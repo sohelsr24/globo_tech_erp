@@ -207,38 +207,42 @@ export default function AppHome() {
 
   // 3. Authenticated state -> render ERP Dashboard & Modules
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex relative ${theme === 'dark' ? 'dark' : ''}`}>
+    <div className={`min-h-screen bg-slate-950 text-slate-100 flex relative ${theme === 'dark' ? 'dark' : ''} print:bg-white print:text-black print:min-h-0`}>
       {/* Responsive Navigation Sidebar (Drawer on mobile, fixed column on desktop) */}
-      <Sidebar
-        currentTab={currentTab}
-        onSelectTab={handleSelectTab}
-        lowStockCount={lowStockCount}
-        currentRole={currentRole}
-        onLogout={handleLogout}
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
+      <div className="no-print">
+        <Sidebar
+          currentTab={currentTab}
+          onSelectTab={handleSelectTab}
+          lowStockCount={lowStockCount}
+          currentRole={currentRole}
+          onLogout={handleLogout}
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+        />
+      </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen print:min-h-0 print:p-0 print:m-0">
         {/* Global Header */}
-        <Header
-          title={title}
-          description={desc}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          lowStockCount={lowStockCount}
-          onLowStockClick={handleLowStockClick}
-          currentRole={currentRole}
-          onRoleChange={setCurrentRole}
-          theme={theme}
-          onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          onLogout={handleLogout}
-          onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        />
+        <div className="no-print">
+          <Header
+            title={title}
+            description={desc}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            lowStockCount={lowStockCount}
+            onLowStockClick={handleLowStockClick}
+            currentRole={currentRole}
+            onRoleChange={setCurrentRole}
+            theme={theme}
+            onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            onLogout={handleLogout}
+            onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          />
+        </div>
 
         {/* Viewport Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 pb-24 lg:pb-8 overflow-y-auto touch-scroll max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 pb-24 lg:pb-8 overflow-y-auto touch-scroll max-w-7xl w-full mx-auto print:p-0 print:m-0 print:max-w-none print:w-full print:overflow-visible">
           {!isPermitted ? (
             <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4 max-w-lg mx-auto mt-12 sm:mt-16 shadow-2xl">
               <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-800 flex items-center justify-center mx-auto text-rose-400">
@@ -286,13 +290,15 @@ export default function AppHome() {
         </main>
 
         {/* Mobile Quick Bottom Navigation */}
-        <MobileBottomNav
-          currentTab={currentTab}
-          onSelectTab={handleSelectTab}
-          lowStockCount={lowStockCount}
-          onOpenMenu={() => setIsMobileMenuOpen(true)}
-          isMenuOpen={isMobileMenuOpen}
-        />
+        <div className="no-print">
+          <MobileBottomNav
+            currentTab={currentTab}
+            onSelectTab={handleSelectTab}
+            lowStockCount={lowStockCount}
+            onOpenMenu={() => setIsMobileMenuOpen(true)}
+            isMenuOpen={isMobileMenuOpen}
+          />
+        </div>
       </div>
     </div>
   );

@@ -832,45 +832,47 @@ export function QuotationView() {
       {/* ========================================================
           1. HEADER & TOP ACTIONS
           ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-400" />
-            Enterprise Quotation & Tender System
-          </h2>
-          <p className="text-xs text-slate-400">
-            Unified Product, Service, Custom Project, and Freight tender management with dynamic free-stock validation
-          </p>
-        </div>
+      {activeViewMode !== 'PDF' && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+          <div>
+            <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-400" />
+              Enterprise Quotation & Tender System
+            </h2>
+            <p className="text-xs text-slate-400">
+              Unified Product, Service, Custom Project, and Freight tender management with dynamic free-stock validation
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          {activeViewMode !== 'LIST' && (
-            <button
-              onClick={() => setActiveViewMode('LIST')}
-              className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
-            >
-              &larr; Back to Quotation List
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {activeViewMode !== 'LIST' && (
+              <button
+                onClick={() => setActiveViewMode('LIST')}
+                className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
+              >
+                &larr; Back to Quotation List
+              </button>
+            )}
 
-          {activeViewMode === 'LIST' && (
-            <button
-              onClick={() => {
-                setNewQuote({
-                  ...newQuote,
-                  quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
-                  items: []
-                });
-                setActiveViewMode('CREATE');
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ New Quotation</span>
-            </button>
-          )}
+            {activeViewMode === 'LIST' && (
+              <button
+                onClick={() => {
+                  setNewQuote({
+                    ...newQuote,
+                    quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+                    items: []
+                  });
+                  setActiveViewMode('CREATE');
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ New Quotation</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ========================================================
           2. DASHBOARD KPI CARDS (Always visible or in LIST mode)
