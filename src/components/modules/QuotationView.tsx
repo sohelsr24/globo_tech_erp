@@ -1593,7 +1593,7 @@ export function QuotationView() {
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:py-6 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs min-h-[960px] sm:min-h-[1050px] print:min-h-[275mm] flex flex-col justify-between overflow-hidden print:overflow-visible">
+          <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:pt-6 sm:pb-2 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs min-h-[1020px] sm:min-h-[1140px] print:min-h-[284mm] flex flex-col justify-between overflow-hidden print:overflow-visible print:p-0 print:m-0">
             {/* Watermark in background matching company pad */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.05] z-0 overflow-hidden">
               <img
@@ -1764,8 +1764,8 @@ export function QuotationView() {
                 </div>
               </div>
 
-              {/* Company Pad Footer matching official letterhead (pinned to bottom) */}
-              <div className="border-t border-slate-200 pt-3 mt-auto text-center text-[11px] text-slate-600 space-y-1 pad-footer">
+              {/* Company Pad Footer matching official letterhead (pinned to absolute bottom) */}
+              <div className="border-t border-slate-200 pt-2 pb-0 mt-auto text-center text-[11px] text-slate-600 space-y-0.5 pad-footer print:pt-1.5 print:pb-0">
                 <p className="font-medium text-slate-700">
                   Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                 </p>

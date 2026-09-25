@@ -114,7 +114,7 @@ body {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 10mm 8mm 10mm;
+    margin: 6mm 8mm 4mm 8mm;
   }
 
   /* Reset body and html completely */
@@ -126,7 +126,7 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    min-height: auto !important;
+    min-height: 100% !important;
     overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -165,12 +165,14 @@ body {
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: 275mm !important;
+    min-height: 284mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
     margin: 0 !important;
     padding: 0 !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -184,7 +186,8 @@ body {
 
   .pad-footer {
     margin-top: auto !important;
-    padding-top: 10px !important;
-    padding-bottom: 2px !important;
+    margin-bottom: 0 !important;
+    padding-top: 6px !important;
+    padding-bottom: 0 !important;
   }
 }
