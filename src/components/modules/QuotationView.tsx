@@ -413,7 +413,19 @@ const INITIAL_QUOTATIONS: Quotation[] = [
 ];
 
 export function QuotationView() {
-  const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [quotations, setQuotations] = useState<Quotation[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_quotations');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return INITIAL_QUOTATIONS;
+  });
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'PDF'>('LIST');
@@ -553,6 +565,19 @@ export function QuotationView() {
     additionalDiscount: 0,
     items: []
   });
+
+  // Edit Quotation State & Trigger
+  const [editingQuotationId, setEditingQuotationId] = useState<string | null>(null);
+
+  const handleStartEditQuotation = (quote: Quotation) => {
+    setEditingQuotationId(quote.id);
+    setSelectedQuotation(quote);
+    setNewQuote({
+      ...quote,
+      items: quote.items ? quote.items.map((i) => ({ ...i })) : []
+    });
+    setActiveViewMode('CREATE');
+  };
 
   // ==========================================
   // DYNAMIC ADD ITEM MODAL STATE
@@ -796,6 +821,50 @@ export function QuotationView() {
       approvalReason = 'High discount threshold exceeded';
     }
 
+    if (editingQuotationId) {
+      const existing = quotations.find((q) => q.id === editingQuotationId);
+      const newVersion = (existing?.version || 1) + 1;
+      const updatedQuote: Quotation = {
+        ...(existing || {}),
+        ...(newQuote as Quotation),
+        id: editingQuotationId,
+        quotationNumber: newQuote.quotationNumber || existing?.quotationNumber || editingQuotationId,
+        version: newVersion,
+        requiresApproval: requiresApproval || existing?.requiresApproval || false,
+        approvalReason: approvalReason || existing?.approvalReason,
+        versionHistory: [
+          ...(existing?.versionHistory || []),
+          {
+            version: newVersion,
+            date: new Date().toISOString().split('T')[0],
+            author: newQuote.salesperson || existing?.salesperson || 'Sales Officer',
+            oldTotal: existing ? calculateQuotationTotals(existing).grandTotal : 0,
+            newTotal: grandTotal,
+            notes: 'Quotation modified and re-saved'
+          }
+        ],
+        timeline: [
+          ...(existing?.timeline || []),
+          {
+            date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+            event: `Updated to Rev ${newVersion}`,
+            actor: newQuote.salesperson || existing?.salesperson || 'Sales Officer',
+            comments: 'Changes saved'
+          }
+        ]
+      };
+
+      const updatedList = quotations.map((q) => (q.id === editingQuotationId ? updatedQuote : q));
+      setQuotations(updatedList);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
+      }
+      setSelectedQuotation(updatedQuote);
+      setEditingQuotationId(null);
+      setActiveViewMode('DETAIL');
+      return;
+    }
+
     const savedQuotation: Quotation = {
       ...(newQuote as Quotation),
       id: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
@@ -823,7 +892,13 @@ export function QuotationView() {
       ]
     };
 
-    setQuotations([savedQuotation, ...quotations]);
+    const updatedList = [savedQuotation, ...quotations];
+    setQuotations(updatedList);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
+    }
+    setSelectedQuotation(savedQuotation);
+    setEditingQuotationId(null);
     setActiveViewMode('LIST');
   };
 
@@ -851,6 +926,9 @@ export function QuotationView() {
     });
 
     setQuotations(updatedQuotations);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+    }
     setIsConvertModalOpen(false);
     alert(`Success! Quotation ${selectedQuotation.quotationNumber} has been converted into ${convertTarget.replace(/_/g, ' ')}. Downstream fulfillment & billing triggered.`);
     setActiveViewMode('LIST');
@@ -882,6 +960,9 @@ export function QuotationView() {
     });
 
     setQuotations(updatedQuotations);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+    }
     setIsApprovalModalOpen(false);
     alert(`Quotation ${selectedQuotation.quotationNumber} ${approvalDecision === 'APPROVE' ? 'Approved' : 'Rejected'} successfully.`);
     setActiveViewMode('LIST');
@@ -933,7 +1014,10 @@ export function QuotationView() {
           <div className="flex items-center gap-2">
             {activeViewMode !== 'LIST' && (
               <button
-                onClick={() => setActiveViewMode('LIST')}
+                onClick={() => {
+                  setEditingQuotationId(null);
+                  setActiveViewMode('LIST');
+                }}
                 className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
               >
                 &larr; Back to Quotation List
@@ -943,9 +1027,34 @@ export function QuotationView() {
             {activeViewMode === 'LIST' && (
               <button
                 onClick={() => {
+                  setEditingQuotationId(null);
                   setNewQuote({
-                    ...newQuote,
                     quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+                    version: 1,
+                    type: 'PRODUCT_SERVICE',
+                    date: new Date().toISOString().split('T')[0],
+                    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    customerId: 'cust-001',
+                    customerName: 'Md. Tariqul Islam',
+                    customerCompany: 'ABC Bank Ltd.',
+                    customerType: 'CORPORATE',
+                    customerPhone: '+880 1711-223344',
+                    customerEmail: 'procurement@abcbank.com.bd',
+                    customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
+                    customerBin: 'BIN-001293848-0101',
+                    salesperson: 'Engr. Sohel Rana',
+                    projectName: '',
+                    projectLocation: 'Dhaka',
+                    reference: '',
+                    currency: 'BDT',
+                    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+                    deliveryTerms: 'Within 15 days from PO date',
+                    warrantyTerms: '2 Years Comprehensive Hardware Replacement',
+                    notes: '',
+                    status: 'DRAFT',
+                    stockReserved: false,
+                    requiresApproval: false,
+                    additionalDiscount: 0,
                     items: []
                   });
                   setActiveViewMode('CREATE');
@@ -1102,6 +1211,14 @@ export function QuotationView() {
                               Inspect
                             </button>
                             <button
+                              onClick={() => handleStartEditQuotation(q)}
+                              className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition inline-flex items-center gap-1"
+                              title="Edit Quotation"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                              Edit
+                            </button>
+                            <button
                               onClick={() => {
                                 setSelectedQuotation(q);
                                 setActiveViewMode('PDF');
@@ -1135,10 +1252,12 @@ export function QuotationView() {
               <div>
                 <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
                   <FileText className="w-4 h-4 text-blue-400" />
-                  Quotation Specification & Header
+                  {editingQuotationId ? `Edit Quotation: ${newQuote.quotationNumber}` : 'Quotation Specification & Header'}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Assign customer, project parameters, terms of warranty, and quotation scope
+                  {editingQuotationId
+                    ? 'Modify items, pricing, terms, and specifications for this quotation'
+                    : 'Assign customer, project parameters, terms of warranty, and quotation scope'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1461,7 +1580,14 @@ export function QuotationView() {
           {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
-              onClick={() => setActiveViewMode('LIST')}
+              onClick={() => {
+                setEditingQuotationId(null);
+                if (selectedQuotation && editingQuotationId) {
+                  setActiveViewMode('DETAIL');
+                } else {
+                  setActiveViewMode('LIST');
+                }
+              }}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold"
             >
               Cancel
@@ -1470,7 +1596,7 @@ export function QuotationView() {
               onClick={handleSaveQuotation}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-blue-500/20"
             >
-              Save & Finalize Quotation
+              {editingQuotationId ? 'Save & Update Quotation' : 'Save & Finalize Quotation'}
             </button>
           </div>
         </div>
@@ -1516,6 +1642,15 @@ export function QuotationView() {
                   Convert Quotation &rarr;
                 </button>
               )}
+
+              <button
+                onClick={() => handleStartEditQuotation(selectedQuotation)}
+                className="px-3.5 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/40 transition inline-flex items-center gap-1.5"
+                title="Edit Quotation"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Edit Quotation
+              </button>
 
               <button
                 onClick={() => setIsVersionModalOpen(true)}
@@ -1673,13 +1808,23 @@ export function QuotationView() {
             >
               &larr; Back
             </button>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Print Customer Quotation (A4)</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleStartEditQuotation(selectedQuotation)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/40 transition"
+                title="Edit Quotation"
+              >
+                <Edit3 className="w-4 h-4" />
+                <span>Edit Quotation</span>
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Customer Quotation (A4)</span>
+              </button>
+            </div>
           </div>
 
           {/* Printable White Sheet Document */}
