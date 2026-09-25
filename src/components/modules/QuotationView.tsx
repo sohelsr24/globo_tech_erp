@@ -1614,9 +1614,9 @@ export function QuotationView() {
                     />
                   </div>
 
-                  {/* 2 no mark: Company Name (Centered in the middle, Larger Font) */}
+                  {/* 2 no mark: Company Name (Centered in the middle, Larger Font, Soft Bold) */}
                   <div className="flex items-center justify-center text-center">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
+                    <h1 className="text-4xl sm:text-5xl md:text-[54px] font-bold tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
                       Globo Tech
                     </h1>
                   </div>
