@@ -1639,18 +1639,20 @@ export function QuotationView() {
               </div>
 
               {/* 4 no mark: Quotation Title & Meta Details */}
-              <div className="py-1.5 sm:py-2 px-4 bg-slate-50 border border-slate-200 rounded-lg text-center">
-                <h2 className="text-base sm:text-lg font-black text-[#008fd5] tracking-widest uppercase">
-                  QUOTATION
-                </h2>
-                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-0.5 mt-0.5 text-xs text-slate-700 font-medium">
-                  <span>
-                    Quotation Ref: <strong className="font-mono text-slate-900 font-bold">{selectedQuotation.quotationNumber}</strong>
-                  </span>
-                  <span className="hidden sm:inline text-slate-300">•</span>
-                  <span>
+              <div className="relative py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between min-h-[48px]">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <h2 className="text-lg sm:text-xl font-black text-[#008fd5] tracking-widest uppercase">
+                    QUOTATION
+                  </h2>
+                </div>
+
+                <div className="ml-auto text-right z-10">
+                  <p className="text-[11px] sm:text-xs text-slate-600 leading-tight">
                     Date: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.date)}</strong>
-                  </span>
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-slate-600 leading-tight mt-1">
+                    Quotation Ref: <strong className="font-mono text-slate-900 font-bold">{selectedQuotation.quotationNumber}</strong>
+                  </p>
                 </div>
               </div>
 
