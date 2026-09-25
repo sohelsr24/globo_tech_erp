@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { UserRole, hasPermission } from '@/lib/permissions';
 import { LoginView } from '@/components/auth/LoginView';
 
@@ -32,6 +33,7 @@ export default function AppHome() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterLowStock, setFilterLowStock] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   // Verify authentication on mount from browser storage
   useEffect(() => {
@@ -64,6 +66,7 @@ export default function AppHome() {
     setUser(null);
     setIsAuthenticated(false);
     setCurrentTab('dashboard');
+    setIsMobileMenuOpen(false);
   };
 
   // Low stock badge count (from initial catalog)
@@ -72,6 +75,7 @@ export default function AppHome() {
   const handleLowStockClick = () => {
     setCurrentTab('products');
     setFilterLowStock(true);
+    setIsMobileMenuOpen(false);
   };
 
   const handleSelectTab = (tab: string) => {
@@ -79,6 +83,7 @@ export default function AppHome() {
     if (tab !== 'products') {
       setFilterLowStock(false);
     }
+    setIsMobileMenuOpen(false);
   };
 
   // Get tab metadata
@@ -197,14 +202,16 @@ export default function AppHome() {
 
   // 3. Authenticated state -> render ERP Dashboard & Modules
   return (
-    <div className={`min-h-screen bg-slate-950 text-slate-100 flex ${theme === 'dark' ? 'dark' : ''}`}>
-      {/* Fixed Left Navigation Sidebar */}
+    <div className={`min-h-screen bg-slate-950 text-slate-100 flex relative ${theme === 'dark' ? 'dark' : ''}`}>
+      {/* Responsive Navigation Sidebar (Drawer on mobile, fixed column on desktop) */}
       <Sidebar
         currentTab={currentTab}
         onSelectTab={handleSelectTab}
         lowStockCount={lowStockCount}
         currentRole={currentRole}
         onLogout={handleLogout}
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -222,12 +229,13 @@ export default function AppHome() {
           theme={theme}
           onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           onLogout={handleLogout}
+          onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         />
 
         {/* Viewport Content */}
-        <main className="flex-1 p-6 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 pb-24 lg:pb-8 overflow-y-auto touch-scroll max-w-7xl w-full mx-auto">
           {!isPermitted ? (
-            <div className="p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4 max-w-lg mx-auto mt-16 shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4 max-w-lg mx-auto mt-12 sm:mt-16 shadow-2xl">
               <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-800 flex items-center justify-center mx-auto text-rose-400">
                 <Lock className="w-6 h-6" />
               </div>
@@ -271,6 +279,15 @@ export default function AppHome() {
             </>
           )}
         </main>
+
+        {/* Mobile Quick Bottom Navigation */}
+        <MobileBottomNav
+          currentTab={currentTab}
+          onSelectTab={handleSelectTab}
+          lowStockCount={lowStockCount}
+          onOpenMenu={() => setIsMobileMenuOpen(true)}
+          isMenuOpen={isMobileMenuOpen}
+        />
       </div>
     </div>
   );

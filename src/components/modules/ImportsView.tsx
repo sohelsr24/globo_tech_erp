@@ -146,27 +146,31 @@ export function ImportsView() {
   return (
     <div className="space-y-5">
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-3.5">
         <div>
           <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-            <Ship className="w-4 h-4 text-blue-400" />
+            <Ship className="w-4 h-4 text-blue-400 flex-shrink-0" />
             <span>China Import Shipments & Real Landed Cost Tracking</span>
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 mt-0.5">
             Track foreign purchase currency, sea/air shipping, customs duties, and true unit landed cost.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="info">Primary Foreign Currency: CNY (¥)</Badge>
-          <Badge variant="success">Standard FX: 1 CNY = 16.0 BDT</Badge>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <Badge variant="info">Currency: CNY (¥)</Badge>
+          <Badge variant="success">FX: 1 CNY = 16.0 BDT</Badge>
         </div>
       </div>
 
       {/* Shipments Table */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+          <span>👉 Swipe table horizontally for full logistics & customs</span>
+          <span className="font-semibold text-slate-300">{shipments.length} imports</span>
+        </div>
+        <div className="overflow-x-auto touch-scroll">
+          <table className="w-full text-left text-xs min-w-[850px]">
             <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
               <tr>
                 <th className="py-3 px-4">Import # / BL</th>

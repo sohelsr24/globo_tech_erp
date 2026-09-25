@@ -177,47 +177,47 @@ export function StockView() {
   return (
     <div className="space-y-5">
       {/* Sub Tabs Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-3.5">
+        <div className="flex items-center gap-2 overflow-x-auto touch-scroll pb-1 sm:pb-0">
           <button
             onClick={() => setActiveTab('inventory')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0 active:scale-95 ${
               activeTab === 'inventory'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
             }`}
           >
             <Warehouse className="w-4 h-4" />
-            <span>Multi-Warehouse Stock Levels</span>
+            <span>Warehouse Stock</span>
           </button>
 
           <button
             onClick={() => setActiveTab('ledger')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+            className={`px-3.5 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 flex-shrink-0 active:scale-95 ${
               activeTab === 'ledger'
                 ? 'bg-blue-600 text-white shadow-sm'
                 : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
             }`}
           >
             <History className="w-4 h-4" />
-            <span>Immutable Stock Movement Ledger ({ledger.length})</span>
+            <span>Stock Ledger ({ledger.length})</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setIsGrnModalOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition"
+            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
           >
             <PackageCheck className="w-3.5 h-3.5" />
-            <span>Receive Goods (GRN)</span>
+            <span>Receive Goods</span>
           </button>
           <button
             onClick={() => setIsTransferModalOpen(true)}
-            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition"
+            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95"
           >
             <ArrowRightLeft className="w-3.5 h-3.5 text-blue-400" />
-            <span>Stock Transfer</span>
+            <span>Transfer</span>
           </button>
         </div>
       </div>
@@ -225,8 +225,12 @@ export function StockView() {
       {activeTab === 'inventory' ? (
         /* Inventory by Warehouse */
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+            <span>👉 Swipe table horizontally for full stock details</span>
+            <span className="font-semibold text-slate-300">{warehouseStock.length} records</span>
+          </div>
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full text-left text-xs min-w-[720px]">
               <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Warehouse</th>
@@ -280,16 +284,20 @@ export function StockView() {
       ) : (
         /* Immutable Stock Movement Ledger */
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-3 bg-slate-800/60 border-b border-slate-800 text-xs text-slate-400 flex items-center justify-between">
+          <div className="p-3 bg-slate-800/60 border-b border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 text-blue-400" />
-              <span>Immutable Stock Ledger: Every physical quantity modification is recorded with historical landed cost.</span>
+              <AlertCircle className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <span>Immutable Stock Ledger: Every physical quantity modification is recorded.</span>
             </span>
             <Badge variant="info">Audit Compliance Active</Badge>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+          <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400">
+            👉 Swipe horizontally for full audit trail & references
+          </div>
+
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full text-left text-xs min-w-[850px]">
               <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
                 <tr>
                   <th className="py-3 px-4">Timestamp</th>
@@ -378,14 +386,14 @@ export function StockView() {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-slate-400 font-semibold mb-1">Product</label>
               <input
                 type="text"
                 disabled
                 value="CCTV Camera (4MP Outdoor IR Dome IP Camera)"
-                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2 text-slate-400"
+                className="w-full bg-slate-800/60 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs text-slate-400"
               />
             </div>
             <div>
@@ -394,7 +402,7 @@ export function StockView() {
                 type="number"
                 value={grnQty}
                 onChange={(e) => setGrnQty(Number(e.target.value))}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 font-bold"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs text-slate-200 font-bold"
               />
             </div>
           </div>
@@ -428,16 +436,16 @@ export function StockView() {
         }
       >
         <div className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-slate-400 font-semibold mb-1">From Warehouse (Origin)</label>
-              <select className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200">
+              <select className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs text-slate-200">
                 <option value="Main Warehouse (Tejgaon)">Main Warehouse (Tejgaon)</option>
               </select>
             </div>
             <div>
               <label className="block text-slate-400 font-semibold mb-1">To Warehouse (Destination)</label>
-              <select className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200">
+              <select className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs text-slate-200">
                 <option value="Project Store (Site Depot)">Project Store (Site Depot)</option>
                 <option value="Office Store (Banani)">Office Store (Banani)</option>
                 <option value="Showroom (Gulshan)">Showroom (Gulshan)</option>
@@ -446,7 +454,7 @@ export function StockView() {
           </div>
           <div>
             <label className="block text-slate-400 font-semibold mb-1">Transfer Quantity (pcs)</label>
-            <input type="number" defaultValue="5" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200" />
+            <input type="number" defaultValue="5" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-sm sm:text-xs text-slate-200" />
           </div>
         </div>
       </Modal>

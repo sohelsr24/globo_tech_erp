@@ -876,53 +876,53 @@ export function QuotationView() {
           ======================================================== */}
       {activeViewMode === 'LIST' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800">
               <span className="text-[11px] text-slate-400 font-medium">Total Quotations</span>
-              <p className="text-xl font-bold text-slate-100 mt-0.5">{totalCount}</p>
+              <p className="text-lg sm:text-xl font-bold text-slate-100 mt-0.5">{totalCount}</p>
               <span className="text-[10px] text-blue-400 font-medium">All Lifetime Quotes</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800">
               <span className="text-[11px] text-slate-400 font-medium">Total Value</span>
-              <p className="text-xl font-bold text-blue-400 mt-0.5">{formatCompactBDT(totalValue)}</p>
-              <span className="text-[10px] text-slate-500">{formatBDT(totalValue)}</span>
+              <p className="text-lg sm:text-xl font-bold text-blue-400 mt-0.5">{formatCompactBDT(totalValue)}</p>
+              <span className="text-[10px] text-slate-500 truncate block">{formatBDT(totalValue)}</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800">
               <span className="text-[11px] text-slate-400 font-medium">Accepted Value</span>
-              <p className="text-xl font-bold text-emerald-400 mt-0.5">{formatCompactBDT(acceptedValue)}</p>
+              <p className="text-lg sm:text-xl font-bold text-emerald-400 mt-0.5">{formatCompactBDT(acceptedValue)}</p>
               <span className="text-[10px] text-emerald-400 font-semibold">{conversionRate.toFixed(1)}% Win Rate</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-[11px] text-slate-400 font-medium">In Pipeline (Sent/Pending)</span>
-              <p className="text-xl font-bold text-amber-400 mt-0.5">{sentCount + pendingCount}</p>
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">In Pipeline</span>
+              <p className="text-lg sm:text-xl font-bold text-amber-400 mt-0.5">{sentCount + pendingCount}</p>
               <span className="text-[10px] text-amber-400">Active client reviews</span>
             </div>
-            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800 col-span-2 sm:col-span-1">
               <span className="text-[11px] text-slate-400 font-medium">Drafts & Revisions</span>
-              <p className="text-xl font-bold text-purple-400 mt-0.5">{draftCount}</p>
+              <p className="text-lg sm:text-xl font-bold text-purple-400 mt-0.5">{draftCount}</p>
               <span className="text-[10px] text-slate-500">Unsubmitted quotes</span>
             </div>
           </div>
 
           {/* Search & Quick Status Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl">
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search Quote #, Client, Project..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 sm:py-1.5 text-sm sm:text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto touch-scroll pb-1 sm:pb-0">
               {['ALL', 'DRAFT', 'SENT', 'PENDING_APPROVAL', 'ACCEPTED', 'CONVERTED', 'REJECTED'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex-shrink-0 ${
                     statusFilter === st
                       ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
                       : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
@@ -936,8 +936,12 @@ export function QuotationView() {
 
           {/* Quotations Master Table */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
+            <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+              <span>👉 Swipe table horizontally for full details & actions</span>
+              <span className="font-semibold text-slate-300">{filteredQuotations.length} quotes</span>
+            </div>
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs text-slate-300 min-w-[850px]">
                 <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
                   <tr>
                     <th className="px-4 py-3">Quote # & Date</th>
@@ -1586,9 +1590,9 @@ export function QuotationView() {
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="bg-white text-slate-900 rounded-xl p-8 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-6">
+          <div className="bg-white text-slate-900 rounded-xl p-4 sm:p-8 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-4 sm:space-y-6 overflow-hidden">
             {/* Header / Brand */}
-            <div className="flex justify-between items-start border-b border-slate-200 pb-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-4 sm:pb-5 gap-3">
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-black text-white text-lg">
@@ -1602,7 +1606,7 @@ export function QuotationView() {
                 </p>
               </div>
 
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <h2 className="text-lg font-black text-blue-600 uppercase tracking-widest">OFFICIAL QUOTATION</h2>
                 <p className="font-mono font-bold text-slate-800 mt-1">{selectedQuotation.quotationNumber}</p>
                 <p className="text-slate-500 text-[11px]">Date: {formatDate(selectedQuotation.date)}</p>
@@ -1611,7 +1615,7 @@ export function QuotationView() {
             </div>
 
             {/* Client & Project Information */}
-            <div className="grid grid-cols-2 gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
               <div>
                 <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Quotation Prepared For:</span>
                 <p className="font-bold text-slate-900 text-sm">{selectedQuotation.customerCompany}</p>
@@ -1631,7 +1635,8 @@ export function QuotationView() {
             </div>
 
             {/* Clean Customer Facing Item Table (NO Internal Cost, NO Profit, NO Stock Levels) */}
-            <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden min-w-[520px]">
               <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
                 <tr>
                   <th className="p-2.5">SL</th>
@@ -1668,6 +1673,7 @@ export function QuotationView() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Totals Breakdown */}
             <div className="flex justify-end pt-2">

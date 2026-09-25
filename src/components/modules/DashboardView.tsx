@@ -50,14 +50,14 @@ export function DashboardView({ onNavigateTab, canViewCosts }: DashboardViewProp
   return (
     <div className="space-y-6">
       {/* Date Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase text-slate-400">Date Range:</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3 sm:p-3.5">
+        <div className="flex items-center gap-2 overflow-x-auto touch-scroll pb-1.5 sm:pb-0">
+          <span className="text-xs font-semibold uppercase text-slate-400 flex-shrink-0">Date Range:</span>
           {(['today', 'this_week', 'this_month', 'this_year'] as const).map((filter) => (
             <button
               key={filter}
               onClick={() => setDateFilter(filter)}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition flex-shrink-0 ${
                 dateFilter === filter
                   ? 'bg-blue-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -68,17 +68,17 @@ export function DashboardView({ onNavigateTab, canViewCosts }: DashboardViewProp
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
           <button
             onClick={() => onNavigateTab('imports')}
-            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 active:scale-95"
           >
             <Ship className="w-3.5 h-3.5" />
-            <span>New China Import</span>
+            <span>New Import</span>
           </button>
           <button
             onClick={() => onNavigateTab('sales')}
-            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1.5"
+            className="flex-1 sm:flex-initial px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center justify-center gap-1.5 active:scale-95"
           >
             <DollarSign className="w-3.5 h-3.5" />
             <span>Create Invoice</span>

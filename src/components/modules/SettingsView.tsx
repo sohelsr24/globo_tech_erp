@@ -253,8 +253,12 @@ export function SettingsView() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
+          <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400">
+            👉 Swipe horizontally for role permissions matrix
+          </div>
+
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full text-left text-xs text-slate-300 min-w-[700px]">
               <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
                 <tr>
                   <th className="px-4 py-2.5">User Role</th>

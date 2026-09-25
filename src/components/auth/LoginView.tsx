@@ -63,30 +63,30 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
       <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Main Container */}
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 px-1 sm:px-0">
         {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/60 text-blue-400 text-xs font-semibold mb-4 backdrop-blur-sm shadow-inner">
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/60 text-blue-400 text-xs font-semibold mb-3 sm:mb-4 backdrop-blur-sm shadow-inner">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Apex Enterprise • Secure Portal</span>
           </div>
 
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 mx-auto flex items-center justify-center font-black text-white text-3xl shadow-xl shadow-blue-600/25 ring-4 ring-slate-900 mb-4">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 mx-auto flex items-center justify-center font-black text-white text-2xl sm:text-3xl shadow-xl shadow-blue-600/25 ring-4 ring-slate-900 mb-3 sm:mb-4">
             A
           </div>
 
-          <h1 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-100 tracking-tight">
             Apex Enterprise
           </h1>
-          <p className="text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">
+          <p className="text-[11px] sm:text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">
             China Import • Stock • Installation Projects ERP
           </p>
         </div>
 
         {/* Card Form */}
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-7 shadow-2xl backdrop-blur-xl">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-slate-100">Sign in to your account</h2>
+        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-7 shadow-2xl backdrop-blur-xl">
+          <div className="mb-5 sm:mb-6">
+            <h2 className="text-base sm:text-lg font-bold text-slate-100">Sign in to your account</h2>
             <p className="text-xs text-slate-400 mt-0.5">
               Enter your authorized email and password to access the ERP dashboard.
             </p>
@@ -113,7 +113,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@globotechbd.com"
-                  className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-sm sm:text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
               </div>
             </div>
@@ -131,7 +131,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+                  className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-10 pr-10 py-2.5 text-sm sm:text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                 />
                 <button
                   type="button"

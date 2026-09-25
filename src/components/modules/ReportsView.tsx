@@ -137,39 +137,43 @@ export function ReportsView() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="bg-transparent font-medium focus:outline-none cursor-pointer text-slate-200"
-            >
-              <option value="SEP_2026" className="bg-slate-900">September 2026 (Current Period)</option>
-              <option value="Q3_2026" className="bg-slate-900">Q3 2026 (Jul - Sep)</option>
-              <option value="FY_2026_27" className="bg-slate-900">Fiscal Year 2026-2027</option>
-            </select>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 w-full sm:w-auto">
+              <Calendar className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="bg-transparent font-medium focus:outline-none cursor-pointer text-slate-200 text-xs w-full sm:w-auto"
+              >
+                <option value="SEP_2026" className="bg-slate-900">September 2026 (Current Period)</option>
+                <option value="Q3_2026" className="bg-slate-900">Q3 2026 (Jul - Sep)</option>
+                <option value="FY_2026_27" className="bg-slate-900">Fiscal Year 2026-2027</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={() => handleExportCSV(activeTab.toUpperCase())}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-400" />
+                <span>Export CSV</span>
+              </button>
+
+              <button
+                onClick={() => window.print()}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-md shadow-blue-500/20"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print</span>
+              </button>
+            </div>
           </div>
-
-          <button
-            onClick={() => handleExportCSV(activeTab.toUpperCase())}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
-          >
-            <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span>Export CSV</span>
-          </button>
-
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-md shadow-blue-500/20"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print Report</span>
-          </button>
         </div>
       </div>
 
       {/* Report Switcher Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto touch-scroll">
         <button
           onClick={() => setActiveTab('pnl')}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition ${
@@ -437,8 +441,12 @@ export function ReportsView() {
               <Badge variant="blue">Real-time Balance</Badge>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
+            <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400">
+              👉 Swipe horizontally for landed cost & valuation details
+            </div>
+
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs text-slate-300 min-w-[720px]">
                 <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
                   <tr>
                     <th className="px-4 py-3">Product & SKU</th>

@@ -276,8 +276,8 @@ export function ProjectsView() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
                 Consumed Warehouse Materials (Auto-Deducted at Landed Cost)
               </h4>
-              <div className="border border-slate-800 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs">
+              <div className="border border-slate-800 rounded-lg overflow-x-auto touch-scroll">
+                <table className="w-full text-left text-xs min-w-[440px]">
                   <thead className="bg-slate-800/80 text-slate-400 text-[10px] uppercase">
                     <tr>
                       <th className="py-2.5 px-3">Product Name</th>
@@ -305,8 +305,8 @@ export function ProjectsView() {
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
                 Technician Labor & Service Work Days
               </h4>
-              <div className="border border-slate-800 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-xs">
+              <div className="border border-slate-800 rounded-lg overflow-x-auto touch-scroll">
+                <table className="w-full text-left text-xs min-w-[440px]">
                   <thead className="bg-slate-800/80 text-slate-400 text-[10px] uppercase">
                     <tr>
                       <th className="py-2.5 px-3">Technician</th>
