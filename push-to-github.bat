@@ -16,6 +16,7 @@ echo [2/3] Syncing export files to web root...
 copy /Y out\index.html index.html
 copy /Y out\404.html 404.html
 copy /Y out\index.txt index.txt
+if exist _next rmdir /s /q _next
 xcopy /E /I /Y out\_next _next
 
 echo [3/3] Committing and pushing to GitHub...
