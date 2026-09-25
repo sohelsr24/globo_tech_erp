@@ -1685,7 +1685,7 @@ export function QuotationView() {
           {/* Printable White Sheet Document */}
           <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:pt-6 sm:pb-2 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs min-h-[1020px] sm:min-h-[1140px] print:min-h-[284mm] flex flex-col justify-between overflow-hidden print:overflow-visible print:p-0 print:m-0">
             {/* Watermark in background matching company pad */}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.05] z-0 overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.08] z-0 overflow-hidden">
               <img
                 src={GLOBO_TECH_LOGO_DATA_URL}
                 alt="Globo Tech Watermark"
@@ -1847,9 +1847,9 @@ export function QuotationView() {
                 </div>
               </div>
 
-              {/* Commercial Terms & Conditions */}
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
-                <h4 className="font-bold text-slate-900 uppercase text-[10px]">Terms & Conditions:</h4>
+              {/* Commercial Terms & Conditions (Clean & Transparent - Watermark Fully Visible) */}
+              <div className="pt-2 text-[11px] text-slate-800 space-y-1 bg-transparent">
+                <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider">Terms & Conditions:</h4>
                 <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
                 <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
                 <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
