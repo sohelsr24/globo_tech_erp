@@ -298,7 +298,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
         type: 'SERVICE',
         name: 'CCTV Installation & Cabling Commissioning',
         description: 'Complete conduit laying, termination, camera mounting, and NVR setup',
-        unit: 'Project',
+        unit: 'Job',
         quantity: 1,
         unitPrice: 150000,
         discountPercent: 0,
@@ -1766,43 +1766,58 @@ export function QuotationView() {
                 </div>
               </div>
 
-              {/* Clean Customer Facing Item Table (NO Internal Cost, NO Profit, NO Stock Levels) */}
-              <div className="overflow-x-auto touch-scroll">
-                <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden min-w-[520px]">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
-                    <tr>
-                      <th className="p-2.5">SL</th>
-                      <th className="p-2.5">Description & Specification</th>
-                      <th className="p-2.5 text-center">Qty</th>
-                      <th className="p-2.5 text-right">Unit Price (BDT)</th>
-                      <th className="p-2.5 text-right">VAT</th>
-                      <th className="p-2.5 text-right">Total (BDT)</th>
+              {/* Customer Facing Item Table matching requested Globo Tech format */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse border border-black text-black">
+                  <thead>
+                    <tr className="bg-white">
+                      <th className="border border-black py-2 px-1 text-center font-bold text-black w-10">Sl</th>
+                      <th className="border border-black py-2 px-3 text-center font-bold text-black w-48">Product Name</th>
+                      <th className="border border-black py-2 px-3 text-center font-bold text-black">Product Description</th>
+                      <th className="border border-black py-2 px-2 text-center font-bold text-black w-16">Unite</th>
+                      <th className="border border-black py-2 px-2 text-center font-bold text-black w-14">Qty</th>
+                      <th className="border border-black py-2 px-2 text-center font-bold text-black w-28">Unite Price</th>
+                      <th className="border border-black py-2 px-2 text-center font-bold text-black w-28">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 text-slate-800 bg-white/80">
-                    {selectedQuotation.items.map((item, idx) => (
-                      <tr key={item.id}>
-                        <td className="p-2.5 font-bold text-slate-400">{idx + 1}</td>
-                        <td className="p-2.5">
-                          <div className="font-bold text-slate-900">{item.name}</div>
-                          {item.brand && <span className="text-[10px] text-slate-500 mr-2">Brand: {item.brand}</span>}
-                          {item.warranty && <span className="text-[10px] text-emerald-700 font-semibold mr-2">Warranty: {item.warranty}</span>}
-                          {item.leadTime && item.leadTime !== 'Immediate' && (
-                            <span className="text-[10px] text-amber-700 font-semibold">Delivery: {item.leadTime}</span>
-                          )}
-                        </td>
-                        <td className="p-2.5 text-center font-mono font-bold">
-                          {item.quantity} {item.unit}
-                        </td>
-                        <td className="p-2.5 text-right font-mono">
-                          {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="p-2.5 text-right font-mono text-slate-600">{item.vatPercent}%</td>
-                        <td className="p-2.5 text-right font-mono font-bold">
-                          {calculateItemTotal(item).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody>
+                    {selectedQuotation.items.map((item, idx) => {
+                      const lineTotal = item.quantity * item.unitPrice;
+                      const description = item.description && item.description.trim()
+                        ? item.description
+                        : [
+                            item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : ''),
+                            item.warranty ? `Warranty: ${item.warranty}` : '',
+                            item.leadTime && item.leadTime !== 'Immediate' ? `Delivery: ${item.leadTime}` : '',
+                            item.remarks || ''
+                          ].filter(Boolean).join('\n') || '--';
+
+                      return (
+                        <tr key={item.id} className="bg-white">
+                          <td className="border border-black p-2 text-center font-bold text-black align-middle">
+                            {idx + 1}
+                          </td>
+                          <td className="border border-black p-2.5 text-center font-bold text-black align-middle whitespace-pre-line leading-snug">
+                            {item.name}
+                          </td>
+                          <td className="border border-black p-2.5 text-left text-black align-middle whitespace-pre-line leading-relaxed">
+                            {description}
+                          </td>
+                          <td className="border border-black p-2 text-center text-black align-middle font-medium">
+                            {item.unit || 'pcs'}
+                          </td>
+                          <td className="border border-black p-2 text-center text-black align-middle font-bold">
+                            {item.quantity}
+                          </td>
+                          <td className="border border-black p-2 text-right font-mono text-black align-middle">
+                            {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="border border-black p-2 text-right font-mono font-bold text-black align-middle">
+                            {lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2043,6 +2058,7 @@ export function QuotationView() {
                       onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                     >
+                      <option value="Job">Job</option>
                       <option value="Project">Project (Lump Sum)</option>
                       <option value="Points">Points (Per Camera/Node)</option>
                       <option value="Days">Days (Man-day)</option>
@@ -2090,6 +2106,18 @@ export function QuotationView() {
                 </div>
               </div>
             )}
+
+            {/* Product Description */}
+            <div className="pt-2 border-t border-slate-800">
+              <label className="block text-slate-400 font-semibold mb-1">Product Description / Scope of Work</label>
+              <textarea
+                rows={2}
+                placeholder="e.g. Rack Shifting and re-setup, AP Dismount and re-setup, Full Completed."
+                value={itemForm.description || ''}
+                onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
 
             {/* Common Item Parameters (Qty, Quoted Price, VAT) */}
             <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-800">
