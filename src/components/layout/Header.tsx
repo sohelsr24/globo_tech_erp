@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Bell, Moon, Sun, AlertTriangle, ChevronDown } from 'lucide-react';
+import { Search, Bell, Moon, Sun, AlertTriangle, ChevronDown, LogOut } from 'lucide-react';
 import { UserRole } from '@/lib/permissions';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ interface HeaderProps {
   onRoleChange: (r: UserRole) => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  onLogout?: () => void;
 }
 
 export function Header({
@@ -27,7 +28,8 @@ export function Header({
   currentRole,
   onRoleChange,
   theme,
-  onToggleTheme
+  onToggleTheme,
+  onLogout
 }: HeaderProps) {
   const roles: { id: UserRole; label: string }[] = [
     { id: 'SUPER_ADMIN', label: 'Super Admin' },
@@ -95,6 +97,18 @@ export function Header({
         >
           {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
         </button>
+
+        {/* Logout Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 transition text-xs font-semibold"
+            title="Log Out of ERP"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Log Out</span>
+          </button>
+        )}
       </div>
     </header>
   );

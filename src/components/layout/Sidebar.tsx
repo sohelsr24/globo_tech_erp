@@ -13,7 +13,8 @@ import {
   Building2,
   BarChart3,
   Settings,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,13 +22,15 @@ interface SidebarProps {
   onSelectTab: (tab: string) => void;
   lowStockCount?: number;
   currentRole: string;
+  onLogout?: () => void;
 }
 
 export function Sidebar({
   currentTab,
   onSelectTab,
   lowStockCount = 0,
-  currentRole
+  currentRole,
+  onLogout
 }: SidebarProps) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -101,14 +104,26 @@ export function Sidebar({
       </nav>
 
       {/* Footer Profile */}
-      <div className="p-4 border-t border-slate-800 flex items-center gap-3 bg-slate-900/50">
-        <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-blue-400">
-          SR
+      <div className="p-4 border-t border-slate-800 flex items-center justify-between gap-3 bg-slate-900/50">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-blue-400 flex-shrink-0">
+            SR
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-200 truncate">Engr. Sohel Rana</p>
+            <p className="text-[10px] text-slate-400 truncate">sohelsr24@gmail.com</p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold text-slate-200 truncate">Engr. Sohel Rana</p>
-          <p className="text-[10px] text-slate-400 truncate">Managing Director</p>
-        </div>
+
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            title="Log Out of ERP"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-transparent hover:border-rose-900/50 transition flex-shrink-0"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </aside>
   );

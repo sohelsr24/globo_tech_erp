@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { UserRole, hasPermission } from '@/lib/permissions';
+import { LoginView } from '@/components/auth/LoginView';
 
 // Modules
 import { DashboardView } from '@/components/modules/DashboardView';
@@ -22,11 +23,48 @@ import { QuotationView } from '@/components/modules/QuotationView';
 import { ShieldAlert, Lock } from 'lucide-react';
 
 export default function AppHome() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
+  const [user, setUser] = useState<{ email: string; name: string; role: string } | null>(null);
+
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
   const [currentRole, setCurrentRole] = useState<UserRole>('SUPER_ADMIN');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterLowStock, setFilterLowStock] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // Verify authentication on mount from browser storage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('apex_erp_session') || sessionStorage.getItem('apex_erp_session');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.email) {
+          setUser(parsed);
+          setIsAuthenticated(true);
+        }
+      }
+    } catch (e) {
+      console.error('Session load error:', e);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  }, []);
+
+  const handleLoginSuccess = (userData: { email: string; name: string; role: string }) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem('apex_erp_session');
+      sessionStorage.removeItem('apex_erp_session');
+    } catch (e) {}
+    setUser(null);
+    setIsAuthenticated(false);
+    setCurrentTab('dashboard');
+  };
 
   // Low stock badge count (from initial catalog)
   const lowStockCount = 2;
@@ -135,6 +173,29 @@ export default function AppHome() {
 
   const { title, desc } = getTabInfo();
 
+  // 1. Initial auth verification loading state (prevents flash of login screen)
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 selection:bg-blue-600">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center font-black text-white text-2xl shadow-xl shadow-blue-600/30 ring-4 ring-slate-900 mb-4 animate-pulse">
+          A
+        </div>
+        <div className="w-32 h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
+          <div className="w-full h-full bg-blue-500 rounded-full animate-indeterminate" />
+        </div>
+        <p className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase mt-3">
+          Loading Apex Enterprise ERP...
+        </p>
+      </div>
+    );
+  }
+
+  // 2. Unauthenticated state -> render Login View
+  if (!isAuthenticated) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // 3. Authenticated state -> render ERP Dashboard & Modules
   return (
     <div className={`min-h-screen bg-slate-950 text-slate-100 flex ${theme === 'dark' ? 'dark' : ''}`}>
       {/* Fixed Left Navigation Sidebar */}
@@ -143,6 +204,7 @@ export default function AppHome() {
         onSelectTab={handleSelectTab}
         lowStockCount={lowStockCount}
         currentRole={currentRole}
+        onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
@@ -159,6 +221,7 @@ export default function AppHome() {
           onRoleChange={setCurrentRole}
           theme={theme}
           onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onLogout={handleLogout}
         />
 
         {/* Viewport Content */}
