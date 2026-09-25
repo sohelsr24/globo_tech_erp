@@ -2475,7 +2475,7 @@ export function QuotationView() {
             <div className="relative z-10 flex-1 flex flex-col justify-between">
               <div className="space-y-3 sm:space-y-4">
               {/* Header / Brand Layout according to company pad */}
-              <div className="border-b-2 border-[#008fd5] pb-2 sm:pb-3">
+              <div className="border-b-2 border-slate-900 pb-2 sm:pb-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
                   {/* 1 no mark: Company Logo (Left Aligned, Larger) */}
                   <div className="flex items-center justify-center sm:justify-start">
