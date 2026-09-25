@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   Plus,
@@ -409,23 +409,197 @@ const INITIAL_QUOTATIONS: Quotation[] = [
         comments: 'Stock reserved (10 pcs camera)'
       }
     ]
+  },
+  {
+    id: 'QT-2026-003',
+    quotationNumber: 'QT-2026-003',
+    version: 3,
+    type: 'SERVICE',
+    date: '2026-09-25',
+    validUntil: '2026-10-25',
+    customerId: 'cust-daraz',
+    customerName: 'Procurement Officer',
+    customerCompany: 'Daraz Bangladesh Limited',
+    customerType: 'CORPORATE',
+    customerPhone: '+880 1700-112233',
+    customerEmail: 'procurement@daraz.com.bd',
+    customerAddress: 'Tejgaon I/A, Dhaka-1208',
+    customerBin: 'BIN-003928174-0101',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Narshingdi HUB Relocation',
+    projectLocation: 'Narshingdi',
+    reference: 'RFQ-DARAZ-2026-03',
+    currency: 'BDT',
+    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+    deliveryTerms: 'Within 7 days',
+    warrantyTerms: '1 Year Service Warranty',
+    status: 'DRAFT',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-301',
+        type: 'SERVICE',
+        name: 'IT Device Relocation',
+        unit: 'job',
+        quantity: 1,
+        unitPrice: 10000,
+        discountPercent: 0,
+        vatPercent: 15,
+        unitCost: 6000,
+        leadTime: 'Immediate',
+        remarks: 'Server & Rack Shifting'
+      },
+      {
+        id: 'item-302',
+        type: 'SERVICE',
+        name: 'CCTV Reinstall',
+        unit: 'job',
+        quantity: 1,
+        unitPrice: 10000,
+        discountPercent: 0,
+        vatPercent: 15,
+        unitCost: 5000,
+        leadTime: 'Immediate',
+        remarks: 'Camera Dismount and re-setup'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-09-25',
+        author: 'Sales Officer',
+        oldTotal: 0,
+        newTotal: 23000,
+        notes: 'Quotation drafted'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-09-25 10:00 AM',
+        event: 'Draft Created',
+        actor: 'Sales Officer',
+        comments: 'Service relocation quote created'
+      }
+    ]
+  },
+  {
+    id: 'QT-2026-004',
+    quotationNumber: 'QT-2026-004',
+    version: 1,
+    type: 'SERVICE',
+    date: '2026-09-25',
+    validUntil: '2026-10-25',
+    customerId: 'cust-daraz',
+    customerName: 'Procurement Officer',
+    customerCompany: 'Daraz Bangladesh Limited',
+    customerType: 'CORPORATE',
+    customerPhone: '+880 1700-112233',
+    customerEmail: 'procurement@daraz.com.bd',
+    customerAddress: 'Tejgaon I/A, Dhaka-1208',
+    customerBin: 'BIN-003928174-0101',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Cumilla Hub IT Relocation',
+    projectLocation: 'Cumilla',
+    reference: 'RFQ-DARAZ-2026-04',
+    currency: 'BDT',
+    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+    deliveryTerms: 'Within 7 days',
+    warrantyTerms: '1 Year Service Warranty',
+    status: 'DRAFT',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-401',
+        type: 'SERVICE',
+        name: 'IT Device Relocation',
+        unit: 'job',
+        quantity: 1,
+        unitPrice: 10000,
+        discountPercent: 0,
+        vatPercent: 15,
+        unitCost: 6000,
+        leadTime: 'Immediate',
+        remarks: 'Cumilla Hub network setup'
+      },
+      {
+        id: 'item-402',
+        type: 'SERVICE',
+        name: 'CCTV Setup & Cabling',
+        unit: 'job',
+        quantity: 1,
+        unitPrice: 10000,
+        discountPercent: 0,
+        vatPercent: 15,
+        unitCost: 5000,
+        leadTime: 'Immediate',
+        remarks: 'CCTV points commissioning'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-09-25',
+        author: 'Sales Officer',
+        oldTotal: 0,
+        newTotal: 23000,
+        notes: 'Quotation drafted'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-09-25 11:30 AM',
+        event: 'Draft Created',
+        actor: 'Sales Officer',
+        comments: 'Cumilla Hub relocation draft'
+      }
+    ]
   }
 ];
 
 export function QuotationView() {
-  const [quotations, setQuotations] = useState<Quotation[]>(() => {
+  const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Sync from localStorage on initial client mount
+  useEffect(() => {
+    setIsMounted(true);
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('globotech_erp_quotations');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
+            const merged = [
+              ...parsed,
+              ...INITIAL_QUOTATIONS.filter((initQ) => !existingIds.has(initQ.id) && !existingIds.has(initQ.quotationNumber))
+            ];
+            setQuotations(merged);
+            localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));
+            return;
+          }
         } catch (e) {
-          console.error(e);
+          console.error('Error loading quotations from localStorage', e);
         }
       }
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(INITIAL_QUOTATIONS));
     }
-    return INITIAL_QUOTATIONS;
-  });
+  }, []);
+
+  // Continuous auto-sync to localStorage whenever quotations state updates
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_quotations', JSON.stringify(quotations));
+      } catch (e) {
+        console.error('Error syncing quotations to localStorage:', e);
+      }
+    }
+  }, [quotations, isMounted]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'PDF'>('LIST');
@@ -756,10 +930,19 @@ export function QuotationView() {
       remarks: itemForm.remarks
     };
 
-    setNewQuote({
-      ...newQuote,
-      items: [...(newQuote.items || []), newItem]
-    });
+    const updatedItems = [...(newQuote.items || []), newItem];
+    setNewQuote((prev) => ({
+      ...prev,
+      items: updatedItems
+    }));
+
+    if (editingQuotationId) {
+      setQuotations((currentList) =>
+        currentList.map((q) =>
+          q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+        )
+      );
+    }
 
     setIsAddItemModalOpen(false);
 
@@ -790,40 +973,72 @@ export function QuotationView() {
 
   // Delete Item from Quotation
   const handleDeleteItem = (itemId: string) => {
-    setNewQuote({
-      ...newQuote,
-      items: (newQuote.items || []).filter((i) => i.id !== itemId)
-    });
+    const updatedItems = (newQuote.items || []).filter((i) => i.id !== itemId);
+    setNewQuote((prev) => ({
+      ...prev,
+      items: updatedItems
+    }));
+
+    if (editingQuotationId) {
+      setQuotations((currentList) =>
+        currentList.map((q) =>
+          q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+        )
+      );
+    }
   };
 
   // Update Item Unit directly
   const handleUpdateItemUnit = (itemId: string, newUnit: string) => {
-    setNewQuote((prev) => ({
-      ...prev,
-      items: (prev.items || []).map((item) =>
+    setNewQuote((prev) => {
+      const updatedItems = (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, unit: newUnit } : item
-      )
-    }));
+      );
+      if (editingQuotationId) {
+        setQuotations((currentList) =>
+          currentList.map((q) =>
+            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+          )
+        );
+      }
+      return { ...prev, items: updatedItems };
+    });
   };
 
   // Update Item Quantity directly
   const handleUpdateItemQuantity = (itemId: string, newQty: number) => {
-    setNewQuote((prev) => ({
-      ...prev,
-      items: (prev.items || []).map((item) =>
-        item.id === itemId ? { ...item, quantity: Math.max(1, isNaN(newQty) ? 1 : newQty) } : item
-      )
-    }));
+    const safeQty = Math.max(1, isNaN(newQty) ? 1 : newQty);
+    setNewQuote((prev) => {
+      const updatedItems = (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, quantity: safeQty } : item
+      );
+      if (editingQuotationId) {
+        setQuotations((currentList) =>
+          currentList.map((q) =>
+            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+          )
+        );
+      }
+      return { ...prev, items: updatedItems };
+    });
   };
 
   // Update Item Unit Price directly
   const handleUpdateItemUnitPrice = (itemId: string, newPrice: number) => {
-    setNewQuote((prev) => ({
-      ...prev,
-      items: (prev.items || []).map((item) =>
-        item.id === itemId ? { ...item, unitPrice: Math.max(0, isNaN(newPrice) ? 0 : newPrice) } : item
-      )
-    }));
+    const safePrice = Math.max(0, isNaN(newPrice) ? 0 : newPrice);
+    setNewQuote((prev) => {
+      const updatedItems = (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, unitPrice: safePrice } : item
+      );
+      if (editingQuotationId) {
+        setQuotations((currentList) =>
+          currentList.map((q) =>
+            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+          )
+        );
+      }
+      return { ...prev, items: updatedItems };
+    });
   };
 
   // Save Quotation (with validation & approval rule triggers)
