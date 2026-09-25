@@ -38,7 +38,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatCompactBDT, formatDate } from '@/lib/formatters';
-import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS } from '@/lib/brandAssets';
+import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS, GLOBO_TECH_SEAL_DATA_URL, GLOBO_TECH_SIGNATURE_DATA_URL } from '@/lib/brandAssets';
 import { Customer, INITIAL_CUSTOMERS } from './CustomersView';
 
 // Types of Quotation Items
@@ -631,6 +631,9 @@ export function QuotationView() {
     warrantyTerms: '',
     notes: ''
   });
+
+  // State to toggle digital Seal & Signature on customer PDF view
+  const [includeSealAndSignature, setIncludeSealAndSignature] = useState(true);
 
   const handleOpenEditTerms = (quote: Quotation) => {
     setTermsForm({
@@ -2429,6 +2432,18 @@ export function QuotationView() {
             </button>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setIncludeSealAndSignature(!includeSealAndSignature)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold text-xs border transition ${
+                  includeSealAndSignature
+                    ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-600/30'
+                    : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700'
+                }`}
+                title="Toggle official digital Seal & Signature on/off"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>{includeSealAndSignature ? 'Seal & Sign: Included' : 'Seal & Sign: Excluded'}</span>
+              </button>
+              <button
                 onClick={() => handleStartEditQuotation(selectedQuotation)}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/40 transition"
                 title="Edit Quotation"
@@ -2640,21 +2655,47 @@ export function QuotationView() {
                 <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
                 <p>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</p>
               </div>
+            </div>
 
-              {/* Signature Block */}
-              <div className="grid grid-cols-2 pt-6 text-center text-xs">
-                <div>
-                  <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
-                  <p className="font-bold text-slate-800">Authorized Signature</p>
-                  <p className="text-slate-500 text-[10px]">Globo Tech</p>
+            {/* Signature Block (Positioned nicely at bottom with authentic Seal & Signature) */}
+            <div className="mt-auto pt-8 sm:pt-14 pb-4">
+              <div className="grid grid-cols-2 text-center text-xs items-end">
+                {/* Left Column: Authorized Signature with Official Seal & Signature */}
+                <div className="flex flex-col items-center">
+                  <div className="relative h-20 sm:h-24 w-52 sm:w-60 flex items-end justify-center">
+                    {includeSealAndSignature && (
+                      <>
+                        {/* Official Globo Tech Rubber Stamp (Seal) */}
+                        <img
+                          src={GLOBO_TECH_SEAL_DATA_URL}
+                          alt="Globo Tech Official Seal"
+                          className="absolute left-3 sm:left-6 -bottom-3.5 w-20 h-20 sm:w-24 sm:h-24 object-contain mix-blend-multiply opacity-90 select-none pointer-events-none transform -rotate-6"
+                        />
+                        {/* Official Executive Signature */}
+                        <img
+                          src={GLOBO_TECH_SIGNATURE_DATA_URL}
+                          alt="Authorized Signature"
+                          className="relative z-10 w-32 sm:w-36 h-auto max-h-16 object-contain mix-blend-multiply select-none pointer-events-none -mb-1 transform translate-x-2"
+                        />
+                      </>
+                    )}
+                  </div>
+                  <div className="w-48 sm:w-56 border-b-2 border-slate-800 mb-1.5"></div>
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm tracking-wide">Authorized Signature</p>
+                  <p className="text-[#008fd5] font-semibold text-[11px] leading-tight">Globo Tech</p>
                 </div>
-                <div>
-                  <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
-                  <p className="font-bold text-slate-800">Customer Acceptance Signature</p>
-                  <p className="text-slate-500 text-[10px]">{selectedQuotation.customerCompany}</p>
-                </div>
+
+                {/* Right Column: Customer Acceptance Signature */}
+                <div className="flex flex-col items-center">
+                  <div className="h-20 sm:h-24 w-52 sm:w-60 flex items-end justify-center">
+                    {/* Space for physical client signature & stamp */}
+                  </div>
+                  <div className="w-48 sm:w-56 border-b-2 border-slate-800 mb-1.5"></div>
+                  <p className="font-bold text-slate-900 text-xs sm:text-sm tracking-wide">Customer Acceptance Signature</p>
+                  <p className="text-slate-700 font-semibold text-[11px] leading-tight truncate max-w-[200px]">{selectedQuotation.customerCompany}</p>
                 </div>
               </div>
+            </div>
 
               {/* Company Pad Footer matching official letterhead (pinned to absolute bottom) */}
               <div className="border-t border-slate-200 pt-2 pb-0 mt-auto text-center text-[11px] text-slate-600 space-y-0.5 pad-footer print:pt-1.5 print:pb-0">
