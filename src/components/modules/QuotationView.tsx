@@ -1593,7 +1593,7 @@ export function QuotationView() {
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:py-6 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-3 sm:space-y-4 overflow-hidden">
+          <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:py-6 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs min-h-[960px] sm:min-h-[1050px] print:min-h-[275mm] flex flex-col justify-between overflow-hidden print:overflow-visible">
             {/* Watermark in background matching company pad */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.05] z-0 overflow-hidden">
               <img
@@ -1603,7 +1603,8 @@ export function QuotationView() {
               />
             </div>
 
-            <div className="relative z-10 space-y-3 sm:space-y-4">
+            <div className="relative z-10 flex-1 flex flex-col justify-between">
+              <div className="space-y-3 sm:space-y-4">
               {/* Header / Brand Layout according to company pad */}
               <div className="border-b-2 border-[#008fd5] pb-2 sm:pb-3">
                 <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
@@ -1760,10 +1761,11 @@ export function QuotationView() {
                   <p className="font-bold text-slate-800">Customer Acceptance Signature</p>
                   <p className="text-slate-500 text-[10px]">{selectedQuotation.customerCompany}</p>
                 </div>
+                </div>
               </div>
 
-              {/* Company Pad Footer matching official letterhead */}
-              <div className="border-t border-slate-200 pt-4 mt-8 text-center text-[11px] text-slate-600 space-y-1">
+              {/* Company Pad Footer matching official letterhead (pinned to bottom) */}
+              <div className="border-t border-slate-200 pt-3 mt-auto text-center text-[11px] text-slate-600 space-y-1 pad-footer">
                 <p className="font-medium text-slate-700">
                   Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                 </p>
