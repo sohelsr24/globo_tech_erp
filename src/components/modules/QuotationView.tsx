@@ -2130,6 +2130,12 @@ export function QuotationView() {
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
                       <option value="">Standard presets...</option>
+                      <option value="No Warranty">No Warranty</option>
+                      <option value="No Warranty Applicable">No Warranty Applicable</option>
+                      <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                      <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
+                      <option value="3 Months Service Warranty">3 Months Service Warranty</option>
+                      <option value="6 Months Service Warranty">6 Months Service Warranty</option>
                       <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
                       <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
                       <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
@@ -3485,6 +3491,12 @@ export function QuotationView() {
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
+                  <option value="No Warranty">No Warranty</option>
+                  <option value="No Warranty Applicable">No Warranty Applicable</option>
+                  <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                  <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
+                  <option value="3 Months Service Warranty">3 Months Service Warranty</option>
+                  <option value="6 Months Service Warranty">6 Months Service Warranty</option>
                   <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
                   <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
                   <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
