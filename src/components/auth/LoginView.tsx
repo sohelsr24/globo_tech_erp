@@ -10,8 +10,7 @@ import {
   ArrowRight,
   AlertCircle,
   Building2,
-  CheckCircle2,
-  Sparkles
+  CheckCircle2
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -55,12 +54,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
         setError('Invalid email or password. Please use registered credentials.');
       }
     }, 400);
-  };
-
-  const handleFillDemo = () => {
-    setEmail('sohelsr24@gmail.com');
-    setPassword('Sohel1234');
-    setError(null);
   };
 
   return (
@@ -184,35 +177,6 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Credentials Autofill Helper */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  Authorized Login Credentials:
-                </span>
-                <button
-                  type="button"
-                  onClick={handleFillDemo}
-                  className="text-[11px] text-blue-400 hover:text-blue-300 font-medium underline"
-                >
-                  Auto-fill
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono bg-slate-900/80 p-2 rounded-lg border border-slate-800/60">
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Email</span>
-                  <span className="text-slate-200 select-all truncate block">sohelsr24@gmail.com</span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block text-[9px] uppercase">Password</span>
-                  <span className="text-slate-200 select-all block">Sohel1234</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Security & Copyright Footer */}
