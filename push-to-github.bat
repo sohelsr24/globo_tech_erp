@@ -10,16 +10,11 @@ echo.
 set "PATH=C:\Users\Sohel\.bin\git\cmd;C:\Users\Sohel\.bin\node-v20.18.0-win-x64;%PATH%"
 
 git add .
-git commit -m "feat: complete Bangladesh Import & Inventory ERP with Quotation module"
-echo.
-echo Pushing to GitHub (main branch)...
-echo If prompted for Username, enter: sohelsr24
-echo If prompted for Password, enter your GitHub Personal Access Token (classic)
-echo.
-git push -u origin main
+git commit -m "update: latest erp updates"
+git push origin main
 
 echo.
 echo ======================================================================
-echo Done! Once authenticated, credentials are saved in Windows.
+echo Successfully pushed to GitHub!
 echo ======================================================================
 pause
