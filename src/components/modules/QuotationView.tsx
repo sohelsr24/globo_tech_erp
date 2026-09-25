@@ -1,0 +1,2183 @@
+'use client';
+
+import React, { useState } from 'react';
+import {
+  FileText,
+  Plus,
+  Search,
+  Filter,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  Layers,
+  ArrowRight,
+  TrendingUp,
+  Printer,
+  Download,
+  Copy,
+  Trash2,
+  Edit3,
+  Eye,
+  Send,
+  Building,
+  User,
+  ShieldCheck,
+  DollarSign,
+  Package,
+  Wrench,
+  Truck,
+  RotateCcw,
+  History,
+  FileCheck,
+  ChevronDown,
+  Info,
+  Calendar,
+  XCircle,
+  Tag
+} from 'lucide-react';
+import { Badge } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
+import { formatBDT, formatCompactBDT, formatDate } from '@/lib/formatters';
+
+// Types of Quotation Items
+export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
+
+export interface QuotationItem {
+  id: string;
+  type: QuotationItemType;
+  name: string;
+  sku?: string;
+  brand?: string;
+  model?: string;
+  description?: string;
+  warehouse?: string;
+  physicalStock?: number;
+  reservedStock?: number;
+  freeStock?: number;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  discountPercent: number;
+  vatPercent: number;
+  // Internal costing (hidden from customer PDF)
+  unitCost: number; // Actual Landed Cost or Estimated Landed Cost
+  leadTime?: string;
+  source?: 'CHINA_IMPORT' | 'LOCAL_PURCHASE' | 'EXISTING_STOCK' | 'PROJECT_PROCUREMENT';
+  warranty?: string;
+  remarks?: string;
+}
+
+export type QuotationStatus =
+  | 'DRAFT'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'SENT'
+  | 'NEGOTIATION'
+  | 'ACCEPTED'
+  | 'REJECTED'
+  | 'EXPIRED'
+  | 'CONVERTED';
+
+export interface QuotationVersion {
+  version: number;
+  date: string;
+  author: string;
+  oldTotal: number;
+  newTotal: number;
+  notes: string;
+}
+
+export interface Quotation {
+  id: string;
+  quotationNumber: string;
+  version: number;
+  type: 'PRODUCT' | 'SERVICE' | 'PRODUCT_SERVICE' | 'PROJECT';
+  date: string;
+  validUntil: string;
+  customerId: string;
+  customerName: string;
+  customerCompany: string;
+  customerType: 'RETAIL' | 'WHOLESALE' | 'CORPORATE';
+  customerPhone: string;
+  customerEmail: string;
+  customerAddress: string;
+  customerBin?: string;
+  salesperson: string;
+  projectName: string;
+  projectLocation: string;
+  reference?: string;
+  currency: string;
+  paymentTerms: string;
+  deliveryTerms: string;
+  warrantyTerms: string;
+  notes?: string;
+  status: QuotationStatus;
+  stockReserved: boolean;
+  requiresApproval: boolean;
+  approvalReason?: string;
+  items: QuotationItem[];
+  additionalDiscount: number;
+  versionHistory: QuotationVersion[];
+  timeline: {
+    date: string;
+    event: string;
+    actor: string;
+    comments?: string;
+  }[];
+}
+
+// Initial In-Stock Catalog for Dynamic Selector
+const STOCK_CATALOG = [
+  {
+    id: 'PRD-001',
+    sku: 'HK-DS2CD2047G2',
+    name: 'Hikvision 4MP ColorVu IP Camera',
+    brand: 'Hikvision',
+    model: 'DS-2CD2047G2-LU',
+    category: 'CCTV & Security',
+    unit: 'pcs',
+    warehouse: 'Dhaka Central Warehouse',
+    physicalStock: 50,
+    reservedStock: 10,
+    freeStock: 40,
+    actualLandedCost: 10000,
+    retailPrice: 15000,
+    wholesalePrice: 12000,
+    projectPrice: 11500,
+    warranty: '24 Months'
+  },
+  {
+    id: 'PRD-002',
+    sku: 'HK-DS7616NI-K2',
+    name: 'Hikvision 16-Channel 4K NVR',
+    brand: 'Hikvision',
+    model: 'DS-7616NI-K2/16P',
+    category: 'CCTV & Security',
+    unit: 'pcs',
+    warehouse: 'Dhaka Central Warehouse',
+    physicalStock: 8,
+    reservedStock: 3,
+    freeStock: 5,
+    actualLandedCost: 32000,
+    retailPrice: 48000,
+    wholesalePrice: 45000,
+    projectPrice: 42000,
+    warranty: '24 Months'
+  },
+  {
+    id: 'PRD-003',
+    sku: 'DL-CAT6-UTP',
+    name: 'D-Link Cat6 UTP Pure Copper Cable (305m)',
+    brand: 'D-Link',
+    model: 'NCB-C6UBLUR-305',
+    category: 'Networking',
+    unit: 'box',
+    warehouse: 'Dhaka Central Warehouse',
+    physicalStock: 45,
+    reservedStock: 5,
+    freeStock: 40,
+    actualLandedCost: 9200,
+    retailPrice: 13500,
+    wholesalePrice: 12000,
+    projectPrice: 11000,
+    warranty: 'Lifetime'
+  },
+  {
+    id: 'PRD-004',
+    sku: 'CS-C9300-24P-A',
+    name: 'Cisco Catalyst 9300 24-Port PoE Switch',
+    brand: 'Cisco',
+    model: 'C9300-24P-A',
+    category: 'Networking',
+    unit: 'unit',
+    warehouse: 'Chittagong Port Transit Hub',
+    physicalStock: 4,
+    reservedStock: 0,
+    freeStock: 4,
+    actualLandedCost: 345000,
+    retailPrice: 420000,
+    wholesalePrice: 395000,
+    projectPrice: 380000,
+    warranty: '36 Months'
+  }
+];
+
+// Initial Quotations including Section 31 Example
+const INITIAL_QUOTATIONS: Quotation[] = [
+  {
+    id: 'QT-2026-001',
+    quotationNumber: 'QT-2026-001',
+    version: 1,
+    type: 'PRODUCT_SERVICE',
+    date: '2026-09-20',
+    validUntil: '2026-10-20',
+    customerId: 'cust-001',
+    customerName: 'Md. Tariqul Islam',
+    customerCompany: 'ABC Bank Ltd.',
+    customerType: 'CORPORATE',
+    customerPhone: '+880 1711-223344',
+    customerEmail: 'procurement@abcbank.com.bd',
+    customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
+    customerBin: 'BIN-001293848-0101',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Head Office CCTV Upgrade',
+    projectLocation: 'Motijheel, Dhaka',
+    reference: 'RFQ-ABC-2026-88',
+    currency: 'BDT',
+    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+    deliveryTerms: 'Within 15 days from PO date',
+    warrantyTerms: '2 Years Comprehensive Hardware Replacement & On-site Support',
+    notes: 'Includes testing, commissioning and cabling support for 3 floors.',
+    status: 'SENT',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-1',
+        type: 'IN_STOCK',
+        name: 'Hikvision 4MP ColorVu IP Camera',
+        sku: 'HK-DS2CD2047G2',
+        brand: 'Hikvision',
+        model: 'DS-2CD2047G2-LU',
+        warehouse: 'Dhaka Central Warehouse',
+        physicalStock: 50,
+        reservedStock: 10,
+        freeStock: 40,
+        unit: 'pcs',
+        quantity: 20,
+        unitPrice: 12000,
+        discountPercent: 0,
+        vatPercent: 7.5,
+        unitCost: 10000,
+        warranty: '24 Months',
+        remarks: 'Main entrance and lobby coverage'
+      },
+      {
+        id: 'item-2',
+        type: 'IN_STOCK',
+        name: 'Hikvision 16-Channel 4K NVR',
+        sku: 'HK-DS7616NI-K2',
+        brand: 'Hikvision',
+        model: 'DS-7616NI-K2/16P',
+        warehouse: 'Dhaka Central Warehouse',
+        physicalStock: 8,
+        reservedStock: 3,
+        freeStock: 5,
+        unit: 'pcs',
+        quantity: 2,
+        unitPrice: 45000,
+        discountPercent: 0,
+        vatPercent: 7.5,
+        unitCost: 32000,
+        warranty: '24 Months',
+        remarks: 'Dual power supply & 4K decoding'
+      },
+      {
+        id: 'item-3',
+        type: 'CUSTOM_PROJECT',
+        name: 'Synology NAS RS2825RP+ (Storage Server)',
+        brand: 'Synology',
+        model: 'RS2825RP+',
+        description: '16-bay Rackmount High-Density Storage for Surveillance Archiving',
+        unit: 'unit',
+        quantity: 1,
+        unitPrice: 450000,
+        discountPercent: 0,
+        vatPercent: 7.5,
+        unitCost: 390000,
+        leadTime: '30 Days',
+        source: 'CHINA_IMPORT',
+        warranty: '36 Months',
+        remarks: 'Custom procurement from China distributor'
+      },
+      {
+        id: 'item-4',
+        type: 'SERVICE',
+        name: 'CCTV Installation & Cabling Commissioning',
+        description: 'Complete conduit laying, termination, camera mounting, and NVR setup',
+        unit: 'Project',
+        quantity: 1,
+        unitPrice: 150000,
+        discountPercent: 0,
+        vatPercent: 7.5,
+        unitCost: 35000,
+        remarks: 'Includes 3 senior network engineers for 5 days'
+      },
+      {
+        id: 'item-5',
+        type: 'OTHER_CHARGE',
+        name: 'Transportation & Site Equipment Logistics',
+        description: 'Covered van freight from Central Warehouse to Client Site',
+        unit: 'Trip',
+        quantity: 1,
+        unitPrice: 20000,
+        discountPercent: 0,
+        vatPercent: 0,
+        unitCost: 15000,
+        remarks: 'Direct delivery with insurance'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-09-20',
+        author: 'Engr. Sohel Rana',
+        oldTotal: 0,
+        newTotal: 1021250,
+        notes: 'Initial quotation generated from client RFQ'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-09-20 10:30 AM',
+        event: 'Quotation Created',
+        actor: 'Engr. Sohel Rana',
+        comments: 'Created with 5 items (In-Stock, Custom NAS, Service & Transport)'
+      },
+      {
+        date: '2026-09-20 02:15 PM',
+        event: 'Sent to Customer',
+        actor: 'Engr. Sohel Rana',
+        comments: 'Official PDF emailed to procurement@abcbank.com.bd'
+      }
+    ]
+  },
+  {
+    id: 'QT-2026-002',
+    quotationNumber: 'QT-2026-002',
+    version: 1,
+    type: 'PRODUCT',
+    date: '2026-09-22',
+    validUntil: '2026-10-07',
+    customerId: 'cust-002',
+    customerName: 'Engr. Kamal Hossain',
+    customerCompany: 'TechVision Security Systems',
+    customerType: 'WHOLESALE',
+    customerPhone: '+880 1819-556677',
+    customerEmail: 'kamal@techvision.com.bd',
+    customerAddress: 'Multiplan Center, Level 6, Elephant Road, Dhaka',
+    customerBin: 'BIN-004819283-0202',
+    salesperson: 'Sales Officer',
+    projectName: 'Dealer Wholesale Restock',
+    projectLocation: 'Elephant Road, Dhaka',
+    currency: 'BDT',
+    paymentTerms: 'Net 15 Days',
+    deliveryTerms: 'Ex-Warehouse Dhaka Central',
+    warrantyTerms: '2 Years Manufacturer Warranty',
+    status: 'ACCEPTED',
+    stockReserved: true,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-201',
+        type: 'IN_STOCK',
+        name: 'Hikvision 4MP ColorVu IP Camera',
+        sku: 'HK-DS2CD2047G2',
+        brand: 'Hikvision',
+        warehouse: 'Dhaka Central Warehouse',
+        physicalStock: 50,
+        reservedStock: 10,
+        freeStock: 40,
+        unit: 'pcs',
+        quantity: 10,
+        unitPrice: 12000,
+        discountPercent: 0,
+        vatPercent: 5,
+        unitCost: 10000,
+        warranty: '24 Months'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-09-22',
+        author: 'Sales Officer',
+        oldTotal: 0,
+        newTotal: 126000,
+        notes: 'Wholesale pricing quote'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-09-22 11:00 AM',
+        event: 'Quotation Created & Accepted',
+        actor: 'Sales Officer',
+        comments: 'Stock reserved (10 pcs camera)'
+      }
+    ]
+  }
+];
+
+export function QuotationView() {
+  const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'PDF'>('LIST');
+
+  // Selected Quotation for Detail / PDF / Edit
+  const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
+
+  // Internal vs Customer toggle for Detail view
+  const [showInternalCosting, setShowInternalCosting] = useState(true);
+
+  // Conversion Modal State
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [convertTarget, setConvertTarget] = useState<'SALES_ORDER' | 'PROJECT' | 'SERVICE' | 'SALES_AND_PROJECT'>('SALES_ORDER');
+
+  // Approval Modal State
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [approvalDecision, setApprovalDecision] = useState<'APPROVE' | 'REJECT'>('APPROVE');
+  const [approvalComment, setApprovalComment] = useState('');
+
+  // Version History Modal State
+  const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
+
+  // ==========================================
+  // NEW QUOTATION FORM STATE
+  // ==========================================
+  const [newQuote, setNewQuote] = useState<Partial<Quotation>>({
+    quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+    version: 1,
+    type: 'PRODUCT_SERVICE',
+    date: new Date().toISOString().split('T')[0],
+    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    customerId: 'cust-001',
+    customerName: 'Md. Tariqul Islam',
+    customerCompany: 'ABC Bank Ltd.',
+    customerType: 'CORPORATE',
+    customerPhone: '+880 1711-223344',
+    customerEmail: 'procurement@abcbank.com.bd',
+    customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
+    customerBin: 'BIN-001293848-0101',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: '',
+    projectLocation: 'Dhaka',
+    reference: '',
+    currency: 'BDT',
+    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+    deliveryTerms: 'Within 15 days from PO date',
+    warrantyTerms: '2 Years Comprehensive Hardware Replacement',
+    notes: '',
+    status: 'DRAFT',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: []
+  });
+
+  // ==========================================
+  // DYNAMIC ADD ITEM MODAL STATE
+  // ==========================================
+  const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [selectedItemCategory, setSelectedItemCategory] = useState<QuotationItemType>('IN_STOCK');
+
+  // Dynamic Item Form Builder
+  const [itemForm, setItemForm] = useState<Partial<QuotationItem>>({
+    type: 'IN_STOCK',
+    name: '',
+    sku: '',
+    brand: '',
+    model: '',
+    description: '',
+    warehouse: 'Dhaka Central Warehouse',
+    physicalStock: 0,
+    reservedStock: 0,
+    freeStock: 0,
+    unit: 'pcs',
+    quantity: 1,
+    unitPrice: 0,
+    discountPercent: 0,
+    vatPercent: 7.5,
+    unitCost: 0,
+    leadTime: 'Immediate',
+    source: 'EXISTING_STOCK',
+    warranty: '24 Months',
+    remarks: ''
+  });
+
+  // Calculation Helpers
+  const calculateItemTotal = (item: QuotationItem) => {
+    const gross = item.quantity * item.unitPrice;
+    const discount = (gross * item.discountPercent) / 100;
+    const net = gross - discount;
+    const vat = (net * item.vatPercent) / 100;
+    return net + vat;
+  };
+
+  const calculateQuotationTotals = (quote: Partial<Quotation>) => {
+    const items = quote.items || [];
+    let productSubtotal = 0;
+    let serviceSubtotal = 0;
+    let otherSubtotal = 0;
+    let totalDiscount = 0;
+    let totalVat = 0;
+    let totalCost = 0;
+
+    items.forEach((item) => {
+      const gross = item.quantity * item.unitPrice;
+      const discount = (gross * item.discountPercent) / 100;
+      const net = gross - discount;
+      const vat = (net * item.vatPercent) / 100;
+      const cost = item.quantity * item.unitCost;
+
+      totalDiscount += discount;
+      totalVat += vat;
+      totalCost += cost;
+
+      if (item.type === 'IN_STOCK' || item.type === 'CUSTOM_PROJECT') {
+        productSubtotal += net;
+      } else if (item.type === 'SERVICE') {
+        serviceSubtotal += net;
+      } else {
+        otherSubtotal += net;
+      }
+    });
+
+    const subtotal = productSubtotal + serviceSubtotal + otherSubtotal;
+    const grandTotal = Math.max(0, subtotal - (quote.additionalDiscount || 0) + totalVat);
+    const estimatedProfit = grandTotal - totalVat - totalCost;
+    const profitMargin = subtotal > 0 ? (estimatedProfit / subtotal) * 100 : 0;
+
+    return {
+      productSubtotal,
+      serviceSubtotal,
+      otherSubtotal,
+      subtotal,
+      totalDiscount,
+      totalVat,
+      totalCost,
+      grandTotal,
+      estimatedProfit,
+      profitMargin
+    };
+  };
+
+  // Filtered Quotations
+  const filteredQuotations = quotations.filter((q) => {
+    const matchSearch =
+      q.quotationNumber.toLowerCase().includes(search.toLowerCase()) ||
+      q.customerCompany.toLowerCase().includes(search.toLowerCase()) ||
+      q.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      q.projectName.toLowerCase().includes(search.toLowerCase());
+
+    const matchStatus = statusFilter === 'ALL' || q.status === statusFilter;
+    return matchSearch && matchStatus;
+  });
+
+  // Dashboard Metrics
+  const totalCount = quotations.length;
+  const draftCount = quotations.filter((q) => q.status === 'DRAFT').length;
+  const sentCount = quotations.filter((q) => q.status === 'SENT').length;
+  const pendingCount = quotations.filter((q) => q.status === 'PENDING_APPROVAL').length;
+  const acceptedCount = quotations.filter((q) => q.status === 'ACCEPTED' || q.status === 'CONVERTED').length;
+  const rejectedCount = quotations.filter((q) => q.status === 'REJECTED').length;
+  const expiredCount = quotations.filter((q) => q.status === 'EXPIRED').length;
+
+  const totalValue = quotations.reduce((acc, q) => acc + calculateQuotationTotals(q).grandTotal, 0);
+  const acceptedValue = quotations
+    .filter((q) => q.status === 'ACCEPTED' || q.status === 'CONVERTED')
+    .reduce((acc, q) => acc + calculateQuotationTotals(q).grandTotal, 0);
+  const conversionRate = totalCount > 0 ? (acceptedCount / totalCount) * 100 : 0;
+
+  // Handle Dynamic Stock Item Selection
+  const handleSelectCatalogProduct = (sku: string) => {
+    const found = STOCK_CATALOG.find((p) => p.sku === sku);
+    if (!found) return;
+
+    // Price auto-suggest based on customer type
+    let suggestedPrice = found.retailPrice;
+    if (newQuote.customerType === 'WHOLESALE') {
+      suggestedPrice = found.wholesalePrice;
+    } else if (newQuote.customerType === 'CORPORATE') {
+      suggestedPrice = found.projectPrice;
+    }
+
+    setItemForm({
+      ...itemForm,
+      type: 'IN_STOCK',
+      sku: found.sku,
+      name: found.name,
+      brand: found.brand,
+      model: found.model,
+      warehouse: found.warehouse,
+      physicalStock: found.physicalStock,
+      reservedStock: found.reservedStock,
+      freeStock: found.freeStock,
+      unit: found.unit,
+      unitPrice: suggestedPrice,
+      unitCost: found.actualLandedCost,
+      warranty: found.warranty,
+      leadTime: 'Immediate'
+    });
+  };
+
+  // Add Item to Quotation
+  const handleAddItemToQuote = () => {
+    if (!itemForm.name || !itemForm.quantity || itemForm.quantity <= 0) {
+      alert('Please enter a valid item name and quantity');
+      return;
+    }
+
+    const newItem: QuotationItem = {
+      id: `item-${Date.now()}`,
+      type: selectedItemCategory,
+      name: itemForm.name || 'Untitled Item',
+      sku: itemForm.sku,
+      brand: itemForm.brand,
+      model: itemForm.model,
+      description: itemForm.description,
+      warehouse: itemForm.warehouse,
+      physicalStock: itemForm.physicalStock || 0,
+      reservedStock: itemForm.reservedStock || 0,
+      freeStock: itemForm.freeStock || 0,
+      unit: itemForm.unit || 'pcs',
+      quantity: Number(itemForm.quantity),
+      unitPrice: Number(itemForm.unitPrice) || 0,
+      discountPercent: Number(itemForm.discountPercent) || 0,
+      vatPercent: Number(itemForm.vatPercent) || 0,
+      unitCost: Number(itemForm.unitCost) || 0,
+      leadTime: itemForm.leadTime || 'Immediate',
+      source: itemForm.source,
+      warranty: itemForm.warranty || 'N/A',
+      remarks: itemForm.remarks
+    };
+
+    setNewQuote({
+      ...newQuote,
+      items: [...(newQuote.items || []), newItem]
+    });
+
+    setIsAddItemModalOpen(false);
+
+    // Reset item form
+    setItemForm({
+      type: 'IN_STOCK',
+      name: '',
+      sku: '',
+      brand: '',
+      model: '',
+      description: '',
+      warehouse: 'Dhaka Central Warehouse',
+      physicalStock: 0,
+      reservedStock: 0,
+      freeStock: 0,
+      unit: 'pcs',
+      quantity: 1,
+      unitPrice: 0,
+      discountPercent: 0,
+      vatPercent: 7.5,
+      unitCost: 0,
+      leadTime: 'Immediate',
+      source: 'EXISTING_STOCK',
+      warranty: '24 Months',
+      remarks: ''
+    });
+  };
+
+  // Delete Item from Quotation
+  const handleDeleteItem = (itemId: string) => {
+    setNewQuote({
+      ...newQuote,
+      items: (newQuote.items || []).filter((i) => i.id !== itemId)
+    });
+  };
+
+  // Save Quotation (with validation & approval rule triggers)
+  const handleSaveQuotation = () => {
+    if (!newQuote.customerCompany || !newQuote.projectName) {
+      alert('Please fill in Customer and Project Name');
+      return;
+    }
+    if (!newQuote.items || newQuote.items.length === 0) {
+      alert('Please add at least one item to the quotation');
+      return;
+    }
+
+    const { grandTotal, totalDiscount } = calculateQuotationTotals(newQuote);
+
+    // Approval Rules
+    let requiresApproval = false;
+    let approvalReason = '';
+
+    if (grandTotal > 1000000) {
+      requiresApproval = true;
+      approvalReason = 'Quotation value exceeds BDT 1,000,000 threshold';
+    } else if (totalDiscount > 50000) {
+      requiresApproval = true;
+      approvalReason = 'High discount threshold exceeded';
+    }
+
+    const savedQuotation: Quotation = {
+      ...(newQuote as Quotation),
+      id: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
+      quotationNumber: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
+      status: requiresApproval ? 'PENDING_APPROVAL' : 'DRAFT',
+      requiresApproval,
+      approvalReason,
+      versionHistory: [
+        {
+          version: 1,
+          date: new Date().toISOString().split('T')[0],
+          author: newQuote.salesperson || 'Sales Officer',
+          oldTotal: 0,
+          newTotal: grandTotal,
+          notes: 'Quotation drafted'
+        }
+      ],
+      timeline: [
+        {
+          date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          event: requiresApproval ? 'Submitted for Approval' : 'Draft Created',
+          actor: newQuote.salesperson || 'Sales Officer',
+          comments: requiresApproval ? approvalReason : 'Saved as working draft'
+        }
+      ]
+    };
+
+    setQuotations([savedQuotation, ...quotations]);
+    setActiveViewMode('LIST');
+  };
+
+  // Conversion Handler
+  const handleConvertQuotation = () => {
+    if (!selectedQuotation) return;
+
+    const updatedQuotations = quotations.map((q) => {
+      if (q.id === selectedQuotation.id) {
+        return {
+          ...q,
+          status: 'CONVERTED' as QuotationStatus,
+          timeline: [
+            ...q.timeline,
+            {
+              date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+              event: `Converted to ${convertTarget.replace(/_/g, ' ')}`,
+              actor: 'Sales Officer',
+              comments: `Downstream pipeline activated for ${q.customerCompany}`
+            }
+          ]
+        };
+      }
+      return q;
+    });
+
+    setQuotations(updatedQuotations);
+    setIsConvertModalOpen(false);
+    alert(`Success! Quotation ${selectedQuotation.quotationNumber} has been converted into ${convertTarget.replace(/_/g, ' ')}. Downstream fulfillment & billing triggered.`);
+    setActiveViewMode('LIST');
+  };
+
+  // Approval Decision Handler
+  const handleApprovalDecision = () => {
+    if (!selectedQuotation) return;
+
+    const updatedQuotations = quotations.map((q) => {
+      if (q.id === selectedQuotation.id) {
+        const newStatus: QuotationStatus = approvalDecision === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+        return {
+          ...q,
+          status: newStatus,
+          requiresApproval: false,
+          timeline: [
+            ...q.timeline,
+            {
+              date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+              event: approvalDecision === 'APPROVE' ? 'Management Approved' : 'Management Rejected',
+              actor: 'Managing Director',
+              comments: approvalComment || (approvalDecision === 'APPROVE' ? 'Commercial terms approved' : 'Pricing revised request')
+            }
+          ]
+        };
+      }
+      return q;
+    });
+
+    setQuotations(updatedQuotations);
+    setIsApprovalModalOpen(false);
+    alert(`Quotation ${selectedQuotation.quotationNumber} ${approvalDecision === 'APPROVE' ? 'Approved' : 'Rejected'} successfully.`);
+    setActiveViewMode('LIST');
+  };
+
+  // Render Status Badge
+  const getStatusBadge = (status: QuotationStatus) => {
+    switch (status) {
+      case 'DRAFT':
+        return <Badge variant="neutral">Draft</Badge>;
+      case 'PENDING_APPROVAL':
+        return <Badge variant="warning">Pending Approval</Badge>;
+      case 'APPROVED':
+        return <Badge variant="blue">Approved</Badge>;
+      case 'SENT':
+        return <Badge variant="info">Sent to Client</Badge>;
+      case 'NEGOTIATION':
+        return <Badge variant="purple">In Negotiation</Badge>;
+      case 'ACCEPTED':
+        return <Badge variant="success">Accepted (Reserved)</Badge>;
+      case 'REJECTED':
+        return <Badge variant="danger">Rejected</Badge>;
+      case 'EXPIRED':
+        return <Badge variant="neutral">Expired</Badge>;
+      case 'CONVERTED':
+        return <Badge variant="success">Converted to Order</Badge>;
+      default:
+        return <Badge variant="neutral">{status}</Badge>;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* ========================================================
+          1. HEADER & TOP ACTIONS
+          ======================================================== */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-400" />
+            Enterprise Quotation & Tender System
+          </h2>
+          <p className="text-xs text-slate-400">
+            Unified Product, Service, Custom Project, and Freight tender management with dynamic free-stock validation
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeViewMode !== 'LIST' && (
+            <button
+              onClick={() => setActiveViewMode('LIST')}
+              className="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
+            >
+              &larr; Back to Quotation List
+            </button>
+          )}
+
+          {activeViewMode === 'LIST' && (
+            <button
+              onClick={() => {
+                setNewQuote({
+                  ...newQuote,
+                  quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+                  items: []
+                });
+                setActiveViewMode('CREATE');
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ New Quotation</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ========================================================
+          2. DASHBOARD KPI CARDS (Always visible or in LIST mode)
+          ======================================================== */}
+      {activeViewMode === 'LIST' && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">Total Quotations</span>
+              <p className="text-xl font-bold text-slate-100 mt-0.5">{totalCount}</p>
+              <span className="text-[10px] text-blue-400 font-medium">All Lifetime Quotes</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">Total Value</span>
+              <p className="text-xl font-bold text-blue-400 mt-0.5">{formatCompactBDT(totalValue)}</p>
+              <span className="text-[10px] text-slate-500">{formatBDT(totalValue)}</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">Accepted Value</span>
+              <p className="text-xl font-bold text-emerald-400 mt-0.5">{formatCompactBDT(acceptedValue)}</p>
+              <span className="text-[10px] text-emerald-400 font-semibold">{conversionRate.toFixed(1)}% Win Rate</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">In Pipeline (Sent/Pending)</span>
+              <p className="text-xl font-bold text-amber-400 mt-0.5">{sentCount + pendingCount}</p>
+              <span className="text-[10px] text-amber-400">Active client reviews</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span className="text-[11px] text-slate-400 font-medium">Drafts & Revisions</span>
+              <p className="text-xl font-bold text-purple-400 mt-0.5">{draftCount}</p>
+              <span className="text-[10px] text-slate-500">Unsubmitted quotes</span>
+            </div>
+          </div>
+
+          {/* Search & Quick Status Filters */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 bg-slate-900 border border-slate-800 rounded-xl">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search Quote #, Client, Project..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+              {['ALL', 'DRAFT', 'SENT', 'PENDING_APPROVAL', 'ACCEPTED', 'CONVERTED', 'REJECTED'].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
+                    statusFilter === st
+                      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
+                      : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  {st.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Quotations Master Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="px-4 py-3">Quote # & Date</th>
+                    <th className="px-4 py-3">Customer & Project</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Items</th>
+                    <th className="px-4 py-3 text-right">Grand Total (BDT)</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Stock State</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredQuotations.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                        No matching quotations found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredQuotations.map((q) => {
+                      const totals = calculateQuotationTotals(q);
+
+                      return (
+                        <tr key={q.id} className="hover:bg-slate-800/40 transition">
+                          <td className="px-4 py-3">
+                            <div className="font-mono font-bold text-blue-400 flex items-center gap-1.5">
+                              {q.quotationNumber}
+                              <span className="text-[10px] text-slate-500 font-normal">v{q.version}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500">{formatDate(q.date)}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="font-semibold text-slate-100">{q.customerCompany}</div>
+                            <div className="text-[11px] text-slate-400">{q.projectName}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge variant={q.type === 'PRODUCT_SERVICE' ? 'purple' : q.type === 'PRODUCT' ? 'blue' : 'info'}>
+                              {q.type.replace(/_/g, ' + ')}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-slate-400">
+                            {q.items.length} Lines
+                            <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                              {q.items.map((i) => i.name).join(', ')}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-slate-100">
+                            {formatBDT(totals.grandTotal)}
+                          </td>
+                          <td className="px-4 py-3">{getStatusBadge(q.status)}</td>
+                          <td className="px-4 py-3">
+                            {q.stockReserved ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                                <ShieldCheck className="w-3 h-3" /> Reserved
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-slate-500">Unreserved</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => {
+                                setSelectedQuotation(q);
+                                setActiveViewMode('DETAIL');
+                              }}
+                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-xs border border-slate-700 transition"
+                            >
+                              Inspect
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedQuotation(q);
+                                setActiveViewMode('PDF');
+                              }}
+                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition"
+                              title="Print / View Customer PDF"
+                            >
+                              <Printer className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                              PDF
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          3. CREATE / EDIT QUOTATION VIEW
+          ======================================================== */}
+      {activeViewMode === 'CREATE' && (
+        <div className="space-y-6">
+          {/* Top Form Header Card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-800 pb-3 gap-2">
+              <div>
+                <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-400" />
+                  Quotation Specification & Header
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Assign customer, project parameters, terms of warranty, and quotation scope
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs font-bold text-blue-400 bg-blue-950/60 px-3 py-1 rounded border border-blue-800/60">
+                  {newQuote.quotationNumber}
+                </span>
+                <span className="text-xs text-slate-400 font-semibold">Rev {newQuote.version}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Customer / Organization *</label>
+                <select
+                  value={newQuote.customerCompany}
+                  onChange={(e) => {
+                    const company = e.target.value;
+                    if (company === 'ABC Bank Ltd.') {
+                      setNewQuote({
+                        ...newQuote,
+                        customerCompany: 'ABC Bank Ltd.',
+                        customerName: 'Md. Tariqul Islam',
+                        customerType: 'CORPORATE',
+                        customerPhone: '+880 1711-223344',
+                        customerEmail: 'procurement@abcbank.com.bd',
+                        customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
+                        customerBin: 'BIN-001293848-0101'
+                      });
+                    } else if (company === 'TechVision Security Systems') {
+                      setNewQuote({
+                        ...newQuote,
+                        customerCompany: 'TechVision Security Systems',
+                        customerName: 'Engr. Kamal Hossain',
+                        customerType: 'WHOLESALE',
+                        customerPhone: '+880 1819-556677',
+                        customerEmail: 'kamal@techvision.com.bd',
+                        customerAddress: 'Multiplan Center, Level 6, Elephant Road, Dhaka',
+                        customerBin: 'BIN-004819283-0202'
+                      });
+                    } else {
+                      setNewQuote({
+                        ...newQuote,
+                        customerCompany: 'Square Pharmaceuticals Ltd',
+                        customerName: 'Dr. Rafiqul Hasan',
+                        customerType: 'CORPORATE',
+                        customerPhone: '+880 1912-334455',
+                        customerEmail: 'projects@squarepharma.com.bd',
+                        customerAddress: 'Square Centre, 48 Mohakhali C/A, Dhaka-1212',
+                        customerBin: 'BIN-009928172-0303'
+                      });
+                    }
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                >
+                  <option value="ABC Bank Ltd.">ABC Bank Ltd. (Corporate)</option>
+                  <option value="TechVision Security Systems">TechVision Security Systems (Wholesale)</option>
+                  <option value="Square Pharmaceuticals Ltd">Square Pharmaceuticals Ltd (Corporate)</option>
+                </select>
+                <div className="mt-1 text-[11px] text-slate-400">
+                  Tier: <span className="text-blue-400 font-semibold">{newQuote.customerType}</span> &bull; BIN: {newQuote.customerBin}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Project Name & Site *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Head Office CCTV Modernization"
+                  value={newQuote.projectName}
+                  onChange={(e) => setNewQuote({ ...newQuote, projectName: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
+                />
+                <input
+                  type="text"
+                  placeholder="Project Location (e.g. Motijheel, Dhaka)"
+                  value={newQuote.projectLocation}
+                  onChange={(e) => setNewQuote({ ...newQuote, projectLocation: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-slate-300 mt-1 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Scope & Quotation Type</label>
+                <select
+                  value={newQuote.type}
+                  onChange={(e) => setNewQuote({ ...newQuote, type: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                >
+                  <option value="PRODUCT_SERVICE">Product + Installation Service</option>
+                  <option value="PRODUCT">Product Only (Supply)</option>
+                  <option value="SERVICE">Service & Maintenance Only</option>
+                  <option value="PROJECT">Turnkey Custom Project</option>
+                </select>
+
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-500">Quote Date:</span>
+                    <input
+                      type="date"
+                      value={newQuote.date}
+                      onChange={(e) => setNewQuote({ ...newQuote, date: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-300"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">Valid Until:</span>
+                    <input
+                      type="date"
+                      value={newQuote.validUntil}
+                      onChange={(e) => setNewQuote({ ...newQuote, validUntil: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-300"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ========================================================
+              DYNAMIC ITEM TABLE
+              ======================================================== */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-purple-400" />
+                  Dynamic Quotation Items ({newQuote.items?.length || 0} line items)
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Combine In-Stock items, Custom/China imports, Installation Services, and Freight charges
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedItemCategory('IN_STOCK');
+                    setIsAddItemModalOpen(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-md shadow-blue-500/20"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add Item</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="px-3 py-2.5">SL</th>
+                    <th className="px-3 py-2.5">Type</th>
+                    <th className="px-3 py-2.5">Item Description & Specifications</th>
+                    <th className="px-3 py-2.5">Warehouse / Stock Status</th>
+                    <th className="px-3 py-2.5 text-center">Quoted Qty</th>
+                    <th className="px-3 py-2.5 text-right">Unit Price</th>
+                    <th className="px-3 py-2.5 text-right">VAT%</th>
+                    <th className="px-3 py-2.5 text-right">Line Total</th>
+                    <th className="px-3 py-2.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {!newQuote.items || newQuote.items.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
+                        No items added yet. Click &ldquo;+ Add Item&rdquo; above to select In-Stock products, custom items, or services.
+                      </td>
+                    </tr>
+                  ) : (
+                    newQuote.items.map((item, idx) => {
+                      const total = calculateItemTotal(item);
+                      const isStockExceeded = item.type === 'IN_STOCK' && (item.freeStock || 0) < item.quantity;
+
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-800/40 transition">
+                          <td className="px-3 py-2.5 font-bold text-slate-400">{idx + 1}</td>
+                          <td className="px-3 py-2.5">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${
+                                item.type === 'IN_STOCK'
+                                  ? 'bg-blue-950 text-blue-300 border-blue-800'
+                                  : item.type === 'CUSTOM_PROJECT'
+                                  ? 'bg-purple-950 text-purple-300 border-purple-800'
+                                  : item.type === 'SERVICE'
+                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                  : 'bg-amber-950 text-amber-300 border-amber-800'
+                              }`}
+                            >
+                              {item.type.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <div className="font-semibold text-slate-100">{item.name}</div>
+                            {item.sku && <span className="font-mono text-[10px] text-slate-400 mr-2">{item.sku}</span>}
+                            {item.leadTime && item.leadTime !== 'Immediate' && (
+                              <span className="text-[10px] text-amber-400 font-semibold">Lead Time: {item.leadTime}</span>
+                            )}
+                            {item.remarks && <p className="text-[10px] text-slate-400 italic mt-0.5">{item.remarks}</p>}
+                          </td>
+                          <td className="px-3 py-2.5">
+                            {item.type === 'IN_STOCK' ? (
+                              <div>
+                                <span className="text-slate-300">{item.warehouse}</span>
+                                <div className="text-[10px] flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-emerald-400 font-semibold">Free: {item.freeStock} {item.unit}</span>
+                                  <span className="text-slate-500">(Phys: {item.physicalStock})</span>
+                                </div>
+                                {isStockExceeded && (
+                                  <div className="text-[10px] text-rose-400 font-bold flex items-center gap-1 mt-0.5">
+                                    <AlertTriangle className="w-3 h-3" /> Insufficient Stock!
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-slate-500 text-[11px]">Non-Inventory Charge</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-100">
+                            {item.quantity} {item.unit}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-200">
+                            {formatBDT(item.unitPrice)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-400">
+                            {item.vatPercent}%
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-100">
+                            {formatBDT(total)}
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <button
+                              onClick={() => handleDeleteItem(item.id)}
+                              className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                              title="Delete Item"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Calculations Summary Row */}
+            {newQuote.items && newQuote.items.length > 0 && (
+              <div className="border-t border-slate-800 pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Internal Profit / Costing Preview Box */}
+                <div className="p-4 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2 text-xs">
+                  <div className="flex items-center justify-between pb-1 border-b border-slate-800">
+                    <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+                      Internal Cost & Margin Preview (Hidden from Customer PDF)
+                    </span>
+                    <Badge variant="purple">Internal Audit</Badge>
+                  </div>
+                  {(() => {
+                    const totals = calculateQuotationTotals(newQuote);
+                    return (
+                      <div className="grid grid-cols-3 gap-2 pt-1 text-slate-300">
+                        <div>
+                          <span className="text-[10px] text-slate-500 block">Total Landed/Est Cost:</span>
+                          <span className="font-mono font-bold text-slate-200">{formatBDT(totals.totalCost)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 block">Estimated Gross Profit:</span>
+                          <span className="font-mono font-bold text-emerald-400">{formatBDT(totals.estimatedProfit)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 block">Profit Margin %:</span>
+                          <span className="font-mono font-bold text-blue-400">{totals.profitMargin.toFixed(1)}%</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Customer Facing Subtotals */}
+                <div className="space-y-1.5 text-xs text-slate-300">
+                  {(() => {
+                    const totals = calculateQuotationTotals(newQuote);
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Product Subtotal:</span>
+                          <span className="font-mono text-slate-200">{formatBDT(totals.productSubtotal)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Installation & Service Charges:</span>
+                          <span className="font-mono text-slate-200">{formatBDT(totals.serviceSubtotal)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Transportation & Other Charges:</span>
+                          <span className="font-mono text-slate-200">{formatBDT(totals.otherSubtotal)}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Calculated VAT:</span>
+                          <span className="font-mono">{formatBDT(totals.totalVat)}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-t border-slate-800 text-sm font-bold text-slate-100">
+                          <span>Grand Total (BDT):</span>
+                          <span className="font-mono text-base text-blue-400">{formatBDT(totals.grandTotal)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              onClick={() => setActiveViewMode('LIST')}
+              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveQuotation}
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-blue-500/20"
+            >
+              Save & Finalize Quotation
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          4. QUOTATION DETAIL / AUDIT VIEW
+          ======================================================== */}
+      {activeViewMode === 'DETAIL' && selectedQuotation && (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="p-5 bg-slate-900 border border-slate-800 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-bold text-slate-100 font-mono">{selectedQuotation.quotationNumber}</h3>
+                {getStatusBadge(selectedQuotation.status)}
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-mono text-slate-300 border border-slate-700">
+                  Version {selectedQuotation.version}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Project: <strong className="text-slate-200">{selectedQuotation.projectName}</strong> &bull; Client: {selectedQuotation.customerCompany}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {/* Approval Button if Pending */}
+              {selectedQuotation.status === 'PENDING_APPROVAL' && (
+                <button
+                  onClick={() => setIsApprovalModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition"
+                >
+                  Review Approval
+                </button>
+              )}
+
+              {/* Conversion Button if Accepted/Approved */}
+              {(selectedQuotation.status === 'ACCEPTED' || selectedQuotation.status === 'APPROVED' || selectedQuotation.status === 'SENT') && (
+                <button
+                  onClick={() => setIsConvertModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-md shadow-emerald-500/20"
+                >
+                  Convert Quotation &rarr;
+                </button>
+              )}
+
+              <button
+                onClick={() => setIsVersionModalOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition"
+              >
+                <History className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                Versions ({selectedQuotation.versionHistory.length})
+              </button>
+
+              <button
+                onClick={() => setActiveViewMode('PDF')}
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-md shadow-blue-500/20"
+              >
+                <Printer className="w-3.5 h-3.5 inline mr-1" />
+                Printable PDF
+              </button>
+            </div>
+          </div>
+
+          {/* Toggle Customer vs Internal View */}
+          <div className="flex items-center justify-between bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl">
+            <span className="text-xs text-slate-400">View Auditing Perspective:</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowInternalCosting(false)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  !showInternalCosting ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Customer Presentation View
+              </button>
+              <button
+                onClick={() => setShowInternalCosting(true)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  showInternalCosting ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Internal Costing & Profit View
+              </button>
+            </div>
+          </div>
+
+          {/* Detail Item Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg p-5 space-y-4">
+            <h4 className="font-bold text-xs text-slate-200 uppercase tracking-wider">Line Items Specification</h4>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="px-3 py-2.5">SL</th>
+                    <th className="px-3 py-2.5">Category</th>
+                    <th className="px-3 py-2.5">Item & Model</th>
+                    <th className="px-3 py-2.5 text-center">Quoted Qty</th>
+                    {showInternalCosting && <th className="px-3 py-2.5 text-right">Landed Cost</th>}
+                    <th className="px-3 py-2.5 text-right">Selling Price</th>
+                    {showInternalCosting && <th className="px-3 py-2.5 text-right">Estimated Margin</th>}
+                    <th className="px-3 py-2.5 text-right">Line Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {selectedQuotation.items.map((item, idx) => {
+                    const lineTotal = calculateItemTotal(item);
+                    const lineCost = item.quantity * item.unitCost;
+                    const lineProfit = lineTotal - lineCost;
+                    const lineMargin = lineTotal > 0 ? (lineProfit / lineTotal) * 100 : 0;
+
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-800/40">
+                        <td className="px-3 py-2.5 text-slate-500 font-bold">{idx + 1}</td>
+                        <td className="px-3 py-2.5">
+                          <span className="text-[10px] font-bold text-slate-300 uppercase">
+                            {item.type.replace(/_/g, ' ')}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="font-semibold text-slate-100">{item.name}</div>
+                          {item.brand && <span className="text-[10px] text-slate-400 mr-2">{item.brand}</span>}
+                          {item.leadTime && <span className="text-[10px] text-amber-400">Lead Time: {item.leadTime}</span>}
+                        </td>
+                        <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-200">
+                          {item.quantity} {item.unit}
+                        </td>
+                        {showInternalCosting && (
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-400">
+                            {formatBDT(item.unitCost)}
+                          </td>
+                        )}
+                        <td className="px-3 py-2.5 text-right font-mono text-slate-200">
+                          {formatBDT(item.unitPrice)}
+                        </td>
+                        {showInternalCosting && (
+                          <td className="px-3 py-2.5 text-right font-mono text-emerald-400 font-semibold">
+                            {lineMargin.toFixed(1)}%
+                          </td>
+                        )}
+                        <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-100">
+                          {formatBDT(lineTotal)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Financial Summary */}
+            <div className="pt-4 border-t border-slate-800 flex justify-end">
+              <div className="w-72 space-y-1.5 text-xs text-slate-300">
+                {(() => {
+                  const totals = calculateQuotationTotals(selectedQuotation);
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Subtotal:</span>
+                        <span className="font-mono text-slate-200">{formatBDT(totals.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-400">
+                        <span>Total VAT:</span>
+                        <span className="font-mono">{formatBDT(totals.totalVat)}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-t border-slate-800 text-sm font-bold text-blue-400">
+                        <span>Grand Total:</span>
+                        <span className="font-mono text-base">{formatBDT(totals.grandTotal)}</span>
+                      </div>
+                      {showInternalCosting && (
+                        <div className="p-2.5 bg-slate-950 rounded-lg border border-slate-800 text-[11px] space-y-1 mt-2">
+                          <div className="flex justify-between text-slate-400">
+                            <span>Total Estimated Cost:</span>
+                            <span className="font-mono">{formatBDT(totals.totalCost)}</span>
+                          </div>
+                          <div className="flex justify-between text-emerald-400 font-bold">
+                            <span>Gross Margin:</span>
+                            <span className="font-mono">{totals.profitMargin.toFixed(1)}% ({formatBDT(totals.estimatedProfit)})</span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          5. CUSTOMER-FACING PRINTABLE A4 PDF VIEW
+          ======================================================== */}
+      {activeViewMode === 'PDF' && selectedQuotation && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between no-print">
+            <button
+              onClick={() => setActiveViewMode('LIST')}
+              className="px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-xs font-semibold"
+            >
+              &larr; Back
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+            >
+              <Printer className="w-4 h-4" />
+              <span>Print Customer Quotation (A4)</span>
+            </button>
+          </div>
+
+          {/* Printable White Sheet Document */}
+          <div className="bg-white text-slate-900 rounded-xl p-8 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-6">
+            {/* Header / Brand */}
+            <div className="flex justify-between items-start border-b border-slate-200 pb-5">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-black text-white text-lg">
+                    A
+                  </div>
+                  <h1 className="text-xl font-bold text-slate-900 tracking-tight">Apex Enterprise Bangladesh</h1>
+                </div>
+                <p className="text-slate-500 text-[11px] leading-relaxed">
+                  Level 11, Sena Kalyan Bhaban, Motijheel C/A, Dhaka-1000<br />
+                  BIN: 001928374-0101 &bull; Tel: +880 2 9568899 &bull; info@apexenterprise.com.bd
+                </p>
+              </div>
+
+              <div className="text-right">
+                <h2 className="text-lg font-black text-blue-600 uppercase tracking-widest">OFFICIAL QUOTATION</h2>
+                <p className="font-mono font-bold text-slate-800 mt-1">{selectedQuotation.quotationNumber}</p>
+                <p className="text-slate-500 text-[11px]">Date: {formatDate(selectedQuotation.date)}</p>
+                <p className="text-slate-500 text-[11px]">Valid Until: {formatDate(selectedQuotation.validUntil)}</p>
+              </div>
+            </div>
+
+            {/* Client & Project Information */}
+            <div className="grid grid-cols-2 gap-6 p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+              <div>
+                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Quotation Prepared For:</span>
+                <p className="font-bold text-slate-900 text-sm">{selectedQuotation.customerCompany}</p>
+                <p className="text-slate-700">Attn: {selectedQuotation.customerName}</p>
+                <p className="text-slate-600">{selectedQuotation.customerAddress}</p>
+                <p className="text-slate-600">Phone: {selectedQuotation.customerPhone}</p>
+                {selectedQuotation.customerBin && <p className="font-mono text-slate-600">BIN: {selectedQuotation.customerBin}</p>}
+              </div>
+
+              <div>
+                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Project & Sales Representative:</span>
+                <p className="font-bold text-slate-900 text-sm">{selectedQuotation.projectName}</p>
+                <p className="text-slate-700">Location: {selectedQuotation.projectLocation}</p>
+                <p className="text-slate-600">Sales Representative: {selectedQuotation.salesperson}</p>
+                <p className="text-slate-600">Reference: {selectedQuotation.reference || 'Direct RFQ'}</p>
+              </div>
+            </div>
+
+            {/* Clean Customer Facing Item Table (NO Internal Cost, NO Profit, NO Stock Levels) */}
+            <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+              <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
+                <tr>
+                  <th className="p-2.5">SL</th>
+                  <th className="p-2.5">Description & Specification</th>
+                  <th className="p-2.5 text-center">Qty</th>
+                  <th className="p-2.5 text-right">Unit Price (BDT)</th>
+                  <th className="p-2.5 text-right">VAT</th>
+                  <th className="p-2.5 text-right">Total (BDT)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 text-slate-800">
+                {selectedQuotation.items.map((item, idx) => (
+                  <tr key={item.id}>
+                    <td className="p-2.5 font-bold text-slate-400">{idx + 1}</td>
+                    <td className="p-2.5">
+                      <div className="font-bold text-slate-900">{item.name}</div>
+                      {item.brand && <span className="text-[10px] text-slate-500 mr-2">Brand: {item.brand}</span>}
+                      {item.warranty && <span className="text-[10px] text-emerald-700 font-semibold mr-2">Warranty: {item.warranty}</span>}
+                      {item.leadTime && item.leadTime !== 'Immediate' && (
+                        <span className="text-[10px] text-amber-700 font-semibold">Delivery: {item.leadTime}</span>
+                      )}
+                    </td>
+                    <td className="p-2.5 text-center font-mono font-bold">
+                      {item.quantity} {item.unit}
+                    </td>
+                    <td className="p-2.5 text-right font-mono">
+                      {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="p-2.5 text-right font-mono text-slate-600">{item.vatPercent}%</td>
+                    <td className="p-2.5 text-right font-mono font-bold">
+                      {calculateItemTotal(item).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Totals Breakdown */}
+            <div className="flex justify-end pt-2">
+              <div className="w-64 space-y-1.5 text-xs text-slate-700">
+                {(() => {
+                  const totals = calculateQuotationTotals(selectedQuotation);
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Items Subtotal:</span>
+                        <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.subtotal)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total VAT:</span>
+                        <span className="font-mono text-slate-900">{formatBDT(totals.totalVat)}</span>
+                      </div>
+                      <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 text-sm font-black text-slate-900">
+                        <span>Grand Total:</span>
+                        <span className="font-mono text-blue-600">{formatBDT(totals.grandTotal)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Commercial Terms & Conditions */}
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
+              <h4 className="font-bold text-slate-900 uppercase text-[10px]">Terms & Conditions:</h4>
+              <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
+              <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
+              <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
+              <p>&bull; <strong>Validity:</strong> Quotation valid for 30 calendar days from issue date.</p>
+            </div>
+
+            {/* Signature Block */}
+            <div className="grid grid-cols-2 pt-8 text-center text-xs">
+              <div>
+                <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
+                <p className="font-bold text-slate-800">Authorized Signature</p>
+                <p className="text-slate-500 text-[10px]">Apex Enterprise Bangladesh</p>
+              </div>
+              <div>
+                <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
+                <p className="font-bold text-slate-800">Customer Acceptance Signature</p>
+                <p className="text-slate-500 text-[10px]">{selectedQuotation.customerCompany}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          6. MODAL: DYNAMIC ADD ITEM DIALOG (Continuous adding)
+          ======================================================== */}
+      {isAddItemModalOpen && (
+        <Modal
+          isOpen={isAddItemModalOpen}
+          onClose={() => setIsAddItemModalOpen(false)}
+          title="Add Line Item to Quotation"
+          size="lg"
+        >
+          <div className="space-y-4">
+            {/* Item Type Selector Tabs */}
+            <div className="grid grid-cols-4 gap-2 border-b border-slate-800 pb-3">
+              {[
+                { type: 'IN_STOCK', label: 'In-Stock Product', icon: Package },
+                { type: 'CUSTOM_PROJECT', label: 'Custom / Project', icon: Wrench },
+                { type: 'SERVICE', label: 'Installation / Service', icon: Building },
+                { type: 'OTHER_CHARGE', label: 'Other Charge', icon: Truck },
+              ].map((cat) => {
+                const Icon = cat.icon;
+                const isSelected = selectedItemCategory === cat.type;
+                return (
+                  <button
+                    key={cat.type}
+                    onClick={() => {
+                      setSelectedItemCategory(cat.type as QuotationItemType);
+                      setItemForm({
+                        ...itemForm,
+                        type: cat.type as QuotationItemType,
+                        name: '',
+                        quantity: 1,
+                        unitPrice: 0
+                      });
+                    }}
+                    className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-xs font-semibold transition ${
+                      isSelected
+                        ? 'bg-blue-600/20 text-blue-400 border-blue-500'
+                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 mb-1" />
+                    <span>{cat.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Category Form 1: IN_STOCK PRODUCT */}
+            {selectedItemCategory === 'IN_STOCK' && (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    Select From Warehouse Inventory *
+                  </label>
+                  <select
+                    value={itemForm.sku}
+                    onChange={(e) => handleSelectCatalogProduct(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-medium"
+                  >
+                    <option value="">-- Choose In-Stock Product --</option>
+                    {STOCK_CATALOG.map((p) => (
+                      <option key={p.sku} value={p.sku}>
+                        {p.name} ({p.sku}) &bull; Free: {p.freeStock} {p.unit} &bull; ৳{p.projectPrice}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {itemForm.sku && (
+                  <div className="p-3 bg-slate-950 rounded-lg border border-slate-800 grid grid-cols-3 gap-2">
+                    <div>
+                      <span className="text-[10px] text-slate-500">Warehouse:</span>
+                      <p className="font-semibold text-slate-200">{itemForm.warehouse}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500">Free Stock Available:</span>
+                      <p className="font-bold text-emerald-400 font-mono">
+                        {itemForm.freeStock} {itemForm.unit} (Phys: {itemForm.physicalStock})
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500">Landed Cost (Actual):</span>
+                      <p className="font-bold text-slate-300 font-mono">{formatBDT(itemForm.unitCost)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Category Form 2: CUSTOM / PROJECT PRODUCT */}
+            {selectedItemCategory === 'CUSTOM_PROJECT' && (
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Product Name *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Synology NAS RS2825RP+"
+                      value={itemForm.name}
+                      onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Brand & Model</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Synology / RS2825RP+"
+                      value={itemForm.brand}
+                      onChange={(e) => setItemForm({ ...itemForm, brand: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Procurement Source</label>
+                    <select
+                      value={itemForm.source}
+                      onChange={(e) => setItemForm({ ...itemForm, source: e.target.value as any })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    >
+                      <option value="CHINA_IMPORT">China Import</option>
+                      <option value="LOCAL_PURCHASE">Local Distributor Purchase</option>
+                      <option value="PROJECT_PROCUREMENT">Project Specific Tender</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Est. Landed Cost (BDT)</label>
+                    <input
+                      type="number"
+                      placeholder="390000"
+                      value={itemForm.unitCost}
+                      onChange={(e) => setItemForm({ ...itemForm, unitCost: Number(e.target.value) })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Estimated Lead Time</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 30 Days"
+                      value={itemForm.leadTime}
+                      onChange={(e) => setItemForm({ ...itemForm, leadTime: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Category Form 3: SERVICE */}
+            {selectedItemCategory === 'SERVICE' && (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">Service Name *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. CCTV Installation, Cabling & Commissioning"
+                    value={itemForm.name}
+                    onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Service Unit</label>
+                    <select
+                      value={itemForm.unit}
+                      onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    >
+                      <option value="Project">Project (Lump Sum)</option>
+                      <option value="Points">Points (Per Camera/Node)</option>
+                      <option value="Days">Days (Man-day)</option>
+                      <option value="Hours">Hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Est. Labor Cost (BDT)</label>
+                    <input
+                      type="number"
+                      placeholder="35000"
+                      value={itemForm.unitCost}
+                      onChange={(e) => setItemForm({ ...itemForm, unitCost: Number(e.target.value) })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Category Form 4: OTHER CHARGE */}
+            {selectedItemCategory === 'OTHER_CHARGE' && (
+              <div className="space-y-3 text-xs">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Charge Title *</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Transportation & Logistics"
+                      value={itemForm.name}
+                      onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-400 font-semibold mb-1">Unit</label>
+                    <input
+                      type="text"
+                      placeholder="Trip / Event"
+                      value={itemForm.unit}
+                      onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })}
+                      className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Common Item Parameters (Qty, Quoted Price, VAT) */}
+            <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-800">
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Quantity *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={itemForm.quantity}
+                  onChange={(e) => setItemForm({ ...itemForm, quantity: Number(e.target.value) })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Quoted Unit Price (BDT) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={itemForm.unitPrice}
+                  onChange={(e) => setItemForm({ ...itemForm, unitPrice: Number(e.target.value) })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono font-bold text-blue-400"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">VAT %</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={itemForm.vatPercent}
+                  onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Dynamic Stock Warning when quantity exceeds free stock */}
+            {selectedItemCategory === 'IN_STOCK' && (itemForm.freeStock || 0) < (itemForm.quantity || 1) && (
+              <div className="p-2.5 bg-rose-950/80 border border-rose-800 rounded-lg text-xs text-rose-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  <strong>Warning:</strong> Quoted quantity ({itemForm.quantity}) exceeds currently available free stock ({itemForm.freeStock}).
+                </span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsAddItemModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddItemToQuote}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-blue-500/20"
+              >
+                Append Item to Quotation
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          7. MODAL: 1-CLICK QUOTATION CONVERSION
+          ======================================================== */}
+      {isConvertModalOpen && selectedQuotation && (
+        <Modal
+          isOpen={isConvertModalOpen}
+          onClose={() => setIsConvertModalOpen(false)}
+          title={`Convert Quotation ${selectedQuotation.quotationNumber}`}
+          size="md"
+        >
+          <div className="space-y-4 text-xs">
+            <p className="text-slate-300">
+              Customer accepted quote. Choose downstream workflow to activate:
+            </p>
+
+            <div className="space-y-2">
+              {[
+                { id: 'SALES_ORDER', title: 'Convert to Sales Order', desc: 'Proceed with commercial invoicing, stock dispatch, and customer payment receipt.' },
+                { id: 'PROJECT', title: 'Convert to Installation Project', desc: 'Initialize installation project site, technician tasks, and landed-cost material issues.' },
+                { id: 'SALES_AND_PROJECT', title: 'Convert to Sales Order + Project', desc: 'Generate simultaneous sales order for hardware and project workspace for installation labor.' },
+              ].map((opt) => (
+                <label
+                  key={opt.id}
+                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
+                    convertTarget === opt.id
+                      ? 'bg-blue-600/15 border-blue-500 text-slate-100'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="convertTarget"
+                    checked={convertTarget === opt.id}
+                    onChange={() => setConvertTarget(opt.id as any)}
+                    className="mt-0.5 text-blue-600"
+                  />
+                  <div>
+                    <p className="font-bold text-slate-200">{opt.title}</p>
+                    <p className="text-[11px] text-slate-400">{opt.desc}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={() => setIsConvertModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConvertQuotation}
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold transition"
+              >
+                Execute Conversion
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          8. MODAL: MANAGEMENT APPROVAL DIALOG
+          ======================================================== */}
+      {isApprovalModalOpen && selectedQuotation && (
+        <Modal
+          isOpen={isApprovalModalOpen}
+          onClose={() => setIsApprovalModalOpen(false)}
+          title={`Commercial Approval: ${selectedQuotation.quotationNumber}`}
+          size="md"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="p-3 bg-amber-950/60 border border-amber-800 rounded-lg text-amber-300">
+              <span className="font-bold block">Approval Trigger Reason:</span>
+              <p className="mt-0.5">{selectedQuotation.approvalReason || 'High quotation value threshold exceeded.'}</p>
+            </div>
+
+            <div>
+              <label className="block text-slate-400 font-semibold mb-1">Decision</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setApprovalDecision('APPROVE')}
+                  className={`py-2 rounded-lg font-bold text-xs border ${
+                    approvalDecision === 'APPROVE'
+                      ? 'bg-emerald-600 text-white border-emerald-500'
+                      : 'bg-slate-900 text-slate-400 border-slate-800'
+                  }`}
+                >
+                  Approve Quotation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setApprovalDecision('REJECT')}
+                  className={`py-2 rounded-lg font-bold text-xs border ${
+                    approvalDecision === 'REJECT'
+                      ? 'bg-rose-600 text-white border-rose-500'
+                      : 'bg-slate-900 text-slate-400 border-slate-800'
+                  }`}
+                >
+                  Reject / Request Revision
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-400 font-semibold mb-1">Approver Comments</label>
+              <textarea
+                rows={2}
+                placeholder="Enter approval or rejection remarks..."
+                value={approvalComment}
+                onChange={(e) => setApprovalComment(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={() => setIsApprovalModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprovalDecision}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold transition"
+              >
+                Submit Decision
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          9. MODAL: VERSION CONTROL HISTORY
+          ======================================================== */}
+      {isVersionModalOpen && selectedQuotation && (
+        <Modal
+          isOpen={isVersionModalOpen}
+          onClose={() => setIsVersionModalOpen(false)}
+          title={`Version Control & Revision History: ${selectedQuotation.quotationNumber}`}
+          size="md"
+        >
+          <div className="space-y-3 text-xs">
+            {selectedQuotation.versionHistory.map((v) => (
+              <div key={v.version} className="p-3 bg-slate-950 border border-slate-800 rounded-lg space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-200">Revision v{v.version}</span>
+                  <span className="text-[10px] text-slate-500">{formatDate(v.date)}</span>
+                </div>
+                <p className="text-slate-400">Author: <strong className="text-slate-300">{v.author}</strong></p>
+                <p className="font-mono text-blue-400 font-bold">Total: {formatBDT(v.newTotal)}</p>
+                <p className="text-[11px] text-slate-500 italic mt-1">{v.notes}</p>
+              </div>
+            ))}
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end">
+              <button
+                onClick={() => setIsVersionModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}

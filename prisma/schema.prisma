@@ -1,0 +1,820 @@
+// Prisma Schema for Bangladesh IT, CCTV & Networking Import ERP
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// 1. AUTHENTICATION, ROLES & AUDIT
+// -------------------------------------------------------------
+
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  passwordHash String
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id])
+  phone        String?
+  status       String     @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  auditLogs          AuditLog[]
+  purchaseOrders     PurchaseOrder[]
+  createdInvoices    SalesInvoice[]
+  managedProjects    Project[]
+  stockMovements     StockMovementLedger[]
+  assignedLabor      ProjectLaborCost[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique // SUPER_ADMIN, ADMIN, PROCUREMENT_OFFICER, SALES_OFFICER, STOREKEEPER, ACCOUNTS_OFFICER, TECHNICIAN, MANAGEMENT_VIEWER
+  displayName String
+  description String?
+  users       User[]
+  permissions Permission[]
+}
+
+model Permission {
+  id         String   @id @default(cuid())
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  module     String   // PRODUCTS, IMPORTS, STOCK, SALES, PROJECTS, PAYMENTS, REPORTS, SETTINGS
+  canView    Boolean  @default(true)
+  canCreate  Boolean  @default(false)
+  canEdit    Boolean  @default(false)
+  canDelete  Boolean  @default(false)
+  canApprove Boolean  @default(false)
+  canExport  Boolean  @default(false)
+  canPrint   Boolean  @default(false)
+
+  @@unique([roleId, module])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  action     String   // CREATE, UPDATE, DELETE, APPROVE, STOCK_ADJUST, LOGIN
+  entityName String   // Product, ImportShipment, SalesInvoice, etc.
+  entityId   String?
+  oldValue   String?  // JSON string
+  newValue   String?  // JSON string
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// 2. PRODUCT MASTER & CATEGORIES
+// -------------------------------------------------------------
+
+model Category {
+  id            String        @id @default(cuid())
+  name          String        @unique
+  code          String        @unique
+  description   String?
+  subcategories Subcategory[]
+  products      Product[]
+}
+
+model Subcategory {
+  id          String    @id @default(cuid())
+  name        String
+  code        String
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products    Product[]
+
+  @@unique([categoryId, code])
+}
+
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  origin      String?
+  products    Product[]
+}
+
+model Unit {
+  id          String    @id @default(cuid())
+  name        String    @unique // pcs, roll, meter, box, set, unit
+  symbol      String
+  products    Product[]
+}
+
+model Product {
+  id              String      @id @default(cuid())
+  sku             String      @unique
+  barcode         String?     @unique
+  qrCode          String?
+  name            String
+  model           String?
+  description     String?
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  subcategoryId   String?
+  subcategory     Subcategory? @relation(fields: [subcategoryId], references: [id])
+  brandId         String?
+  brand           Brand?      @relation(fields: [brandId], references: [id])
+  unitId          String
+  unit            Unit        @relation(fields: [unitId], references: [id])
+  
+  productType     String      @default("STOCK_PRODUCT") // STOCK_PRODUCT, SERVICE, INSTALLATION_ITEM, CONSUMABLE, ASSET, SPARE_PARTS
+  originCountry   String?     @default("China")
+  hsnCode         String?
+  warrantyMonths  Int         @default(12)
+  isSerialTracked Boolean     @default(false)
+  isBatchTracked  Boolean     @default(false)
+  stockTracking   Boolean     @default(true)
+
+  minStockLevel   Int         @default(5)
+  reorderLevel    Int         @default(10)
+  maxStockLevel   Int         @default(100)
+
+  // Pricing Architecture: Purchase in Foreign Currency preserved, Landed Cost in BDT
+  purchasePrice      Float    @default(0)
+  purchaseCurrency   String   @default("CNY") // CNY, USD, BDT
+  currentLandedCost  Float    @default(0)    // BDT Landed Cost per unit
+  
+  status          String      @default("ACTIVE") // ACTIVE, INACTIVE
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  priceTier       ProductPriceTier?
+  stockRecords    Stock[]
+  stockMovements  StockMovementLedger[]
+  serialNumbers   SerialNumber[]
+  poItems         PurchaseOrderItem[]
+  importItems     ImportItem[]
+  quoteItems      QuotationItem[]
+  soItems         SalesOrderItem[]
+  invoiceItems    SalesInvoiceItem[]
+  projectIssues   ProjectMaterialIssue[]
+  projectReturns  ProjectMaterialReturn[]
+}
+
+model ProductPriceTier {
+  id              String   @id @default(cuid())
+  productId       String   @unique
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  retailPrice     Float    @default(0) // BDT
+  wholesalePrice  Float    @default(0) // BDT
+  projectPrice    Float    @default(0) // BDT
+  dealerPrice     Float    @default(0) // BDT
+  
+  vatRate         Float    @default(0) // e.g. 5, 7.5, 15%
+  defaultDiscount Float    @default(0)
+  updatedAt       DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// 3. SUPPLIER & CHINA IMPORT LIFECYCLE
+// -------------------------------------------------------------
+
+model Supplier {
+  id              String          @id @default(cuid())
+  name            String
+  company         String
+  country         String          @default("China")
+  address         String?
+  contactPerson   String?
+  phone           String?
+  email           String?
+  weChat          String?
+  whatsApp        String?
+  website         String?
+  currency        String          @default("CNY") // CNY, USD, BDT
+  paymentTerms    String?         @default("30% Advance, 70% before shipment")
+  bankDetails     String?
+  taxVatInfo      String?
+  rating          Int             @default(5)
+  notes           String?
+  status          String          @default("ACTIVE")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  purchaseOrders  PurchaseOrder[]
+  importShipments ImportShipment[]
+  payments        SupplierPayment[]
+}
+
+model PurchaseOrder {
+  id              String              @id @default(cuid())
+  poNumber        String              @unique // PO-2026-XXXX
+  supplierId      String
+  supplier        Supplier            @relation(fields: [supplierId], references: [id])
+  createdById     String?
+  createdBy       User?               @relation(fields: [createdById], references: [id])
+  poDate          DateTime            @default(now())
+  currency        String              @default("CNY")
+  exchangeRate    Float               @default(16.0) // 1 CNY = 16 BDT
+  subtotal        Float               @default(0)
+  tax             Float               @default(0)
+  total           Float               @default(0)
+  expectedDate    DateTime?
+  paymentTerms    String?
+  status          String              @default("DRAFT") // DRAFT, PENDING_APPROVAL, APPROVED, ORDERED, PARTIALLY_RECEIVED, FULLY_RECEIVED, CLOSED
+  notes           String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  items           PurchaseOrderItem[]
+  importShipments ImportShipment[]
+  supplierPayments SupplierPayment[]
+}
+
+model PurchaseOrderItem {
+  id                String        @id @default(cuid())
+  purchaseOrderId   String
+  purchaseOrder     PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId         String
+  product           Product       @relation(fields: [productId], references: [id])
+  orderedQty        Int
+  unitPriceOriginal Float         // in PO Currency
+  receivedQty       Int           @default(0)
+  totalOriginal     Float
+}
+
+model ImportShipment {
+  id                    String                 @id @default(cuid())
+  importNumber          String                 @unique // IMP-2026-001
+  purchaseOrderId       String?
+  purchaseOrder         PurchaseOrder?         @relation(fields: [purchaseOrderId], references: [id])
+  supplierId            String
+  supplier              Supplier               @relation(fields: [supplierId], references: [id])
+  
+  proformaInvoiceNo     String?
+  commercialInvoiceNo   String?
+  lcTtReference         String?
+  shippingMethod        String                 @default("AIR") // AIR, SEA, COURIER
+  containerNo           String?
+  blAwbNo               String?                // Bill of Lading / Air Waybill
+  etd                   DateTime?              // Estimated Time of Departure
+  eta                   DateTime?              // Estimated Time of Arrival
+  portOfLoading         String?                // e.g. Guangzhou, Shenzhen, Shanghai
+  portOfDestination     String?                @default("Dhaka Airport / Chattogram Port")
+  clearingAgent         String?                // C&F Agent Name
+  forwarder             String?
+  
+  status                String                 @default("DRAFT") // DRAFT, ORDERED, PROCESSING, SHIPPED, IN_TRANSIT, ARRIVED, CUSTOMS, CLEARING, RECEIVED, COMPLETED, CANCELLED
+  currency              String                 @default("CNY")
+  exchangeRate          Float                  @default(16.0)
+  
+  // Landed Cost Summary
+  totalProductCostBDT   Float                  @default(0)
+  totalAdditionalCostBDT Float                 @default(0)
+  finalLandedCostBDT    Float                  @default(0)
+  isLandedCostAllocated Boolean                @default(false)
+  allocationMethod      String                 @default("BY_QUANTITY") // BY_QUANTITY, BY_VALUE, BY_WEIGHT, BY_VOLUME, MANUAL
+  
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  items                 ImportItem[]
+  costItems             ImportCostItem[]
+  grnRecords            GoodsReceivedNote[]
+  supplierPayments      SupplierPayment[]
+}
+
+model ImportItem {
+  id                       String         @id @default(cuid())
+  importShipmentId         String
+  importShipment           ImportShipment @relation(fields: [importShipmentId], references: [id], onDelete: Cascade)
+  productId                String
+  product                  Product        @relation(fields: [productId], references: [id])
+  
+  orderedQty               Int
+  shippedQty               Int
+  receivedQty              Int            @default(0)
+  damagedQty               Int            @default(0)
+  
+  unitPurchasePriceOriginal Float         // e.g. 500 CNY
+  unitPurchasePriceBDT     Float          // e.g. 8,000 BDT
+  allocatedImportCostBDT   Float          @default(0) // e.g. 2,000 BDT
+  finalUnitLandedCostBDT   Float          @default(0) // e.g. 10,000 BDT
+}
+
+model ImportCostItem {
+  id               String         @id @default(cuid())
+  importShipmentId String
+  importShipment   ImportShipment @relation(fields: [importShipmentId], references: [id], onDelete: Cascade)
+  
+  costType         String         // FREIGHT, INSURANCE, CUSTOMS_DUTY, REGULATORY_DUTY, VAT, AIT, AT, CLEARING_CHARGE, PORT_CHARGE, CF_CHARGE, BANK_CHARGE, LOCAL_TRANSPORT, WAREHOUSE_HANDLING, OTHER
+  name             String
+  amountBDT        Float
+  paymentRef       String?
+  notes            String?
+  createdAt        DateTime       @default(now())
+}
+
+// -------------------------------------------------------------
+// 4. WAREHOUSES, GRN & IMMUTABLE STOCK LEDGER
+// -------------------------------------------------------------
+
+model Warehouse {
+  id              String      @id @default(cuid())
+  name            String      @unique // Main Warehouse, Office Store, Project Store, Service Store, Showroom
+  code            String      @unique
+  address         String?
+  manager         String?
+  isDefault       Boolean     @default(false)
+  status          String      @default("ACTIVE")
+  createdAt       DateTime    @default(now())
+
+  stockRecords    Stock[]
+  stockMovements  StockMovementLedger[]
+  transfersFrom   StockTransfer[] @relation("FromWarehouse")
+  transfersTo     StockTransfer[] @relation("ToWarehouse")
+  grnRecords      GoodsReceivedNote[]
+  challans        DeliveryChallan[]
+  projectIssues   ProjectMaterialIssue[]
+  projectReturns  ProjectMaterialReturn[]
+}
+
+model Stock {
+  id                 String    @id @default(cuid())
+  warehouseId        String
+  warehouse          Warehouse @relation(fields: [warehouseId], references: [id])
+  productId          String
+  product            Product   @relation(fields: [productId], references: [id])
+  
+  quantityAvailable  Int       @default(0)
+  quantityReserved   Int       @default(0)
+  quantityDamaged    Int       @default(0)
+  quantityInTransit  Int       @default(0)
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([warehouseId, productId])
+}
+
+// IMMUTABLE AUDIT TRAIL FOR EVERY SINGLE STOCK MOVEMENT
+model StockMovementLedger {
+  id              String    @id @default(cuid())
+  timestamp       DateTime  @default(now())
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  
+  movementType    String    // PURCHASE_GRN, SALE_INVOICE, SALES_RETURN, PURCHASE_RETURN, TRANSFER_IN, TRANSFER_OUT, PROJECT_ISSUE, PROJECT_RETURN, DAMAGE_WRITEOFF, ADJUSTMENT, OPENING_STOCK
+  quantityDelta   Int       // Positive for stock increases, Negative for stock reductions
+  balanceAfter    Int       // Stock balance after transaction
+  unitLandedCost  Float     // Historical landed cost at time of transaction
+  totalCostValue  Float     // quantityDelta * unitLandedCost
+  
+  referenceType   String    // GRN, INVOICE, CHALLAN, PROJECT, TRANSFER, ADJUSTMENT
+  referenceId     String    // Document Number (e.g. GRN-2026-001, INV-2026-9001)
+  serialNumbers   String?   // Comma-separated or JSON list of serials involved
+  
+  createdById     String?
+  createdBy       User?     @relation(fields: [createdById], references: [id])
+  reasonNotes     String?
+}
+
+model GoodsReceivedNote {
+  id               String         @id @default(cuid())
+  grnNumber        String         @unique // GRN-2026-XXXX
+  importShipmentId String?
+  importShipment   ImportShipment? @relation(fields: [importShipmentId], references: [id])
+  warehouseId      String
+  warehouse        Warehouse      @relation(fields: [warehouseId], references: [id])
+  
+  receivedDate     DateTime       @default(now())
+  storekeeperName  String
+  notes            String?
+  status           String         @default("COMPLETED")
+  createdAt        DateTime       @default(now())
+
+  items            GoodsReceivedNoteItem[]
+}
+
+model GoodsReceivedNoteItem {
+  id               String            @id @default(cuid())
+  grnId            String
+  grn              GoodsReceivedNote @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  productId        String
+  orderedQty       Int
+  receivedQty      Int
+  damagedQty       Int               @default(0)
+  missingQty       Int               @default(0)
+  unitLandedCost   Float
+}
+
+model StockTransfer {
+  id               String              @id @default(cuid())
+  transferNo       String              @unique // TRF-2026-XXXX
+  fromWarehouseId  String
+  fromWarehouse    Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id])
+  toWarehouseId    String
+  toWarehouse      Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id])
+  
+  requestDate      DateTime            @default(now())
+  dispatchDate     DateTime?
+  receiveDate      DateTime?
+  status           String              @default("REQUESTED") // REQUESTED, APPROVED, DISPATCHED, RECEIVED, COMPLETED
+  notes            String?
+  createdAt        DateTime            @default(now())
+
+  items            StockTransferItem[]
+}
+
+model StockTransferItem {
+  id              String        @id @default(cuid())
+  transferId      String
+  transfer        StockTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  productId       String
+  quantity        Int
+  serialNumbers   String?       // JSON list of serial numbers
+}
+
+model SerialNumber {
+  id               String         @id @default(cuid())
+  productId        String
+  product          Product        @relation(fields: [productId], references: [id])
+  serialNumber     String         @unique
+  importBatch      String?        // e.g. IMP-2026-001
+  unitLandedCost   Float          @default(0)
+  currentWarehouse String?        // Warehouse Name or ID
+  
+  currentStatus    String         @default("IN_STOCK") // IN_STOCK, RESERVED, SOLD, INSTALLED, RETURNED, UNDER_REPAIR, SCRAPPED
+  customerId       String?
+  salesInvoiceId   String?
+  projectId        String?
+  
+  warrantyStart    DateTime?
+  warrantyEnd      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+// -------------------------------------------------------------
+// 5. CUSTOMERS, QUOTATIONS & SALES LIFECYCLE
+// -------------------------------------------------------------
+
+model Customer {
+  id              String        @id @default(cuid())
+  customerNumber  String        @unique // CUST-2026-XXXX
+  name            String
+  organization    String?
+  customerType    String        @default("RETAIL") // RETAIL, DEALER, CORPORATE, GOVERNMENT, PROJECT
+  phone           String
+  email           String?
+  billingAddress  String?
+  deliveryAddress String?
+  vatTin          String?
+  creditLimit     Float         @default(0)
+  paymentTerms    String?       @default("Net 14 Days")
+  status          String        @default("ACTIVE")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  quotations      Quotation[]
+  salesOrders     SalesOrder[]
+  invoices        SalesInvoice[]
+  payments        CustomerPayment[]
+  projects        Project[]
+}
+
+model Quotation {
+  id                  String          @id @default(cuid())
+  quotationNo         String          @unique // QT-2026-XXXX
+  customerId          String
+  customer            Customer        @relation(fields: [customerId], references: [id])
+  date                DateTime        @default(now())
+  validUntil          DateTime
+  subtotal            Float           @default(0)
+  discount            Float           @default(0)
+  vat                 Float           @default(0)
+  deliveryCharge      Float           @default(0)
+  installationCharge  Float           @default(0)
+  grandTotal          Float           @default(0)
+  status              String          @default("DRAFT") // DRAFT, SENT, ACCEPTED, CONVERTED, REJECTED
+  termsAndConditions  String?
+  notes               String?
+  createdAt           DateTime        @default(now())
+
+  items               QuotationItem[]
+  salesOrders         SalesOrder[]
+}
+
+model QuotationItem {
+  id           String    @id @default(cuid())
+  quotationId  String
+  quotation    Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id])
+  quantity     Int
+  unitPrice    Float
+  discount     Float     @default(0)
+  total        Float
+}
+
+model SalesOrder {
+  id           String            @id @default(cuid())
+  orderNo      String            @unique // SO-2026-XXXX
+  quotationId  String?
+  quotation    Quotation?        @relation(fields: [quotationId], references: [id])
+  customerId   String
+  customer     Customer          @relation(fields: [customerId], references: [id])
+  saleType     String            @default("RETAIL") // RETAIL, WHOLESALE, PROJECT
+  orderDate    DateTime          @default(now())
+  subtotal     Float             @default(0)
+  discount     Float             @default(0)
+  vat          Float             @default(0)
+  grandTotal   Float             @default(0)
+  status       String            @default("CONFIRMED") // DRAFT, CONFIRMED, DISPATCHED, DELIVERED, CANCELLED
+  createdAt    DateTime          @default(now())
+
+  items        SalesOrderItem[]
+  challans     DeliveryChallan[]
+  invoices     SalesInvoice[]
+}
+
+model SalesOrderItem {
+  id           String     @id @default(cuid())
+  salesOrderId String
+  salesOrder   SalesOrder @relation(fields: [salesOrderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id])
+  quantity     Int
+  unitPrice    Float
+  total        Float
+}
+
+model DeliveryChallan {
+  id           String            @id @default(cuid())
+  challanNo    String            @unique // DC-2026-XXXX
+  salesOrderId String?
+  salesOrder   SalesOrder?       @relation(fields: [salesOrderId], references: [id])
+  salesInvoiceId String?
+  warehouseId  String
+  warehouse    Warehouse         @relation(fields: [warehouseId], references: [id])
+  dispatchDate DateTime          @default(now())
+  courierName  String?
+  vehicleNo    String?
+  driverPhone  String?
+  status       String            @default("PREPARED") // PREPARED, IN_TRANSIT, DELIVERED
+  notes        String?
+  createdAt    DateTime          @default(now())
+
+  items        DeliveryItem[]
+}
+
+model DeliveryItem {
+  id           String          @id @default(cuid())
+  challanId    String
+  challan      DeliveryChallan @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  productName  String
+  quantity     Int
+  unit         String          @default("pcs")
+  serialNumbers String?
+}
+
+model SalesInvoice {
+  id             String             @id @default(cuid())
+  invoiceNo      String             @unique // INV-2026-XXXX
+  salesOrderId   String?
+  salesOrder     SalesOrder?        @relation(fields: [salesOrderId], references: [id])
+  customerId     String
+  customer       Customer           @relation(fields: [customerId], references: [id])
+  saleType       String             @default("RETAIL") // RETAIL, WHOLESALE, PROJECT
+  invoiceDate    DateTime           @default(now())
+  dueDate        DateTime
+  subtotal       Float              @default(0)
+  discount       Float              @default(0)
+  vatAmount      Float              @default(0)
+  grandTotal     Float              @default(0)
+  paidAmount     Float              @default(0)
+  dueAmount      Float              @default(0)
+  
+  paymentStatus  String             @default("UNPAID") // UNPAID, PARTIAL, PAID, OVERDUE
+  stockDeducted  Boolean            @default(false)
+  createdById    String?
+  createdBy      User?              @relation(fields: [createdById], references: [id])
+  notes          String?
+  createdAt      DateTime           @default(now())
+
+  items          SalesInvoiceItem[]
+  payments       CustomerPayment[]
+  returns        SalesReturn[]
+}
+
+model SalesInvoiceItem {
+  id             String       @id @default(cuid())
+  invoiceId      String
+  invoice        SalesInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+  quantity       Int
+  unitLandedCost Float        // Historical Landed Cost in BDT
+  unitSellPrice  Float        // Invoiced price in BDT
+  discount       Float        @default(0)
+  vatRate        Float        @default(0)
+  totalAmount    Float
+  grossProfit    Float        // (unitSellPrice - unitLandedCost) * qty - discount
+  serialNumbers  String?
+}
+
+model SalesReturn {
+  id            String            @id @default(cuid())
+  returnNo      String            @unique // RTN-2026-XXXX
+  invoiceId     String
+  invoice       SalesInvoice      @relation(fields: [invoiceId], references: [id])
+  returnDate    DateTime          @default(now())
+  refundAmount  Float             @default(0)
+  reason        String
+  status        String            @default("APPROVED")
+  createdAt     DateTime          @default(now())
+
+  items         SalesReturnItem[]
+}
+
+model SalesReturnItem {
+  id            String      @id @default(cuid())
+  returnId      String
+  returnDoc     SalesReturn @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  productId     String
+  quantity      Int
+  condition     String      @default("RESELLABLE") // RESELLABLE, DAMAGED, REPAIR
+}
+
+// -------------------------------------------------------------
+// 6. INSTALLATION / PROJECT MANAGEMENT
+// -------------------------------------------------------------
+
+model Project {
+  id                     String                 @id @default(cuid())
+  projectCode            String                 @unique // PRJ-2026-XXXX
+  customerId             String
+  customer               Customer               @relation(fields: [customerId], references: [id])
+  projectName            String                 // e.g. "ABC Bank CCTV Installation Project"
+  location               String
+  startDate              DateTime               @default(now())
+  expectedCompletionDate DateTime?
+  actualCompletionDate   DateTime?
+  projectManagerId       String?
+  projectManager         User?                  @relation(fields: [projectManagerId], references: [id])
+  
+  contractValue          Float                  @default(0)
+  materialLandedCost     Float                  @default(0) // Landed cost of consumed products
+  laborCost              Float                  @default(0) // Technician daily/overtime wages
+  transportCost          Float                  @default(0)
+  otherCost              Float                  @default(0)
+  totalProjectCost       Float                  @default(0) // materialLandedCost + laborCost + transportCost + otherCost
+  projectGrossProfit     Float                  @default(0) // contractValue - totalProjectCost
+  
+  status                 String                 @default("PLANNING") // PLANNING, APPROVED, MATERIAL_PREPARED, INSTALLATION_IN_PROGRESS, TESTING, COMPLETED, HANDOVER, CLOSED
+  notes                  String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+
+  materialIssues         ProjectMaterialIssue[]
+  materialReturns        ProjectMaterialReturn[]
+  laborCosts             ProjectLaborCost[]
+  expenses               ProjectExpense[]
+}
+
+model ProjectMaterialIssue {
+  id              String    @id @default(cuid())
+  projectId       String
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  warehouseId     String
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id])
+  productId       String
+  product         Product   @relation(fields: [productId], references: [id])
+  
+  issueDate       DateTime  @default(now())
+  quantityIssued  Int
+  unitLandedCost  Float     // Accurate product Landed Cost at time of issue
+  totalCost       Float     // quantityIssued * unitLandedCost
+  serialNumbers   String?   // JSON list of installed serials
+}
+
+model ProjectMaterialReturn {
+  id               String    @id @default(cuid())
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  warehouseId      String
+  warehouse        Warehouse @relation(fields: [warehouseId], references: [id])
+  productId        String
+  product          Product   @relation(fields: [productId], references: [id])
+  
+  returnDate       DateTime  @default(now())
+  quantityReturned Int
+  condition        String    @default("RESELLABLE") // RESELLABLE, DAMAGED
+}
+
+model ProjectLaborCost {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technicianId    String?
+  technician      User?    @relation(fields: [technicianId], references: [id])
+  technicianName  String
+  
+  workDate        DateTime @default(now())
+  regularDays     Float    @default(1.0)
+  dailyRate       Float    @default(1500)
+  overtimeHours   Float    @default(0)
+  overtimeRate    Float    @default(200)
+  totalLaborCost  Float    @default(1500)
+  notes           String?
+}
+
+model ProjectExpense {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now())
+  category    String   // TRANSPORT, FOOD_LODGING, PERMIT, MISC
+  amount      Float
+  description String
+}
+
+// -------------------------------------------------------------
+// 7. PAYMENTS, EXPENSES & SETTINGS
+// -------------------------------------------------------------
+
+model CustomerPayment {
+  id            String       @id @default(cuid())
+  receiptNo     String       @unique // REC-2026-XXXX
+  invoiceId     String
+  invoice       SalesInvoice @relation(fields: [invoiceId], references: [id])
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  
+  paymentDate   DateTime     @default(now())
+  amount        Float
+  paymentMethod String       // CASH, BANK_TRANSFER, BKASH, NAGAD, CARD, CHEQUE
+  referenceNo   String?
+  notes         String?
+  createdAt     DateTime     @default(now())
+}
+
+model SupplierPayment {
+  id               String          @id @default(cuid())
+  voucherNo        String          @unique // SPAY-2026-XXXX
+  supplierId       String
+  supplier         Supplier        @relation(fields: [supplierId], references: [id])
+  purchaseOrderId  String?
+  purchaseOrder    PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id])
+  importShipmentId String?
+  importShipment   ImportShipment? @relation(fields: [importShipmentId], references: [id])
+  
+  paymentDate      DateTime        @default(now())
+  amountBDT        Float
+  currencyOriginal String          @default("CNY")
+  amountOriginal   Float
+  paymentMethod    String          // TT, LC, BANK_TRANSFER, CASH
+  referenceNo      String?
+  notes            String?
+  createdAt        DateTime        @default(now())
+}
+
+model Expense {
+  id            String   @id @default(cuid())
+  voucherNo     String   @unique // EXP-2026-XXXX
+  date          DateTime @default(now())
+  category      String   // OFFICE_RENT, SALARY, TRANSPORT_COURIER, INTERNET_UTILITIES, MARKETING, INSTALLATION_EXPENSE, IMPORT_EXPENSE, BANK_CHARGE, OTHER
+  amount        Float
+  paymentMethod String   @default("CASH")
+  reference     String?
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // LOW_STOCK, IMPORT_ARRIVAL, WARRANTY_EXPIRY, PAYMENT_DUE
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id          String   @id @default("SYSTEM_CONFIG")
+  companyName String   @default("Apex Industrial & Tech Solutions Ltd.")
+  tagline     String?  @default("Importer & Distributor of CCTV, Networking & Security Systems")
+  address     String?  @default("Level 6, House 42, Road 11, Banani C/A, Dhaka-1213, Bangladesh")
+  phone       String?  @default("+880 1711-234567")
+  email       String?  @default("info@apexsolutions.bd")
+  website     String?  @default("https://apexsolutions.bd")
+  binVat      String?  @default("BIN-002349182-0101")
+  tin         String?  @default("TIN-889912003")
+  
+  primaryCurrency String @default("BDT")
+  cnyToBdtRate    Float  @default(16.0)
+  usdToBdtRate    Float  @default(122.0)
+  costingMethod   String @default("WEIGHTED_AVERAGE") // WEIGHTED_AVERAGE, FIFO
+  blockNegativeStock Boolean @default(true)
+  updatedAt       DateTime @updatedAt
+}

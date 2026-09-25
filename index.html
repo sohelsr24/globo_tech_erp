@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="All-in-one Business ERP & CRM Suite: Inventory, Quotations, Invoices, Delivery Challans, Payments, Leads, Payroll, and Financial Reports.">
+  <title>Apex Enterprise Suite — Business ERP & CRM</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Core Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- ===================================================================
+         SIDEBAR NAVIGATION
+         =================================================================== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">A</div>
+        <div class="brand-text">
+          <h2>Apex Suite</h2>
+          <p>ERP &bull; CRM &bull; Billing</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div class="menu-category">Main Operations</div>
+
+        <a class="nav-link active" data-tab="dashboard">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-link" data-tab="inventory">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+          <span>Products & Stock</span>
+          <span class="nav-badge" id="nav-badge-lowstock" style="display: none;">0</span>
+        </a>
+
+        <a class="nav-link" data-tab="customers">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          <span>Customers</span>
+        </a>
+
+        <a class="nav-link" data-tab="sales">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Sales & Billing</span>
+        </a>
+
+        <a class="nav-link" data-tab="crm">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span>Leads & CRM</span>
+        </a>
+
+        <div class="menu-category">Human Resources & Finance</div>
+
+        <a class="nav-link" data-tab="payroll">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          <span>Payroll & Staff</span>
+        </a>
+
+        <a class="nav-link" data-tab="expenses">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Expenses</span>
+        </a>
+
+        <a class="nav-link" data-tab="reports">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          <span>P&L & Cash Flow</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">ADM</div>
+          <div class="user-info">
+            <div class="user-name">Sohel Rana</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+        <button class="btn btn-icon btn-outline" id="btn-open-settings" title="System Settings & Backups">
+          ⚙️
+        </button>
+      </div>
+    </aside>
+
+    <!-- ===================================================================
+         MAIN CONTENT WRAPPER
+         =================================================================== -->
+    <main class="main-wrapper">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn-mobile-toggle" id="btn-mobile-sidebar-toggle" aria-label="Toggle navigation">
+            <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <div class="page-title-area">
+            <h1 id="page-header-title">Executive Overview</h1>
+            <p id="page-header-desc">Real-time financial performance and operations</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Low Stock Alert Banner in Topbar -->
+          <div class="topbar-alert-banner" id="topbar-lowstock-alert" style="display: none;" title="Click to view low stock inventory">
+            ⚠️ Low Stock Alert
+          </div>
+
+          <!-- Dark / Light Theme Toggle -->
+          <button class="btn btn-icon btn-secondary" id="btn-toggle-theme" title="Toggle Dark/Light Mode">
+            🌙
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic View Container -->
+      <div class="content-area">
+        <div id="view-container">
+          <!-- Modules render dynamically here -->
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===================================================================
+       REUSABLE INTERACTIVE MODAL OVERLAY
+       =================================================================== -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-container modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Modal Title</h3>
+        <button class="modal-close" id="modal-close-x" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer" id="modal-footer">
+        <button class="btn btn-secondary" id="modal-btn-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-btn-confirm">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Core JavaScript Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

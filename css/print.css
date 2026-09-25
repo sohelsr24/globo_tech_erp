@@ -1,0 +1,105 @@
+/* ===================================================================
+   BUSINESS ERP & CRM SUITE - DEDICATED PRINT STYLESHEET
+   Flawless A4 PDF and Paper Printing for Invoices, Quotations, Challans & Payslips
+   =================================================================== */
+
+@media print {
+  /* Hide application shell UI */
+  .sidebar,
+  .topbar,
+  .modal-header,
+  .modal-footer,
+  .card-actions,
+  .btn,
+  .toast-container,
+  .topbar-alert-banner,
+  .no-print {
+    display: none !important;
+  }
+
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-container {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .main-wrapper {
+    overflow: visible !important;
+  }
+
+  .content-area {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Make modal full screen plain sheet when printing from modal */
+  .modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .modal-container {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    transform: none !important;
+  }
+
+  .modal-body {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .document-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 10mm 15mm !important;
+    margin: 0 !important;
+    page-break-after: avoid;
+  }
+
+  .doc-header {
+    border-bottom: 2px solid #333 !important;
+  }
+
+  .doc-table th {
+    background-color: #f3f4f6 !important;
+    color: #111 !important;
+    border-bottom: 1.5pt solid #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc-table td {
+    border-bottom: 0.5pt solid #ccc !important;
+  }
+
+  .doc-total-row.grand {
+    border-top: 1.5pt solid #333 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+}
