@@ -1822,10 +1822,27 @@ export function QuotationView() {
                                 step="0.5"
                                 value={item.vatPercent}
                                 onChange={(e) => handleUpdateItemVatPercent(item.id, Number(e.target.value))}
-                                className="w-14 bg-slate-950/70 border border-slate-700/80 rounded px-1.5 py-1 text-right font-mono font-bold text-slate-100 text-xs focus:outline-none focus:border-blue-500"
+                                className="w-12 bg-slate-950/70 border border-slate-700/80 rounded px-1.5 py-1 text-right font-mono font-bold text-slate-100 text-xs focus:outline-none focus:border-blue-500"
                                 title="Edit VAT & TAX % (Mushak 6.6)"
                               />
-                              <span className="text-slate-400 text-xs">%</span>
+                              <select
+                                value={item.vatPercent}
+                                onChange={(e) => handleUpdateItemVatPercent(item.id, Number(e.target.value))}
+                                className="bg-slate-900 border border-slate-700/80 text-[10px] text-slate-300 rounded px-1 py-1 cursor-pointer focus:outline-none focus:border-blue-500 hover:bg-slate-800"
+                                title="Select Preset Rate"
+                              >
+                                <option value="7.5">7.5%</option>
+                                <option value="10">10%</option>
+                                <option value="15">15%</option>
+                                <option value="17.5">17.5%</option>
+                                <option value="20">20%</option>
+                                <option value="25">25%</option>
+                                <option value="5">5%</option>
+                                <option value="0">0%</option>
+                                {!['7.5', '10', '15', '17.5', '20', '25', '5', '0'].includes(String(item.vatPercent)) && (
+                                  <option value={item.vatPercent}>{item.vatPercent}%</option>
+                                )}
+                              </select>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-100">
@@ -2681,8 +2698,8 @@ export function QuotationView() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-slate-400 font-semibold">VAT & TAX %</label>
-                  <span className="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800">
+                  <label className="block text-slate-400 font-semibold truncate">VAT & TAX %</label>
+                  <span className="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800 flex-shrink-0">
                     Mushak 6.6
                   </span>
                 </div>
@@ -2693,13 +2710,13 @@ export function QuotationView() {
                     step="0.5"
                     value={itemForm.vatPercent}
                     onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-100 font-mono font-bold"
+                    className="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-slate-100 font-mono font-bold text-center"
                     placeholder="7.5"
                   />
                   <select
                     value={itemForm.vatPercent}
                     onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
-                    className="bg-slate-900 border border-slate-700 rounded-lg px-1.5 text-[11px] text-slate-300 font-semibold cursor-pointer hover:bg-slate-800"
+                    className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 text-[11px] text-slate-300 font-semibold cursor-pointer hover:bg-slate-800 focus:outline-none focus:border-blue-500"
                     title="Select Mushak 6.6 Presets"
                   >
                     <option value="7.5">7.5% (VDS)</option>
@@ -2707,8 +2724,12 @@ export function QuotationView() {
                     <option value="15">15% (Std)</option>
                     <option value="17.5">17.5% (VAT+AIT)</option>
                     <option value="20">20%</option>
+                    <option value="25">25%</option>
                     <option value="5">5%</option>
                     <option value="0">0%</option>
+                    {!['7.5', '10', '15', '17.5', '20', '25', '5', '0'].includes(String(itemForm.vatPercent)) && (
+                      <option value={itemForm.vatPercent}>{itemForm.vatPercent}% (Custom)</option>
+                    )}
                   </select>
                 </div>
               </div>
