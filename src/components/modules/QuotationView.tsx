@@ -1669,7 +1669,7 @@ export function QuotationView() {
                   {selectedQuotation.customerBin && <p className="font-mono text-slate-600">BIN: {selectedQuotation.customerBin}</p>}
                 </div>
 
-                <div>
+                <div className="sm:pl-16">
                   <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Project & Delivery Location:</span>
                   <p className="font-bold text-slate-900 text-sm">{selectedQuotation.projectName}</p>
                   <p className="text-slate-700 mt-0.5">Delivery Location: {selectedQuotation.projectLocation}</p>
