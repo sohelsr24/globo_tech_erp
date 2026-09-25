@@ -26,13 +26,13 @@ export function SettingsView() {
   const [isSaved, setIsSaved] = useState(false);
 
   const [companyInfo, setCompanyInfo] = useState({
-    name: 'Apex Enterprise Bangladesh',
+    name: 'Globo Tech',
     tradeLicense: 'TRAD/DNCC/004928/2026',
     binNumber: '001928374-0101',
     tinNumber: '772918239102',
-    address: 'Level 11, Sena Kalyan Bhaban, Motijheel C/A, Dhaka-1000',
-    contactEmail: 'info@apexenterprise.com.bd',
-    contactPhone: '+880 2 9568899'
+    address: 'Rahman Chamber (2nd Floor), 12/13 Motijheel C/A, Dhaka-1000',
+    contactEmail: 'info@globotechbd.com',
+    contactPhone: '+88 01622-152133, 01715-763303'
   });
 
   const handleSave = (e: React.FormEvent) => {

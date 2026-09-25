@@ -12,6 +12,7 @@ import {
   Building2,
   CheckCircle2
 } from 'lucide-react';
+import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
 interface LoginViewProps {
   onLoginSuccess: (user: { email: string; name: string; role: string }) => void;
@@ -66,20 +67,24 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
       <div className="w-full max-w-md relative z-10 px-1 sm:px-0">
         {/* Brand Header */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/60 text-blue-400 text-xs font-semibold mb-3 sm:mb-4 backdrop-blur-sm shadow-inner">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-950/60 border border-sky-800/60 text-sky-400 text-xs font-semibold mb-3 sm:mb-4 backdrop-blur-sm shadow-inner">
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Apex Enterprise • Secure Portal</span>
+            <span>Globo Tech • Secure Portal</span>
           </div>
 
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 mx-auto flex items-center justify-center font-black text-white text-2xl sm:text-3xl shadow-xl shadow-blue-600/25 ring-4 ring-slate-900 mb-3 sm:mb-4">
-            A
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-900 border border-slate-800 mx-auto flex items-center justify-center p-2.5 shadow-xl shadow-sky-600/20 ring-4 ring-slate-900 mb-3 sm:mb-4">
+            <img
+              src={GLOBO_TECH_LOGO_DATA_URL}
+              alt="Globo Tech"
+              className="w-full h-full object-contain"
+            />
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-100 tracking-tight">
-            Apex Enterprise
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
+            Globo Tech
           </h1>
-          <p className="text-[11px] sm:text-xs text-slate-400 mt-1 uppercase tracking-wider font-medium">
-            China Import • Stock • Installation Projects ERP
+          <p className="text-[11px] sm:text-xs text-sky-400 mt-1 uppercase tracking-wider font-semibold">
+            Enterprise &bull; Bangladesh IT, CCTV &amp; Import ERP
           </p>
         </div>
 
@@ -181,7 +186,7 @@ export function LoginView({ onLoginSuccess }: LoginViewProps) {
 
         {/* Security & Copyright Footer */}
         <div className="text-center mt-6 text-[11px] text-slate-500 space-y-1">
-          <p>© {new Date().getFullYear()} Apex Enterprise • GloboTech ERP Suite</p>
+          <p>© {new Date().getFullYear()} Globo Tech • Enterprise ERP Suite</p>
           <p className="flex items-center justify-center gap-1.5">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             SSL 256-bit Encrypted Session • Verified Super Admin Portal

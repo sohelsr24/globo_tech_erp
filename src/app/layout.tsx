@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Apex Suite — Product Management & Inventory ERP (Bangladesh)',
+  title: 'Globo Tech ERP — Enterprise Management & Inventory System',
   description: 'Enterprise ERP for IT, CCTV, Networking, Data Center Import & Project Distribution in Bangladesh',
 };
 

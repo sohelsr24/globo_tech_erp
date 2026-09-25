@@ -22,6 +22,7 @@ import { SettingsView } from '@/components/modules/SettingsView';
 import { QuotationView } from '@/components/modules/QuotationView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
+import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
 export default function AppHome() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -150,7 +151,7 @@ export default function AppHome() {
           desc: 'CNY/USD to BDT exchange rates, costing allocation rules, and 8-role security matrix'
         };
       default:
-        return { title: 'Apex Enterprise ERP', desc: 'Enterprise ERP System' };
+        return { title: 'Globo Tech ERP', desc: 'Enterprise ERP System' };
     }
   };
 
@@ -182,14 +183,18 @@ export default function AppHome() {
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-100 selection:bg-blue-600">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center font-black text-white text-2xl shadow-xl shadow-blue-600/30 ring-4 ring-slate-900 mb-4 animate-pulse">
-          A
+        <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center p-2.5 shadow-xl shadow-sky-600/30 ring-4 ring-slate-900 mb-4 animate-pulse">
+          <img
+            src={GLOBO_TECH_LOGO_DATA_URL}
+            alt="Globo Tech"
+            className="w-full h-full object-contain"
+          />
         </div>
         <div className="w-32 h-1 bg-slate-800 rounded-full overflow-hidden mt-2">
-          <div className="w-full h-full bg-blue-500 rounded-full animate-indeterminate" />
+          <div className="w-full h-full bg-sky-500 rounded-full animate-indeterminate" />
         </div>
         <p className="text-[11px] font-semibold text-slate-400 tracking-wider uppercase mt-3">
-          Loading Apex Enterprise ERP...
+          Loading Globo Tech ERP...
         </p>
       </div>
     );

@@ -17,6 +17,7 @@ import {
   LogOut,
   X
 } from 'lucide-react';
+import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
 interface SidebarProps {
   currentTab: string;
@@ -78,16 +79,20 @@ export function Sidebar({
       >
         {/* Brand Header */}
         <div className="h-16 px-4 sm:px-5 border-b border-slate-800 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center font-extrabold text-white text-lg shadow-md shadow-blue-500/20">
-              A
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/80 flex items-center justify-center p-1 shadow-md shadow-blue-500/10">
+              <img
+                src={GLOBO_TECH_LOGO_DATA_URL}
+                alt="Globo Tech"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h2 className="font-bold text-slate-100 text-sm leading-tight tracking-wide">
-                Apex Enterprise
+                Globo Tech
               </h2>
-              <p className="text-[10px] text-slate-400 font-medium tracking-wider uppercase">
-                Import &bull; Stock &bull; Projects
+              <p className="text-[10px] text-sky-400 font-medium tracking-wider uppercase">
+                Enterprise &bull; ERP Suite
               </p>
             </div>
           </div>

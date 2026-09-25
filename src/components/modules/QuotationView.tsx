@@ -38,6 +38,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatCompactBDT, formatDate } from '@/lib/formatters';
+import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS } from '@/lib/brandAssets';
 
 // Types of Quotation Items
 export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
@@ -1590,136 +1591,186 @@ export function QuotationView() {
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="bg-white text-slate-900 rounded-xl p-4 sm:p-8 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-4 sm:space-y-6 overflow-hidden">
-            {/* Header / Brand */}
-            <div className="flex flex-col sm:flex-row justify-between items-start border-b border-slate-200 pb-4 sm:pb-5 gap-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center font-black text-white text-lg">
-                    A
+          <div className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-10 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-4 sm:space-y-6 overflow-hidden">
+            {/* Watermark in background matching company pad */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.05] z-0 overflow-hidden">
+              <img
+                src={GLOBO_TECH_LOGO_DATA_URL}
+                alt="Globo Tech Watermark"
+                className="w-80 sm:w-96 max-w-full object-contain"
+              />
+            </div>
+
+            <div className="relative z-10 space-y-4 sm:space-y-6">
+              {/* Header / Brand Layout according to company pad */}
+              <div className="flex flex-row justify-between items-center gap-4">
+                {/* 1 no mark: Company Logo & 2 no mark: Company Name */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* 1 no mark: Company Logo */}
+                  <img
+                    src={GLOBO_TECH_LOGO_DATA_URL}
+                    alt="Globo Tech Logo"
+                    className="h-12 sm:h-14 w-auto object-contain flex-shrink-0"
+                  />
+                  {/* 2 no mark: Company Name */}
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#008fd5] leading-none">
+                      Globo Tech
+                    </h1>
                   </div>
-                  <h1 className="text-xl font-bold text-slate-900 tracking-tight">Apex Enterprise Bangladesh</h1>
                 </div>
-                <p className="text-slate-500 text-[11px] leading-relaxed">
-                  Level 11, Sena Kalyan Bhaban, Motijheel C/A, Dhaka-1000<br />
-                  BIN: 001928374-0101 &bull; Tel: +880 2 9568899 &bull; info@apexenterprise.com.bd
+
+                {/* 3 no mark: Company Address (Right Aligned) */}
+                <div className="text-right">
+                  <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+                    Rahman Chamber (2nd Floor),
+                  </p>
+                  <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+                    12/13 Motijheel C/A, Dhaka-1000.
+                  </p>
+                </div>
+              </div>
+
+              {/* Pad Horizontal Divider Line */}
+              <div className="border-b-2 border-[#008fd5] w-full" />
+
+              {/* 4 no mark: Quotation Title & Meta Details */}
+              <div className="py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                <h2 className="text-lg sm:text-xl font-black text-[#008fd5] tracking-widest uppercase">
+                  QUOTATION
+                </h2>
+                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 mt-1 text-xs text-slate-700 font-medium">
+                  <span>
+                    Quotation Ref: <strong className="font-mono text-slate-900 font-bold">{selectedQuotation.quotationNumber}</strong>
+                  </span>
+                  <span className="hidden sm:inline text-slate-300">•</span>
+                  <span>
+                    Date: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.date)}</strong>
+                  </span>
+                  <span className="hidden sm:inline text-slate-300">•</span>
+                  <span>
+                    Valid Until: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.validUntil)}</strong>
+                  </span>
+                </div>
+              </div>
+
+              {/* Client & Project Information */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 bg-slate-50/80 rounded-lg border border-slate-200 text-xs">
+                <div>
+                  <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Quotation Prepared For:</span>
+                  <p className="font-bold text-slate-900 text-sm">{selectedQuotation.customerCompany}</p>
+                  <p className="text-slate-700">Attn: {selectedQuotation.customerName}</p>
+                  <p className="text-slate-600">{selectedQuotation.customerAddress}</p>
+                  <p className="text-slate-600">Phone: {selectedQuotation.customerPhone}</p>
+                  {selectedQuotation.customerBin && <p className="font-mono text-slate-600">BIN: {selectedQuotation.customerBin}</p>}
+                </div>
+
+                <div>
+                  <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Project & Sales Representative:</span>
+                  <p className="font-bold text-slate-900 text-sm">{selectedQuotation.projectName}</p>
+                  <p className="text-slate-700">Location: {selectedQuotation.projectLocation}</p>
+                  <p className="text-slate-600">Sales Representative: {selectedQuotation.salesperson}</p>
+                  <p className="text-slate-600">Reference: {selectedQuotation.reference || 'Direct RFQ'}</p>
+                </div>
+              </div>
+
+              {/* Clean Customer Facing Item Table (NO Internal Cost, NO Profit, NO Stock Levels) */}
+              <div className="overflow-x-auto touch-scroll">
+                <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden min-w-[520px]">
+                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
+                    <tr>
+                      <th className="p-2.5">SL</th>
+                      <th className="p-2.5">Description & Specification</th>
+                      <th className="p-2.5 text-center">Qty</th>
+                      <th className="p-2.5 text-right">Unit Price (BDT)</th>
+                      <th className="p-2.5 text-right">VAT</th>
+                      <th className="p-2.5 text-right">Total (BDT)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800 bg-white/80">
+                    {selectedQuotation.items.map((item, idx) => (
+                      <tr key={item.id}>
+                        <td className="p-2.5 font-bold text-slate-400">{idx + 1}</td>
+                        <td className="p-2.5">
+                          <div className="font-bold text-slate-900">{item.name}</div>
+                          {item.brand && <span className="text-[10px] text-slate-500 mr-2">Brand: {item.brand}</span>}
+                          {item.warranty && <span className="text-[10px] text-emerald-700 font-semibold mr-2">Warranty: {item.warranty}</span>}
+                          {item.leadTime && item.leadTime !== 'Immediate' && (
+                            <span className="text-[10px] text-amber-700 font-semibold">Delivery: {item.leadTime}</span>
+                          )}
+                        </td>
+                        <td className="p-2.5 text-center font-mono font-bold">
+                          {item.quantity} {item.unit}
+                        </td>
+                        <td className="p-2.5 text-right font-mono">
+                          {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-2.5 text-right font-mono text-slate-600">{item.vatPercent}%</td>
+                        <td className="p-2.5 text-right font-mono font-bold">
+                          {calculateItemTotal(item).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals Breakdown */}
+              <div className="flex justify-end pt-2">
+                <div className="w-64 space-y-1.5 text-xs text-slate-700">
+                  {(() => {
+                    const totals = calculateQuotationTotals(selectedQuotation);
+                    return (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Items Subtotal:</span>
+                          <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total VAT:</span>
+                          <span className="font-mono text-slate-900">{formatBDT(totals.totalVat)}</span>
+                        </div>
+                        <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 text-sm font-black text-slate-900">
+                          <span>Grand Total:</span>
+                          <span className="font-mono text-[#008fd5]">{formatBDT(totals.grandTotal)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Commercial Terms & Conditions */}
+              <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                <h4 className="font-bold text-slate-900 uppercase text-[10px]">Terms & Conditions:</h4>
+                <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
+                <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
+                <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
+                <p>&bull; <strong>Validity:</strong> Quotation valid for 30 calendar days from issue date.</p>
+              </div>
+
+              {/* Signature Block */}
+              <div className="grid grid-cols-2 pt-6 text-center text-xs">
+                <div>
+                  <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
+                  <p className="font-bold text-slate-800">Authorized Signature</p>
+                  <p className="text-slate-500 text-[10px]">Globo Tech</p>
+                </div>
+                <div>
+                  <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
+                  <p className="font-bold text-slate-800">Customer Acceptance Signature</p>
+                  <p className="text-slate-500 text-[10px]">{selectedQuotation.customerCompany}</p>
+                </div>
+              </div>
+
+              {/* Company Pad Footer matching official letterhead */}
+              <div className="border-t border-slate-200 pt-4 mt-8 text-center text-[11px] text-slate-600 space-y-1">
+                <p className="font-medium text-slate-700">
+                  Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                 </p>
-              </div>
-
-              <div className="text-left sm:text-right">
-                <h2 className="text-lg font-black text-blue-600 uppercase tracking-widest">OFFICIAL QUOTATION</h2>
-                <p className="font-mono font-bold text-slate-800 mt-1">{selectedQuotation.quotationNumber}</p>
-                <p className="text-slate-500 text-[11px]">Date: {formatDate(selectedQuotation.date)}</p>
-                <p className="text-slate-500 text-[11px]">Valid Until: {formatDate(selectedQuotation.validUntil)}</p>
-              </div>
-            </div>
-
-            {/* Client & Project Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
-              <div>
-                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Quotation Prepared For:</span>
-                <p className="font-bold text-slate-900 text-sm">{selectedQuotation.customerCompany}</p>
-                <p className="text-slate-700">Attn: {selectedQuotation.customerName}</p>
-                <p className="text-slate-600">{selectedQuotation.customerAddress}</p>
-                <p className="text-slate-600">Phone: {selectedQuotation.customerPhone}</p>
-                {selectedQuotation.customerBin && <p className="font-mono text-slate-600">BIN: {selectedQuotation.customerBin}</p>}
-              </div>
-
-              <div>
-                <span className="font-bold text-slate-500 uppercase text-[10px] block mb-1">Project & Sales Representative:</span>
-                <p className="font-bold text-slate-900 text-sm">{selectedQuotation.projectName}</p>
-                <p className="text-slate-700">Location: {selectedQuotation.projectLocation}</p>
-                <p className="text-slate-600">Sales Representative: {selectedQuotation.salesperson}</p>
-                <p className="text-slate-600">Reference: {selectedQuotation.reference || 'Direct RFQ'}</p>
-              </div>
-            </div>
-
-            {/* Clean Customer Facing Item Table (NO Internal Cost, NO Profit, NO Stock Levels) */}
-            <div className="overflow-x-auto touch-scroll">
-              <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden min-w-[520px]">
-              <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] border-b border-slate-200">
-                <tr>
-                  <th className="p-2.5">SL</th>
-                  <th className="p-2.5">Description & Specification</th>
-                  <th className="p-2.5 text-center">Qty</th>
-                  <th className="p-2.5 text-right">Unit Price (BDT)</th>
-                  <th className="p-2.5 text-right">VAT</th>
-                  <th className="p-2.5 text-right">Total (BDT)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-800">
-                {selectedQuotation.items.map((item, idx) => (
-                  <tr key={item.id}>
-                    <td className="p-2.5 font-bold text-slate-400">{idx + 1}</td>
-                    <td className="p-2.5">
-                      <div className="font-bold text-slate-900">{item.name}</div>
-                      {item.brand && <span className="text-[10px] text-slate-500 mr-2">Brand: {item.brand}</span>}
-                      {item.warranty && <span className="text-[10px] text-emerald-700 font-semibold mr-2">Warranty: {item.warranty}</span>}
-                      {item.leadTime && item.leadTime !== 'Immediate' && (
-                        <span className="text-[10px] text-amber-700 font-semibold">Delivery: {item.leadTime}</span>
-                      )}
-                    </td>
-                    <td className="p-2.5 text-center font-mono font-bold">
-                      {item.quantity} {item.unit}
-                    </td>
-                    <td className="p-2.5 text-right font-mono">
-                      {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="p-2.5 text-right font-mono text-slate-600">{item.vatPercent}%</td>
-                    <td className="p-2.5 text-right font-mono font-bold">
-                      {calculateItemTotal(item).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-
-            {/* Totals Breakdown */}
-            <div className="flex justify-end pt-2">
-              <div className="w-64 space-y-1.5 text-xs text-slate-700">
-                {(() => {
-                  const totals = calculateQuotationTotals(selectedQuotation);
-                  return (
-                    <>
-                      <div className="flex justify-between">
-                        <span>Items Subtotal:</span>
-                        <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Total VAT:</span>
-                        <span className="font-mono text-slate-900">{formatBDT(totals.totalVat)}</span>
-                      </div>
-                      <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 text-sm font-black text-slate-900">
-                        <span>Grand Total:</span>
-                        <span className="font-mono text-blue-600">{formatBDT(totals.grandTotal)}</span>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Commercial Terms & Conditions */}
-            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
-              <h4 className="font-bold text-slate-900 uppercase text-[10px]">Terms & Conditions:</h4>
-              <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
-              <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
-              <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
-              <p>&bull; <strong>Validity:</strong> Quotation valid for 30 calendar days from issue date.</p>
-            </div>
-
-            {/* Signature Block */}
-            <div className="grid grid-cols-2 pt-8 text-center text-xs">
-              <div>
-                <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
-                <p className="font-bold text-slate-800">Authorized Signature</p>
-                <p className="text-slate-500 text-[10px]">Apex Enterprise Bangladesh</p>
-              </div>
-              <div>
-                <div className="w-44 border-b border-slate-400 mx-auto mb-1"></div>
-                <p className="font-bold text-slate-800">Customer Acceptance Signature</p>
-                <p className="text-slate-500 text-[10px]">{selectedQuotation.customerCompany}</p>
+                <p className="font-semibold text-[#008fd5]">
+                  Web: www.globotechbd.com
+                </p>
               </div>
             </div>
           </div>
