@@ -623,6 +623,54 @@ export function QuotationView() {
   // Version History Modal State
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
 
+  // Quick Edit Terms & Conditions Modal State (Directly from PDF & Detail view)
+  const [isEditTermsModalOpen, setIsEditTermsModalOpen] = useState(false);
+  const [termsForm, setTermsForm] = useState({
+    paymentTerms: '',
+    deliveryTerms: '',
+    warrantyTerms: '',
+    notes: ''
+  });
+
+  const handleOpenEditTerms = (quote: Quotation) => {
+    setTermsForm({
+      paymentTerms: quote.paymentTerms || '',
+      deliveryTerms: quote.deliveryTerms || '',
+      warrantyTerms: quote.warrantyTerms || '',
+      notes: quote.notes || 'Quotation valid for 30 calendar days from issue date.'
+    });
+    setIsEditTermsModalOpen(true);
+  };
+
+  const handleSaveTerms = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedQuotation) return;
+    const updatedQuote: Quotation = {
+      ...selectedQuotation,
+      paymentTerms: termsForm.paymentTerms,
+      deliveryTerms: termsForm.deliveryTerms,
+      warrantyTerms: termsForm.warrantyTerms,
+      notes: termsForm.notes
+    };
+
+    setSelectedQuotation(updatedQuote);
+    setQuotations((currentList) =>
+      currentList.map((q) => (q.id === updatedQuote.id ? updatedQuote : q))
+    );
+
+    if (editingQuotationId === updatedQuote.id) {
+      setNewQuote((prev) => ({
+        ...prev,
+        paymentTerms: termsForm.paymentTerms,
+        deliveryTerms: termsForm.deliveryTerms,
+        warrantyTerms: termsForm.warrantyTerms,
+        notes: termsForm.notes
+      }));
+    }
+
+    setIsEditTermsModalOpen(false);
+  };
+
   // Customer List with localStorage Persistence
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (typeof window !== 'undefined') {
@@ -1999,7 +2047,136 @@ export function QuotationView() {
             )}
           </div>
 
-          {/* Form Actions */}
+          {/* Commercial Terms & Conditions (কোটেশনের শর্তাবলী) */}
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  Commercial Terms & Conditions (কোটেশনের বাণিজ্যিক শর্তাবলী)
+                </h3>
+                <span className="text-[11px] text-slate-400">Printed directly at the bottom of the customer Quotation A4 sheet</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* Payment Terms */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold">Payment Terms *</label>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setNewQuote({ ...newQuote, paymentTerms: e.target.value });
+                        }
+                      }}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Standard presets...</option>
+                      <option value="50% Advance with PO, 40% on Delivery, 10% on Commissioning">50% Adv, 40% Del, 10% Com</option>
+                      <option value="100% Advance Payment with Work Order">100% Advance with PO</option>
+                      <option value="50% Advance with PO, 50% on Delivery">50% Adv, 50% on Delivery</option>
+                      <option value="Net 30 Days after Delivery & Invoice">Net 30 Days</option>
+                      <option value="Net 15 Days after Invoice">Net 15 Days</option>
+                      <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                    </select>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuote.paymentTerms || ''}
+                    onChange={(e) => setNewQuote({ ...newQuote, paymentTerms: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                    placeholder="e.g. 50% Advance with PO, 40% on Delivery, 10% on Commissioning"
+                  />
+                </div>
+
+                {/* Delivery Terms */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold">Delivery Terms *</label>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setNewQuote({ ...newQuote, deliveryTerms: e.target.value });
+                        }
+                      }}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Standard presets...</option>
+                      <option value="Within 7 days from PO date">Within 7 days</option>
+                      <option value="Within 15 days from PO date">Within 15 days</option>
+                      <option value="Within 30 days from PO date">Within 30 days</option>
+                      <option value="Within 3-5 Working Days">Within 3-5 Working Days</option>
+                      <option value="Immediate Delivery from Central Warehouse">Immediate Delivery (Ex-Stock)</option>
+                    </select>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuote.deliveryTerms || ''}
+                    onChange={(e) => setNewQuote({ ...newQuote, deliveryTerms: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                    placeholder="e.g. Within 15 days from PO date"
+                  />
+                </div>
+
+                {/* Warranty Support */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setNewQuote({ ...newQuote, warrantyTerms: e.target.value });
+                        }
+                      }}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Standard presets...</option>
+                      <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
+                      <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
+                      <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
+                      <option value="24 Months Comprehensive Hardware Replacement & On-site Support">24 Months On-site Support</option>
+                      <option value="As per manufacturer standard policy">As per manufacturer policy</option>
+                    </select>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuote.warrantyTerms || ''}
+                    onChange={(e) => setNewQuote({ ...newQuote, warrantyTerms: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                    placeholder="e.g. 2 Years Comprehensive Hardware Replacement"
+                  />
+                </div>
+
+                {/* Validity & Special Conditions */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-300 font-semibold">Validity & Special Conditions</label>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setNewQuote({ ...newQuote, notes: e.target.value });
+                        }
+                      }}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Standard presets...</option>
+                      <option value="Quotation valid for 30 calendar days from issue date.">Valid for 30 calendar days</option>
+                      <option value="Quotation valid for 15 calendar days from issue date.">Valid for 15 calendar days</option>
+                      <option value="Quotation valid for 7 calendar days due to currency fluctuation.">Valid for 7 calendar days</option>
+                      <option value="Prices are subject to stock availability and valid for 30 days.">Subject to stock (30 days)</option>
+                    </select>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuote.notes || ''}
+                    onChange={(e) => setNewQuote({ ...newQuote, notes: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                    placeholder="e.g. Quotation valid for 30 calendar days from issue date."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
               onClick={() => {
@@ -2440,12 +2617,22 @@ export function QuotationView() {
               </div>
 
               {/* Commercial Terms & Conditions (Clean & Transparent - Watermark Fully Visible) */}
-              <div className="pt-2 text-[11px] text-slate-800 space-y-1 bg-transparent">
-                <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider">Terms & Conditions:</h4>
+              <div className="pt-2 text-[11px] text-slate-800 space-y-1 bg-transparent group relative">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider">Terms & Conditions:</h4>
+                  <button
+                    onClick={() => handleOpenEditTerms(selectedQuotation)}
+                    className="no-print text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-sm transition cursor-pointer"
+                    title="Click to edit Terms and Conditions"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>Edit Terms & Conditions</span>
+                  </button>
+                </div>
                 <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
                 <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
                 <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
-                <p>&bull; <strong>Validity:</strong> Quotation valid for 30 calendar days from issue date.</p>
+                <p>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</p>
               </div>
 
               {/* Signature Block */}
@@ -3217,6 +3404,140 @@ export function QuotationView() {
                 className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 transition"
               >
                 <Plus className="w-4 h-4" /> Save & Select Customer
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          9. MODAL: EDIT TERMS & CONDITIONS (DIRECT FROM PDF / DETAIL)
+          ======================================================== */}
+      {isEditTermsModalOpen && selectedQuotation && (
+        <Modal
+          isOpen={isEditTermsModalOpen}
+          onClose={() => setIsEditTermsModalOpen(false)}
+          title={`Edit Terms & Conditions (${selectedQuotation.quotationNumber})`}
+          size="lg"
+        >
+          <form onSubmit={handleSaveTerms} className="space-y-4 text-xs">
+            <p className="text-slate-300">
+              Customize the commercial terms and conditions for quotation <strong className="text-slate-100">{selectedQuotation.quotationNumber}</strong>:
+            </p>
+
+            {/* Payment Terms */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">Payment Terms *</label>
+                <select
+                  onChange={(e) => e.target.value && setTermsForm({ ...termsForm, paymentTerms: e.target.value })}
+                  className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                >
+                  <option value="">Choose preset...</option>
+                  <option value="50% Advance with PO, 40% on Delivery, 10% on Commissioning">50% Adv, 40% Del, 10% Com</option>
+                  <option value="100% Advance Payment with Work Order">100% Advance with PO</option>
+                  <option value="50% Advance with PO, 50% on Delivery">50% Adv, 50% on Delivery</option>
+                  <option value="Net 30 Days after Delivery & Invoice">Net 30 Days</option>
+                  <option value="Net 15 Days after Invoice">Net 15 Days</option>
+                  <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                </select>
+              </div>
+              <textarea
+                required
+                rows={2}
+                value={termsForm.paymentTerms}
+                onChange={(e) => setTermsForm({ ...termsForm, paymentTerms: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+              />
+            </div>
+
+            {/* Delivery Terms */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">Delivery Terms *</label>
+                <select
+                  onChange={(e) => e.target.value && setTermsForm({ ...termsForm, deliveryTerms: e.target.value })}
+                  className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                >
+                  <option value="">Choose preset...</option>
+                  <option value="Within 7 days from PO date">Within 7 days</option>
+                  <option value="Within 15 days from PO date">Within 15 days</option>
+                  <option value="Within 30 days from PO date">Within 30 days</option>
+                  <option value="Within 3-5 Working Days">Within 3-5 Working Days</option>
+                  <option value="Immediate Delivery from Central Warehouse">Immediate Delivery</option>
+                </select>
+              </div>
+              <textarea
+                required
+                rows={2}
+                value={termsForm.deliveryTerms}
+                onChange={(e) => setTermsForm({ ...termsForm, deliveryTerms: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+              />
+            </div>
+
+            {/* Warranty Support */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                <select
+                  onChange={(e) => e.target.value && setTermsForm({ ...termsForm, warrantyTerms: e.target.value })}
+                  className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                >
+                  <option value="">Choose preset...</option>
+                  <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
+                  <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
+                  <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
+                  <option value="24 Months Comprehensive Hardware Replacement & On-site Support">24 Months On-site Support</option>
+                  <option value="As per manufacturer standard policy">As per manufacturer policy</option>
+                </select>
+              </div>
+              <textarea
+                required
+                rows={2}
+                value={termsForm.warrantyTerms}
+                onChange={(e) => setTermsForm({ ...termsForm, warrantyTerms: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+              />
+            </div>
+
+            {/* Validity / Notes */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">Validity & Additional Conditions</label>
+                <select
+                  onChange={(e) => e.target.value && setTermsForm({ ...termsForm, notes: e.target.value })}
+                  className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                >
+                  <option value="">Choose preset...</option>
+                  <option value="Quotation valid for 30 calendar days from issue date.">Valid for 30 calendar days</option>
+                  <option value="Quotation valid for 15 calendar days from issue date.">Valid for 15 calendar days</option>
+                  <option value="Quotation valid for 7 calendar days due to currency fluctuation.">Valid for 7 calendar days</option>
+                  <option value="Prices are subject to stock availability and valid for 30 days.">Subject to stock (30 days)</option>
+                </select>
+              </div>
+              <textarea
+                rows={2}
+                value={termsForm.notes}
+                onChange={(e) => setTermsForm({ ...termsForm, notes: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                placeholder="e.g. Quotation valid for 30 calendar days from issue date."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsEditTermsModalOpen(false)}
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-md shadow-blue-500/20"
+              >
+                Update Terms & Conditions
               </button>
             </div>
           </form>
