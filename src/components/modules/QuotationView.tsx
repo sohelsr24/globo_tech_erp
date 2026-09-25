@@ -1641,8 +1641,10 @@ export function QuotationView() {
               {/* 4 no mark: Quotation Title & Meta Details */}
               <div className="relative py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between min-h-[48px]">
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <h2 className="text-lg sm:text-xl font-black text-[#008fd5] tracking-widest uppercase">
-                    QUOTATION
+                  <h2 className="text-lg sm:text-xl font-black text-[#008fd5] uppercase">
+                    <span className="border-b-2 border-[#008fd5] pb-0.5 tracking-widest inline-block">
+                      QUOTATION
+                    </span>
                   </h2>
                 </div>
 
