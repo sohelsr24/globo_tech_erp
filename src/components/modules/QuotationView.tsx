@@ -1603,31 +1603,33 @@ export function QuotationView() {
 
             <div className="relative z-10 space-y-4 sm:space-y-6">
               {/* Header / Brand Layout according to company pad */}
-              <div className="flex flex-row justify-between items-center gap-4">
-                {/* 1 no mark: Company Logo & 2 no mark: Company Name */}
-                <div className="flex items-center gap-3 sm:gap-4">
-                  {/* 1 no mark: Company Logo */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-3 sm:gap-4 pb-2">
+                {/* 1 no mark: Company Logo (Left Aligned, Larger) */}
+                <div className="flex items-center justify-center sm:justify-start">
                   <img
                     src={GLOBO_TECH_LOGO_DATA_URL}
                     alt="Globo Tech Logo"
-                    className="h-12 sm:h-14 w-auto object-contain flex-shrink-0"
+                    className="h-16 sm:h-20 md:h-22 w-auto object-contain flex-shrink-0"
                   />
-                  {/* 2 no mark: Company Name */}
-                  <div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#008fd5] leading-none">
-                      Globo Tech
-                    </h1>
-                  </div>
+                </div>
+
+                {/* 2 no mark: Company Name (Centered in the middle, Larger Font) */}
+                <div className="flex items-center justify-center text-center">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
+                    Globo Tech
+                  </h1>
                 </div>
 
                 {/* 3 no mark: Company Address (Right Aligned) */}
-                <div className="text-right">
-                  <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
-                    Rahman Chamber (2nd Floor),
-                  </p>
-                  <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
-                    12/13 Motijheel C/A, Dhaka-1000.
-                  </p>
+                <div className="flex items-center justify-center sm:justify-end text-center sm:text-right">
+                  <div>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
+                      Rahman Chamber (2nd Floor),
+                    </p>
+                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
+                      12/13 Motijheel C/A, Dhaka-1000.
+                    </p>
+                  </div>
                 </div>
               </div>
 
