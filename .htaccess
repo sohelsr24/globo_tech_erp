@@ -1,0 +1,24 @@
+# Disable Directory Listing
+Options -Indexes
+
+# Enable Rewrite Engine
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve existing files and directories directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Route all other requests to index.html for SPA client-side routing
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Ensure proper MIME types for Next.js assets
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType text/css .css
+  AddType application/json .json
+  AddType image/svg+xml .svg
+</IfModule>

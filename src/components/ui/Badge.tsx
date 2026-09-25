@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface BadgeProps {
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'purple';
+  variant?: 'default' | 'neutral' | 'success' | 'warning' | 'danger' | 'info' | 'blue' | 'purple';
   children: React.ReactNode;
   className?: string;
 }
@@ -9,10 +9,12 @@ interface BadgeProps {
 export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
   const variantStyles = {
     default: 'bg-slate-800 text-slate-300 border-slate-700',
+    neutral: 'bg-slate-800 text-slate-300 border-slate-700',
     success: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60',
     warning: 'bg-amber-950/80 text-amber-400 border-amber-800/60',
     danger: 'bg-rose-950/80 text-rose-400 border-rose-800/60',
     info: 'bg-cyan-950/80 text-cyan-400 border-cyan-800/60',
+    blue: 'bg-blue-950/80 text-blue-400 border-blue-800/60',
     purple: 'bg-purple-950/80 text-purple-400 border-purple-800/60',
   };
 

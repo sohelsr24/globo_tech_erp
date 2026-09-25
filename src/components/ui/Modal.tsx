@@ -10,6 +10,7 @@ interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl';
 }
 
 export function Modal({
@@ -18,10 +19,12 @@ export function Modal({
   title,
   children,
   footer,
-  maxWidth = '2xl'
+  maxWidth,
+  size
 }: ModalProps) {
   if (!isOpen) return null;
 
+  const widthKey = size || maxWidth || '2xl';
   const maxWidthClass = {
     sm: 'max-w-sm',
     md: 'max-w-md',
@@ -29,7 +32,7 @@ export function Modal({
     xl: 'max-w-xl',
     '2xl': 'max-w-2xl',
     '4xl': 'max-w-4xl',
-  }[maxWidth];
+  }[widthKey] || 'max-w-2xl';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
