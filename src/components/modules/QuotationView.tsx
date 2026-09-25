@@ -796,6 +796,36 @@ export function QuotationView() {
     });
   };
 
+  // Update Item Unit directly
+  const handleUpdateItemUnit = (itemId: string, newUnit: string) => {
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, unit: newUnit } : item
+      )
+    }));
+  };
+
+  // Update Item Quantity directly
+  const handleUpdateItemQuantity = (itemId: string, newQty: number) => {
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, quantity: Math.max(1, isNaN(newQty) ? 1 : newQty) } : item
+      )
+    }));
+  };
+
+  // Update Item Unit Price directly
+  const handleUpdateItemUnitPrice = (itemId: string, newPrice: number) => {
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, unitPrice: Math.max(0, isNaN(newPrice) ? 0 : newPrice) } : item
+      )
+    }));
+  };
+
   // Save Quotation (with validation & approval rule triggers)
   const handleSaveQuotation = () => {
     if (!newQuote.customerCompany || !newQuote.projectName) {
@@ -1481,11 +1511,71 @@ export function QuotationView() {
                               <span className="text-slate-500 text-[11px]">Non-Inventory Charge</span>
                             )}
                           </td>
-                          <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-100">
-                            {item.quantity} {item.unit}
+                          <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                            <div className="inline-flex items-center justify-center gap-1.5 bg-slate-950/70 border border-slate-700/80 rounded-lg px-2 py-1 shadow-inner">
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.quantity}
+                                onChange={(e) => handleUpdateItemQuantity(item.id, Number(e.target.value))}
+                                className="w-12 bg-transparent text-center font-mono font-bold text-slate-100 text-xs focus:outline-none focus:bg-slate-900 rounded"
+                                title="Edit Quantity"
+                              />
+                              <select
+                                value={
+                                  ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                                    (item.unit || '').toLowerCase()
+                                  )
+                                    ? (item.unit || '').toLowerCase()
+                                    : (item.unit || 'pcs')
+                                }
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '__CUSTOM__') {
+                                    const custom = prompt(
+                                      'Custom Unit লিখুন (যেমন: coil, bundle, drum, sqft, trip, license):',
+                                      item.unit || ''
+                                    );
+                                    if (custom && custom.trim()) {
+                                      handleUpdateItemUnit(item.id, custom.trim());
+                                    }
+                                  } else {
+                                    handleUpdateItemUnit(item.id, val);
+                                  }
+                                }}
+                                className="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-blue-400 font-semibold text-xs rounded px-1.5 py-0.5 focus:outline-none focus:border-blue-500 cursor-pointer transition shadow-sm"
+                                title="Select or Change Unit (pcs, nos, job, packet, box, etc.)"
+                              >
+                                <option value="pcs">pcs</option>
+                                <option value="nos">nos</option>
+                                <option value="job">job</option>
+                                <option value="packet">packet</option>
+                                <option value="box">box</option>
+                                <option value="set">set</option>
+                                <option value="meter">meter</option>
+                                <option value="roll">roll</option>
+                                <option value="lot">lot</option>
+                                <option value="unit">unit</option>
+                                {item.unit &&
+                                  !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                                    item.unit.toLowerCase()
+                                  ) && <option value={item.unit}>{item.unit}</option>}
+                                <option value="__CUSTOM__">✏️ Custom Unit...</option>
+                              </select>
+                            </div>
                           </td>
-                          <td className="px-3 py-2.5 text-right font-mono text-slate-200">
-                            {formatBDT(item.unitPrice)}
+                          <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                            <div className="inline-flex items-center justify-end gap-1">
+                              <span className="text-slate-400 font-mono text-xs">৳</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={item.unitPrice}
+                                onChange={(e) => handleUpdateItemUnitPrice(item.id, Number(e.target.value))}
+                                className="w-24 bg-slate-950/70 border border-slate-700/80 rounded px-2 py-1 text-right font-mono font-bold text-slate-100 text-xs focus:outline-none focus:border-blue-500"
+                                title="Edit Unit Price"
+                              />
+                            </div>
                           </td>
                           <td className="px-3 py-2.5 text-right font-mono text-slate-400">
                             {item.vatPercent}%
@@ -2203,7 +2293,11 @@ export function QuotationView() {
                       onChange={(e) => setItemForm({ ...itemForm, unit: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                     >
-                      <option value="Job">Job</option>
+                      <option value="job">job</option>
+                      <option value="nos">nos</option>
+                      <option value="pcs">pcs</option>
+                      <option value="packet">packet</option>
+                      <option value="box">box</option>
                       <option value="Project">Project (Lump Sum)</option>
                       <option value="Points">Points (Per Camera/Node)</option>
                       <option value="Days">Days (Man-day)</option>
@@ -2264,8 +2358,8 @@ export function QuotationView() {
               />
             </div>
 
-            {/* Common Item Parameters (Qty, Quoted Price, VAT) */}
-            <div className="grid grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-800">
+            {/* Common Item Parameters (Qty, Unit, Quoted Price, VAT) */}
+            <div className="grid grid-cols-4 gap-3 text-xs pt-2 border-t border-slate-800">
               <div>
                 <label className="block text-slate-400 font-semibold mb-1">Quantity *</label>
                 <input
@@ -2275,6 +2369,51 @@ export function QuotationView() {
                   onChange={(e) => setItemForm({ ...itemForm, quantity: Number(e.target.value) })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono font-bold"
                 />
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Unit *</label>
+                <select
+                  value={
+                    ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                      (itemForm.unit || '').toLowerCase()
+                    )
+                      ? (itemForm.unit || '').toLowerCase()
+                      : (itemForm.unit || 'pcs')
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '__CUSTOM__') {
+                      const custom = prompt(
+                        'Custom Unit লিখুন (যেমন: coil, bundle, drum, sqft, trip, license):',
+                        itemForm.unit || ''
+                      );
+                      if (custom && custom.trim()) {
+                        setItemForm({ ...itemForm, unit: custom.trim() });
+                      }
+                    } else {
+                      setItemForm({ ...itemForm, unit: val });
+                    }
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-slate-100 font-semibold text-xs focus:border-blue-500 focus:outline-none cursor-pointer"
+                  title="Unit"
+                >
+                  <option value="pcs">pcs</option>
+                  <option value="nos">nos</option>
+                  <option value="job">job</option>
+                  <option value="packet">packet</option>
+                  <option value="box">box</option>
+                  <option value="set">set</option>
+                  <option value="meter">meter</option>
+                  <option value="roll">roll</option>
+                  <option value="lot">lot</option>
+                  <option value="unit">unit</option>
+                  {itemForm.unit &&
+                    !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                      itemForm.unit.toLowerCase()
+                    ) && <option value={itemForm.unit}>{itemForm.unit}</option>}
+                  <option value="__CUSTOM__">✏️ Custom Unit...</option>
+                </select>
               </div>
 
               <div>
