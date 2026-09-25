@@ -1591,7 +1591,7 @@ export function QuotationView() {
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-10 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-4 sm:space-y-6 overflow-hidden">
+          <div className="relative bg-white text-slate-900 rounded-xl p-4 sm:px-8 sm:py-6 max-w-4xl mx-auto shadow-2xl printable-area font-sans text-xs space-y-3 sm:space-y-4 overflow-hidden">
             {/* Watermark in background matching company pad */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.05] z-0 overflow-hidden">
               <img
@@ -1601,47 +1601,46 @@ export function QuotationView() {
               />
             </div>
 
-            <div className="relative z-10 space-y-4 sm:space-y-6">
+            <div className="relative z-10 space-y-3 sm:space-y-4">
               {/* Header / Brand Layout according to company pad */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-3 sm:gap-4 pb-2">
-                {/* 1 no mark: Company Logo (Left Aligned, Larger) */}
-                <div className="flex items-center justify-center sm:justify-start">
-                  <img
-                    src={GLOBO_TECH_LOGO_DATA_URL}
-                    alt="Globo Tech Logo"
-                    className="h-16 sm:h-20 md:h-22 w-auto object-contain flex-shrink-0"
-                  />
-                </div>
+              <div className="border-b-2 border-[#008fd5] pb-2 sm:pb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 items-center gap-2 sm:gap-4">
+                  {/* 1 no mark: Company Logo (Left Aligned, Larger) */}
+                  <div className="flex items-center justify-center sm:justify-start">
+                    <img
+                      src={GLOBO_TECH_LOGO_DATA_URL}
+                      alt="Globo Tech Logo"
+                      className="h-16 sm:h-20 md:h-22 w-auto object-contain flex-shrink-0"
+                    />
+                  </div>
 
-                {/* 2 no mark: Company Name (Centered in the middle, Larger Font) */}
-                <div className="flex items-center justify-center text-center">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
-                    Globo Tech
-                  </h1>
-                </div>
+                  {/* 2 no mark: Company Name (Centered in the middle, Larger Font) */}
+                  <div className="flex items-center justify-center text-center">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
+                      Globo Tech
+                    </h1>
+                  </div>
 
-                {/* 3 no mark: Company Address (Right Aligned) */}
-                <div className="flex items-center justify-center sm:justify-end text-center sm:text-right">
-                  <div>
-                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
-                      Rahman Chamber (2nd Floor),
-                    </p>
-                    <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
-                      12/13 Motijheel C/A, Dhaka-1000.
-                    </p>
+                  {/* 3 no mark: Company Address (Right Aligned) */}
+                  <div className="flex items-center justify-center sm:justify-end text-center sm:text-right">
+                    <div>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
+                        Rahman Chamber (2nd Floor),
+                      </p>
+                      <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug whitespace-nowrap">
+                        12/13 Motijheel C/A, Dhaka-1000.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Pad Horizontal Divider Line */}
-              <div className="border-b-2 border-[#008fd5] w-full" />
-
               {/* 4 no mark: Quotation Title & Meta Details */}
-              <div className="py-2.5 px-4 bg-slate-50 border border-slate-200 rounded-lg text-center">
-                <h2 className="text-lg sm:text-xl font-black text-[#008fd5] tracking-widest uppercase">
+              <div className="py-1.5 sm:py-2 px-4 bg-slate-50 border border-slate-200 rounded-lg text-center">
+                <h2 className="text-base sm:text-lg font-black text-[#008fd5] tracking-widest uppercase">
                   QUOTATION
                 </h2>
-                <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-1 mt-1 text-xs text-slate-700 font-medium">
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-0.5 mt-0.5 text-xs text-slate-700 font-medium">
                   <span>
                     Quotation Ref: <strong className="font-mono text-slate-900 font-bold">{selectedQuotation.quotationNumber}</strong>
                   </span>
