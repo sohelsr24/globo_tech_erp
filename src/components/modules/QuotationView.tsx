@@ -1647,10 +1647,6 @@ export function QuotationView() {
                   <span>
                     Date: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.date)}</strong>
                   </span>
-                  <span className="hidden sm:inline text-slate-300">•</span>
-                  <span>
-                    Valid Until: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.validUntil)}</strong>
-                  </span>
                 </div>
               </div>
 
