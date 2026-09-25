@@ -775,7 +775,7 @@ export function QuotationView() {
     quantity: 1,
     unitPrice: 0,
     discountPercent: 0,
-    vatPercent: 7.5,
+    vatPercent: 15,
     unitCost: 0,
     leadTime: 'Immediate',
     source: 'EXISTING_STOCK',
@@ -962,7 +962,7 @@ export function QuotationView() {
       quantity: 1,
       unitPrice: 0,
       discountPercent: 0,
-      vatPercent: 7.5,
+      vatPercent: 15,
       unitCost: 0,
       leadTime: 'Immediate',
       source: 'EXISTING_STOCK',
@@ -1683,7 +1683,7 @@ export function QuotationView() {
                     <th className="px-3 py-2.5">Warehouse / Stock Status</th>
                     <th className="px-3 py-2.5 text-center">Quoted Qty</th>
                     <th className="px-3 py-2.5 text-right">Unit Price</th>
-                    <th className="px-3 py-2.5 text-right">VAT & TAX % (Mushak 6.6)</th>
+                    <th className="px-3 py-2.5 text-right">VAT % (Mushak 6.3)</th>
                     <th className="px-3 py-2.5 text-right">Line Total</th>
                     <th className="px-3 py-2.5 text-right">Actions</th>
                   </tr>
@@ -1823,23 +1823,23 @@ export function QuotationView() {
                                 value={item.vatPercent}
                                 onChange={(e) => handleUpdateItemVatPercent(item.id, Number(e.target.value))}
                                 className="w-12 bg-slate-950/70 border border-slate-700/80 rounded px-1.5 py-1 text-right font-mono font-bold text-slate-100 text-xs focus:outline-none focus:border-blue-500"
-                                title="Edit VAT & TAX % (Mushak 6.6)"
+                                title="Edit VAT % (Mushak 6.3)"
                               />
                               <select
                                 value={item.vatPercent}
                                 onChange={(e) => handleUpdateItemVatPercent(item.id, Number(e.target.value))}
                                 className="bg-slate-900 border border-slate-700/80 text-[10px] text-slate-300 rounded px-1 py-1 cursor-pointer focus:outline-none focus:border-blue-500 hover:bg-slate-800"
-                                title="Select Preset Rate"
+                                title="Select Mushak 6.3 Preset Rate"
                               >
-                                <option value="7.5">7.5%</option>
+                                <option value="15">15% (Std)</option>
                                 <option value="10">10%</option>
-                                <option value="15">15%</option>
-                                <option value="17.5">17.5%</option>
-                                <option value="20">20%</option>
-                                <option value="25">25%</option>
+                                <option value="7.5">7.5%</option>
                                 <option value="5">5%</option>
+                                <option value="25">25%</option>
+                                <option value="20">20%</option>
+                                <option value="17.5">17.5%</option>
                                 <option value="0">0%</option>
-                                {!['7.5', '10', '15', '17.5', '20', '25', '5', '0'].includes(String(item.vatPercent)) && (
+                                {!['15', '10', '7.5', '5', '25', '20', '17.5', '0'].includes(String(item.vatPercent)) && (
                                   <option value={item.vatPercent}>{item.vatPercent}%</option>
                                 )}
                               </select>
@@ -2095,8 +2095,8 @@ export function QuotationView() {
                         )}
                         <td className="px-3 py-2.5 text-right font-mono text-slate-200">
                           {formatBDT(item.unitPrice)}
-                          <div className="text-[10px] text-emerald-400 font-mono mt-0.5" title="Inclusive of VAT & TAX (Mushak 6.6)">
-                            ৳{((item.unitPrice || 0) * (1 + (item.vatPercent || 0) / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (inc. {item.vatPercent || 0}% tax)
+                          <div className="text-[10px] text-emerald-400 font-mono mt-0.5" title="Inclusive of VAT (Mushak 6.3)">
+                            ৳{((item.unitPrice || 0) * (1 + (item.vatPercent || 0) / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (inc. {item.vatPercent || 0}% VAT - Mushak 6.3)
                           </div>
                         </td>
                         {showInternalCosting && (
@@ -2334,11 +2334,15 @@ export function QuotationView() {
                     return (
                       <>
                         <div className="flex justify-between">
-                          <span>Items Subtotal (Incl. VAT & TAX):</span>
+                          <span>Items Subtotal (Incl. VAT):</span>
                           <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.grandTotal)}</span>
                         </div>
                         <div className="flex justify-between text-[11px] text-slate-600">
-                          <span>Included VAT & TAX (Mushak 6.6):</span>
+                          <span>Base Supply Value (Excl. VAT):</span>
+                          <span className="font-mono font-medium">{formatBDT(totals.subtotal)}</span>
+                        </div>
+                        <div className="flex justify-between text-[11px] text-slate-600">
+                          <span>Total VAT (Mushak 6.3):</span>
                           <span className="font-mono font-medium">{formatBDT(totals.totalVat)}</span>
                         </div>
                         <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 text-sm font-black text-slate-900">
@@ -2698,9 +2702,9 @@ export function QuotationView() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-slate-400 font-semibold truncate">VAT & TAX %</label>
+                  <label className="block text-slate-400 font-semibold truncate">VAT %</label>
                   <span className="text-[10px] text-blue-400 font-bold bg-blue-950/80 px-1.5 py-0.5 rounded border border-blue-800 flex-shrink-0">
-                    Mushak 6.6
+                    Mushak 6.3
                   </span>
                 </div>
                 <div className="flex gap-1.5">
@@ -2711,23 +2715,23 @@ export function QuotationView() {
                     value={itemForm.vatPercent}
                     onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
                     className="w-16 bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-slate-100 font-mono font-bold text-center"
-                    placeholder="7.5"
+                    placeholder="15"
                   />
                   <select
                     value={itemForm.vatPercent}
                     onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
                     className="flex-1 min-w-0 bg-slate-900 border border-slate-700 rounded-lg px-2 text-[11px] text-slate-300 font-semibold cursor-pointer hover:bg-slate-800 focus:outline-none focus:border-blue-500"
-                    title="Select Mushak 6.6 Presets"
+                    title="Select Mushak 6.3 VAT Presets"
                   >
-                    <option value="7.5">7.5% (VDS)</option>
-                    <option value="10">10%</option>
-                    <option value="15">15% (Std)</option>
-                    <option value="17.5">17.5% (VAT+AIT)</option>
+                    <option value="15">15% (Standard Mushak 6.3)</option>
+                    <option value="10">10% (Reduced Rate)</option>
+                    <option value="7.5">7.5% (Specific / Services)</option>
+                    <option value="5">5% (Reduced Rate)</option>
+                    <option value="25">25% (High Tier / SD)</option>
                     <option value="20">20%</option>
-                    <option value="25">25%</option>
-                    <option value="5">5%</option>
-                    <option value="0">0%</option>
-                    {!['7.5', '10', '15', '17.5', '20', '25', '5', '0'].includes(String(itemForm.vatPercent)) && (
+                    <option value="17.5">17.5% (VAT+AIT)</option>
+                    <option value="0">0% (Exempt)</option>
+                    {!['15', '10', '7.5', '5', '25', '20', '17.5', '0'].includes(String(itemForm.vatPercent)) && (
                       <option value={itemForm.vatPercent}>{itemForm.vatPercent}% (Custom)</option>
                     )}
                   </select>
@@ -2735,25 +2739,33 @@ export function QuotationView() {
               </div>
             </div>
 
-            {/* Live Calculation preview for unit price with VAT & TAX */}
-            <div className="p-2.5 bg-blue-950/40 border border-blue-800/60 rounded-lg text-xs flex flex-wrap items-center justify-between gap-2">
-              <div className="text-slate-300">
-                Effective Quoted Unit Price (Printed on Quotation):{' '}
-                <span className="text-emerald-400 font-bold font-mono text-sm">
-                  ৳{((itemForm.unitPrice || 0) * (1 + (itemForm.vatPercent || 0) / 100)).toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                </span>{' '}
-                <span className="text-[10px] text-slate-400">(Includes {itemForm.vatPercent || 0}% VAT & TAX - Mushak 6.6)</span>
+            {/* Live Calculation preview for unit price with VAT (Mushak 6.3) */}
+            <div className="p-2.5 bg-blue-950/40 border border-blue-800/60 rounded-lg text-xs space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-slate-300">
+                  Effective Quoted Unit Price (Printed on Quotation):{' '}
+                  <span className="text-emerald-400 font-bold font-mono text-sm">
+                    ৳{((itemForm.unitPrice || 0) * (1 + (itemForm.vatPercent || 0) / 100)).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                  </span>{' '}
+                  <span className="text-[10px] text-slate-400">(Includes {itemForm.vatPercent || 0}% VAT - Mushak 6.3)</span>
+                </div>
+                <div className="text-slate-300">
+                  Line Total ({itemForm.quantity || 1} {itemForm.unit || 'pcs'}):{' '}
+                  <span className="text-blue-400 font-bold font-mono text-sm">
+                    ৳{(((itemForm.quantity || 1) * (itemForm.unitPrice || 0)) * (1 + (itemForm.vatPercent || 0) / 100)).toLocaleString('en-IN', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    })}
+                  </span>
+                </div>
               </div>
-              <div className="text-slate-300">
-                Line Total ({itemForm.quantity || 1} {itemForm.unit || 'pcs'}):{' '}
-                <span className="text-blue-400 font-bold font-mono text-sm">
-                  ৳{(((itemForm.quantity || 1) * (itemForm.unitPrice || 0)) * (1 + (itemForm.vatPercent || 0) / 100)).toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
+              <div className="text-[11px] text-slate-400 flex items-center justify-between border-t border-blue-900/60 pt-1">
+                <span>Mushak 6.3 Calculation per unit:</span>
+                <span className="font-mono text-slate-300">
+                  Base: ৳{(itemForm.unitPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })} + VAT ({itemForm.vatPercent || 0}%): ৳{(((itemForm.unitPrice || 0) * (itemForm.vatPercent || 0)) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })} = ৳{((itemForm.unitPrice || 0) * (1 + (itemForm.vatPercent || 0) / 100)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </span>
               </div>
             </div>
