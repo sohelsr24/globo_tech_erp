@@ -148,16 +148,19 @@ export function CustomersView() {
 
   const handleAddCustomer = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCustomer.name || !newCustomer.phone) return;
+    if (!newCustomer.name && !newCustomer.company) return;
+
+    const company = (newCustomer.company || newCustomer.name).trim();
+    const contactPerson = (newCustomer.name || newCustomer.company).trim();
 
     const item: Customer = {
       id: `cust-${Date.now()}`,
-      name: newCustomer.name,
-      company: newCustomer.company,
+      name: contactPerson,
+      company: company,
       type: newCustomer.type,
-      phone: newCustomer.phone,
+      phone: newCustomer.phone.trim() || '',
       email: newCustomer.email,
-      address: newCustomer.address,
+      address: newCustomer.address || 'Dhaka, Bangladesh',
       binNumber: newCustomer.binNumber,
       creditLimit: Number(newCustomer.creditLimit),
       currentDues: 0,
@@ -452,12 +455,11 @@ export function CustomersView() {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Phone Number *
+                  Phone Number
                 </label>
                 <input
                   type="text"
-                  required
-                  placeholder="+880 1700-000000"
+                  placeholder="+880 1700-000000 (Optional)"
                   value={newCustomer.phone}
                   onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-blue-500 focus:outline-none"

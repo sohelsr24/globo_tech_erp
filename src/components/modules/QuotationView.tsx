@@ -466,18 +466,19 @@ export function QuotationView() {
 
   const handleCreateCustomerFromQuotation = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerModalForm.name.trim() || !customerModalForm.phone.trim()) {
-      alert('Please provide Customer Name and Phone Number');
+    if (!customerModalForm.company.trim() && !customerModalForm.name.trim()) {
+      alert('Please provide Company / Organization Name');
       return;
     }
 
     const companyName = customerModalForm.company.trim() || customerModalForm.name.trim();
+    const contactName = customerModalForm.name.trim() || companyName;
     const createdCustomer: Customer = {
       id: `cust-${Date.now()}`,
-      name: customerModalForm.name.trim(),
+      name: contactName,
       company: companyName,
       type: customerModalForm.type,
-      phone: customerModalForm.phone.trim(),
+      phone: customerModalForm.phone.trim() || '',
       email: customerModalForm.email.trim(),
       address: customerModalForm.address.trim() || 'Dhaka, Bangladesh',
       binNumber: customerModalForm.binNumber.trim(),
@@ -2353,11 +2354,10 @@ export function QuotationView() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Contact Person (Attn) *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Contact Person (Attn)</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. Engr. Tanvir Ahmed"
+                  placeholder="e.g. Engr. Tanvir Ahmed (Optional)"
                   value={customerModalForm.name}
                   onChange={(e) => setCustomerModalForm({ ...customerModalForm, name: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
@@ -2380,11 +2380,10 @@ export function QuotationView() {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Phone Number *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Phone Number</label>
                 <input
                   type="tel"
-                  required
-                  placeholder="e.g. +880 1711-000000"
+                  placeholder="e.g. +880 1711-000000 (Optional)"
                   value={customerModalForm.phone}
                   onChange={(e) => setCustomerModalForm({ ...customerModalForm, phone: e.target.value })}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
