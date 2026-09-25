@@ -2629,7 +2629,7 @@ export function QuotationView() {
                         )}
                         <div className="flex justify-between border-t-2 border-slate-900 pt-1.5 text-sm font-black text-slate-900">
                           <span>Grand Total (BDT):</span>
-                          <span className="font-mono text-[#008fd5]">{formatBDT(totals.grandTotal)}</span>
+                          <span className="font-mono text-black font-black">{formatBDT(totals.grandTotal)}</span>
                         </div>
                       </>
                     );
@@ -2682,7 +2682,7 @@ export function QuotationView() {
                   </div>
                   <div className="w-48 sm:w-56 border-b-2 border-slate-800 mb-1.5"></div>
                   <p className="font-bold text-slate-900 text-xs sm:text-sm tracking-wide">Authorized Signature</p>
-                  <p className="text-[#008fd5] font-semibold text-[11px] leading-tight">Globo Tech</p>
+                  <p className="text-black font-bold text-[11px] leading-tight">Globo Tech</p>
                 </div>
 
                 {/* Right Column: Customer Acceptance Signature */}
@@ -2702,7 +2702,7 @@ export function QuotationView() {
                 <p className="font-medium text-slate-700">
                   Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                 </p>
-                <p className="font-semibold text-[#008fd5]">
+                <p className="font-bold text-black">
                   Web: www.globotechbd.com
                 </p>
               </div>
