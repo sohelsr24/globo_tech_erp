@@ -34,15 +34,15 @@ export interface Customer {
   paymentTerms: string;
 }
 
-const INITIAL_CUSTOMERS: Customer[] = [
+export const INITIAL_CUSTOMERS: Customer[] = [
   {
     id: 'cust-001',
     name: 'Md. Tariqul Islam',
-    company: 'Dhaka Bank Ltd - Principal Branch',
+    company: 'ABC Bank Ltd.',
     type: 'CORPORATE',
     phone: '+880 1711-223344',
-    email: 'procurement@dhakabank.com.bd',
-    address: 'Motijheel C/A, Dhaka-1000, Bangladesh',
+    email: 'procurement@abcbank.com.bd',
+    address: 'ABC Tower, Motijheel C/A, Dhaka-1000',
     binNumber: 'BIN-001293848-0101',
     creditLimit: 2000000,
     currentDues: 0,
@@ -105,7 +105,19 @@ const INITIAL_CUSTOMERS: Customer[] = [
 ];
 
 export function CustomersView() {
-  const [customers, setCustomers] = useState<Customer[]>(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_customers');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return INITIAL_CUSTOMERS;
+  });
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -153,7 +165,11 @@ export function CustomersView() {
       paymentTerms: newCustomer.paymentTerms
     };
 
-    setCustomers([item, ...customers]);
+    const updated = [item, ...customers];
+    setCustomers(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+    }
     setIsAddModalOpen(false);
     setNewCustomer({
       name: '',

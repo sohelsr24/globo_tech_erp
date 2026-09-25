@@ -39,6 +39,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatCompactBDT, formatDate } from '@/lib/formatters';
 import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS } from '@/lib/brandAssets';
+import { Customer, INITIAL_CUSTOMERS } from './CustomersView';
 
 // Types of Quotation Items
 export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
@@ -434,6 +435,90 @@ export function QuotationView() {
 
   // Version History Modal State
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
+
+  // Customer List with localStorage Persistence
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_customers');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+    return INITIAL_CUSTOMERS;
+  });
+
+  // Quick Add Customer Modal State (from Quotation form)
+  const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
+  const [customerModalForm, setCustomerModalForm] = useState({
+    name: '',
+    company: '',
+    type: 'CORPORATE' as 'RETAIL' | 'WHOLESALE' | 'CORPORATE',
+    phone: '',
+    email: '',
+    address: '',
+    binNumber: '',
+    paymentTerms: 'Net 30 Days'
+  });
+
+  const handleCreateCustomerFromQuotation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerModalForm.name.trim() || !customerModalForm.phone.trim()) {
+      alert('Please provide Customer Name and Phone Number');
+      return;
+    }
+
+    const companyName = customerModalForm.company.trim() || customerModalForm.name.trim();
+    const createdCustomer: Customer = {
+      id: `cust-${Date.now()}`,
+      name: customerModalForm.name.trim(),
+      company: companyName,
+      type: customerModalForm.type,
+      phone: customerModalForm.phone.trim(),
+      email: customerModalForm.email.trim(),
+      address: customerModalForm.address.trim() || 'Dhaka, Bangladesh',
+      binNumber: customerModalForm.binNumber.trim(),
+      creditLimit: 500000,
+      currentDues: 0,
+      totalInvoiced: 0,
+      paymentTerms: customerModalForm.paymentTerms
+    };
+
+    const updated = [createdCustomer, ...customers];
+    setCustomers(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+    }
+
+    // Automatically select newly created customer for this quotation
+    setNewQuote((prev) => ({
+      ...prev,
+      customerId: createdCustomer.id,
+      customerCompany: companyName,
+      customerName: createdCustomer.name,
+      customerType: createdCustomer.type,
+      customerPhone: createdCustomer.phone,
+      customerEmail: createdCustomer.email || '',
+      customerAddress: createdCustomer.address,
+      customerBin: createdCustomer.binNumber || ''
+    }));
+
+    // Reset form and close modal
+    setCustomerModalForm({
+      name: '',
+      company: '',
+      type: 'CORPORATE',
+      phone: '',
+      email: '',
+      address: '',
+      binNumber: '',
+      paymentTerms: 'Net 30 Days'
+    });
+    setIsAddCustomerModalOpen(false);
+  };
 
   // ==========================================
   // NEW QUOTATION FORM STATE
@@ -1065,54 +1150,58 @@ export function QuotationView() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block text-slate-400 font-semibold mb-1">Customer / Organization *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-400 font-semibold">Customer / Organization *</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddCustomerModalOpen(true)}
+                    className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/40 text-[10px] font-bold flex items-center gap-1 transition"
+                  >
+                    <Plus className="w-3 h-3" /> New Customer
+                  </button>
+                </div>
                 <select
-                  value={newQuote.customerCompany}
+                  value={newQuote.customerId || ''}
                   onChange={(e) => {
-                    const company = e.target.value;
-                    if (company === 'ABC Bank Ltd.') {
+                    const val = e.target.value;
+                    if (val === '__ADD_NEW__') {
+                      setIsAddCustomerModalOpen(true);
+                      return;
+                    }
+                    const found = customers.find((c) => c.id === val || c.company === val || c.name === val);
+                    if (found) {
                       setNewQuote({
                         ...newQuote,
-                        customerCompany: 'ABC Bank Ltd.',
-                        customerName: 'Md. Tariqul Islam',
-                        customerType: 'CORPORATE',
-                        customerPhone: '+880 1711-223344',
-                        customerEmail: 'procurement@abcbank.com.bd',
-                        customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
-                        customerBin: 'BIN-001293848-0101'
-                      });
-                    } else if (company === 'TechVision Security Systems') {
-                      setNewQuote({
-                        ...newQuote,
-                        customerCompany: 'TechVision Security Systems',
-                        customerName: 'Engr. Kamal Hossain',
-                        customerType: 'WHOLESALE',
-                        customerPhone: '+880 1819-556677',
-                        customerEmail: 'kamal@techvision.com.bd',
-                        customerAddress: 'Multiplan Center, Level 6, Elephant Road, Dhaka',
-                        customerBin: 'BIN-004819283-0202'
-                      });
-                    } else {
-                      setNewQuote({
-                        ...newQuote,
-                        customerCompany: 'Square Pharmaceuticals Ltd',
-                        customerName: 'Dr. Rafiqul Hasan',
-                        customerType: 'CORPORATE',
-                        customerPhone: '+880 1912-334455',
-                        customerEmail: 'projects@squarepharma.com.bd',
-                        customerAddress: 'Square Centre, 48 Mohakhali C/A, Dhaka-1212',
-                        customerBin: 'BIN-009928172-0303'
+                        customerId: found.id,
+                        customerCompany: found.company || found.name,
+                        customerName: found.name,
+                        customerType: found.type,
+                        customerPhone: found.phone,
+                        customerEmail: found.email || '',
+                        customerAddress: found.address,
+                        customerBin: found.binNumber || ''
                       });
                     }
                   }}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
                 >
-                  <option value="ABC Bank Ltd.">ABC Bank Ltd. (Corporate)</option>
-                  <option value="TechVision Security Systems">TechVision Security Systems (Wholesale)</option>
-                  <option value="Square Pharmaceuticals Ltd">Square Pharmaceuticals Ltd (Corporate)</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.company || c.name} ({c.type})
+                    </option>
+                  ))}
+                  <option value="__ADD_NEW__" className="text-blue-400 font-bold bg-slate-900">
+                    + Add New Customer...
+                  </option>
                 </select>
-                <div className="mt-1 text-[11px] text-slate-400">
-                  Tier: <span className="text-blue-400 font-semibold">{newQuote.customerType}</span> &bull; BIN: {newQuote.customerBin}
+                <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>
+                    Tier: <span className="text-blue-400 font-semibold">{newQuote.customerType}</span>
+                    {newQuote.customerBin && <> &bull; BIN: {newQuote.customerBin}</>}
+                  </span>
+                  {newQuote.customerPhone && (
+                    <span className="text-slate-500">{newQuote.customerPhone}</span>
+                  )}
                 </div>
               </div>
 
@@ -2236,6 +2325,136 @@ export function QuotationView() {
               </button>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          10. MODAL: QUICK ADD CUSTOMER (from Quotation form)
+          ======================================================== */}
+      {isAddCustomerModalOpen && (
+        <Modal
+          isOpen={isAddCustomerModalOpen}
+          onClose={() => setIsAddCustomerModalOpen(false)}
+          title="Add New Customer / Organization"
+          size="md"
+        >
+          <form onSubmit={handleCreateCustomerFromQuotation} className="space-y-3.5 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Company / Organization *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Bangladesh Bank / Acme Corp"
+                  value={customerModalForm.company}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, company: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Contact Person (Attn) *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Engr. Tanvir Ahmed"
+                  value={customerModalForm.name}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Customer Type</label>
+                <select
+                  value={customerModalForm.type}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, type: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="CORPORATE">Corporate</option>
+                  <option value="WHOLESALE">Wholesale / Dealer</option>
+                  <option value="RETAIL">Retail / End-User</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Phone Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. +880 1711-000000"
+                  value={customerModalForm.phone}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, phone: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="e.g. procurement@company.com"
+                  value={customerModalForm.email}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, email: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">BIN / VAT Reg No.</label>
+                <input
+                  type="text"
+                  placeholder="e.g. BIN-001293848-0101"
+                  value={customerModalForm.binNumber}
+                  onChange={(e) => setCustomerModalForm({ ...customerModalForm, binNumber: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Office / Delivery Address *</label>
+              <textarea
+                required
+                rows={2}
+                placeholder="e.g. Suite 402, Motijheel C/A, Dhaka-1000"
+                value={customerModalForm.address}
+                onChange={(e) => setCustomerModalForm({ ...customerModalForm, address: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Payment Terms</label>
+              <input
+                type="text"
+                placeholder="e.g. Net 30 Days / Cash on Delivery"
+                value={customerModalForm.paymentTerms}
+                onChange={(e) => setCustomerModalForm({ ...customerModalForm, paymentTerms: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsAddCustomerModalOpen(false)}
+                className="px-4 py-2 rounded-lg text-slate-300 hover:bg-slate-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-600/30 transition"
+              >
+                <Plus className="w-4 h-4" /> Save & Select Customer
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
     </div>
