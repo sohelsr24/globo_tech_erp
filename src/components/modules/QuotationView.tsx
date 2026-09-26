@@ -41,6 +41,12 @@ import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatCompactBDT, formatDate, numberToWordsBDT } from '@/lib/formatters';
 import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS, GLOBO_TECH_SEAL_DATA_URL, GLOBO_TECH_SIGNATURE_DATA_URL } from '@/lib/brandAssets';
 import { Customer, INITIAL_CUSTOMERS } from './CustomersView';
+import {
+  getStoredWarehouseStock,
+  getStoredProducts,
+  WarehouseStockItem,
+  ProductItem
+} from '@/lib/productsStorage';
 
 // Types of Quotation Items
 export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
@@ -875,6 +881,99 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   };
 
   // ==========================================
+  // DYNAMIC LIVE WAREHOUSE STOCK SYNCHRONIZATION
+  // ==========================================
+  const [warehouseStockList, setWarehouseStockList] = useState<WarehouseStockItem[]>([]);
+  const [productList, setProductList] = useState<ProductItem[]>([]);
+
+  useEffect(() => {
+    setWarehouseStockList(getStoredWarehouseStock());
+    setProductList(getStoredProducts());
+
+    const handleStockUpdate = () => setWarehouseStockList(getStoredWarehouseStock());
+    const handleProductsUpdate = () => setProductList(getStoredProducts());
+
+    window.addEventListener('globotech_stock_updated', handleStockUpdate);
+    window.addEventListener('globotech_products_updated', handleProductsUpdate);
+    return () => {
+      window.removeEventListener('globotech_stock_updated', handleStockUpdate);
+      window.removeEventListener('globotech_products_updated', handleProductsUpdate);
+    };
+  }, []);
+
+  // Merge live warehouse stock with registered products and fallback catalog
+  const liveCatalog = React.useMemo(() => {
+    const list: typeof STOCK_CATALOG = [];
+    const seenKeys = new Set<string>();
+
+    // 1. Live warehouse stock locations
+    warehouseStockList.forEach((st) => {
+      const prod = productList.find(
+        (p) => p.sku.toLowerCase() === st.sku.toLowerCase() || p.name.toLowerCase() === st.productName.toLowerCase()
+      );
+      const uniqueKey = `${st.sku}@@@${st.warehouseName}`;
+      seenKeys.add(uniqueKey);
+
+      const landed = st.unitLandedCost || prod?.currentLandedCost || 100;
+      list.push({
+        id: st.id,
+        sku: st.sku,
+        name: st.productName,
+        brand: prod?.brand || 'Globo Tech',
+        model: st.productName,
+        category: prod?.category || 'General Stock',
+        unit: prod?.unit || 'pcs',
+        warehouse: st.warehouseName,
+        physicalStock: st.available,
+        reservedStock: st.reserved || 0,
+        freeStock: Math.max(0, st.available - (st.reserved || 0)),
+        actualLandedCost: landed,
+        retailPrice: prod?.retailPrice || Math.round(landed * 1.5),
+        wholesalePrice: prod?.wholesalePrice || Math.round(landed * 1.35),
+        projectPrice: prod?.projectPrice || Math.round(landed * 1.25),
+        warranty: prod?.isSerialTracked ? '24 Months' : '12 Months'
+      });
+    });
+
+    // 2. Any registered products not yet in warehouseStockList
+    productList.forEach((prod) => {
+      const defaultWh = 'Main Warehouse (Tejgaon)';
+      const uniqueKey = `${prod.sku}@@@${defaultWh}`;
+      if (!seenKeys.has(uniqueKey) && !list.some((item) => item.sku.toLowerCase() === prod.sku.toLowerCase())) {
+        seenKeys.add(uniqueKey);
+        const landed = prod.currentLandedCost || 100;
+        list.push({
+          id: prod.id,
+          sku: prod.sku,
+          name: prod.name,
+          brand: prod.brand,
+          model: prod.name,
+          category: prod.category,
+          unit: prod.unit,
+          warehouse: defaultWh,
+          physicalStock: prod.stock || 0,
+          reservedStock: 0,
+          freeStock: prod.stock || 0,
+          actualLandedCost: landed,
+          retailPrice: prod.retailPrice || Math.round(landed * 1.5),
+          wholesalePrice: prod.wholesalePrice || Math.round(landed * 1.35),
+          projectPrice: prod.projectPrice || Math.round(landed * 1.25),
+          warranty: prod.isSerialTracked ? '24 Months' : '12 Months'
+        });
+      }
+    });
+
+    // 3. Demo fallback items
+    STOCK_CATALOG.forEach((demo) => {
+      if (!list.some((item) => item.sku.toLowerCase() === demo.sku.toLowerCase())) {
+        list.push(demo);
+      }
+    });
+
+    return list;
+  }, [warehouseStockList, productList]);
+
+  // ==========================================
   // NEW QUOTATION FORM STATE
   // ==========================================
   const [newQuote, setNewQuote] = useState<Partial<Quotation>>({
@@ -1042,8 +1141,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   const conversionRate = totalCount > 0 ? (acceptedCount / totalCount) * 100 : 0;
 
   // Handle Dynamic Stock Item Selection
-  const handleSelectCatalogProduct = (sku: string) => {
-    const found = STOCK_CATALOG.find((p) => p.sku === sku);
+  const handleSelectCatalogProduct = (selectedVal: string) => {
+    if (!selectedVal) return;
+    const found =
+      liveCatalog.find((p) => `${p.sku}@@@${p.warehouse}` === selectedVal) ||
+      liveCatalog.find((p) => p.sku === selectedVal);
     if (!found) return;
 
     // Price auto-suggest based on customer type
@@ -3121,14 +3223,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     Select From Warehouse Inventory *
                   </label>
                   <select
-                    value={itemForm.sku}
+                    value={itemForm.sku ? `${itemForm.sku}@@@${itemForm.warehouse}` : ''}
                     onChange={(e) => handleSelectCatalogProduct(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-medium"
                   >
                     <option value="">-- Choose In-Stock Product --</option>
-                    {STOCK_CATALOG.map((p) => (
-                      <option key={p.sku} value={p.sku}>
-                        {p.name} ({p.sku}) &bull; Free: {p.freeStock} {p.unit} &bull; ৳{p.projectPrice}
+                    {liveCatalog.map((p) => (
+                      <option key={`${p.sku}-${p.warehouse}`} value={`${p.sku}@@@${p.warehouse}`}>
+                        {p.name} [{p.warehouse.split(' ')[0]}] ({p.sku}) &bull; Free: {p.freeStock} {p.unit} &bull; ৳{p.projectPrice}
                       </option>
                     ))}
                   </select>
