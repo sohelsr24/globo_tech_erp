@@ -598,12 +598,15 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   // Update Item in Form
   const handleUpdateItem = (index: number, field: keyof BillInvoiceItem, value: any) => {
     const currentItems = [...(formData.items || [])];
-    const item = { ...currentItems[index], [field]: value };
+    const item = { ...currentItems[index] };
 
     if (field === 'quantity' || field === 'unitPrice') {
-      const q = field === 'quantity' ? Number(value) || 0 : currentItems[index].quantity;
-      const p = field === 'unitPrice' ? Number(value) || 0 : currentItems[index].unitPrice;
+      (item as any)[field] = value;
+      const q = field === 'quantity' ? (value === '' ? 0 : Number(value) || 0) : (Number(item.quantity) || 0);
+      const p = field === 'unitPrice' ? (value === '' ? 0 : Number(value) || 0) : (Number(item.unitPrice) || 0);
       item.amount = q * p;
+    } else {
+      (item as any)[field] = value;
     }
 
     currentItems[index] = item;
@@ -1348,7 +1351,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title={editingBillId ? `Edit Bill Invoice (${formData.billNo})` : 'Create New Bill Invoice'}
-        size="xl"
+        size="5xl"
       >
         <form onSubmit={handleSaveBill} className="space-y-6 text-xs text-slate-200">
           {/* Dynamic Quotation Selector Bar */}
@@ -1565,95 +1568,104 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
           {/* Items Table */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-200">Bill Items</h3>
+              <div>
+                <h3 className="font-bold text-slate-200 text-sm">Bill Items</h3>
+                <p className="text-[11px] text-slate-400">Enter item name, specification, unit, quantity and unit price</p>
+              </div>
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg font-medium transition"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-xl font-bold text-xs transition active:scale-95 shadow-sm"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Item</span>
+                <Plus className="w-4 h-4" />
+                <span>+ Add Item</span>
               </button>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-x-auto shadow-inner">
+              <table className="w-full min-w-[840px] text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-900 border-b border-slate-800 text-slate-400 font-semibold text-[10px] uppercase">
-                    <th className="py-2 px-3 w-12 text-center">SN</th>
-                    <th className="py-2 px-3 min-w-[160px]">Item Name</th>
-                    <th className="py-2 px-3 min-w-[200px]">Description</th>
-                    <th className="py-2 px-3 w-24">Unit</th>
-                    <th className="py-2 px-3 w-20 text-center">Qty</th>
-                    <th className="py-2 px-3 w-28 text-right">Unit Price</th>
-                    <th className="py-2 px-3 w-28 text-right">Amount</th>
-                    <th className="py-2 px-3 w-10"></th>
+                  <tr className="bg-slate-900 border-b border-slate-800 text-slate-300 font-semibold text-[11px] uppercase tracking-wider">
+                    <th className="py-3 px-3 w-12 text-center">SN</th>
+                    <th className="py-3 px-3 min-w-[190px]">Item Name *</th>
+                    <th className="py-3 px-3 min-w-[230px]">Description / Specification</th>
+                    <th className="py-3 px-3 w-24 text-center">Unit</th>
+                    <th className="py-3 px-3 w-28 text-center">Quantity *</th>
+                    <th className="py-3 px-3 w-36 text-right">Unit Price (৳) *</th>
+                    <th className="py-3 px-3 w-36 text-right">Amount (৳)</th>
+                    <th className="py-3 px-2 w-12 text-center"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {(formData.items || []).map((item, index) => (
-                    <tr key={item.id} className="hover:bg-slate-900/40">
-                      <td className="py-2 px-3 text-center text-slate-500 font-mono">
+                    <tr key={item.id} className="hover:bg-slate-900/40 transition">
+                      <td className="py-2.5 px-3 text-center text-slate-400 font-mono font-bold">
                         {index + 1}
                       </td>
-                      <td className="py-2 px-3">
+                      <td className="py-2.5 px-3">
                         <input
                           type="text"
                           required
                           value={item.name}
                           onChange={(e) => handleUpdateItem(index, 'name', e.target.value)}
-                          className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-emerald-500"
-                          placeholder="Rosenberger UTP Cable"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium text-xs"
+                          placeholder="e.g. Rosenberger UTP Cable"
                         />
                       </td>
-                      <td className="py-2 px-3">
+                      <td className="py-2.5 px-3">
                         <input
                           type="text"
                           value={item.description}
                           onChange={(e) => handleUpdateItem(index, 'description', e.target.value)}
-                          className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-emerald-500"
-                          placeholder="Rosenberger Cat-6 UTP Cable, 305M"
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs"
+                          placeholder="e.g. Cat-6 UTP Cable, 305M"
                         />
                       </td>
-                      <td className="py-2 px-3">
+                      <td className="py-2.5 px-3">
                         <input
                           type="text"
                           value={item.unit}
                           onChange={(e) => handleUpdateItem(index, 'unit', e.target.value)}
-                          className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-emerald-500 text-center"
+                          className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 text-center font-medium text-xs"
                           placeholder="Box"
                         />
                       </td>
-                      <td className="py-2 px-3">
+                      <td className="py-2.5 px-3">
                         <input
                           type="number"
                           min="1"
-                          value={item.quantity}
+                          step="any"
+                          required
+                          value={item.quantity !== undefined && item.quantity !== null ? item.quantity : ''}
                           onChange={(e) => handleUpdateItem(index, 'quantity', e.target.value)}
-                          className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-emerald-500 text-center font-mono"
+                          className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-center font-mono font-bold text-sm"
+                          placeholder="1"
                         />
                       </td>
-                      <td className="py-2 px-3">
+                      <td className="py-2.5 px-3">
                         <input
                           type="number"
                           min="0"
-                          step="0.01"
-                          value={item.unitPrice}
+                          step="any"
+                          required
+                          value={item.unitPrice !== undefined && item.unitPrice !== null ? item.unitPrice : ''}
                           onChange={(e) => handleUpdateItem(index, 'unitPrice', e.target.value)}
-                          className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 focus:outline-none focus:border-emerald-500 text-right font-mono"
+                          className="w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-emerald-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-right font-mono font-bold text-sm"
+                          placeholder="0.00"
                         />
                       </td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-slate-100">
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-100 text-sm whitespace-nowrap">
                         {formatBDT(item.amount)}
                       </td>
-                      <td className="py-2 px-2 text-center">
+                      <td className="py-2.5 px-2 text-center">
                         {(formData.items?.length || 0) > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveItem(index)}
-                            className="text-rose-400 hover:text-rose-300 p-1"
+                            className="p-1.5 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                            title="Remove Item"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-4 h-4" />
                           </button>
                         )}
                       </td>
