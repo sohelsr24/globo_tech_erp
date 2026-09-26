@@ -113,6 +113,7 @@ export interface Quotation {
   paymentTerms: string;
   deliveryTerms: string;
   warrantyTerms: string;
+  vatTaxTerms?: string;
   notes?: string;
   status: QuotationStatus;
   stockReserved: boolean;
@@ -230,6 +231,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 15 days from PO date',
     warrantyTerms: '2 Years Comprehensive Hardware Replacement & On-site Support',
+    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
     notes: 'Includes testing, commissioning and cabling support for 3 floors.',
     status: 'SENT',
     stockReserved: false,
@@ -368,6 +370,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: 'Net 15 Days',
     deliveryTerms: 'Ex-Warehouse Dhaka Central',
     warrantyTerms: '2 Years Manufacturer Warranty',
+    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
     status: 'ACCEPTED',
     stockReserved: true,
     requiresApproval: false,
@@ -434,6 +437,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 7 days',
     warrantyTerms: '1 Year Service Warranty',
+    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -508,6 +512,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 7 days',
     warrantyTerms: '1 Year Service Warranty',
+    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -629,6 +634,7 @@ export function QuotationView() {
     paymentTerms: '',
     deliveryTerms: '',
     warrantyTerms: '',
+    vatTaxTerms: '',
     notes: ''
   });
 
@@ -640,6 +646,7 @@ export function QuotationView() {
       paymentTerms: quote.paymentTerms || '',
       deliveryTerms: quote.deliveryTerms || '',
       warrantyTerms: quote.warrantyTerms || '',
+      vatTaxTerms: quote.vatTaxTerms || 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
       notes: quote.notes || 'Quotation valid for 30 calendar days from issue date.'
     });
     setIsEditTermsModalOpen(true);
@@ -653,6 +660,7 @@ export function QuotationView() {
       paymentTerms: termsForm.paymentTerms,
       deliveryTerms: termsForm.deliveryTerms,
       warrantyTerms: termsForm.warrantyTerms,
+      vatTaxTerms: termsForm.vatTaxTerms,
       notes: termsForm.notes
     };
 
@@ -667,6 +675,7 @@ export function QuotationView() {
         paymentTerms: termsForm.paymentTerms,
         deliveryTerms: termsForm.deliveryTerms,
         warrantyTerms: termsForm.warrantyTerms,
+        vatTaxTerms: termsForm.vatTaxTerms,
         notes: termsForm.notes
       }));
     }
@@ -784,6 +793,7 @@ export function QuotationView() {
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 15 days from PO date',
     warrantyTerms: '2 Years Comprehensive Hardware Replacement',
+    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
     notes: '',
     status: 'DRAFT',
     stockReserved: false,
@@ -1391,6 +1401,7 @@ export function QuotationView() {
                     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
                     deliveryTerms: 'Within 15 days from PO date',
                     warrantyTerms: '2 Years Comprehensive Hardware Replacement',
+                    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
                     notes: '',
                     status: 'DRAFT',
                     stockReserved: false,
@@ -2155,6 +2166,68 @@ export function QuotationView() {
                   />
                 </div>
 
+                {/* VAT & TAX Terms */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <label className="text-slate-300 font-semibold">VAT & TAX Terms *</label>
+                      <div className="flex items-center gap-1 bg-slate-950 border border-slate-700/80 rounded px-1 py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setNewQuote({
+                            ...newQuote,
+                            vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'
+                          })}
+                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition ${
+                            newQuote.vatTaxTerms?.toLowerCase().includes('inclusive')
+                              ? 'bg-emerald-600 text-white'
+                              : 'text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          Included
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewQuote({
+                            ...newQuote,
+                            vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
+                          })}
+                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition ${
+                            newQuote.vatTaxTerms?.toLowerCase().includes('exclusive')
+                              ? 'bg-rose-600 text-white'
+                              : 'text-slate-400 hover:text-slate-200'
+                          }`}
+                        >
+                          Excluded
+                        </button>
+                      </div>
+                    </div>
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setNewQuote({ ...newQuote, vatTaxTerms: e.target.value });
+                        }
+                      }}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Presets...</option>
+                      <option value="All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.">Included: 15% VAT & TAX</option>
+                      <option value="Quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3). TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
+                      <option value="All quoted prices are INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                      <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
+                      <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
+                      <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                    </select>
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={newQuote.vatTaxTerms || ''}
+                    onChange={(e) => setNewQuote({ ...newQuote, vatTaxTerms: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                    placeholder="e.g. All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT."
+                  />
+                </div>
+
                 {/* Validity & Special Conditions */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -2653,6 +2726,7 @@ export function QuotationView() {
                 <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
                 <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
                 <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
+                <p>&bull; <strong>VAT & TAX Terms:</strong> {selectedQuotation.vatTaxTerms || 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'}</p>
                 <p>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</p>
               </div>
             </div>
@@ -3551,6 +3625,67 @@ export function QuotationView() {
                 value={termsForm.warrantyTerms}
                 onChange={(e) => setTermsForm({ ...termsForm, warrantyTerms: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+              />
+            </div>
+
+            {/* VAT & TAX Terms */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <label className="text-slate-300 font-semibold">VAT & TAX Terms *</label>
+                  {/* Quick Pill Buttons: Included vs Excluded */}
+                  <div className="flex items-center gap-1 bg-slate-900 border border-slate-700/80 rounded px-1 py-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setTermsForm({
+                        ...termsForm,
+                        vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'
+                      })}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition ${
+                        termsForm.vatTaxTerms?.toLowerCase().includes('inclusive')
+                          ? 'bg-emerald-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Included
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTermsForm({
+                        ...termsForm,
+                        vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
+                      })}
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition ${
+                        termsForm.vatTaxTerms?.toLowerCase().includes('exclusive')
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Excluded
+                    </button>
+                  </div>
+                </div>
+
+                <select
+                  onChange={(e) => e.target.value && setTermsForm({ ...termsForm, vatTaxTerms: e.target.value })}
+                  className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                >
+                  <option value="">Choose preset...</option>
+                  <option value="All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.">Included: 15% VAT (Mushak 6.3) & TAX</option>
+                  <option value="Quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3). TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
+                  <option value="All quoted prices are INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                  <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
+                  <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
+                  <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                </select>
+              </div>
+              <textarea
+                required
+                rows={2}
+                value={termsForm.vatTaxTerms}
+                onChange={(e) => setTermsForm({ ...termsForm, vatTaxTerms: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
+                placeholder="e.g. All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT."
               />
             </div>
 
