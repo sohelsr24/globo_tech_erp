@@ -300,9 +300,45 @@ export const STORAGE_KEYS = {
   PRODUCTS: 'globotech_erp_products',
   WAREHOUSE_STOCK: 'globotech_erp_warehouse_stock',
   LEDGER: 'globotech_erp_stock_ledger',
+  CATEGORIES: 'globotech_erp_categories',
 };
 
+export const INITIAL_CATEGORIES: string[] = [
+  'CCTV & Surveillance',
+  'Networking',
+  'Data Center & Power',
+  'Security & Wireless',
+  'Accessories & Cables',
+  'Fire Safety & Access Control',
+  'Stationery & Paper',
+  'Office Supplies & Consumables'
+];
+
 // Storage helper functions
+export function getStoredCategories(): string[] {
+  if (typeof window === 'undefined') return INITIAL_CATEGORIES;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.CATEGORIES);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.error('Error loading categories from storage:', e);
+  }
+  return INITIAL_CATEGORIES;
+}
+
+export function saveStoredCategories(categories: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    window.dispatchEvent(new CustomEvent('globotech_categories_updated', { detail: categories }));
+  } catch (e) {
+    console.error('Error saving categories to storage:', e);
+  }
+}
+
 export function getStoredProducts(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
   try {

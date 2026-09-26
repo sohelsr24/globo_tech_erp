@@ -28,7 +28,9 @@ import {
   getStoredWarehouseStock,
   saveStoredWarehouseStock,
   getStoredStockLedger,
-  saveStoredStockLedger
+  saveStoredStockLedger,
+  getStoredCategories,
+  saveStoredCategories
 } from '@/lib/productsStorage';
 
 const WAREHOUSE_OPTIONS = [
@@ -39,15 +41,6 @@ const WAREHOUSE_OPTIONS = [
   'Chittagong Regional Depot'
 ];
 
-const CATEGORY_OPTIONS = [
-  'CCTV & Surveillance',
-  'Networking',
-  'Data Center & Power',
-  'Security & Wireless',
-  'Accessories & Cables',
-  'Fire Safety & Access Control'
-];
-
 export function StockView() {
   const [activeTab, setActiveTab] = useState<'inventory' | 'ledger'>('inventory');
   
@@ -55,6 +48,9 @@ export function StockView() {
   const [warehouseStock, setWarehouseStock] = useState<WarehouseStockItem[]>([]);
   const [ledger, setLedger] = useState<StockLedgerRecord[]>([]);
   const [products, setProducts] = useState<ProductItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -112,10 +108,12 @@ export function StockView() {
     const loadedStock = getStoredWarehouseStock();
     const loadedLedger = getStoredStockLedger();
     const loadedProducts = getStoredProducts();
+    const loadedCategories = getStoredCategories();
 
     setWarehouseStock(loadedStock);
     setLedger(loadedLedger);
     setProducts(loadedProducts);
+    setCategories(loadedCategories);
 
     if (loadedProducts.length > 0) {
       setGrnSelectedProductId(loadedProducts[0].id);
@@ -126,17 +124,35 @@ export function StockView() {
     const handleStockUpdate = () => setWarehouseStock(getStoredWarehouseStock());
     const handleLedgerUpdate = () => setLedger(getStoredStockLedger());
     const handleProductsUpdate = () => setProducts(getStoredProducts());
+    const handleCategoriesUpdate = () => setCategories(getStoredCategories());
 
     window.addEventListener('globotech_stock_updated', handleStockUpdate);
     window.addEventListener('globotech_ledger_updated', handleLedgerUpdate);
     window.addEventListener('globotech_products_updated', handleProductsUpdate);
+    window.addEventListener('globotech_categories_updated', handleCategoriesUpdate);
 
     return () => {
       window.removeEventListener('globotech_stock_updated', handleStockUpdate);
       window.removeEventListener('globotech_ledger_updated', handleLedgerUpdate);
       window.removeEventListener('globotech_products_updated', handleProductsUpdate);
+      window.removeEventListener('globotech_categories_updated', handleCategoriesUpdate);
     };
   }, []);
+
+  // Helper to add custom category
+  const handleCreateNewCategory = (catName?: string) => {
+    const target = (catName || newCategoryInput).trim();
+    if (!target) return;
+    if (!categories.includes(target)) {
+      const updated = [...categories, target];
+      setCategories(updated);
+      saveStoredCategories(updated);
+    }
+    setNewProductForm((prev) => ({ ...prev, category: target }));
+    setNewCategoryInput('');
+    setIsAddingCustomCategory(false);
+    showToast(`✓ Category "${target}" added!`);
+  };
 
   // Update GRN landed cost when product selection changes
   const handleGrnProductChange = (productId: string) => {
@@ -232,6 +248,14 @@ export function StockView() {
       const updatedLedger = [newLedgerEntry, ...ledger];
       setLedger(updatedLedger);
       saveStoredStockLedger(updatedLedger);
+    }
+
+    // Also save category to global list if new
+    const catName = newProductForm.category.trim();
+    if (catName && !categories.includes(catName)) {
+      const updatedCats = [...categories, catName];
+      setCategories(updatedCats);
+      saveStoredCategories(updatedCats);
     }
 
     setIsAddProductModalOpen(false);
@@ -938,18 +962,76 @@ export function StockView() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Category</label>
-                <select
-                  value={newProductForm.category}
-                  onChange={(e) => setNewProductForm({ ...newProductForm, category: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
-                >
-                  {CATEGORY_OPTIONS.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-300 font-semibold">Category</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingCustomCategory(!isAddingCustomCategory);
+                      setNewCategoryInput('');
+                    }}
+                    className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>{isAddingCustomCategory ? 'Choose Existing' : '+ Add New Category'}</span>
+                  </button>
+                </div>
+
+                {isAddingCustomCategory ? (
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="e.g. Stationery & Paper..."
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCreateNewCategory();
+                        }
+                      }}
+                      autoFocus
+                      className="flex-1 bg-slate-800 border border-blue-500 rounded-lg p-2 text-slate-100 text-xs focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleCreateNewCategory()}
+                      className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 shadow-sm active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingCustomCategory(false)}
+                      className="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    value={newProductForm.category}
+                    onChange={(e) => {
+                      if (e.target.value === '__ADD_NEW__') {
+                        setIsAddingCustomCategory(true);
+                        setNewCategoryInput('');
+                      } else {
+                        setNewProductForm({ ...newProductForm, category: e.target.value });
+                      }
+                    }}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                    <option value="__ADD_NEW__" className="text-blue-400 font-bold bg-slate-900">
+                      ➕ + Add New Category...
                     </option>
-                  ))}
-                </select>
+                  </select>
+                )}
               </div>
 
               <div>
