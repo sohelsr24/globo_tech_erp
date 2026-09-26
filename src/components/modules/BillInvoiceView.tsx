@@ -203,6 +203,36 @@ export const INITIAL_BILL_INVOICES: BillInvoice[] = [
   }
 ];
 
+// Automatically generates the next sequential Bill Invoice number based on existing bills.
+// Format: GT/YYNNN (e.g., GT/26109 when GT/26107 & GT/26108 exist)
+export function generateNextBillNo(existingBills: BillInvoice[]): string {
+  const currentYear = new Date().getFullYear();
+  const yearSuffix = currentYear.toString().slice(-2); // "26"
+  const prefix = `GT/${yearSuffix}`;
+
+  let maxSeq = 100; // Will start at 101 if no bills exist for the year
+
+  const billsList = Array.isArray(existingBills) && existingBills.length > 0 ? existingBills : INITIAL_BILL_INVOICES;
+
+  billsList.forEach((b) => {
+    if (!b || !b.billNo) return;
+    const cleanStr = b.billNo.trim();
+    // Match GT/26108, GT-26108, GT26108, 26108
+    const match = cleanStr.match(/(?:GT[/-]?)?(\d{2})(\d{3,})/i);
+    if (match) {
+      const billYear = match[1];
+      const seq = parseInt(match[2], 10);
+      if (billYear === yearSuffix && !isNaN(seq)) {
+        if (seq > maxSeq) {
+          maxSeq = seq;
+        }
+      }
+    }
+  });
+
+  return `${prefix}${maxSeq + 1}`;
+}
+
 export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuoteId?: string }) {
   const [bills, setBills] = useState<BillInvoice[]>(INITIAL_BILL_INVOICES);
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
@@ -227,7 +257,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
   const [formData, setFormData] = useState<Partial<BillInvoice>>({
-    billNo: `GT/${new Date().getFullYear().toString().slice(-2)}${Math.floor(100 + Math.random() * 900)}`,
+    billNo: generateNextBillNo(INITIAL_BILL_INVOICES),
     date: Formatters.date(new Date()),
     poNumber: '',
     binNumber: '004728009-0202',
@@ -345,9 +375,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   // Open Create Modal & optionally preload from quotation
   const handleOpenCreateModal = (quoteIdToPreload?: string) => {
     setEditingBillId(null);
-    const yearSuffix = new Date().getFullYear().toString().slice(-2);
-    const nextNum = Math.floor(100 + Math.random() * 900);
-    const generatedBillNo = `GT/${yearSuffix}${nextNum}`;
+    const generatedBillNo = generateNextBillNo(bills);
 
     const baseForm: Partial<BillInvoice> = {
       billNo: generatedBillNo,
@@ -443,24 +471,29 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
       targetQuote.paymentTerms ? `2. Payment: ${targetQuote.paymentTerms}` : '2. Payment: Within Deadline'
     ];
 
-    setFormData({
-      ...currentFormState,
-      poNumber: targetQuote.reference || currentFormState.poNumber || 'POBD9729-1',
-      quotationRef: targetQuote.quotationNumber,
-      quotationId: targetQuote.id,
-      binNumber: targetQuote.customerBin || currentFormState.binNumber || '004728009-0202',
-      billToName: targetQuote.customerCompany || targetQuote.customerName || '',
-      billToAddress: targetQuote.customerAddress || '',
-      deliverToAddress: deliveryLocation,
-      deliverToName: deliverContactName,
-      deliverToPhone: deliverContactPhone,
-      items: mappedItems,
-      subTotal: totals.subTotal,
-      vatTaxIncluded: true,
-      vatTaxAmount: 0,
-      grandTotal: totals.grandTotal,
-      amountInWords: totals.amountInWords,
-      termsAndConditions: terms
+    setFormData((prev) => {
+      const stateToUse = currentFormState || prev;
+      return {
+        ...stateToUse,
+        // Only use quote's reference if it exists; otherwise KEEP whatever manual PO number the user already entered
+        poNumber: targetQuote.reference ? targetQuote.reference : (stateToUse.poNumber || ''),
+        quotationRef: targetQuote.quotationNumber,
+        quotationId: targetQuote.id,
+        binNumber: targetQuote.customerBin || stateToUse.binNumber || '004728009-0202',
+        billToName: targetQuote.customerCompany || targetQuote.customerName || stateToUse.billToName || '',
+        billToAddress: targetQuote.customerAddress || stateToUse.billToAddress || '',
+        deliverToAddress: deliveryLocation || stateToUse.deliverToAddress || '',
+        deliverToName: deliverContactName || stateToUse.deliverToName || '',
+        // If user already typed a delivery phone, keep it; otherwise fill with quotation contact phone
+        deliverToPhone: stateToUse.deliverToPhone || deliverContactPhone || '',
+        items: mappedItems,
+        subTotal: totals.subTotal,
+        vatTaxIncluded: true,
+        vatTaxAmount: 0,
+        grandTotal: totals.grandTotal,
+        amountInWords: totals.amountInWords,
+        termsAndConditions: terms
+      };
     });
   };
 
@@ -472,14 +505,13 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
     setIsCreateModalOpen(true);
   };
 
-  // Duplicate an existing bill
+  // Duplicate an existing bill with next sequential Bill NO
   const handleDuplicateBill = (bill: BillInvoice) => {
-    const yearSuffix = new Date().getFullYear().toString().slice(-2);
-    const nextNum = Math.floor(100 + Math.random() * 900);
+    const nextBillNo = generateNextBillNo(bills);
     const newBill: BillInvoice = {
       ...bill,
       id: `bill-${Date.now()}`,
-      billNo: `GT/${yearSuffix}${nextNum}`,
+      billNo: nextBillNo,
       date: Formatters.date(new Date()),
       status: 'ISSUED',
       createdAt: new Date().toISOString()
@@ -529,7 +561,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
       // Create new
       savedRecord = {
         id: `bill-${Date.now()}`,
-        billNo: formData.billNo || `GT/${Date.now().toString().slice(-5)}`,
+        billNo: formData.billNo?.trim() || generateNextBillNo(bills),
         date: formData.date || Formatters.date(new Date()),
         poNumber: formData.poNumber || '',
         quotationRef: formData.quotationRef || '',
@@ -728,17 +760,66 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
     }
   };
 
-  // Filtered Bills
+  // Filtered Bills with high-accuracy Search for Bill NO, PO, Phone, and Client
   const filteredBills = useMemo(() => {
-    return bills.filter((b) => {
-      const matchesSearch =
-        searchQuery.trim() === '' ||
-        b.billNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.billToName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.poNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (b.quotationRef && b.quotationRef.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        b.items.some((it) => it.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const rawQuery = searchQuery.trim().toLowerCase();
+    const cleanQuery = rawQuery.replace(/[\s\-/\\#.]/g, '');
 
+    return bills.filter((b) => {
+      // 1. Search Query Match
+      let matchesSearch = true;
+      if (rawQuery !== '') {
+        const billNoLower = (b.billNo || '').toLowerCase();
+        const cleanBillNo = billNoLower.replace(/[\s\-/\\#.]/g, '');
+
+        const poLower = (b.poNumber || '').toLowerCase();
+        const cleanPo = poLower.replace(/[\s\-/\\#.]/g, '');
+
+        const phoneLower = (b.deliverToPhone || '').toLowerCase();
+        const cleanPhone = phoneLower.replace(/\D/g, '');
+        const queryDigits = rawQuery.replace(/\D/g, '');
+
+        const billToName = (b.billToName || '').toLowerCase();
+        const deliverToName = (b.deliverToName || '').toLowerCase();
+        const deliverToAddress = (b.deliverToAddress || '').toLowerCase();
+        const quotationRef = (b.quotationRef || '').toLowerCase();
+
+        // Check Bill NO (flexible matching: "26107", "GT/26107", "GT 26107", "gt26107")
+        const matchesBillNo =
+          billNoLower.includes(rawQuery) ||
+          (cleanQuery.length >= 2 && cleanBillNo.includes(cleanQuery)) ||
+          cleanBillNo.endsWith(cleanQuery);
+
+        // Check PO Number (e.g. POBD9729-1, 9729)
+        const matchesPo =
+          poLower.includes(rawQuery) ||
+          (cleanQuery.length >= 2 && cleanPo.includes(cleanQuery));
+
+        // Check Phone Number (e.g. 1999074461, 01999)
+        const matchesPhone =
+          phoneLower.includes(rawQuery) ||
+          (queryDigits.length >= 3 && cleanPhone.includes(queryDigits));
+
+        // Check Client & Deliver To
+        const matchesClient =
+          billToName.includes(rawQuery) ||
+          deliverToName.includes(rawQuery) ||
+          deliverToAddress.includes(rawQuery);
+
+        // Check Quotation Reference
+        const matchesQuote = quotationRef.includes(rawQuery);
+
+        // Check Items
+        const matchesItem = (b.items || []).some(
+          (it) =>
+            (it.name || '').toLowerCase().includes(rawQuery) ||
+            (it.description || '').toLowerCase().includes(rawQuery)
+        );
+
+        matchesSearch = matchesBillNo || matchesPo || matchesPhone || matchesClient || matchesQuote || matchesItem;
+      }
+
+      // 2. Status Filter Match
       const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -835,12 +916,37 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search by Bill NO, Client, PO, Quotation, or Item..."
+                placeholder="Search by Bill NO (e.g. GT/26107, 26107), PO, Phone, Client..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                className="w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-0.5 rounded transition"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
+
+            {searchQuery.trim() && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span>
+                  Found <strong className="text-emerald-400">{filteredBills.length}</strong> matching bills
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-[11px] text-emerald-400 hover:underline font-semibold ml-1"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
               <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
@@ -892,7 +998,16 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                     filteredBills.map((bill) => (
                       <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
                         <td className="py-3 px-4 font-mono font-bold text-emerald-400">
-                          {bill.billNo}
+                          <div className="flex items-center gap-1.5">
+                            <span>{bill.billNo}</span>
+                            {searchQuery &&
+                              (bill.billNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                bill.billNo.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(searchQuery.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())) && (
+                                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded font-sans uppercase font-bold">
+                                  Match
+                                </span>
+                              )}
+                          </div>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap text-slate-400">
                           {bill.date}
@@ -902,9 +1017,17 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                           <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-mono text-slate-300">{bill.poNumber || '—'}</div>
+                          <div className="font-mono text-slate-200 font-medium">
+                            {bill.poNumber ? (
+                              <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[11px]">
+                                {bill.poNumber}
+                              </span>
+                            ) : (
+                              <span className="text-slate-600 italic">No PO</span>
+                            )}
+                          </div>
                           {bill.quotationRef && (
-                            <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1">
+                            <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1 mt-0.5">
                               <span>Ref: {bill.quotationRef}</span>
                             </div>
                           )}
@@ -913,9 +1036,15 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                           <div className="text-slate-300 font-medium truncate max-w-[180px]">
                             {bill.deliverToAddress || '—'}
                           </div>
-                          {bill.deliverToName && (
-                            <div className="text-[11px] text-slate-500">
-                              {bill.deliverToName} ({bill.deliverToPhone})
+                          {(bill.deliverToName || bill.deliverToPhone) && (
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              {bill.deliverToName && <span>{bill.deliverToName}</span>}
+                              {bill.deliverToName && bill.deliverToPhone && <span className="text-slate-600">&bull;</span>}
+                              {bill.deliverToPhone && (
+                                <span className="font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded text-[10px]">
+                                  {bill.deliverToPhone}
+                                </span>
+                              )}
                             </div>
                           )}
                         </td>
@@ -1399,14 +1528,32 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
           {/* Primary Invoice Header Info */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
             <div>
-              <label className="block text-[11px] font-medium text-slate-400 mb-1">Bill NO *</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-medium text-slate-300">Bill NO *</label>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                    Auto
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextNo = generateNextBillNo(bills);
+                      setFormData((prev) => ({ ...prev, billNo: nextNo }));
+                    }}
+                    title="Click to recalculate next sequential Bill NO"
+                    className="text-[10px] text-slate-400 hover:text-emerald-400 transition underline cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
               <input
                 type="text"
                 required
                 value={formData.billNo || ''}
-                onChange={(e) => setFormData({ ...formData, billNo: e.target.value })}
-                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
-                placeholder="GT/26107"
+                onChange={(e) => setFormData((prev) => ({ ...prev, billNo: e.target.value }))}
+                className="w-full px-3 py-1.5 bg-slate-950 border border-emerald-500/40 rounded-lg font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs transition"
+                placeholder="GT/26109"
               />
             </div>
             <div>
@@ -1415,27 +1562,32 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                 type="text"
                 required
                 value={formData.date || ''}
-                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
+                onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 text-xs transition"
                 placeholder="23-Feb-26"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-slate-400 mb-1">PO Number</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-medium text-slate-300">PO Number</label>
+                <span className="text-[10px] text-sky-400 font-semibold bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                  Manual Type
+                </span>
+              </div>
               <input
                 type="text"
                 value={formData.poNumber || ''}
-                onChange={(e) => setFormData({ ...formData, poNumber: e.target.value })}
-                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
-                placeholder="POBD9729-1"
+                onChange={(e) => setFormData((prev) => ({ ...prev, poNumber: e.target.value }))}
+                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-xs transition"
+                placeholder="Type PO Number (e.g. POBD9729-1)"
               />
             </div>
             <div>
               <label className="block text-[11px] font-medium text-slate-400 mb-1">Status</label>
               <select
                 value={formData.status || 'ISSUED'}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as BillInvoiceStatus })}
-                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
+                onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as BillInvoiceStatus }))}
+                className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 text-xs transition"
               >
                 <option value="DRAFT">DRAFT</option>
                 <option value="ISSUED">ISSUED</option>
@@ -1533,19 +1685,24 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                   <input
                     type="text"
                     value={formData.deliverToName || ''}
-                    onChange={(e) => setFormData({ ...formData, deliverToName: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
+                    onChange={(e) => setFormData((prev) => ({ ...prev, deliverToName: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 text-xs transition"
                     placeholder="Rony"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">Contact Phone</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-medium text-slate-300">Contact Phone</label>
+                    <span className="text-[10px] text-sky-400 font-semibold bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
+                      Manual Type
+                    </span>
+                  </div>
                   <input
                     type="text"
                     value={formData.deliverToPhone || ''}
-                    onChange={(e) => setFormData({ ...formData, deliverToPhone: e.target.value })}
-                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
-                    placeholder="1999074461"
+                    onChange={(e) => setFormData((prev) => ({ ...prev, deliverToPhone: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-xs transition"
+                    placeholder="Type phone (e.g. 01999074461)"
                   />
                 </div>
               </div>
