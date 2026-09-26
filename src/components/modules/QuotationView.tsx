@@ -206,6 +206,17 @@ const STOCK_CATALOG = [
   }
 ];
 
+// Helper to sanitize VAT & TAX terms to keep concise wording
+export const cleanVatTaxTerms = (terms?: string) => {
+  if (!terms) return 'INCLUSIVE of 15% VAT and TAX / AIT.';
+  return terms
+    .replace(/^All quoted prices are\s*/i, '')
+    .replace(/\s*\(Mushak 6\.3\)/gi, '')
+    .replace(/\s*applicable\s*/gi, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+};
+
 // Initial Quotations including Section 31 Example
 const INITIAL_QUOTATIONS: Quotation[] = [
   {
@@ -231,7 +242,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 15 days from PO date',
     warrantyTerms: '2 Years Comprehensive Hardware Replacement & On-site Support',
-    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
     notes: 'Includes testing, commissioning and cabling support for 3 floors.',
     status: 'SENT',
     stockReserved: false,
@@ -370,7 +381,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: 'Net 15 Days',
     deliveryTerms: 'Ex-Warehouse Dhaka Central',
     warrantyTerms: '2 Years Manufacturer Warranty',
-    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
     status: 'ACCEPTED',
     stockReserved: true,
     requiresApproval: false,
@@ -437,7 +448,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 7 days',
     warrantyTerms: '1 Year Service Warranty',
-    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -512,7 +523,7 @@ const INITIAL_QUOTATIONS: Quotation[] = [
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 7 days',
     warrantyTerms: '1 Year Service Warranty',
-    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -581,7 +592,10 @@ export function QuotationView() {
           if (Array.isArray(parsed) && parsed.length > 0) {
             const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
             const merged = [
-              ...parsed,
+              ...parsed.map((q: Quotation) => ({
+                ...q,
+                vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+              })),
               ...INITIAL_QUOTATIONS.filter((initQ) => !existingIds.has(initQ.id) && !existingIds.has(initQ.quotationNumber))
             ];
             setQuotations(merged);
@@ -642,11 +656,12 @@ export function QuotationView() {
   const [includeSealAndSignature, setIncludeSealAndSignature] = useState(true);
 
   const handleOpenEditTerms = (quote: Quotation) => {
+    setSelectedQuotation(quote);
     setTermsForm({
       paymentTerms: quote.paymentTerms || '',
       deliveryTerms: quote.deliveryTerms || '',
       warrantyTerms: quote.warrantyTerms || '',
-      vatTaxTerms: quote.vatTaxTerms || 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+      vatTaxTerms: cleanVatTaxTerms(quote.vatTaxTerms),
       notes: quote.notes || 'Quotation valid for 30 calendar days from issue date.'
     });
     setIsEditTermsModalOpen(true);
@@ -793,7 +808,7 @@ export function QuotationView() {
     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
     deliveryTerms: 'Within 15 days from PO date',
     warrantyTerms: '2 Years Comprehensive Hardware Replacement',
-    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
     notes: '',
     status: 'DRAFT',
     stockReserved: false,
@@ -1401,7 +1416,7 @@ export function QuotationView() {
                     paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
                     deliveryTerms: 'Within 15 days from PO date',
                     warrantyTerms: '2 Years Comprehensive Hardware Replacement',
-                    vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.',
+                    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
                     notes: '',
                     status: 'DRAFT',
                     stockReserved: false,
@@ -2178,7 +2193,7 @@ export function QuotationView() {
                           type="button"
                           onClick={() => setNewQuote({
                             ...newQuote,
-                            vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'
+                            vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.'
                           })}
                           className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition ${
                             newQuote.vatTaxTerms?.toLowerCase().includes('inclusive')
@@ -2213,9 +2228,9 @@ export function QuotationView() {
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
                       <option value="">Presets...</option>
-                      <option value="All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.">Included: 15% VAT & TAX</option>
-                      <option value="Quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3). TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
-                      <option value="All quoted prices are INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                      <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
+                      <option value="Quoted prices are INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
+                      <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
                       <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
                       <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
                       <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
@@ -2226,7 +2241,7 @@ export function QuotationView() {
                     value={newQuote.vatTaxTerms || ''}
                     onChange={(e) => setNewQuote({ ...newQuote, vatTaxTerms: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
-                    placeholder="e.g. All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT."
+                    placeholder="e.g. INCLUSIVE of 15% VAT and TAX / AIT."
                   />
                 </div>
 
@@ -2734,7 +2749,7 @@ export function QuotationView() {
                 <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
                 <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
                 <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
-                <p>&bull; <strong>VAT & TAX Terms:</strong> {selectedQuotation.vatTaxTerms || 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'}</p>
+                <p>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</p>
                 <p>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</p>
               </div>
             </div>
@@ -3647,7 +3662,7 @@ export function QuotationView() {
                       type="button"
                       onClick={() => setTermsForm({
                         ...termsForm,
-                        vatTaxTerms: 'All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.'
+                        vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.'
                       })}
                       className={`px-2 py-0.5 text-[10px] font-bold rounded transition ${
                         termsForm.vatTaxTerms?.toLowerCase().includes('inclusive')
@@ -3679,9 +3694,9 @@ export function QuotationView() {
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
-                  <option value="All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT.">Included: 15% VAT (Mushak 6.3) & TAX</option>
-                  <option value="Quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3). TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
-                  <option value="All quoted prices are INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                  <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
+                  <option value="Quoted prices are INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
+                  <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
                   <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
                   <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
                   <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
@@ -3693,7 +3708,7 @@ export function QuotationView() {
                 value={termsForm.vatTaxTerms}
                 onChange={(e) => setTermsForm({ ...termsForm, vatTaxTerms: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
-                placeholder="e.g. All quoted prices are INCLUSIVE of 15% VAT (Mushak 6.3) and applicable TAX / AIT."
+                placeholder="e.g. INCLUSIVE of 15% VAT and TAX / AIT."
               />
             </div>
 
