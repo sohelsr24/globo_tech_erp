@@ -25,6 +25,22 @@ import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
+const VALID_TABS = [
+  'dashboard',
+  'products',
+  'imports',
+  'stock',
+  'serials',
+  'customers',
+  'suppliers',
+  'quotation',
+  'bill-invoice',
+  'sales',
+  'projects',
+  'reports',
+  'settings'
+];
+
 export default function AppHome() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState<boolean>(true);
@@ -55,6 +71,31 @@ export default function AppHome() {
     }
   }, []);
 
+  // Synchronize active tab with URL query parameter (?tab=...) on mount & browser back/forward
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncTabFromUrl = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam && VALID_TABS.includes(tabParam)) {
+        setCurrentTab(tabParam);
+      } else if (window.location.hash) {
+        const hashTab = window.location.hash.replace('#', '');
+        if (VALID_TABS.includes(hashTab)) {
+          setCurrentTab(hashTab);
+        }
+      }
+    };
+
+    syncTabFromUrl();
+
+    window.addEventListener('popstate', syncTabFromUrl);
+    return () => {
+      window.removeEventListener('popstate', syncTabFromUrl);
+    };
+  }, []);
+
   const handleLoginSuccess = (userData: { email: string; name: string; role: string }) => {
     setUser(userData);
     setIsAuthenticated(true);
@@ -69,6 +110,12 @@ export default function AppHome() {
     setIsAuthenticated(false);
     setCurrentTab('dashboard');
     setIsMobileMenuOpen(false);
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('tab');
+      window.history.replaceState(null, '', url.pathname);
+    }
   };
 
   // Low stock badge count (from initial catalog)
@@ -78,6 +125,12 @@ export default function AppHome() {
     setCurrentTab('products');
     setFilterLowStock(true);
     setIsMobileMenuOpen(false);
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', 'products');
+      window.history.pushState({ tab: 'products' }, '', url.pathname + url.search);
+    }
   };
 
   const handleSelectTab = (tab: string) => {
@@ -86,6 +139,14 @@ export default function AppHome() {
       setFilterLowStock(false);
     }
     setIsMobileMenuOpen(false);
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('tab') !== tab) {
+        url.searchParams.set('tab', tab);
+        window.history.pushState({ tab }, '', url.pathname + url.search);
+      }
+    }
   };
 
   // Get tab metadata

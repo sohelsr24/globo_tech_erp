@@ -126,10 +126,18 @@ export function Sidebar({
             const isActive = currentTab === item.id;
 
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition active:scale-[0.99] ${
+                href={`?tab=${item.id}`}
+                onClick={(e) => {
+                  // If user clicked with Ctrl, Cmd, Shift, Alt or middle click, allow native browser new tab action
+                  if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button === 1) {
+                    return;
+                  }
+                  e.preventDefault();
+                  handleItemClick(item.id);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition active:scale-[0.99] select-none cursor-pointer no-underline ${
                   isActive
                     ? 'bg-blue-600/15 text-blue-400 border-l-4 border-blue-500 shadow-sm'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
@@ -145,7 +153,7 @@ export function Sidebar({
                     {item.badge}
                   </span>
                 )}
-              </button>
+              </a>
             );
           })}
         </nav>

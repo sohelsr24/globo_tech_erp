@@ -70,11 +70,49 @@ export function MobileBottomNav({
           const Icon = item.icon;
           const isActive = item.isActive !== undefined ? item.isActive : currentTab === item.id;
 
+          if (item.id === 'menu') {
+            return (
+              <button
+                key={item.id}
+                onClick={item.action}
+                className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 relative rounded-xl transition duration-150 active:scale-95 ${
+                  isActive
+                    ? 'text-blue-400 font-semibold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {/* Active glow indicator */}
+                {isActive && (
+                  <span className="absolute top-1 w-6 h-0.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                )}
+
+                <div className="relative mt-1">
+                  <Icon
+                    className={`w-5 h-5 transition-transform ${
+                      isActive ? 'scale-110 text-blue-400' : 'text-slate-400'
+                    }`}
+                  />
+                </div>
+
+                <span className="text-[10px] mt-1 tracking-tight leading-none truncate max-w-full">
+                  {item.label}
+                </span>
+              </button>
+            );
+          }
+
           return (
-            <button
+            <a
               key={item.id}
-              onClick={item.action}
-              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 relative rounded-xl transition duration-150 active:scale-95 ${
+              href={`?tab=${item.id}`}
+              onClick={(e) => {
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button === 1) {
+                  return;
+                }
+                e.preventDefault();
+                item.action();
+              }}
+              className={`flex-1 flex flex-col items-center justify-center py-1.5 px-1 relative rounded-xl transition duration-150 active:scale-95 no-underline select-none cursor-pointer ${
                 isActive
                   ? 'text-blue-400 font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
@@ -101,7 +139,7 @@ export function MobileBottomNav({
               <span className="text-[10px] mt-1 tracking-tight leading-none truncate max-w-full">
                 {item.label}
               </span>
-            </button>
+            </a>
           );
         })}
       </div>
