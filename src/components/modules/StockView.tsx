@@ -41,7 +41,7 @@ const WAREHOUSE_OPTIONS = [
   'Chittagong Regional Depot'
 ];
 
-export function StockView() {
+export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } = {}) {
   const [activeTab, setActiveTab] = useState<'inventory' | 'ledger'>('inventory');
   
   // Storage state
@@ -53,8 +53,14 @@ export function StockView() {
   const [newCategoryInput, setNewCategoryInput] = useState('');
 
   // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(globalSearchQuery || '');
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState('ALL');
+
+  useEffect(() => {
+    if (globalSearchQuery !== undefined && globalSearchQuery !== searchQuery) {
+      setSearchQuery(globalSearchQuery);
+    }
+  }, [globalSearchQuery]);
 
   // Modals state
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);

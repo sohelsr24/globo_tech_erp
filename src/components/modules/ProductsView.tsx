@@ -47,14 +47,21 @@ const WAREHOUSES = [
 interface ProductsViewProps {
   canViewCosts: boolean;
   filterLowStock?: boolean;
+  globalSearchQuery?: string;
 }
 
-export function ProductsView({ canViewCosts, filterLowStock = false }: ProductsViewProps) {
+export function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery }: ProductsViewProps) {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(globalSearchQuery || '');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [showLowStockOnly, setShowLowStockOnly] = useState(filterLowStock);
+
+  useEffect(() => {
+    if (globalSearchQuery !== undefined && globalSearchQuery !== search) {
+      setSearch(globalSearchQuery);
+    }
+  }, [globalSearchQuery]);
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

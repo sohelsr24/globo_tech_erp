@@ -306,6 +306,7 @@ export default function AppHome() {
             onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             onLogout={handleLogout}
             onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onNavigateTab={(t) => setCurrentTab(t as any)}
           />
         </div>
 
@@ -341,10 +342,11 @@ export default function AppHome() {
                 <ProductsView
                   canViewCosts={canViewCosts}
                   filterLowStock={filterLowStock}
+                  globalSearchQuery={searchQuery}
                 />
               )}
               {currentTab === 'imports' && <ImportsView />}
-              {currentTab === 'stock' && <StockView />}
+              {currentTab === 'stock' && <StockView globalSearchQuery={searchQuery} />}
               {currentTab === 'serials' && <SerialsView />}
               {currentTab === 'quotation' && <QuotationView onNavigateTab={(t, quoteId) => {
                 if (quoteId) {
@@ -352,7 +354,7 @@ export default function AppHome() {
                 }
                 setCurrentTab(t);
               }} />}
-              {currentTab === 'bill-invoice' && <BillInvoiceView />}
+              {currentTab === 'bill-invoice' && <BillInvoiceView globalSearchQuery={searchQuery} />}
               {currentTab === 'sales' && <SalesView />}
               {currentTab === 'projects' && <ProjectsView />}
               {currentTab === 'customers' && <CustomersView />}

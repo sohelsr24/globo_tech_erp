@@ -27,6 +27,7 @@ import { Quotation, INITIAL_QUOTATIONS } from '@/components/modules/QuotationVie
 export interface BillInvoiceItem {
   id: string;
   itemNo: number;
+  sku?: string;
   name: string;
   description: string;
   unit: string;
@@ -233,7 +234,13 @@ export function generateNextBillNo(existingBills: BillInvoice[]): string {
   return `${prefix}${maxSeq + 1}`;
 }
 
-export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuoteId?: string }) {
+export function BillInvoiceView({
+  initialSelectedQuoteId,
+  globalSearchQuery
+}: {
+  initialSelectedQuoteId?: string;
+  globalSearchQuery?: string;
+} = {}) {
   const [bills, setBills] = useState<BillInvoice[]>(INITIAL_BILL_INVOICES);
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [isMounted, setIsMounted] = useState(false);
@@ -242,8 +249,14 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'PREVIEW'>('LIST');
 
   // Filters & Search
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(globalSearchQuery || '');
   const [statusFilter, setStatusFilter] = useState<'ALL' | BillInvoiceStatus>('ALL');
+
+  useEffect(() => {
+    if (globalSearchQuery !== undefined && globalSearchQuery !== searchQuery) {
+      setSearchQuery(globalSearchQuery);
+    }
+  }, [globalSearchQuery]);
 
   // Modals & Active Records
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -437,6 +450,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
     const mappedItems: BillInvoiceItem[] = (targetQuote.items || []).map((it, idx) => ({
       id: `bi-${it.id || idx}-${Date.now()}`,
       itemNo: idx + 1,
+      sku: (it as any).sku || '',
       name: it.name || '',
       description: it.description || it.model || it.brand || '',
       unit: it.unit || 'Box',
@@ -809,14 +823,35 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
         // Check Quotation Reference
         const matchesQuote = quotationRef.includes(rawQuery);
 
-        // Check Items
+        // Check Items (Name, Description, SKU)
         const matchesItem = (b.items || []).some(
           (it) =>
             (it.name || '').toLowerCase().includes(rawQuery) ||
-            (it.description || '').toLowerCase().includes(rawQuery)
+            (it.description || '').toLowerCase().includes(rawQuery) ||
+            ((it as any).sku || '').toLowerCase().includes(rawQuery)
         );
 
-        matchesSearch = matchesBillNo || matchesPo || matchesPhone || matchesClient || matchesQuote || matchesItem;
+        // Also check linked quotation items (e.g. if quote had SKU or name)
+        const linkedQuote = quotations.find(
+          (q) => q.id === b.quotationId || q.quotationNumber === b.quotationRef
+        );
+        const matchesLinkedQuoteItem = linkedQuote
+          ? (linkedQuote.items || []).some(
+              (qi) =>
+                (qi.sku || '').toLowerCase().includes(rawQuery) ||
+                (qi.name || '').toLowerCase().includes(rawQuery) ||
+                (qi.model || '').toLowerCase().includes(rawQuery)
+            )
+          : false;
+
+        matchesSearch =
+          matchesBillNo ||
+          matchesPo ||
+          matchesPhone ||
+          matchesClient ||
+          matchesQuote ||
+          matchesItem ||
+          matchesLinkedQuoteItem;
       }
 
       // 2. Status Filter Match
