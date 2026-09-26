@@ -100,9 +100,18 @@ export const formatDate = (dateVal: Date | string | null | undefined) => Formatt
 export const formatDateTime = (dateVal: Date | string | null | undefined) => Formatters.dateTime(dateVal);
 
 // Convert number to words in Bangladeshi/Indian counting standard (Crore, Lakh, Thousand)
-export function numberToWordsBDT(amount: number | string | null | undefined, currency: string = 'BDT'): string {
+export function numberToWordsBDT(
+  amount: number | string | null | undefined,
+  currency: string = 'BDT',
+  options?: { style?: 'prefix' | 'suffix'; suffixUnit?: string; dotEnd?: boolean }
+): string {
   const num = Math.round((Number(amount) || 0) * 100) / 100;
-  if (num === 0) return `${currency} Zero Only`;
+  if (num === 0) {
+    if (options?.style === 'suffix') {
+      return `Zero ${options.suffixUnit || 'Taka'} Only${options?.dotEnd ? '.' : ''}`;
+    }
+    return `${currency} Zero Only${options?.dotEnd ? '.' : ''}`;
+  }
 
   const ones = [
     '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -160,13 +169,19 @@ export function numberToWordsBDT(amount: number | string | null | undefined, cur
   result = result.trim();
   if (!result) result = 'Zero';
 
-  let finalStr = `${currency} ${result}`;
+  let finalStr = '';
+  if (options?.style === 'suffix') {
+    finalStr = `${result} ${options.suffixUnit || 'Taka'}`;
+  } else {
+    finalStr = `${currency} ${result}`;
+  }
+
   if (decimalPart > 0) {
     const paisaStr = convertLessThanOneThousand(decimalPart);
     const subUnit = currency === 'USD' ? 'Cents' : 'Paisa';
     finalStr += ` and ${paisaStr} ${subUnit}`;
   }
-  finalStr += ' Only';
+  finalStr += options?.dotEnd ? ' Only.' : ' Only';
 
   return finalStr;
 }

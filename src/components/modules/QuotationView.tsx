@@ -17,6 +17,7 @@ import {
   Copy,
   Trash2,
   Edit3,
+  Receipt,
   Eye,
   Send,
   Building,
@@ -241,7 +242,7 @@ export const updateVatTaxString = (currentText: string = '', newVat?: string, ne
 };
 
 // Initial Quotations including Section 31 Example
-const INITIAL_QUOTATIONS: Quotation[] = [
+export const INITIAL_QUOTATIONS: Quotation[] = [
   {
     id: 'QT-2026-001',
     quotationNumber: 'QT-2026-001',
@@ -597,10 +598,77 @@ const INITIAL_QUOTATIONS: Quotation[] = [
         comments: 'Cumilla Hub relocation draft'
       }
     ]
+  },
+  {
+    id: 'QT-2026-005',
+    quotationNumber: 'QT-2026-005',
+    version: 1,
+    type: 'PRODUCT',
+    date: '2026-02-23',
+    validUntil: '2026-03-23',
+    customerId: 'cust-daraz-02',
+    customerName: 'Rony',
+    customerCompany: 'Daraz Bangladesh LTD',
+    customerType: 'CORPORATE',
+    customerPhone: '1999074461',
+    customerEmail: 'procurement@daraz.com.bd',
+    customerAddress: 'Asfia Tower, House- 76/B, Road-11, Dhaka-1213',
+    customerBin: '004728009-0202',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Tejgoan Sort DC Network Expansion',
+    projectLocation: 'Tejgoan Sort DC',
+    reference: 'POBD9729-1',
+    currency: 'BDT',
+    paymentTerms: 'Payment: Within Deadline',
+    deliveryTerms: 'Tejgoan Sort DC',
+    warrantyTerms: 'Standard Manufacturer Warranty',
+    vatTaxTerms: 'VAT&TAX : Included',
+    notes: 'PO : POBD9729-1, TIN: 169493772750',
+    status: 'ACCEPTED',
+    stockReserved: true,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-501',
+        type: 'IN_STOCK',
+        name: 'Rosenberger UTP Cable',
+        description: 'Rosenberger Cat-6 UTP Cable, 305M',
+        warehouse: 'Dhaka Central Warehouse',
+        physicalStock: 25,
+        reservedStock: 2,
+        freeStock: 23,
+        unit: 'Box',
+        quantity: 2,
+        unitPrice: 19000,
+        discountPercent: 0,
+        vatPercent: 0,
+        unitCost: 15500,
+        warranty: '25 Years Performance Warranty'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-02-23',
+        author: 'Engr. Sohel Rana',
+        oldTotal: 0,
+        newTotal: 38000,
+        notes: 'Official quotation for Rosenberger Cat-6 UTP Cable supply'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-02-23 10:00 AM',
+        event: 'Quotation Approved by Client',
+        actor: 'Rony (Daraz)',
+        comments: 'Approved with PO: POBD9729-1'
+      }
+    ]
   }
 ];
 
-export function QuotationView() {
+export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string, meta?: any) => void } = {}) {
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -1607,6 +1675,20 @@ export function QuotationView() {
                             >
                               <Edit3 className="w-3.5 h-3.5" />
                               Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (onNavigateTab) {
+                                  onNavigateTab('bill-invoice', q.id);
+                                } else {
+                                  sessionStorage.setItem('globotech_pending_bill_quote_id', q.id);
+                                }
+                              }}
+                              className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition inline-flex items-center gap-1"
+                              title="Create Bill Invoice from this Quotation"
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              Bill
                             </button>
                             <button
                               onClick={() => {
@@ -2654,6 +2736,20 @@ export function QuotationView() {
               >
                 <Edit3 className="w-4 h-4" />
                 <span>Edit Quotation</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (onNavigateTab) {
+                    onNavigateTab('bill-invoice', selectedQuotation.id);
+                  } else {
+                    sessionStorage.setItem('globotech_pending_bill_quote_id', selectedQuotation.id);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 font-semibold text-xs border border-emerald-500/40 transition"
+                title="Create Bill Invoice from this Quotation"
+              >
+                <Receipt className="w-4 h-4" />
+                <span>Create Bill Invoice</span>
               </button>
               <button
                 onClick={() => window.print()}

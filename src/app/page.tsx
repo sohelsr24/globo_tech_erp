@@ -20,6 +20,7 @@ import { SuppliersView } from '@/components/modules/SuppliersView';
 import { ReportsView } from '@/components/modules/ReportsView';
 import { SettingsView } from '@/components/modules/SettingsView';
 import { QuotationView } from '@/components/modules/QuotationView';
+import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
@@ -120,6 +121,11 @@ export default function AppHome() {
           title: 'Enterprise Quotations & Tenders',
           desc: 'Product, Service, Custom Project, and Freight tender management with dynamic free-stock validation'
         };
+      case 'bill-invoice':
+        return {
+          title: 'Bill Invoices & Pad Printing',
+          desc: 'Quotation-driven supply bills formatted for pre-printed letterhead pad paper'
+        };
       case 'sales':
         return {
           title: 'Sales, Invoicing & Delivery Challans',
@@ -164,6 +170,7 @@ export default function AppHome() {
       case 'stock': return 'STOCK';
       case 'serials': return 'STOCK';
       case 'quotation': return 'QUOTATIONS';
+      case 'bill-invoice': return 'QUOTATIONS';
       case 'sales': return 'SALES';
       case 'projects': return 'PROJECTS';
       case 'customers': return 'SALES';
@@ -278,7 +285,13 @@ export default function AppHome() {
               {currentTab === 'imports' && <ImportsView />}
               {currentTab === 'stock' && <StockView />}
               {currentTab === 'serials' && <SerialsView />}
-              {currentTab === 'quotation' && <QuotationView />}
+              {currentTab === 'quotation' && <QuotationView onNavigateTab={(t, quoteId) => {
+                if (quoteId) {
+                  sessionStorage.setItem('globotech_pending_bill_quote_id', quoteId);
+                }
+                setCurrentTab(t);
+              }} />}
+              {currentTab === 'bill-invoice' && <BillInvoiceView />}
               {currentTab === 'sales' && <SalesView />}
               {currentTab === 'projects' && <ProjectsView />}
               {currentTab === 'customers' && <CustomersView />}
