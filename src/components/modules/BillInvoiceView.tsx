@@ -1129,11 +1129,11 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               )}
 
               {/* TOP SECTION: Boxed "Bill Invoice" on Left, Date/Bill No/PO/BIN/TIN on Right */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                 {/* Title Box */}
-                <div style={{ paddingTop: '4px' }}>
-                  <div style={{ border: '2px solid #000', padding: '6px 20px', display: 'inline-block' }}>
-                    <span style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.5px', textTransform: 'none', color: '#000' }}>
+                <div style={{ paddingTop: '2px' }}>
+                  <div style={{ border: '2.5px solid #000', padding: '8px 28px', display: 'inline-block', backgroundColor: '#fff' }}>
+                    <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
                       Bill Invoice
                     </span>
                   </div>
@@ -1150,24 +1150,24 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               </div>
 
               {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '22px', fontSize: '12px', color: '#000' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
                 {/* Bill To */}
-                <div style={{ width: '48%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                <div style={{ width: '52%' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
                     Bill To
                   </div>
-                  <div style={{ lineHeight: '1.4' }}>
+                  <div style={{ lineHeight: '1.45' }}>
                     <div><strong>Name:</strong> {activeBill.billToName}</div>
                     <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
                   </div>
                 </div>
 
-                {/* Deliver To */}
-                <div style={{ width: '48%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                {/* Deliver To (shifted further right) */}
+                <div style={{ width: '38%', paddingLeft: '10px' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
                     Deliver To
                   </div>
-                  <div style={{ lineHeight: '1.4' }}>
+                  <div style={{ lineHeight: '1.45' }}>
                     <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
                     {activeBill.deliverToName && (
                       <div style={{ marginTop: '2px' }}><strong>Name:</strong> {activeBill.deliverToName}</div>
@@ -1225,19 +1225,6 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                         </td>
                       </tr>
                     ))}
-
-                    {/* Spacer row if few items to give authentic document balance */}
-                    {activeBill.items.length < 3 && (
-                      <tr style={{ borderBottom: '1px solid #000', height: '45px' }}>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td style={{ borderRight: '1px solid #000' }}></td>
-                        <td></td>
-                      </tr>
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -1319,15 +1306,15 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               </div>
 
               {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '45px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
-                <div style={{ textAlign: 'center', minWidth: '180px' }}>
-                  <div style={{ borderTop: '2px solid #000', paddingTop: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '140px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
+                <div style={{ textAlign: 'center', minWidth: '200px' }}>
+                  <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
                     Received By
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center', minWidth: '180px' }}>
-                  <div style={{ borderTop: '2px solid #000', paddingTop: '4px' }}>
+                <div style={{ textAlign: 'center', minWidth: '200px' }}>
+                  <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
                     Prepared By
                   </div>
                 </div>
