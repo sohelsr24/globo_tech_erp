@@ -12,14 +12,11 @@ import {
   Copy,
   CheckCircle2,
   Clock,
-  ArrowRight,
+  ArrowLeft,
   FileText,
   Sparkles,
-  Building2,
   Filter,
-  Sliders,
   X,
-  FileDown,
   Info
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -211,18 +208,19 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [isMounted, setIsMounted] = useState(false);
 
+  // View Mode: 'LIST' or 'PREVIEW'
+  const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'PREVIEW'>('LIST');
+
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | BillInvoiceStatus>('ALL');
 
-  // Modals
+  // Modals & Active Records
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
-  const [activeBill, setActiveBill] = useState<BillInvoice | null>(null);
+  const [activeBill, setActiveBill] = useState<BillInvoice | null>(INITIAL_BILL_INVOICES[0]);
 
   // Pad Print Settings
   const [padTopMarginMm, setPadTopMarginMm] = useState<number>(45); // Standard Bangladesh company pad header = 45mm
-  const [includeSealOnPad, setIncludeSealOnPad] = useState<boolean>(false);
   const [usePreprintedPadMode, setUsePreprintedPadMode] = useState<boolean>(true); // TRUE = No digital letterhead/watermark/footer
 
   // Form State for Create / Edit
@@ -284,6 +282,9 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo))
             ];
             setBills(merged);
+            if (merged.length > 0 && !activeBill) {
+              setActiveBill(merged[0]);
+            }
           }
         } catch (e) {
           console.error('Error loading bill invoices from localStorage', e);
@@ -489,9 +490,11 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
   // Delete bill
   const handleDeleteBill = (id: string) => {
     if (confirm('Are you sure you want to delete this Bill Invoice?')) {
-      setBills(bills.filter((b) => b.id !== id));
+      const remaining = bills.filter((b) => b.id !== id);
+      setBills(remaining);
       if (activeBill?.id === id) {
-        setIsPreviewModalOpen(false);
+        setActiveBill(remaining[0] || null);
+        setActiveViewMode('LIST');
       }
     }
   };
@@ -508,25 +511,23 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
     const items = formData.items || [];
     const totals = recalculateFormTotals(items, formData.vatTaxIncluded ?? true, formData.vatTaxAmount ?? 0);
 
+    let savedRecord: BillInvoice;
+
     if (editingBillId) {
       // Update existing
-      setBills(
-        bills.map((b) =>
-          b.id === editingBillId
-            ? ({
-                ...b,
-                ...formData,
-                items,
-                subTotal: totals.subTotal,
-                grandTotal: totals.grandTotal,
-                amountInWords: totals.amountInWords
-              } as BillInvoice)
-            : b
-        )
-      );
+      savedRecord = {
+        ...formData,
+        id: editingBillId,
+        items,
+        subTotal: totals.subTotal,
+        grandTotal: totals.grandTotal,
+        amountInWords: totals.amountInWords
+      } as BillInvoice;
+
+      setBills(bills.map((b) => (b.id === editingBillId ? savedRecord : b)));
     } else {
       // Create new
-      const newBill: BillInvoice = {
+      savedRecord = {
         id: `bill-${Date.now()}`,
         billNo: formData.billNo || `GT/${Date.now().toString().slice(-5)}`,
         date: formData.date || Formatters.date(new Date()),
@@ -565,11 +566,12 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
         createdAt: new Date().toISOString()
       };
 
-      setBills([newBill, ...bills]);
-      setActiveBill(newBill);
+      setBills([savedRecord, ...bills]);
     }
 
+    setActiveBill(savedRecord);
     setIsCreateModalOpen(false);
+    setActiveViewMode('PREVIEW');
   };
 
   // Add Item in Form
@@ -617,15 +619,110 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
     setFormData({ ...formData, items: renumbered, ...totals });
   };
 
-  // Open Preview Modal
+  // Switch to Full-Screen Preview
   const handleOpenPreview = (bill: BillInvoice) => {
     setActiveBill(bill);
-    setIsPreviewModalOpen(true);
+    setActiveViewMode('PREVIEW');
   };
 
-  // Print directly using browser print
+  // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
   const handlePrintBill = () => {
-    window.print();
+    const printElement = document.getElementById('printable-bill-invoice');
+    if (!printElement) {
+      window.print();
+      return;
+    }
+
+    try {
+      // Remove any prior print frame
+      const oldFrame = document.getElementById('isolated-bill-print-frame');
+      if (oldFrame) {
+        oldFrame.remove();
+      }
+
+      // Create a clean hidden iframe
+      const printIframe = document.createElement('iframe');
+      printIframe.id = 'isolated-bill-print-frame';
+      printIframe.style.position = 'fixed';
+      printIframe.style.right = '0';
+      printIframe.style.bottom = '0';
+      printIframe.style.width = '0';
+      printIframe.style.height = '0';
+      printIframe.style.border = '0';
+      document.body.appendChild(printIframe);
+
+      const frameDoc = printIframe.contentWindow?.document;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      const billHtml = printElement.innerHTML;
+      const topPaddingMm = usePreprintedPadMode ? padTopMarginMm : 20;
+
+      frameDoc.open();
+      frameDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>Bill Invoice - ${activeBill?.billNo || 'GT'}</title>
+            <style>
+              @page {
+                size: A4 portrait;
+                margin: 0;
+              }
+              *, *::before, *::after {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              html, body {
+                margin: 0;
+                padding: 0;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+              }
+              .print-sheet {
+                width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto;
+                padding-top: ${topPaddingMm}mm;
+                padding-left: 20mm;
+                padding-right: 20mm;
+                padding-bottom: 15mm;
+                box-sizing: border-box;
+                background: #ffffff;
+                color: #000000;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-sheet">
+              ${billHtml}
+            </div>
+          </body>
+        </html>
+      `);
+      frameDoc.close();
+
+      setTimeout(() => {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+        setTimeout(() => {
+          printIframe.remove();
+        }, 1500);
+      }, 350);
+    } catch (err) {
+      console.error('Iframe print failed, falling back to window.print()', err);
+      window.print();
+    }
   };
 
   // Filtered Bills
@@ -655,227 +752,598 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
 
   return (
     <div className="space-y-6">
-      {/* Module Title & Quick Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-md no-print">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
-            <Receipt className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-slate-100">Bill Invoices</h1>
-              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                Printed Pad Ready
-              </span>
+      {/* ========================================================
+          1. LIST VIEW MODE (Default Management Table)
+          ======================================================== */}
+      {activeViewMode === 'LIST' && (
+        <>
+          {/* Module Title & Quick Action Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-md no-print">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-lg shadow-emerald-500/10">
+                <Receipt className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-xl font-bold text-slate-100">Bill Invoices</h1>
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    Printed Pad Ready
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">
+                  Generate & print dynamic client supply bills directly on pre-printed company pad paper
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-slate-400">
-              Generate & print dynamic client supply bills directly on pre-printed company pad paper
-            </p>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={() => handleOpenCreateModal()}
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Bill Invoice</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => handleOpenCreateModal()}
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Bill Invoice</span>
-          </button>
-        </div>
-      </div>
+          {/* Quick Summary Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 no-print">
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">Total Billed Invoices</span>
+                <Receipt className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-xl font-bold text-slate-100 mt-2">{stats.totalCount}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Records in system</p>
+            </div>
 
-      {/* Quick Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 no-print">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Total Billed Invoices</span>
-            <Receipt className="w-4 h-4 text-emerald-400" />
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">Total Billed Volume</span>
+                <FileText className="w-4 h-4 text-sky-400" />
+              </div>
+              <p className="text-xl font-bold text-slate-100 mt-2">{formatBDT(stats.totalBilled)}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Commercial value</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">Issued / Pending</span>
+                <Clock className="w-4 h-4 text-amber-400" />
+              </div>
+              <p className="text-xl font-bold text-amber-400 mt-2">{stats.pendingCount}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Awaiting collection</p>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-400">Settled / Paid</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-xl font-bold text-emerald-400 mt-2">{stats.paidCount}</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Fully collected</p>
+            </div>
           </div>
-          <p className="text-xl font-bold text-slate-100 mt-2">{stats.totalCount}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Records in system</p>
-        </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Total Billed Volume</span>
-            <FileText className="w-4 h-4 text-sky-400" />
+          {/* Search & Filter Toolbar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-xl no-print">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search by Bill NO, Client, PO, Quotation, or Item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+              {(['ALL', 'ISSUED', 'PAID', 'PARTIAL', 'DRAFT'] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
+                    statusFilter === st
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {st === 'ALL' ? 'All Bills' : st}
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="text-xl font-bold text-slate-100 mt-2">{formatBDT(stats.totalBilled)}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Commercial value</p>
-        </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Issued / Pending</span>
-            <Clock className="w-4 h-4 text-amber-400" />
-          </div>
-          <p className="text-xl font-bold text-amber-400 mt-2">{stats.pendingCount}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Awaiting collection</p>
-        </div>
-
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Settled / Paid</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-          <p className="text-xl font-bold text-emerald-400 mt-2">{stats.paidCount}</p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Fully collected</p>
-        </div>
-      </div>
-
-      {/* Search & Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-xl no-print">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by Bill NO, Client, PO, Quotation, or Item..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
-          />
-        </div>
-
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-          {(['ALL', 'ISSUED', 'PAID', 'PARTIAL', 'DRAFT'] as const).map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition ${
-                statusFilter === st
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {st === 'ALL' ? 'All Bills' : st}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Bill Invoices Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl no-print">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
-                <th className="py-3.5 px-4">Bill NO</th>
-                <th className="py-3.5 px-4">Date</th>
-                <th className="py-3.5 px-4">Client (Bill To)</th>
-                <th className="py-3.5 px-4">PO / Quote Ref</th>
-                <th className="py-3.5 px-4">Delivered To</th>
-                <th className="py-3.5 px-4 text-right">Items</th>
-                <th className="py-3.5 px-4 text-right">Grand Total</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-300">
-              {filteredBills.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-500">
-                    <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
-                    <p className="text-sm font-medium">No bill invoices found</p>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Click &ldquo;Create Bill Invoice&rdquo; above to generate your first company pad bill from quotation.
-                    </p>
-                  </td>
-                </tr>
-              ) : (
-                filteredBills.map((bill) => (
-                  <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
-                    <td className="py-3 px-4 font-mono font-bold text-emerald-400">
-                      {bill.billNo}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap text-slate-400">
-                      {bill.date}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-slate-200">{bill.billToName}</div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="font-mono text-slate-300">{bill.poNumber || '—'}</div>
-                      {bill.quotationRef && (
-                        <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1">
-                          <span>Ref: {bill.quotationRef}</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="text-slate-300 font-medium truncate max-w-[180px]">
-                        {bill.deliverToAddress || '—'}
-                      </div>
-                      {bill.deliverToName && (
-                        <div className="text-[11px] text-slate-500">
-                          {bill.deliverToName} ({bill.deliverToPhone})
-                        </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right font-medium">
-                      {bill.items.length} {bill.items.length === 1 ? 'item' : 'items'}
-                    </td>
-                    <td className="py-3 px-4 text-right font-bold text-slate-100">
-                      {formatBDT(bill.grandTotal)}
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <Badge
-                        variant={
-                          bill.status === 'PAID'
-                            ? 'success'
-                            : bill.status === 'ISSUED'
-                            ? 'warning'
-                            : bill.status === 'DRAFT'
-                            ? 'neutral'
-                            : 'info'
-                        }
-                      >
-                        {bill.status}
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => handleOpenPreview(bill)}
-                          title="View & Print Pad Invoice"
-                          className="p-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditModal(bill)}
-                          title="Edit Bill"
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDuplicateBill(bill)}
-                          title="Duplicate"
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteBill(bill.id)}
-                          title="Delete"
-                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+          {/* Bill Invoices Table */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl no-print">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+                    <th className="py-3.5 px-4">Bill NO</th>
+                    <th className="py-3.5 px-4">Date</th>
+                    <th className="py-3.5 px-4">Client (Bill To)</th>
+                    <th className="py-3.5 px-4">PO / Quote Ref</th>
+                    <th className="py-3.5 px-4">Delivered To</th>
+                    <th className="py-3.5 px-4 text-right">Items</th>
+                    <th className="py-3.5 px-4 text-right">Grand Total</th>
+                    <th className="py-3.5 px-4 text-center">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  {filteredBills.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center text-slate-500">
+                        <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
+                        <p className="text-sm font-medium">No bill invoices found</p>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Click &ldquo;Create Bill Invoice&rdquo; above to generate your first company pad bill from quotation.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredBills.map((bill) => (
+                      <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
+                        <td className="py-3 px-4 font-mono font-bold text-emerald-400">
+                          {bill.billNo}
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap text-slate-400">
+                          {bill.date}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-slate-200">{bill.billToName}</div>
+                          <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-mono text-slate-300">{bill.poNumber || '—'}</div>
+                          {bill.quotationRef && (
+                            <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1">
+                              <span>Ref: {bill.quotationRef}</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-slate-300 font-medium truncate max-w-[180px]">
+                            {bill.deliverToAddress || '—'}
+                          </div>
+                          {bill.deliverToName && (
+                            <div className="text-[11px] text-slate-500">
+                              {bill.deliverToName} ({bill.deliverToPhone})
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right font-medium">
+                          {bill.items.length} {bill.items.length === 1 ? 'item' : 'items'}
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-slate-100">
+                          {formatBDT(bill.grandTotal)}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <Badge
+                            variant={
+                              bill.status === 'PAID'
+                                ? 'success'
+                                : bill.status === 'ISSUED'
+                                ? 'warning'
+                                : bill.status === 'DRAFT'
+                                ? 'neutral'
+                                : 'info'
+                            }
+                          >
+                            {bill.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => handleOpenPreview(bill)}
+                              title="View & Print Pad Invoice"
+                              className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/20 transition flex items-center gap-1"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View / Print</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditModal(bill)}
+                              title="Edit Bill"
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDuplicateBill(bill)}
+                              title="Duplicate"
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteBill(bill.id)}
+                              title="Delete"
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
-      {/* CREATE / EDIT BILL INVOICE MODAL */}
+      {/* ========================================================
+          2. DEDICATED FULL-SCREEN A4 PREVIEW & PRINT VIEW MODE
+          ======================================================== */}
+      {activeViewMode === 'PREVIEW' && activeBill && (
+        <div className="space-y-6">
+          {/* Top Floating Control Bar */}
+          <div className="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl no-print">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setActiveViewMode('LIST')}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Bills</span>
+              </button>
+
+              <div className="h-5 w-px bg-slate-800 hidden sm:block" />
+
+              <div>
+                <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                  <span>Bill Invoice: {activeBill.billNo}</span>
+                  <span className="font-normal text-xs text-slate-400">({activeBill.billToName})</span>
+                </h2>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Pad Mode Toggle */}
+              <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setUsePreprintedPadMode(true)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+                    usePreprintedPadMode
+                      ? 'bg-emerald-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Pre-Printed Pad (No Header/Footer)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUsePreprintedPadMode(false)}
+                  className={`px-3 py-1.5 rounded-lg font-semibold transition ${
+                    !usePreprintedPadMode
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Plain White Paper
+                </button>
+              </div>
+
+              {/* Pad Top Spacing Selector */}
+              {usePreprintedPadMode && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-slate-400 hidden md:inline">Pad Spacing:</span>
+                  <select
+                    value={padTopMarginMm}
+                    onChange={(e) => setPadTopMarginMm(Number(e.target.value))}
+                    className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 font-mono text-xs"
+                  >
+                    <option value={35}>35 mm (Compact Pad)</option>
+                    <option value={45}>45 mm (Standard Pad)</option>
+                    <option value={55}>55 mm (Tall Header Pad)</option>
+                    <option value={65}>65 mm (Large Pad)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Edit button */}
+              <button
+                type="button"
+                onClick={() => handleOpenEditModal(activeBill)}
+                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+              >
+                <Edit className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
+
+              {/* PRIMARY PRINT BUTTON */}
+              <button
+                type="button"
+                onClick={handlePrintBill}
+                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print to Pad (A4)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Pad Printing Notice */}
+          <div className="p-3.5 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex items-start gap-2.5 no-print">
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold">Company Pad Printing Notice:</p>
+              <p className="text-[11px] text-emerald-300/80 mt-0.5">
+                This document is designed for your printed company pad (No digital logo, no watermark, and no footer). When clicking <strong>&ldquo;Print to Pad (A4)&rdquo;</strong>, select <strong>A4</strong> paper and <strong>Margins: Default / None</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* A4 PRINTABLE BILL INVOICE SHEET (Pure White Sheet Container) */}
+          <div className="flex justify-center pb-12">
+            <div
+              id="printable-bill-invoice"
+              style={{
+                width: '210mm',
+                minHeight: '297mm',
+                boxSizing: 'border-box',
+                backgroundColor: '#ffffff',
+                color: '#000000',
+                paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '20mm',
+                paddingLeft: '20mm',
+                paddingRight: '20mm',
+                paddingBottom: '15mm',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif'
+              }}
+              className="shadow-2xl rounded-sm text-black select-text relative print:shadow-none print:w-full print:m-0 print:p-0"
+            >
+              {/* Optional Plain Paper Header */}
+              {!usePreprintedPadMode && (
+                <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
+                        GLOBO TECH
+                      </h1>
+                      <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
+                        Enterprise Supply & Engineering Solutions
+                      </p>
+                      <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
+                        Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
+                      </p>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '11px', color: '#444' }}>
+                      <p style={{ margin: '0' }}><strong>BIN:</strong> 004728009-0202</p>
+                      <p style={{ margin: '2px 0 0 0' }}><strong>TIN:</strong> 169493772750</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TOP SECTION: Boxed "Bill Invoice" on Left, Date/Bill No/PO/BIN/TIN on Right */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
+                {/* Title Box */}
+                <div style={{ paddingTop: '4px' }}>
+                  <div style={{ border: '2px solid #000', padding: '6px 20px', display: 'inline-block' }}>
+                    <span style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.5px', textTransform: 'none', color: '#000' }}>
+                      Bill Invoice
+                    </span>
+                  </div>
+                </div>
+
+                {/* Metadata List */}
+                <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
+                  <div><strong>Date:</strong> {activeBill.date}</div>
+                  <div><strong>Bill NO:</strong> {activeBill.billNo}</div>
+                  <div><strong>PO :</strong> {activeBill.poNumber || '—'}</div>
+                  <div><strong>BIN:</strong> {activeBill.binNumber || '004728009-0202'}</div>
+                  <div><strong>TIN:</strong> {activeBill.tinNumber || '169493772750'}</div>
+                </div>
+              </div>
+
+              {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '22px', fontSize: '12px', color: '#000' }}>
+                {/* Bill To */}
+                <div style={{ width: '48%' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                    Bill To
+                  </div>
+                  <div style={{ lineHeight: '1.4' }}>
+                    <div><strong>Name:</strong> {activeBill.billToName}</div>
+                    <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
+                  </div>
+                </div>
+
+                {/* Deliver To */}
+                <div style={{ width: '48%' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                    Deliver To
+                  </div>
+                  <div style={{ lineHeight: '1.4' }}>
+                    <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
+                    {activeBill.deliverToName && (
+                      <div style={{ marginTop: '2px' }}><strong>Name:</strong> {activeBill.deliverToName}</div>
+                    )}
+                    {activeBill.deliverToPhone && (
+                      <div style={{ marginTop: '2px' }}><strong>Phone No:</strong> {activeBill.deliverToPhone}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* ITEMS TABLE (Exact black-bordered layout matching PDF) */}
+              <div style={{ marginBottom: '16px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '165px', fontWeight: 'bold' }}>Item name</th>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Discription</th>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unite</th>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '45px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
+                      <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Unite Price</th>
+                      <th style={{ padding: '8px 6px', width: '105px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeBill.items.map((item, idx) => (
+                      <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
+                          {idx + 1}
+                        </td>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
+                          {item.name}
+                        </td>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
+                          {item.description || item.name}
+                        </td>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
+                          {item.unit}
+                        </td>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold' }}>
+                          {item.quantity}
+                        </td>
+                        <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
+                          {Number(item.unitPrice).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </td>
+                        <td style={{ padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                          {Number(item.amount).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Spacer row if few items to give authentic document balance */}
+                    {activeBill.items.length < 3 && (
+                      <tr style={{ borderBottom: '1px solid #000', height: '45px' }}>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td style={{ borderRight: '1px solid #000' }}></td>
+                        <td></td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* BOTTOM TOTALS: Boxed Amount In Word (Left) vs Summary Rows (Right) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
+                {/* Left: Amount In Word Box */}
+                <div style={{ width: '58%', border: '1px solid #000', padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
+                    Amount In Word
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: '500', fontStyle: 'italic', lineHeight: '1.4' }}>
+                    {activeBill.amountInWords || numberToWordsBDT(activeBill.grandTotal, 'BDT', { style: 'suffix', suffixUnit: 'Taka', dotEnd: true })}
+                  </div>
+                </div>
+
+                {/* Right: SubTotal / VAT & TAX / Grand Total */}
+                <div style={{ width: '38%', fontSize: '12px', fontWeight: '600' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
+                    <span>Sub Total</span>
+                    <span>
+                      {Number(activeBill.subTotal).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
+                    <span>VAT & TAX Included</span>
+                    <span>
+                      {activeBill.vatTaxIncluded
+                        ? '0.00'
+                        : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: '3px double #000' }}>
+                    <span>Grand Total</span>
+                    <span>
+                      {Number(activeBill.grandTotal).toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '45px', fontSize: '12px', color: '#000' }}>
+                {/* Terms & Conditions */}
+                <div style={{ width: '48%' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                    Terms & Conditions
+                  </div>
+                  <div style={{ lineHeight: '1.6', fontWeight: '500' }}>
+                    {activeBill.termsAndConditions.map((term, tIdx) => (
+                      <div key={tIdx}>{term}</div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div style={{ width: '48%' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                    Payment Details
+                  </div>
+                  <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
+                    <div><strong>Account No :</strong> {activeBill.bankAccountNo}</div>
+                    <div><strong>Account Title:</strong> {activeBill.bankAccountTitle}</div>
+                    <div><strong>Bank Name :</strong> {activeBill.bankName}</div>
+                    <div><strong>Branch Name:</strong> {activeBill.bankBranchName}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '45px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
+                <div style={{ textAlign: 'center', minWidth: '180px' }}>
+                  <div style={{ borderTop: '2px solid #000', paddingTop: '4px' }}>
+                    Received By
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'center', minWidth: '180px' }}>
+                  <div style={{ borderTop: '2px solid #000', paddingTop: '4px' }}>
+                    Prepared By
+                  </div>
+                </div>
+              </div>
+
+              {/* Plain Paper Footer (Only if Pre-printed Pad Mode is Disabled) */}
+              {!usePreprintedPadMode && (
+                <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+                  This is an electronically generated bill invoice. For questions, contact info@globotechbd.com.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          3. CREATE / EDIT BILL INVOICE MODAL
+          ======================================================== */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -1318,369 +1786,39 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               type="submit"
               className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition"
             >
-              {editingBillId ? 'Update Bill Invoice' : 'Save Bill Invoice'}
+              {editingBillId ? 'Update & Preview' : 'Save & Preview'}
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* VIEW & PRINT PAD INVOICE MODAL (Strictly matching PDF and pre-printed pad paper) */}
-      {activeBill && (
-        <Modal
-          isOpen={isPreviewModalOpen}
-          onClose={() => setIsPreviewModalOpen(false)}
-          title={`Bill Invoice Preview - ${activeBill.billNo}`}
-          size="xl"
-        >
-          <div className="space-y-6">
-            {/* Pad Calibration & Print Action Bar (Hidden when printed) */}
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 no-print">
-              <div className="flex flex-wrap items-center gap-4">
-                {/* Pad Print Mode Toggle */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-slate-300">Printing Mode:</span>
-                  <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-                    <button
-                      type="button"
-                      onClick={() => setUsePreprintedPadMode(true)}
-                      className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                        usePreprintedPadMode
-                          ? 'bg-emerald-600 text-white shadow'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Pre-Printed Pad (No Header/Footer)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setUsePreprintedPadMode(false)}
-                      className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                        !usePreprintedPadMode
-                          ? 'bg-blue-600 text-white shadow'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      Plain White Paper
-                    </button>
-                  </div>
-                </div>
-
-                {/* Top Pad Spacing Selector */}
-                {usePreprintedPadMode && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400">Pad Header Spacing:</span>
-                    <select
-                      value={padTopMarginMm}
-                      onChange={(e) => setPadTopMarginMm(Number(e.target.value))}
-                      className="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 font-mono"
-                    >
-                      <option value={35}>35 mm (Compact Pad)</option>
-                      <option value={45}>45 mm (Standard Pad)</option>
-                      <option value={55}>55 mm (Tall Header Pad)</option>
-                      <option value={65}>65 mm (Large Pad)</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handlePrintBill}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-600/20 transition"
-                >
-                  <Printer className="w-4 h-4" />
-                  <span>Print to Pad (A4)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Information Notice for User */}
-            <div className="p-3 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex items-start gap-2.5 no-print">
-              <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Company Pad Printing Notice:</p>
-                <p className="text-[11px] text-emerald-300/80 mt-0.5">
-                  This document has zero digital letterhead, zero watermark, and zero footer so you can print directly on your pre-printed Globo Tech pad paper. In your browser print dialog, ensure paper size is set to <strong>A4</strong> and margins are set to <strong>Default</strong> or <strong>None</strong>.
-                </p>
-              </div>
-            </div>
-
-            {/* A4 PRINTABLE BILL INVOICE CONTAINER */}
-            <div className="overflow-x-auto bg-slate-950 p-2 sm:p-4 rounded-xl border border-slate-800 flex justify-center">
-              <div
-                id="printable-bill-invoice"
-                style={{
-                  paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '20mm',
-                  minHeight: '297mm',
-                  width: '210mm',
-                  boxSizing: 'border-box'
-                }}
-                className="bg-white text-black p-8 sm:p-10 font-sans shadow-2xl relative select-text print:shadow-none print:w-full print:p-0 print:m-0"
-              >
-                {/* Plain Paper Header (ONLY shown when pre-printed pad mode is disabled) */}
-                {!usePreprintedPadMode && (
-                  <div className="border-b-2 border-black pb-4 mb-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900">GLOBO TECH</h1>
-                        <p className="text-xs text-slate-700 font-medium">Enterprise Supply & Engineering Solutions</p>
-                        <p className="text-[10px] text-slate-600 mt-1">
-                          Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
-                        </p>
-                      </div>
-                      <div className="text-right text-[10px] text-slate-600">
-                        <p>BIN: 004728009-0202</p>
-                        <p>TIN: 169493772750</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* EXACT PDF TOP SECTION: Title Box on Left, Date/Bill No/PO/BIN/TIN on Right */}
-                <div className="flex justify-between items-start mb-6">
-                  {/* Title Box */}
-                  <div className="pt-1">
-                    <div className="border-2 border-black px-6 py-2">
-                      <h2 className="text-xl sm:text-2xl font-black text-black tracking-wide">
-                        Bill Invoice
-                      </h2>
-                    </div>
-                  </div>
-
-                  {/* Metadata List */}
-                  <div className="text-right text-xs leading-tight font-medium text-black space-y-1">
-                    <p><span className="font-bold">Date:</span> {activeBill.date}</p>
-                    <p><span className="font-bold">Bill NO:</span> {activeBill.billNo}</p>
-                    <p><span className="font-bold">PO :</span> {activeBill.poNumber || '—'}</p>
-                    <p><span className="font-bold">BIN:</span> {activeBill.binNumber || '004728009-0202'}</p>
-                    <p><span className="font-bold">TIN:</span> {activeBill.tinNumber || '169493772750'}</p>
-                  </div>
-                </div>
-
-                {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
-                <div className="grid grid-cols-2 gap-8 mb-6 text-xs text-black">
-                  {/* Bill To */}
-                  <div>
-                    <h3 className="font-bold text-sm text-black border-b border-black pb-0.5 mb-2 inline-block min-w-[120px]">
-                      Bill To
-                    </h3>
-                    <div className="space-y-1">
-                      <p>
-                        <span className="font-bold">Name:</span> {activeBill.billToName}
-                      </p>
-                      <p className="leading-snug">
-                        <span className="font-bold">Address:</span> {activeBill.billToAddress}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Deliver To */}
-                  <div>
-                    <h3 className="font-bold text-sm text-black border-b border-black pb-0.5 mb-2 inline-block min-w-[120px]">
-                      Deliver To
-                    </h3>
-                    <div className="space-y-1">
-                      <p className="leading-snug">
-                        <span className="font-bold">Address:</span> {activeBill.deliverToAddress || '—'}
-                      </p>
-                      {activeBill.deliverToName && (
-                        <p>
-                          <span className="font-bold">Name:</span> {activeBill.deliverToName}
-                        </p>
-                      )}
-                      {activeBill.deliverToPhone && (
-                        <p>
-                          <span className="font-bold">Phone No:</span> {activeBill.deliverToPhone}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ITEMS TABLE (Exact borders & columns matching PDF) */}
-                <div className="mb-4">
-                  <table className="w-full border-collapse border border-black text-xs text-black">
-                    <thead>
-                      <tr className="border-b border-black text-center font-bold">
-                        <th className="border-r border-black py-2 px-2 w-10">SN</th>
-                        <th className="border-r border-black py-2 px-3 text-left w-48">Item name</th>
-                        <th className="border-r border-black py-2 px-3 text-left">Discription</th>
-                        <th className="border-r border-black py-2 px-2 w-16">Unite</th>
-                        <th className="border-r border-black py-2 px-2 w-12">Qty</th>
-                        <th className="border-r border-black py-2 px-2 text-right w-24">Unite Price</th>
-                        <th className="py-2 px-2 text-right w-28">Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {activeBill.items.map((item, idx) => (
-                        <tr key={item.id} className="border-b border-black text-xs align-top">
-                          <td className="border-r border-black py-2.5 px-2 text-center font-medium">
-                            {idx + 1}
-                          </td>
-                          <td className="border-r border-black py-2.5 px-3 font-semibold">
-                            {item.name}
-                          </td>
-                          <td className="border-r border-black py-2.5 px-3 leading-snug">
-                            {item.description || item.name}
-                          </td>
-                          <td className="border-r border-black py-2.5 px-2 text-center">
-                            {item.unit}
-                          </td>
-                          <td className="border-r border-black py-2.5 px-2 text-center font-bold">
-                            {item.quantity}
-                          </td>
-                          <td className="border-r border-black py-2.5 px-2 text-right font-medium">
-                            {Number(item.unitPrice).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })}
-                          </td>
-                          <td className="py-2.5 px-2 text-right font-bold">
-                            {Number(item.amount).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })}
-                          </td>
-                        </tr>
-                      ))}
-
-                      {/* Visual filler height for authentic pad bill aesthetics */}
-                      {activeBill.items.length < 3 && (
-                        <tr className="border-b border-black" style={{ height: '40px' }}>
-                          <td className="border-r border-black"></td>
-                          <td className="border-r border-black"></td>
-                          <td className="border-r border-black"></td>
-                          <td className="border-r border-black"></td>
-                          <td className="border-r border-black"></td>
-                          <td className="border-r border-black"></td>
-                          <td></td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* BOTTOM TOTALS: Amount in Word Box (Left) & SubTotal / VAT / Grand Total (Right) */}
-                <div className="grid grid-cols-12 gap-4 mb-6 text-xs text-black">
-                  {/* Amount In Word Box */}
-                  <div className="col-span-7">
-                    <div className="border border-black p-3 min-h-[60px] flex flex-col justify-center">
-                      <p className="font-bold mb-1">Amount In Word</p>
-                      <p className="font-medium italic leading-snug">
-                        {activeBill.amountInWords || numberToWordsBDT(activeBill.grandTotal, 'BDT', { style: 'suffix', suffixUnit: 'Taka', dotEnd: true })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Summary Rows */}
-                  <div className="col-span-5 text-xs text-black font-semibold space-y-1">
-                    <div className="flex justify-between py-1 border-b border-black">
-                      <span>Sub Total</span>
-                      <span>
-                        {Number(activeBill.subTotal).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between py-1 border-b border-black">
-                      <span>VAT & TAX Included</span>
-                      <span>
-                        {activeBill.vatTaxIncluded
-                          ? '0.00'
-                          : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between py-1.5 font-bold text-sm border-b-4 border-double border-black">
-                      <span>Grand Total</span>
-                      <span>
-                        {Number(activeBill.grandTotal).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
-                <div className="grid grid-cols-2 gap-8 mb-12 text-xs text-black">
-                  {/* Terms & Conditions */}
-                  <div>
-                    <h3 className="font-bold text-xs text-black border-b border-black pb-0.5 mb-2 inline-block min-w-[140px]">
-                      Terms & Conditions
-                    </h3>
-                    <div className="space-y-1 text-black font-medium leading-relaxed">
-                      {activeBill.termsAndConditions.map((term, tIdx) => (
-                        <p key={tIdx}>{term}</p>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Payment Details */}
-                  <div>
-                    <h3 className="font-bold text-xs text-black border-b border-black pb-0.5 mb-2 inline-block min-w-[140px]">
-                      Payment Details
-                    </h3>
-                    <div className="space-y-1 text-black font-medium leading-tight">
-                      <p><span className="font-bold">Account No :</span> {activeBill.bankAccountNo}</p>
-                      <p><span className="font-bold">Account Title:</span> {activeBill.bankAccountTitle}</p>
-                      <p><span className="font-bold">Bank Name :</span> {activeBill.bankName}</p>
-                      <p><span className="font-bold">Branch Name:</span> {activeBill.bankBranchName}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
-                <div className="pt-8 flex justify-between items-end text-xs text-black font-bold">
-                  <div className="text-center min-w-[180px]">
-                    <div className="border-t-2 border-black pt-1">
-                      Received By
-                    </div>
-                  </div>
-
-                  <div className="text-center min-w-[180px]">
-                    <div className="border-t-2 border-black pt-1">
-                      Prepared By
-                    </div>
-                  </div>
-                </div>
-
-                {/* Plain Paper Footer (ONLY shown when Pre-Printed Pad Mode is FALSE) */}
-                {!usePreprintedPadMode && (
-                  <div className="border-t border-slate-300 pt-3 mt-8 text-center text-[10px] text-slate-500">
-                    This is an electronically generated bill invoice. For questions, contact info@globotechbd.com.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Embedded Print CSS to guarantee clean single-page pad print */}
+      {/* Embedded Global Print CSS ensuring seamless direct printing */}
       <style jsx global>{`
         @media print {
-          body {
-            background: white !important;
-            color: black !important;
+          body, html {
+            background-color: #ffffff !important;
+            color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
+            width: 100% !important;
+            height: auto !important;
           }
-          .no-print {
+          .no-print, header, aside, nav {
             display: none !important;
+          }
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: none !important;
+            width: 100% !important;
+            overflow: visible !important;
           }
           #printable-bill-invoice {
             box-shadow: none !important;
             border: none !important;
             width: 100% !important;
             min-height: auto !important;
+            margin: 0 auto !important;
             page-break-after: avoid !important;
             page-break-inside: avoid !important;
           }
