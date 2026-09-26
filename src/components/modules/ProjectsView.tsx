@@ -442,9 +442,9 @@ export function ProjectsView() {
   };
 
   // Material Issue Form
-  const [issueQty, setIssueQty] = useState(2);
-  const [issueProduct, setIssueProduct] = useState('CCTV Camera (4MP Outdoor IR Dome IP Camera)');
-  const [issueUnitCost, setIssueUnitCost] = useState(10000);
+  const [issueQty, setIssueQty] = useState(1);
+  const [issueProduct, setIssueProduct] = useState('');
+  const [issueUnitCost, setIssueUnitCost] = useState(0);
 
   // Labor Form
   const [techName, setTechName] = useState('Md. Al-Amin');
@@ -613,14 +613,18 @@ export function ProjectsView() {
 
   // Handle Issue Material
   const handleIssueMaterial = () => {
-    if (!selectedProject || issueQty <= 0) return;
+    if (!selectedProject) return;
+    const prodName = issueProduct.trim();
+    if (!prodName) return;
+    const qty = Number(issueQty) || 0;
+    if (qty <= 0) return;
     const unitCost = Number(issueUnitCost) || 0;
-    const addedCost = issueQty * unitCost;
+    const addedCost = qty * unitCost;
 
     const newIssue: MaterialIssue = {
       id: `iss-${Date.now()}`,
-      productName: issueProduct,
-      quantity: issueQty,
+      productName: prodName,
+      quantity: qty,
       unitLandedCost: unitCost,
       totalCost: addedCost
     };
@@ -1091,7 +1095,12 @@ export function ProjectsView() {
 
                 <div className="flex flex-wrap items-center gap-2">
                   <button
-                    onClick={() => setIsIssueMaterialOpen(true)}
+                    onClick={() => {
+                      setIssueProduct('');
+                      setIssueQty(1);
+                      setIssueUnitCost(0);
+                      setIsIssueMaterialOpen(true);
+                    }}
                     className="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5 transition"
                   >
                     <PackageMinus className="w-3.5 h-3.5" />
@@ -1574,35 +1583,103 @@ export function ProjectsView() {
           onClose={() => setIsIssueMaterialOpen(false)}
           title={`Issue Materials to Project: ${selectedProject.projectName}`}
         >
-          <div className="space-y-4 text-xs">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleIssueMaterial();
+            }}
+            className="space-y-4 text-xs"
+          >
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">Select Product / Cable / Hardware</label>
-              <select
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-300 font-semibold">
+                  Product / Cable / Gift / Hardware / Material Name *
+                </label>
+                <span className="text-[10px] text-purple-400 font-medium">
+                  Type freely or select below
+                </span>
+              </div>
+              <input
+                type="text"
+                required
+                list="material-catalog-list"
+                placeholder="Type any custom item (e.g. Leather gift box-1, CCTV Camera, Patch Cord...)"
                 value={issueProduct}
+                onChange={(e) => setIssueProduct(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-semibold focus:border-purple-500 focus:outline-none placeholder-slate-500"
+              />
+            </div>
+
+            {/* Quick Catalog / Preset Selector */}
+            <div>
+              <label className="block text-slate-400 text-[11px] font-semibold mb-1">
+                Or Quick Pick from Standard Catalog / Common Items:
+              </label>
+              <select
+                value=""
                 onChange={(e) => {
-                  setIssueProduct(e.target.value);
-                  if (e.target.value.includes('Cable')) setIssueUnitCost(14500);
-                  else if (e.target.value.includes('Camera')) setIssueUnitCost(9000);
-                  else if (e.target.value.includes('NVR')) setIssueUnitCost(35000);
+                  if (!e.target.value) return;
+                  const [name, costStr] = e.target.value.split('||');
+                  setIssueProduct(name);
+                  if (costStr) setIssueUnitCost(Number(costStr));
                 }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100"
+                className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-slate-300 text-xs focus:border-purple-500 focus:outline-none cursor-pointer"
               >
-                <option value="CCTV Camera (4MP Outdoor IR Dome IP Camera)">CCTV Camera (4MP Outdoor IR Dome IP Camera)</option>
-                <option value="Cat6 UTP Pure Copper Industrial Cable (305m)">Cat6 UTP Pure Copper Industrial Cable (305m)</option>
-                <option value="Hikvision 16-Channel 4K NVR with 2-SATA">Hikvision 16-Channel 4K NVR with 2-SATA</option>
-                <option value="Cisco 24-Port Gigabit Managed PoE+ Switch">Cisco 24-Port Gigabit Managed PoE+ Switch</option>
+                <option value="">-- Click to select from catalog / common supplies --</option>
+                <optgroup label="Gift Items, Packaging & Customized Goods">
+                  <option value="Leather gift box-1||1500">Leather gift box-1 (৳1,500)</option>
+                  <option value="Executive Wooden Box / Gift Set||2500">Executive Wooden Box / Gift Set (৳2,500)</option>
+                  <option value="Custom Engraved Metal Crest / Memento||3000">Custom Engraved Metal Crest / Memento (৳3,000)</option>
+                  <option value="Corporate Gift Pack & Bags||1200">Corporate Gift Pack & Bags (৳1,200)</option>
+                </optgroup>
+                <optgroup label="CCTV & Surveillance Hardware">
+                  <option value="CCTV Camera (4MP Outdoor IR Dome IP Camera)||9000">CCTV Camera (4MP Outdoor IR Dome IP Camera) (৳9,000)</option>
+                  <option value="Hikvision 16-Channel 4K NVR with 2-SATA||35000">Hikvision 16-Channel 4K NVR with 2-SATA (৳35,000)</option>
+                  <option value="Hikvision 4MP IP Cameras with Mounting Junctions||11000">Hikvision 4MP IP Cameras with Mounting Junctions (৳11,000)</option>
+                  <option value="Surveillance Hard Disk 4TB / 6TB Surveillance Grade||14500">Surveillance Hard Disk 4TB / 6TB (৳14,500)</option>
+                </optgroup>
+                <optgroup label="Cabling & Infrastructure">
+                  <option value="Cat6 UTP Pure Copper Industrial Cable (305m)||14500">Cat6 UTP Pure Copper Industrial Cable (305m) (৳14,500)</option>
+                  <option value="Rosenberger Cat-6 UTP Pure Copper Cable (305m)||16500">Rosenberger Cat-6 UTP Pure Copper Cable (305m) (৳16,500)</option>
+                  <option value="Cat6 Patch Panels 24-Port & Wire Managers||6500">Cat6 Patch Panels 24-Port & Wire Managers (৳6,500)</option>
+                  <option value="RJ45 Pure Copper Modular Connectors (100 Pcs)||1200">RJ45 Pure Copper Modular Connectors (100 Pcs) (৳1,200)</option>
+                  <option value="PVC Conduit Pipes & Flexible Hose (100ft)||2500">PVC Conduit Pipes & Flexible Hose (100ft) (৳2,500)</option>
+                </optgroup>
+                <optgroup label="Networking & Active Power">
+                  <option value="Cisco 24-Port Gigabit Managed PoE+ Switch||42000">Cisco 24-Port Gigabit Managed PoE+ Switch (৳42,000)</option>
+                  <option value="Server Rack / Wall Mount 6U-12U Industrial||8500">Server Rack / Wall Mount 6U-12U Industrial (৳8,500)</option>
+                  <option value="Centralized Power Supply 12V 20A with Battery Backup||4500">Centralized Power Supply 12V 20A with Battery Backup (৳4,500)</option>
+                </optgroup>
               </select>
             </div>
 
+            {/* Datalist for inline browser autocomplete */}
+            <datalist id="material-catalog-list">
+              <option value="Leather gift box-1" />
+              <option value="Executive Wooden Box / Gift Set" />
+              <option value="Custom Engraved Metal Crest / Memento" />
+              <option value="Corporate Gift Pack & Bags" />
+              <option value="CCTV Camera (4MP Outdoor IR Dome IP Camera)" />
+              <option value="Cat6 UTP Pure Copper Industrial Cable (305m)" />
+              <option value="Hikvision 16-Channel 4K NVR with 2-SATA" />
+              <option value="Cisco 24-Port Gigabit Managed PoE+ Switch" />
+              <option value="Server Rack / Wall Mount 6U-12U Industrial" />
+              <option value="Rosenberger Cat-6 UTP Pure Copper Cable (305m)" />
+              <option value="Cat6 Patch Panels 24-Port & Wire Managers" />
+              <option value="RJ45 Pure Copper Modular Connectors (100 Pcs)" />
+            </datalist>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Quantity (pcs/boxes) *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Quantity (pcs/boxes/sets) *</label>
                 <input
                   type="number"
-                  min="1"
+                  min="0.01"
+                  step="any"
+                  required
                   value={issueQty}
                   onChange={(e) => setIssueQty(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-bold"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold focus:border-purple-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -1611,34 +1688,34 @@ export function ProjectsView() {
                   type="number"
                   min="0"
                   step="any"
+                  required
                   value={issueUnitCost}
                   onChange={(e) => setIssueUnitCost(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-purple-500 focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="p-3 bg-purple-950/40 border border-purple-800/60 rounded-xl text-slate-300 text-[11px] leading-relaxed">
-              ⚡ <strong>Automatic Landed Cost Accounting:</strong> Total of <strong>{formatBDT(issueQty * issueUnitCost)}</strong> will be charged against project revenue to compute net profit.
+              ⚡ <strong>Automatic Landed Cost Accounting:</strong> Total of <strong>{formatBDT((Number(issueQty) || 0) * (Number(issueUnitCost) || 0))}</strong> will be charged against project revenue to compute net profit.
             </div>
 
             <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsIssueMaterialOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold hover:bg-slate-700 transition"
               >
                 Cancel
               </button>
               <button
-                type="button"
-                onClick={handleIssueMaterial}
+                type="submit"
                 className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow transition"
               >
                 Confirm Material Issue
               </button>
             </div>
-          </div>
+          </form>
         </Modal>
       )}
 
