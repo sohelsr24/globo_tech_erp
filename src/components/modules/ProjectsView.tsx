@@ -24,7 +24,9 @@ import {
   ShieldCheck,
   Truck,
   ChevronDown,
-  Users
+  Users,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -315,10 +317,33 @@ export function ProjectsView() {
 
   // Modals
   const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
   const [isIssueMaterialOpen, setIsIssueMaterialOpen] = useState(false);
   const [isLogLaborOpen, setIsLogLaborOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isPnLSheetModalOpen, setIsPnLSheetModalOpen] = useState(false);
+
+  // Edit states for individual records
+  const [editProjectData, setEditProjectData] = useState<{
+    id: string;
+    projectName: string;
+    customerName: string;
+    location: string;
+    contractValue: number | '';
+    status: ProjectRecord['status'];
+    notes: string;
+  }>({
+    id: '',
+    projectName: '',
+    customerName: '',
+    location: '',
+    contractValue: '',
+    status: 'INSTALLATION_IN_PROGRESS',
+    notes: ''
+  });
+  const [editingMaterial, setEditingMaterial] = useState<MaterialIssue | null>(null);
+  const [editingLabor, setEditingLabor] = useState<LaborLog | null>(null);
+  const [editingExpense, setEditingExpense] = useState<ProjectExpense | null>(null);
 
   // Saved custom clients directory
   const [customClients, setCustomClients] = useState<ClientOption[]>(() => {
@@ -721,6 +746,256 @@ export function ProjectsView() {
     setExpenseAmount(5000);
   };
 
+  // --- EDIT PROJECT HANDLERS ---
+  const openEditProjectModal = (prj: ProjectRecord) => {
+    setEditProjectData({
+      id: prj.id,
+      projectName: prj.projectName,
+      customerName: prj.customerName,
+      location: prj.location,
+      contractValue: prj.contractValue,
+      status: prj.status,
+      notes: prj.notes || ''
+    });
+    setIsEditProjectOpen(true);
+  };
+
+  const handleUpdateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editProjectData.projectName.trim() || !editProjectData.customerName.trim()) return;
+    const contractVal = Number(editProjectData.contractValue) || 0;
+
+    const updatedProjects = projects.map((p) => {
+      if (p.id === editProjectData.id) {
+        const newGrossProfit = contractVal - p.totalProjectCost;
+        const newMargin = contractVal > 0 ? (newGrossProfit / contractVal) * 100 : 0;
+        return {
+          ...p,
+          projectName: editProjectData.projectName.trim(),
+          customerName: editProjectData.customerName.trim(),
+          location: editProjectData.location.trim() || 'Dhaka, Bangladesh',
+          contractValue: contractVal,
+          status: editProjectData.status,
+          notes: editProjectData.notes,
+          projectGrossProfit: newGrossProfit,
+          profitMarginPercent: newMargin
+        };
+      }
+      return p;
+    });
+
+    setProjects(updatedProjects);
+    setIsEditProjectOpen(false);
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to delete this project? All associated material, labor, and expense entries will be deleted.')) {
+      return;
+    }
+    const remaining = projects.filter((p) => p.id !== projectId);
+    setProjects(remaining);
+    if (selectedProjectId === projectId) {
+      setSelectedProjectId(remaining[0]?.id || '');
+    }
+  };
+
+  // --- EDIT & DELETE MATERIAL HANDLERS ---
+  const handleUpdateMaterial = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject || !editingMaterial) return;
+    const qty = Number(editingMaterial.quantity) || 0;
+    const cost = Number(editingMaterial.unitLandedCost) || 0;
+    if (!editingMaterial.productName.trim() || qty <= 0) return;
+
+    const updatedMaterials = selectedProject.materialIssues.map((m) => {
+      if (m.id === editingMaterial.id) {
+        return {
+          ...m,
+          productName: editingMaterial.productName.trim(),
+          quantity: qty,
+          unitLandedCost: cost,
+          totalCost: qty * cost
+        };
+      }
+      return m;
+    });
+
+    const newMaterialCost = updatedMaterials.reduce((sum, item) => sum + item.totalCost, 0);
+    const newTotalCost =
+      newMaterialCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      materialIssues: updatedMaterials,
+      materialLandedCost: newMaterialCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+    setEditingMaterial(null);
+  };
+
+  const handleDeleteMaterial = (materialId: string) => {
+    if (!selectedProject) return;
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to remove this material entry?')) return;
+    const updatedMaterials = selectedProject.materialIssues.filter((m) => m.id !== materialId);
+    const newMaterialCost = updatedMaterials.reduce((sum, item) => sum + item.totalCost, 0);
+    const newTotalCost =
+      newMaterialCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      materialIssues: updatedMaterials,
+      materialLandedCost: newMaterialCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+  };
+
+  // --- EDIT & DELETE LABOR HANDLERS ---
+  const handleUpdateLabor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject || !editingLabor) return;
+    const days = Number(editingLabor.workDays) || 0;
+    const rate = Number(editingLabor.dailyRate) || 0;
+    if (!editingLabor.technicianName.trim() || days <= 0) return;
+
+    const updatedLaborList = selectedProject.laborLogs.map((l) => {
+      if (l.id === editingLabor.id) {
+        return {
+          ...l,
+          technicianName: editingLabor.technicianName.trim(),
+          workDays: days,
+          dailyRate: rate,
+          totalLabor: days * rate
+        };
+      }
+      return l;
+    });
+
+    const newLaborCost = updatedLaborList.reduce((sum, item) => sum + item.totalLabor, 0);
+    const newTotalCost =
+      selectedProject.materialLandedCost + newLaborCost + selectedProject.transportCost + selectedProject.otherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      laborLogs: updatedLaborList,
+      laborCost: newLaborCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+    setEditingLabor(null);
+  };
+
+  const handleDeleteLabor = (laborId: string) => {
+    if (!selectedProject) return;
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to remove this labor entry?')) return;
+    const updatedLaborList = selectedProject.laborLogs.filter((l) => l.id !== laborId);
+    const newLaborCost = updatedLaborList.reduce((sum, item) => sum + item.totalLabor, 0);
+    const newTotalCost =
+      selectedProject.materialLandedCost + newLaborCost + selectedProject.transportCost + selectedProject.otherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      laborLogs: updatedLaborList,
+      laborCost: newLaborCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+  };
+
+  // --- EDIT & DELETE EXPENSE HANDLERS ---
+  const handleUpdateExpense = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject || !editingExpense) return;
+    const amt = Number(editingExpense.amount) || 0;
+    if (amt < 0) return;
+
+    const updatedExpenses = (selectedProject.expenses || []).map((exp) => {
+      if (exp.id === editingExpense.id) {
+        return {
+          ...exp,
+          category: editingExpense.category,
+          description: editingExpense.description.trim() || `${editingExpense.category} expense`,
+          amount: amt,
+          date: editingExpense.date
+        };
+      }
+      return exp;
+    });
+
+    const newTransportCost = updatedExpenses
+      .filter((e) => e.category === 'TRANSPORT')
+      .reduce((sum, item) => sum + item.amount, 0);
+    const newOtherCost = updatedExpenses
+      .filter((e) => e.category !== 'TRANSPORT')
+      .reduce((sum, item) => sum + item.amount, 0);
+    const newTotalCost =
+      selectedProject.materialLandedCost + selectedProject.laborCost + newTransportCost + newOtherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      expenses: updatedExpenses,
+      transportCost: newTransportCost,
+      otherCost: newOtherCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+    setEditingExpense(null);
+  };
+
+  const handleDeleteExpense = (expenseId: string) => {
+    if (!selectedProject) return;
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to remove this expense entry?')) return;
+    const updatedExpenses = (selectedProject.expenses || []).filter((e) => e.id !== expenseId);
+    const newTransportCost = updatedExpenses
+      .filter((e) => e.category === 'TRANSPORT')
+      .reduce((sum, item) => sum + item.amount, 0);
+    const newOtherCost = updatedExpenses
+      .filter((e) => e.category !== 'TRANSPORT')
+      .reduce((sum, item) => sum + item.amount, 0);
+    const newTotalCost =
+      selectedProject.materialLandedCost + selectedProject.laborCost + newTransportCost + newOtherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      expenses: updatedExpenses,
+      transportCost: newTransportCost,
+      otherCost: newOtherCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header & Actions */}
@@ -964,17 +1239,30 @@ export function ProjectsView() {
                         </Badge>
                       </td>
                       <td className="py-3 px-3 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProjectId(prj.id);
-                            setIsPnLSheetModalOpen(true);
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1 ml-auto"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>P&L Sheet</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditProjectModal(prj);
+                            }}
+                            className="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-semibold flex items-center gap-1"
+                            title="Edit Project"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedProjectId(prj.id);
+                              setIsPnLSheetModalOpen(true);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>P&L Sheet</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1029,17 +1317,29 @@ export function ProjectsView() {
                       <h4 className="text-xs font-bold text-slate-100 mt-0.5 leading-snug">{prj.projectName}</h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">{prj.customerName}</p>
                     </div>
-                    <Badge
-                      variant={
-                        prj.status === 'COMPLETED'
-                          ? 'success'
-                          : prj.status === 'INSTALLATION_IN_PROGRESS'
-                          ? 'info'
-                          : 'warning'
-                      }
-                    >
-                      {prj.status === 'INSTALLATION_IN_PROGRESS' ? 'IN PROGRESS' : prj.status}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditProjectModal(prj);
+                        }}
+                        className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition"
+                        title="Edit Project"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <Badge
+                        variant={
+                          prj.status === 'COMPLETED'
+                            ? 'success'
+                            : prj.status === 'INSTALLATION_IN_PROGRESS'
+                            ? 'info'
+                            : 'warning'
+                        }
+                      >
+                        {prj.status === 'INSTALLATION_IN_PROGRESS' ? 'IN PROGRESS' : prj.status}
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-xs">
@@ -1094,6 +1394,14 @@ export function ProjectsView() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => openEditProjectModal(selectedProject)}
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition"
+                    title="Edit Project Details & Contract Value"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Edit Project</span>
+                  </button>
                   <button
                     onClick={() => {
                       setIssueProduct('');
@@ -1182,12 +1490,13 @@ export function ProjectsView() {
                         <th className="py-2.5 px-3 text-center">Qty</th>
                         <th className="py-2.5 px-3 text-right">Unit Landed Cost</th>
                         <th className="py-2.5 px-3 text-right">Total Charged</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80 text-slate-200">
                       {selectedProject.materialIssues.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-3 px-3 text-center text-slate-500 italic">
+                          <td colSpan={5} className="py-3 px-3 text-center text-slate-500 italic">
                             No materials issued yet. Click &ldquo;Issue Material&rdquo; above.
                           </td>
                         </tr>
@@ -1198,6 +1507,24 @@ export function ProjectsView() {
                             <td className="py-2 px-3 text-center font-bold text-purple-400">{m.quantity} pcs</td>
                             <td className="py-2 px-3 text-right text-slate-400 font-mono">{formatBDT(m.unitLandedCost)}</td>
                             <td className="py-2 px-3 text-right font-bold text-slate-100 font-mono">{formatBDT(m.totalCost)}</td>
+                            <td className="py-2 px-3 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => setEditingMaterial(m)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition"
+                                  title="Edit Material"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMaterial(m.id)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition"
+                                  title="Delete Material"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -1225,12 +1552,13 @@ export function ProjectsView() {
                         <th className="py-2.5 px-3 text-center">Work Days</th>
                         <th className="py-2.5 px-3 text-right">Daily Rate</th>
                         <th className="py-2.5 px-3 text-right">Total Labor</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80 text-slate-200">
                       {selectedProject.laborLogs.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="py-3 px-3 text-center text-slate-500 italic">
+                          <td colSpan={5} className="py-3 px-3 text-center text-slate-500 italic">
                             No technician work days logged yet. Click &ldquo;Log Labor&rdquo; above.
                           </td>
                         </tr>
@@ -1241,6 +1569,24 @@ export function ProjectsView() {
                             <td className="py-2 px-3 text-center font-bold text-blue-400">{l.workDays} days</td>
                             <td className="py-2 px-3 text-right text-slate-400 font-mono">{formatBDT(l.dailyRate)}</td>
                             <td className="py-2 px-3 text-right font-bold text-slate-100 font-mono">{formatBDT(l.totalLabor)}</td>
+                            <td className="py-2 px-3 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => setEditingLabor(l)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition"
+                                  title="Edit Labor Log"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLabor(l.id)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition"
+                                  title="Delete Labor Log"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -1268,12 +1614,13 @@ export function ProjectsView() {
                         <th className="py-2.5 px-3">Description</th>
                         <th className="py-2.5 px-3">Date</th>
                         <th className="py-2.5 px-3 text-right">Amount (৳)</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/80 text-slate-200">
                       {(!selectedProject.expenses || selectedProject.expenses.length === 0) ? (
                         <tr>
-                          <td colSpan={4} className="py-3 px-3 text-center text-slate-500 italic">
+                          <td colSpan={5} className="py-3 px-3 text-center text-slate-500 italic">
                             No site expenses recorded yet. Click &ldquo;+ Add Expense&rdquo; above.
                           </td>
                         </tr>
@@ -1284,6 +1631,24 @@ export function ProjectsView() {
                             <td className="py-2 px-3 text-slate-300">{exp.description}</td>
                             <td className="py-2 px-3 text-slate-500 text-[11px]">{exp.date}</td>
                             <td className="py-2 px-3 text-right font-bold text-slate-100 font-mono">{formatBDT(exp.amount)}</td>
+                            <td className="py-2 px-3 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => setEditingExpense(exp)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-blue-400 transition"
+                                  title="Edit Expense"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteExpense(exp.id)}
+                                  className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-rose-400 transition"
+                                  title="Delete Expense"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         ))
                       )}
@@ -2067,6 +2432,432 @@ export function ProjectsView() {
               </div>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: EDIT PROJECT
+          ======================================================== */}
+      {isEditProjectOpen && (
+        <Modal
+          isOpen={isEditProjectOpen}
+          onClose={() => setIsEditProjectOpen(false)}
+          title={`Edit Project Details`}
+          size="lg"
+        >
+          <form onSubmit={handleUpdateProject} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Project Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editProjectData.projectName}
+                  onChange={(e) => setEditProjectData({ ...editProjectData, projectName: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Customer / Client Name *</label>
+                <input
+                  type="text"
+                  required
+                  list="customer-suggestions-list"
+                  value={editProjectData.customerName}
+                  onChange={(e) => setEditProjectData({ ...editProjectData, customerName: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Project / Delivery Location</label>
+                <input
+                  type="text"
+                  value={editProjectData.location}
+                  onChange={(e) => setEditProjectData({ ...editProjectData, location: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Contract / Invoiced Value (৳) *</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="any"
+                  placeholder="0"
+                  value={editProjectData.contractValue === 0 ? '' : editProjectData.contractValue}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditProjectData({ ...editProjectData, contractValue: val === '' ? '' : Number(val) });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Project Status</label>
+                <select
+                  value={editProjectData.status}
+                  onChange={(e) => setEditProjectData({ ...editProjectData, status: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="INSTALLATION_IN_PROGRESS">Installation In Progress</option>
+                  <option value="PLANNING">Planning / Tender Approved</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="ON_HOLD">On Hold</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Scope / Notes</label>
+                <input
+                  type="text"
+                  value={editProjectData.notes}
+                  onChange={(e) => setEditProjectData({ ...editProjectData, notes: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  if (editProjectData.id) {
+                    setIsEditProjectOpen(false);
+                    handleDeleteProject(editProjectData.id);
+                  }
+                }}
+                className="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 rounded-lg font-semibold border border-rose-500/30 flex items-center gap-1.5 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Project</span>
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditProjectOpen(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: EDIT CONSUMED MATERIAL
+          ======================================================== */}
+      {editingMaterial && (
+        <Modal
+          isOpen={!!editingMaterial}
+          onClose={() => setEditingMaterial(null)}
+          title={`Edit Material Entry: ${editingMaterial.productName}`}
+        >
+          <form onSubmit={handleUpdateMaterial} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Product / Item Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={editingMaterial.productName}
+                onChange={(e) => setEditingMaterial({ ...editingMaterial, productName: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-semibold focus:border-purple-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Quantity (pcs/boxes/sets) *</label>
+                <input
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  required
+                  placeholder="1"
+                  value={editingMaterial.quantity === 0 ? '' : editingMaterial.quantity}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingMaterial({ ...editingMaterial, quantity: val === '' ? '' as any : Number(val) });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Unit Landed Cost (৳) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  placeholder="0"
+                  value={editingMaterial.unitLandedCost === 0 ? '' : editingMaterial.unitLandedCost}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingMaterial({ ...editingMaterial, unitLandedCost: val === '' ? '' as any : Number(val) });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-purple-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-purple-950/40 border border-purple-800/60 rounded-xl text-slate-300 text-[11px] leading-relaxed">
+              Updated Total: <strong>{formatBDT((Number(editingMaterial.quantity) || 0) * (Number(editingMaterial.unitLandedCost) || 0))}</strong>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const idToDelete = editingMaterial.id;
+                  setEditingMaterial(null);
+                  handleDeleteMaterial(idToDelete);
+                }}
+                className="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 rounded-lg font-semibold border border-rose-500/30 flex items-center gap-1.5 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingMaterial(null)}
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold hover:bg-slate-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow transition"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: EDIT TECHNICIAN LABOR
+          ======================================================== */}
+      {editingLabor && (
+        <Modal
+          isOpen={!!editingLabor}
+          onClose={() => setEditingLabor(null)}
+          title={`Edit Technician Labor Log: ${editingLabor.technicianName}`}
+        >
+          <form onSubmit={handleUpdateLabor} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Technician / Lead Engineer *</label>
+              <input
+                type="text"
+                required
+                value={editingLabor.technicianName}
+                onChange={(e) => setEditingLabor({ ...editingLabor, technicianName: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Work Days *</label>
+                <input
+                  type="number"
+                  min="0.5"
+                  step="any"
+                  required
+                  placeholder="1"
+                  value={editingLabor.workDays === 0 ? '' : editingLabor.workDays}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingLabor({ ...editingLabor, workDays: val === '' ? '' as any : Number(val) });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Daily Rate (৳) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  placeholder="0"
+                  value={editingLabor.dailyRate === 0 ? '' : editingLabor.dailyRate}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingLabor({ ...editingLabor, dailyRate: val === '' ? '' as any : Number(val) });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-blue-950/40 border border-blue-800/60 rounded-xl text-slate-300 text-[11px]">
+              Total labor cost: <strong>{formatBDT((Number(editingLabor.workDays) || 0) * (Number(editingLabor.dailyRate) || 0))}</strong>
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const idToDelete = editingLabor.id;
+                  setEditingLabor(null);
+                  handleDeleteLabor(idToDelete);
+                }}
+                className="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 rounded-lg font-semibold border border-rose-500/30 flex items-center gap-1.5 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingLabor(null)}
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold hover:bg-slate-700 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow transition"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: EDIT DIRECT EXPENSE
+          ======================================================== */}
+      {editingExpense && (
+        <Modal
+          isOpen={!!editingExpense}
+          onClose={() => setEditingExpense(null)}
+          title={`Edit Direct Expense`}
+        >
+          <form onSubmit={handleUpdateExpense} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Expense Category</label>
+                <select
+                  value={editingExpense.category}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="TRANSPORT">Transport & Vehicle Fare</option>
+                  <option value="TOOLS_EQUIPMENT">Tools & Equipment Rental</option>
+                  <option value="MEALS_CONVEYANCE">Meals & Tech Conveyance</option>
+                  <option value="SUBCONTRACTOR">Subcontractor Civil Works</option>
+                  <option value="MISCELLANEOUS">Miscellaneous Consumables</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Expense Date</label>
+                <input
+                  type="date"
+                  value={editingExpense.date}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, date: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Expense Description</label>
+              <input
+                type="text"
+                value={editingExpense.description}
+                onChange={(e) => setEditingExpense({ ...editingExpense, description: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Expense Amount (৳) *</label>
+              <input
+                type="number"
+                required
+                min="0"
+                step="any"
+                placeholder="0"
+                value={editingExpense.amount === 0 ? '' : editingExpense.amount}
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setEditingExpense({ ...editingExpense, amount: val === '' ? '' as any : Number(val) });
+                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none text-sm"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const idToDelete = editingExpense.id;
+                  setEditingExpense(null);
+                  handleDeleteExpense(idToDelete);
+                }}
+                className="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 rounded-lg font-semibold border border-rose-500/30 flex items-center gap-1.5 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingExpense(null)}
+                  className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow transition"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
         </Modal>
       )}
     </div>
