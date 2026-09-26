@@ -1160,7 +1160,7 @@ export function ProjectsView() {
                   type="number"
                   required
                   min="0"
-                  step="1000"
+                  step="any"
                   value={newProject.contractValue}
                   onChange={(e) => setNewProject({ ...newProject, contractValue: Number(e.target.value) })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none"
@@ -1256,8 +1256,8 @@ export function ProjectsView() {
               <input
                 type="number"
                 required
-                min="1"
-                step="100"
+                min="0"
+                step="any"
                 value={expenseAmount}
                 onChange={(e) => setExpenseAmount(Number(e.target.value))}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none text-sm"
@@ -1328,7 +1328,7 @@ export function ProjectsView() {
                 <input
                   type="number"
                   min="0"
-                  step="100"
+                  step="any"
                   value={issueUnitCost}
                   onChange={(e) => setIssueUnitCost(Number(e.target.value))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-slate-100 font-mono"
@@ -1396,7 +1396,7 @@ export function ProjectsView() {
                 <input
                   type="number"
                   min="0"
-                  step="100"
+                  step="any"
                   value={dailyRate}
                   onChange={(e) => setDailyRate(Number(e.target.value))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono"

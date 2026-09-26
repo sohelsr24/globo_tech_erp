@@ -1383,7 +1383,7 @@ export function CustomersView() {
                 <input
                   type="number"
                   min="0"
-                  step="50000"
+                  step="any"
                   value={newCustomer.creditLimit}
                   onChange={(e) => setNewCustomer({ ...newCustomer, creditLimit: Number(e.target.value) })}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"

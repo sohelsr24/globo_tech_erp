@@ -2034,7 +2034,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               <input
                                 type="number"
                                 min="0"
-                                step="0.5"
+                                step="any"
                                 value={item.vatPercent}
                                 onChange={(e) => handleUpdateItemVatPercent(item.id, Number(e.target.value))}
                                 className="w-12 bg-slate-950/70 border border-slate-700/80 rounded px-1.5 py-1 text-right font-mono font-bold text-slate-100 text-xs focus:outline-none focus:border-blue-500"
@@ -2065,7 +2065,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               <input
                                 type="number"
                                 min="0"
-                                step="0.5"
+                                step="any"
                                 value={item.taxPercent || 0}
                                 onChange={(e) => handleUpdateItemTaxPercent(item.id, Number(e.target.value))}
                                 className="w-12 bg-slate-950/70 border border-slate-700/80 rounded px-1.5 py-1 text-right font-mono font-bold text-amber-300 text-xs focus:outline-none focus:border-amber-500"
@@ -3384,7 +3384,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <input
                     type="number"
                     min="0"
-                    step="0.5"
+                    step="any"
                     value={itemForm.vatPercent}
                     onChange={(e) => setItemForm({ ...itemForm, vatPercent: Number(e.target.value) })}
                     className="w-12 bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-2 text-slate-100 font-mono font-bold text-center text-xs"
@@ -3422,7 +3422,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <input
                     type="number"
                     min="0"
-                    step="0.5"
+                    step="any"
                     value={itemForm.taxPercent || 0}
                     onChange={(e) => setItemForm({ ...itemForm, taxPercent: Number(e.target.value) })}
                     className="w-12 bg-slate-950 border border-slate-700 rounded-lg px-1.5 py-2 text-amber-300 font-mono font-bold text-center text-xs"
