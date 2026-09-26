@@ -26,7 +26,8 @@ import {
   ChevronDown,
   Users,
   Pencil,
-  Trash2
+  Trash2,
+  Check
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -322,6 +323,8 @@ export function ProjectsView() {
   const [isLogLaborOpen, setIsLogLaborOpen] = useState(false);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isPnLSheetModalOpen, setIsPnLSheetModalOpen] = useState(false);
+  const [isEditMaterialCostModalOpen, setIsEditMaterialCostModalOpen] = useState(false);
+  const [directMaterialCost, setDirectMaterialCost] = useState<number | ''>('');
 
   // Edit states for individual records
   const [editProjectData, setEditProjectData] = useState<{
@@ -797,6 +800,81 @@ export function ProjectsView() {
     if (selectedProjectId === projectId) {
       setSelectedProjectId(remaining[0]?.id || '');
     }
+  };
+
+  // --- DIRECT EDIT TOTAL MATERIALS COST HANDLER ---
+  const openEditMaterialCostModal = (currentCost: number) => {
+    setDirectMaterialCost(currentCost === 0 ? '' : currentCost);
+    setIsEditMaterialCostModalOpen(true);
+  };
+
+  const handleSaveDirectMaterialCost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProject) return;
+    const newCost = Number(directMaterialCost) || 0;
+
+    let updatedMaterials = [...selectedProject.materialIssues];
+    if (updatedMaterials.length === 0) {
+      if (newCost > 0) {
+        updatedMaterials = [
+          {
+            id: `iss-${Date.now()}`,
+            productName: 'General Materials / Supplies',
+            quantity: 1,
+            unitLandedCost: newCost,
+            totalCost: newCost
+          }
+        ];
+      }
+    } else if (updatedMaterials.length === 1) {
+      const single = updatedMaterials[0];
+      const qty = single.quantity || 1;
+      updatedMaterials = [
+        {
+          ...single,
+          unitLandedCost: Number((newCost / qty).toFixed(2)),
+          totalCost: newCost
+        }
+      ];
+    } else {
+      const currentSum = updatedMaterials.reduce((sum, item) => sum + item.totalCost, 0);
+      if (currentSum > 0) {
+        const ratio = newCost / currentSum;
+        updatedMaterials = updatedMaterials.map((item) => {
+          const itemNewTotal = Number((item.totalCost * ratio).toFixed(2));
+          const itemQty = item.quantity || 1;
+          return {
+            ...item,
+            unitLandedCost: Number((itemNewTotal / itemQty).toFixed(2)),
+            totalCost: itemNewTotal
+          };
+        });
+      } else {
+        const itemQty = updatedMaterials[0].quantity || 1;
+        updatedMaterials[0] = {
+          ...updatedMaterials[0],
+          totalCost: newCost,
+          unitLandedCost: Number((newCost / itemQty).toFixed(2))
+        };
+      }
+    }
+
+    const newTotalCost =
+      newCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+    const newProfit = selectedProject.contractValue - newTotalCost;
+    const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
+
+    const updatedPrj: ProjectRecord = {
+      ...selectedProject,
+      materialIssues: updatedMaterials,
+      materialLandedCost: newCost,
+      totalProjectCost: newTotalCost,
+      projectGrossProfit: newProfit,
+      profitMarginPercent: newMargin
+    };
+
+    setProjects(projects.map((p) => (p.id === updatedPrj.id ? updatedPrj : p)));
+    setIsEditMaterialCostModalOpen(false);
   };
 
   // --- EDIT & DELETE MATERIAL HANDLERS ---
@@ -1440,24 +1518,53 @@ export function ProjectsView() {
 
               {/* Profitability Meter Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-                <div>
-                  <span className="text-[10px] text-slate-400 uppercase font-semibold block">Contract Value</span>
+                <div
+                  onClick={() => openEditProjectModal(selectedProject)}
+                  className="p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-slate-700 cursor-pointer transition group"
+                  title="Click to edit contract value"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-slate-400 uppercase font-semibold block">Contract Value</span>
+                    <Pencil className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition" />
+                  </div>
                   <span className="text-base font-bold text-slate-100 font-mono">
                     {formatBDT(selectedProject.contractValue)}
                   </span>
                 </div>
-                <div>
-                  <span className="text-[10px] text-purple-400 uppercase font-semibold block">Materials (Landed)</span>
-                  <span className="text-base font-bold text-purple-400 font-mono">
+
+                <div
+                  onClick={() => openEditMaterialCostModal(selectedProject.materialLandedCost)}
+                  className="p-2 rounded-xl bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/40 hover:border-purple-400 cursor-pointer transition group shadow-sm ring-1 ring-purple-500/20 hover:ring-purple-500/40"
+                  title="Click to edit Materials Landed Cost"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-purple-300 uppercase font-bold flex items-center gap-1.5">
+                      Materials (Landed)
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 group-hover:bg-purple-500/40 transition">
+                        Edit
+                      </span>
+                    </span>
+                    <Pencil className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition" />
+                  </div>
+                  <span className="text-base font-bold text-purple-300 font-mono">
                     {formatBDT(selectedProject.materialLandedCost)}
                   </span>
                 </div>
-                <div>
-                  <span className="text-[10px] text-amber-400 uppercase font-semibold block">Labor & Transit</span>
+
+                <div
+                  onClick={() => setIsAddExpenseOpen(true)}
+                  className="p-2 rounded-xl hover:bg-slate-900 border border-transparent hover:border-amber-500/30 cursor-pointer transition group"
+                  title="Click to add/manage labor & transport expenses"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-amber-400 uppercase font-semibold block">Labor & Transit</span>
+                    <Pencil className="w-3 h-3 text-amber-500 opacity-0 group-hover:opacity-100 transition" />
+                  </div>
                   <span className="text-base font-bold text-amber-400 font-mono">
                     {formatBDT(selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost)}
                   </span>
                 </div>
+
                 <div className="bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-500/20">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-emerald-400 uppercase font-bold block">Net Profit</span>
@@ -1478,9 +1585,19 @@ export function ProjectsView() {
                     <PackageMinus className="w-3.5 h-3.5 text-purple-400" />
                     <span>1. Consumed Materials (Warehouse Stock Drawn at Landed Cost)</span>
                   </h4>
-                  <span className="text-xs font-mono font-bold text-purple-400">
-                    Total: {formatBDT(selectedProject.materialLandedCost)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-purple-400">
+                      Total: {formatBDT(selectedProject.materialLandedCost)}
+                    </span>
+                    <button
+                      onClick={() => openEditMaterialCostModal(selectedProject.materialLandedCost)}
+                      className="px-2 py-0.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[10px] font-semibold flex items-center gap-1 transition"
+                      title="Directly edit Total Materials Cost"
+                    >
+                      <Pencil className="w-3 h-3" />
+                      <span>Edit Cost</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="border border-slate-800 rounded-xl overflow-x-auto bg-slate-950">
                   <table className="w-full text-left text-xs">
@@ -2586,9 +2703,9 @@ export function ProjectsView() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Quantity (pcs/boxes/sets) *</label>
+                <label className="block text-slate-300 font-semibold mb-1">Quantity (pcs/units) *</label>
                 <input
                   type="number"
                   min="0.01"
@@ -2623,10 +2740,36 @@ export function ProjectsView() {
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-purple-500 focus:outline-none"
                 />
               </div>
+              <div>
+                <label className="block text-purple-300 font-semibold mb-1">Total Charged Cost (৳) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="0"
+                  value={
+                    editingMaterial.quantity && editingMaterial.unitLandedCost
+                      ? Number((Number(editingMaterial.quantity) * Number(editingMaterial.unitLandedCost)).toFixed(2))
+                      : ''
+                  }
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const totalVal = e.target.value === '' ? 0 : Number(e.target.value);
+                    const qty = Number(editingMaterial.quantity) || 1;
+                    setEditingMaterial({
+                      ...editingMaterial,
+                      unitLandedCost: qty > 0 ? Number((totalVal / qty).toFixed(2)) : totalVal
+                    });
+                  }}
+                  className="w-full bg-slate-950 border border-purple-500/50 rounded-lg p-2.5 text-purple-300 font-mono font-bold focus:border-purple-400 focus:outline-none"
+                />
+              </div>
             </div>
 
-            <div className="p-3 bg-purple-950/40 border border-purple-800/60 rounded-xl text-slate-300 text-[11px] leading-relaxed">
-              Updated Total: <strong>{formatBDT((Number(editingMaterial.quantity) || 0) * (Number(editingMaterial.unitLandedCost) || 0))}</strong>
+            <div className="p-3 bg-purple-950/40 border border-purple-800/60 rounded-xl text-slate-300 text-[11px] leading-relaxed flex items-center justify-between">
+              <span>Updated Total Charged:</span>
+              <strong className="text-purple-300 text-sm font-mono">{formatBDT((Number(editingMaterial.quantity) || 0) * (Number(editingMaterial.unitLandedCost) || 0))}</strong>
             </div>
 
             <div className="pt-3 border-t border-slate-800 flex justify-between items-center">
@@ -2856,6 +2999,99 @@ export function ProjectsView() {
                   Save Changes
                 </button>
               </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: DIRECT EDIT TOTAL MATERIALS LANDED COST
+          ======================================================== */}
+      {isEditMaterialCostModalOpen && selectedProject && (
+        <Modal
+          isOpen={isEditMaterialCostModalOpen}
+          onClose={() => setIsEditMaterialCostModalOpen(false)}
+          title={`Edit Materials Landed Cost: ${selectedProject.projectName}`}
+        >
+          <form onSubmit={handleSaveDirectMaterialCost} className="space-y-4 text-xs">
+            <div className="p-3 bg-purple-950/30 border border-purple-800/40 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Project Code:</span>
+                <span className="font-mono font-bold text-blue-400">{selectedProject.projectCode}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Client:</span>
+                <span className="font-semibold text-slate-200">{selectedProject.customerName}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-400">
+                <span>Contract Value:</span>
+                <span className="font-mono font-bold text-slate-100">{formatBDT(selectedProject.contractValue)}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-purple-300 font-bold mb-1.5 text-sm">
+                Total Materials Landed Cost (৳) *
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                required
+                placeholder="0"
+                value={directMaterialCost === 0 ? '' : directMaterialCost}
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setDirectMaterialCost(val === '' ? '' : Number(val));
+                }}
+                className="w-full bg-slate-950 border-2 border-purple-500/60 rounded-xl p-3 text-xl font-mono font-black text-purple-300 focus:border-purple-400 focus:outline-none shadow-inner"
+                autoFocus
+              />
+              <span className="text-[11px] text-slate-400 mt-1.5 block">
+                এখানে সরাসরি মোট মেটেরিয়াল খরচ (Landed Cost) লিখে সেভ করুন। প্রজেক্টের লাভ ও মার্জিন স্বয়ংক্রিয়ভাবে আপডেট হবে।
+              </span>
+            </div>
+
+            {/* Projected Financial Impact */}
+            {(() => {
+              const testCost = Number(directMaterialCost) || 0;
+              const testTotalCost = testCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+              const testProfit = selectedProject.contractValue - testTotalCost;
+              const testMargin = selectedProject.contractValue > 0 ? (testProfit / selectedProject.contractValue) * 100 : 0;
+              return (
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5 font-mono">
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans font-bold">New Profit Calculation Preview:</div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>New Total Cost:</span>
+                    <span className="text-rose-400 font-bold">{formatBDT(testTotalCost)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-300">
+                    <span>Estimated Net Profit (লাভ):</span>
+                    <span className={testProfit >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                      {testProfit >= 0 ? `+${formatBDT(testProfit)}` : `-${formatBDT(Math.abs(testProfit))}`} ({testMargin.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditMaterialCostModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold hover:bg-slate-700 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg shadow-lg shadow-purple-600/30 transition flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Save Material Cost</span>
+              </button>
             </div>
           </form>
         </Modal>
