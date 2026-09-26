@@ -166,9 +166,11 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 0 !important;
-    height: auto !important;
-    display: block !important;
+    min-height: 255mm !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;

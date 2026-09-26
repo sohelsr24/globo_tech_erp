@@ -2768,9 +2768,13 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                boxSizing: 'border-box'
+                minHeight: '255mm',
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
-              className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl printable-area font-sans text-xs print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
+              className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl printable-area font-sans text-xs flex flex-col justify-between print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
             >
               {/* Watermark in background matching company pad */}
               <div
@@ -2784,6 +2788,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 />
               </div>
 
+              {/* TOP SECTION: Header, Quotation Bar, Parties, Items, Totals, Terms */}
               <div className="relative z-10 w-full">
                 {/* 1. Brand Header Table: Guaranteed 3 columns on all mobile print engines */}
                 <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginBottom: '6px' }}>
@@ -2980,7 +2985,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 })()}
 
                 {/* 6. Terms & Conditions */}
-                <div style={{ marginTop: '4px', marginBottom: '8px', fontSize: '9.5px', color: '#1e293b', lineHeight: 1.35 }}>
+                <div style={{ marginTop: '4px', marginBottom: '4px', fontSize: '9.5px', color: '#1e293b', lineHeight: 1.35 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
                     <span style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>Terms & Conditions:</span>
                     <button
@@ -2998,21 +3003,24 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <div>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</div>
                   <div>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</div>
                 </div>
+              </div>
 
+              {/* BOTTOM SECTION: Signatures & Company Pad Footer (Always pushed to page bottom) */}
+              <div className="relative z-10 w-full mt-auto" style={{ marginTop: 'auto', paddingTop: '24px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 {/* 7. Signatures Table: Guaranteed side-by-side on mobile print */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', marginBottom: '6px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <tbody>
                     <tr>
                       {/* Left Column: Authorized Signature with Official Seal & Signature */}
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
                         <div style={{ display: 'inline-block', textAlign: 'center' }}>
-                          <div style={{ position: 'relative', height: '46px', width: '180px', margin: '0 auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                          <div style={{ position: 'relative', height: '52px', width: '180px', margin: '0 auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                             {includeSealAndSignature && (
                               <>
                                 <img
                                   src={GLOBO_TECH_SEAL_DATA_URL}
                                   alt="Globo Tech Official Seal"
-                                  style={{ position: 'absolute', left: '10px', bottom: '-4px', width: '58px', height: '58px', objectFit: 'contain', mixBlendMode: 'multiply', opacity: 0.9, pointerEvents: 'none', transform: 'rotate(-6deg)' }}
+                                  style={{ position: 'absolute', left: '10px', bottom: '-2px', width: '56px', height: '56px', objectFit: 'contain', mixBlendMode: 'multiply', opacity: 0.9, pointerEvents: 'none', transform: 'rotate(-6deg)' }}
                                 />
                                 <img
                                   src={GLOBO_TECH_SIGNATURE_DATA_URL}
@@ -3031,7 +3039,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       {/* Right Column: Customer Acceptance Signature */}
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
                         <div style={{ display: 'inline-block', textAlign: 'center' }}>
-                          <div style={{ height: '46px', width: '180px', margin: '0 auto' }}></div>
+                          <div style={{ height: '52px', width: '180px', margin: '0 auto' }}></div>
                           <div style={{ width: '170px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11px', letterSpacing: '0.3px' }}>Customer Acceptance Signature</div>
                           <div style={{ fontWeight: 600, color: '#334155', fontSize: '10px', lineHeight: 1.2, maxWidth: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 auto' }}>
@@ -3044,11 +3052,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </table>
 
                 {/* 8. Company Pad Footer matching official letterhead */}
-                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '4px', marginTop: '6px', textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '6px', marginTop: '10px', textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <p style={{ margin: 0, color: '#334155', fontWeight: 500 }}>
                     Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                   </p>
-                  <p style={{ margin: '1px 0 0 0', color: '#000000', fontWeight: 700 }}>
+                  <p style={{ margin: '2px 0 0 0', color: '#000000', fontWeight: 700 }}>
                     Web: www.globotechbd.com
                   </p>
                 </div>
