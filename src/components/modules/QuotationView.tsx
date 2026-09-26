@@ -1383,12 +1383,16 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     if (editingQuotationId) {
       const existing = quotations.find((q) => q.id === editingQuotationId);
       const newVersion = (existing?.version || 1) + 1;
+      const targetStatus: QuotationStatus = requiresApproval ? 'PENDING_APPROVAL' : (newQuote.status || existing?.status || 'DRAFT');
+      const isAcceptedStatus = targetStatus === 'ACCEPTED' || targetStatus === 'CONVERTED';
       const updatedQuote: Quotation = {
         ...(existing || {}),
         ...(newQuote as Quotation),
         id: editingQuotationId,
         quotationNumber: newQuote.quotationNumber || existing?.quotationNumber || editingQuotationId,
         version: newVersion,
+        status: targetStatus,
+        stockReserved: isAcceptedStatus ? true : (newQuote.stockReserved !== undefined ? newQuote.stockReserved : existing?.stockReserved || false),
         requiresApproval: requiresApproval || existing?.requiresApproval || false,
         approvalReason: approvalReason || existing?.approvalReason,
         versionHistory: [
@@ -1406,7 +1410,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           ...(existing?.timeline || []),
           {
             date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-            event: `Updated to Rev ${newVersion}`,
+            event: `Updated to Rev ${newVersion} (${targetStatus})`,
             actor: newQuote.salesperson || existing?.salesperson || 'Sales Officer',
             comments: 'Changes saved'
           }
@@ -1424,11 +1428,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       return;
     }
 
+    const initialStatus: QuotationStatus = requiresApproval ? 'PENDING_APPROVAL' : (newQuote.status || 'DRAFT');
+    const isAcceptedInitial = initialStatus === 'ACCEPTED' || initialStatus === 'CONVERTED';
     const savedQuotation: Quotation = {
       ...(newQuote as Quotation),
       id: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
       quotationNumber: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
-      status: requiresApproval ? 'PENDING_APPROVAL' : 'DRAFT',
+      status: initialStatus,
+      stockReserved: isAcceptedInitial ? true : (newQuote.stockReserved || false),
       requiresApproval,
       approvalReason,
       versionHistory: [
@@ -1525,6 +1532,42 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     setIsApprovalModalOpen(false);
     alert(`Quotation ${selectedQuotation.quotationNumber} ${approvalDecision === 'APPROVE' ? 'Approved' : 'Rejected'} successfully.`);
     setActiveViewMode('LIST');
+  };
+
+  // Quick Status Transition Handler (Lifecycle Step Update)
+  const handleQuickUpdateStatus = (quoteId: string, newStatus: QuotationStatus) => {
+    const updatedQuotations = quotations.map((q) => {
+      if (q.id === quoteId) {
+        const isAccepted = newStatus === 'ACCEPTED' || newStatus === 'CONVERTED';
+        const isUnreserved = newStatus === 'DRAFT' || newStatus === 'REJECTED';
+        const updated: Quotation = {
+          ...q,
+          status: newStatus,
+          stockReserved: isAccepted ? true : isUnreserved ? false : q.stockReserved,
+          requiresApproval: newStatus === 'PENDING_APPROVAL',
+          timeline: [
+            ...q.timeline,
+            {
+              date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+              event: `Status updated to ${newStatus.replace(/_/g, ' ')}`,
+              actor: 'Engr. Sohel Rana',
+              comments: `Quotation lifecycle stage changed to ${newStatus.replace(/_/g, ' ')}`
+            }
+          ]
+        };
+        return updated;
+      }
+      return q;
+    });
+
+    setQuotations(updatedQuotations);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+    }
+    if (selectedQuotation && selectedQuotation.id === quoteId) {
+      const match = updatedQuotations.find((q) => q.id === quoteId);
+      if (match) setSelectedQuotation(match);
+    }
   };
 
   // Render Status Badge
@@ -1676,19 +1719,45 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             </div>
 
             <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto touch-scroll pb-1 sm:pb-0">
-              {['ALL', 'DRAFT', 'SENT', 'PENDING_APPROVAL', 'ACCEPTED', 'CONVERTED', 'REJECTED'].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex-shrink-0 ${
-                    statusFilter === st
-                      ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
-                  }`}
-                >
-                  {st.replace(/_/g, ' ')}
-                </button>
-              ))}
+              {['ALL', 'DRAFT', 'SENT', 'PENDING_APPROVAL', 'ACCEPTED', 'CONVERTED', 'REJECTED'].map((st) => {
+                const count =
+                  st === 'ALL'
+                    ? totalCount
+                    : st === 'DRAFT'
+                    ? draftCount
+                    : st === 'SENT'
+                    ? sentCount
+                    : st === 'PENDING_APPROVAL'
+                    ? pendingCount
+                    : st === 'ACCEPTED'
+                    ? quotations.filter((q) => q.status === 'ACCEPTED').length
+                    : st === 'CONVERTED'
+                    ? quotations.filter((q) => q.status === 'CONVERTED').length
+                    : st === 'REJECTED'
+                    ? rejectedCount
+                    : 0;
+
+                return (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex-shrink-0 flex items-center gap-1.5 ${
+                      statusFilter === st
+                        ? 'bg-blue-600/20 text-blue-400 border border-blue-500/40 shadow-sm'
+                        : 'bg-slate-800 text-slate-400 border border-slate-700 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>{st.replace(/_/g, ' ')}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                        statusFilter === st ? 'bg-blue-500/30 text-blue-200' : 'bg-slate-700/60 text-slate-400'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -1750,7 +1819,41 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <td className="px-4 py-3 text-right font-mono font-bold text-slate-100">
                             {formatBDT(totals.grandTotal)}
                           </td>
-                          <td className="px-4 py-3">{getStatusBadge(q.status)}</td>
+                          <td className="px-4 py-3">
+                            <div className="relative inline-flex items-center group">
+                              <select
+                                value={q.status}
+                                onChange={(e) => handleQuickUpdateStatus(q.id, e.target.value as QuotationStatus)}
+                                className={`text-[11px] font-bold rounded-lg pl-2.5 pr-6 py-1 appearance-none cursor-pointer border transition focus:outline-none shadow-sm ${
+                                  q.status === 'DRAFT'
+                                    ? 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500'
+                                    : q.status === 'SENT'
+                                    ? 'bg-sky-950/90 text-sky-400 border-sky-800/80 hover:border-sky-500'
+                                    : q.status === 'PENDING_APPROVAL'
+                                    ? 'bg-amber-950/90 text-amber-400 border-amber-800/80 hover:border-amber-500'
+                                    : q.status === 'APPROVED'
+                                    ? 'bg-blue-950/90 text-blue-400 border-blue-800/80 hover:border-blue-500'
+                                    : q.status === 'ACCEPTED'
+                                    ? 'bg-emerald-950/90 text-emerald-400 border-emerald-800/80 hover:border-emerald-500'
+                                    : q.status === 'CONVERTED'
+                                    ? 'bg-teal-950/90 text-teal-300 border-teal-800/80 hover:border-teal-500'
+                                    : q.status === 'REJECTED'
+                                    ? 'bg-rose-950/90 text-rose-400 border-rose-800/80 hover:border-rose-500'
+                                    : 'bg-slate-800 text-slate-300 border-slate-700'
+                                }`}
+                                title="Click to update quotation step / status"
+                              >
+                                <option value="DRAFT" className="bg-slate-900 text-slate-200">● Draft</option>
+                                <option value="SENT" className="bg-slate-900 text-sky-400">● Sent to Client</option>
+                                <option value="PENDING_APPROVAL" className="bg-slate-900 text-amber-400">● Pending Approval</option>
+                                <option value="APPROVED" className="bg-slate-900 text-blue-400">● Approved</option>
+                                <option value="ACCEPTED" className="bg-slate-900 text-emerald-400">● Accepted (Won)</option>
+                                <option value="CONVERTED" className="bg-slate-900 text-teal-300">● Converted to Order</option>
+                                <option value="REJECTED" className="bg-slate-900 text-rose-400">● Rejected</option>
+                              </select>
+                              <ChevronDown className="w-3 h-3 absolute right-1.5 pointer-events-none text-slate-400 group-hover:text-slate-200" />
+                            </div>
+                          </td>
                           <td className="px-4 py-3">
                             {q.stockReserved ? (
                               <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
@@ -1842,7 +1945,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-slate-400 font-semibold">Customer / Organization *</label>
@@ -1949,6 +2052,41 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-300"
                     />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 font-semibold mb-1">Quotation Lifecycle Step</label>
+                <select
+                  value={newQuote.status || 'DRAFT'}
+                  onChange={(e) => {
+                    const st = e.target.value as QuotationStatus;
+                    setNewQuote({
+                      ...newQuote,
+                      status: st,
+                      stockReserved: st === 'ACCEPTED' || st === 'CONVERTED'
+                    });
+                  }}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                >
+                  <option value="DRAFT">1. Draft (Internal Draft)</option>
+                  <option value="SENT">2. Sent to Client</option>
+                  <option value="PENDING_APPROVAL">3. Pending Approval</option>
+                  <option value="APPROVED">4. Approved</option>
+                  <option value="ACCEPTED">5. Accepted (Won / Reserve Stock)</option>
+                  <option value="CONVERTED">6. Converted to Order</option>
+                  <option value="REJECTED">7. Rejected</option>
+                </select>
+
+                <div className="mt-2.5 p-2 bg-slate-950/60 rounded border border-slate-800 text-[11px] flex items-center justify-between">
+                  <span className="text-slate-400">Stock State:</span>
+                  {(newQuote.status === 'ACCEPTED' || newQuote.status === 'CONVERTED' || newQuote.stockReserved) ? (
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Auto-Reserved
+                    </span>
+                  ) : (
+                    <span className="text-slate-500">Unreserved</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -2615,12 +2753,55 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Quick Status Progression Buttons */}
+              {selectedQuotation.status === 'DRAFT' && (
+                <>
+                  <button
+                    onClick={() => handleQuickUpdateStatus(selectedQuotation.id, 'SENT')}
+                    className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-xs transition inline-flex items-center gap-1.5 shadow-md shadow-sky-500/20"
+                    title="Mark Quotation as Sent to Client"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Mark Sent
+                  </button>
+                  <button
+                    onClick={() => handleQuickUpdateStatus(selectedQuotation.id, 'ACCEPTED')}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition inline-flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                    title="Client accepted quotation; reserve stock"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Accept Quote
+                  </button>
+                </>
+              )}
+
+              {selectedQuotation.status === 'SENT' && (
+                <>
+                  <button
+                    onClick={() => handleQuickUpdateStatus(selectedQuotation.id, 'ACCEPTED')}
+                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition inline-flex items-center gap-1.5 shadow-md shadow-emerald-500/20"
+                    title="Client confirmed & accepted"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Mark Accepted
+                  </button>
+                  <button
+                    onClick={() => handleQuickUpdateStatus(selectedQuotation.id, 'REJECTED')}
+                    className="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/40 font-semibold text-xs transition inline-flex items-center gap-1.5"
+                    title="Client declined this quote"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    Reject
+                  </button>
+                </>
+              )}
+
               {/* Approval Button if Pending */}
               {selectedQuotation.status === 'PENDING_APPROVAL' && (
                 <button
                   onClick={() => setIsApprovalModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition"
+                  className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs transition shadow-md shadow-amber-500/20"
                 >
                   Review Approval
                 </button>
@@ -2630,19 +2811,20 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               {(selectedQuotation.status === 'ACCEPTED' || selectedQuotation.status === 'APPROVED' || selectedQuotation.status === 'SENT') && (
                 <button
                   onClick={() => setIsConvertModalOpen(true)}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-md shadow-emerald-500/20"
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-md shadow-emerald-500/20 inline-flex items-center gap-1"
                 >
-                  Convert Quotation &rarr;
+                  <Receipt className="w-3.5 h-3.5" />
+                  Convert to Bill &rarr;
                 </button>
               )}
 
               <button
                 onClick={() => handleStartEditQuotation(selectedQuotation)}
-                className="px-3.5 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/40 transition inline-flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/40 transition inline-flex items-center gap-1.5"
                 title="Edit Quotation"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                Edit Quotation
+                Edit
               </button>
 
               <button
@@ -2658,8 +2840,83 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-md shadow-blue-500/20"
               >
                 <Printer className="w-3.5 h-3.5 inline mr-1" />
-                Printable PDF
+                PDF
               </button>
+            </div>
+          </div>
+
+          {/* Quotation Lifecycle Stepper Pipeline Card */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                  Quotation Lifecycle Stepper
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  (Current Status: <strong className="text-blue-400">{selectedQuotation.status.replace(/_/g, ' ')}</strong>)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-slate-400 font-semibold">Change Step:</span>
+                <select
+                  value={selectedQuotation.status}
+                  onChange={(e) => handleQuickUpdateStatus(selectedQuotation.id, e.target.value as QuotationStatus)}
+                  className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1 font-semibold focus:outline-none focus:border-blue-500 cursor-pointer"
+                >
+                  <option value="DRAFT">1. Draft (Internal Draft)</option>
+                  <option value="SENT">2. Sent to Client</option>
+                  <option value="PENDING_APPROVAL">3. Pending Approval</option>
+                  <option value="APPROVED">4. Approved</option>
+                  <option value="ACCEPTED">5. Accepted (Won / Reserved)</option>
+                  <option value="CONVERTED">6. Converted to Order</option>
+                  <option value="REJECTED">7. Rejected</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Stepper Pipeline Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-2 border-t border-slate-800/80">
+              {[
+                { key: 'DRAFT', label: '1. Draft', desc: 'Internal draft stage' },
+                { key: 'SENT', label: '2. Sent to Client', desc: 'Shared with customer' },
+                { key: 'PENDING_APPROVAL', label: '3. Approval', desc: 'Under review' },
+                { key: 'ACCEPTED', label: '4. Accepted', desc: 'Client won & stock reserved' },
+                { key: 'CONVERTED', label: '5. Converted', desc: 'Converted to bill/invoice' },
+              ].map((step) => {
+                const isCurrent = selectedQuotation.status === step.key;
+                const isDone =
+                  (step.key === 'DRAFT' && ['SENT', 'PENDING_APPROVAL', 'APPROVED', 'ACCEPTED', 'CONVERTED'].includes(selectedQuotation.status)) ||
+                  (step.key === 'SENT' && ['APPROVED', 'ACCEPTED', 'CONVERTED'].includes(selectedQuotation.status)) ||
+                  (step.key === 'PENDING_APPROVAL' && ['APPROVED', 'ACCEPTED', 'CONVERTED'].includes(selectedQuotation.status)) ||
+                  (step.key === 'ACCEPTED' && ['CONVERTED'].includes(selectedQuotation.status));
+
+                return (
+                  <button
+                    key={step.key}
+                    type="button"
+                    onClick={() => handleQuickUpdateStatus(selectedQuotation.id, step.key as QuotationStatus)}
+                    className={`p-2.5 rounded-lg border text-left transition flex flex-col justify-between ${
+                      isCurrent
+                        ? 'bg-blue-600/15 border-blue-500 text-blue-300 shadow-sm'
+                        : isDone
+                        ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-400 hover:bg-emerald-950/40'
+                        : 'bg-slate-950/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-bold">
+                        {isDone ? '✓ ' : ''}{step.label}
+                      </span>
+                      {isCurrent && (
+                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-400">{step.desc}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
