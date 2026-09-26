@@ -1152,7 +1152,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
                 {/* Bill To */}
-                <div style={{ width: '52%' }}>
+                <div style={{ width: '58%' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
                     Bill To
                   </div>
@@ -1162,8 +1162,8 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                   </div>
                 </div>
 
-                {/* Deliver To (shifted further right) */}
-                <div style={{ width: '38%', paddingLeft: '10px' }}>
+                {/* Deliver To (aligned nicely to right column) */}
+                <div style={{ width: '34%' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
                     Deliver To
                   </div>
@@ -1280,7 +1280,7 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
               {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '45px', fontSize: '12px', color: '#000' }}>
                 {/* Terms & Conditions */}
-                <div style={{ width: '48%' }}>
+                <div style={{ width: '58%' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
                     Terms & Conditions
                   </div>
@@ -1291,8 +1291,8 @@ export function BillInvoiceView({ initialSelectedQuoteId }: { initialSelectedQuo
                   </div>
                 </div>
 
-                {/* Payment Details */}
-                <div style={{ width: '48%' }}>
+                {/* Payment Details (aligned to right column) */}
+                <div style={{ width: '34%' }}>
                   <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
                     Payment Details
                   </div>
