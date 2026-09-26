@@ -2766,270 +2766,289 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             <div
               id="printable-quotation-sheet"
               style={{
-                width: '210mm',
-                minWidth: '210mm',
+                width: '100%',
                 maxWidth: '210mm',
                 boxSizing: 'border-box'
               }}
-              className="relative bg-white text-slate-900 rounded-xl p-6 sm:px-8 sm:pt-6 sm:pb-3 shadow-2xl printable-area font-sans text-xs flex flex-col justify-between overflow-hidden print:overflow-visible print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
+              className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl printable-area font-sans text-xs print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
             >
               {/* Watermark in background matching company pad */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.08] z-0 overflow-hidden">
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.07] z-0 overflow-hidden"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+              >
                 <img
                   src={GLOBO_TECH_LOGO_DATA_URL}
                   alt="Globo Tech Watermark"
-                  className="w-80 max-w-full object-contain"
+                  style={{ width: '270px', maxWidth: '75%', objectFit: 'contain' }}
                 />
               </div>
 
-              <div className="relative z-10 flex-1 flex flex-col justify-between">
-                <div className="space-y-3">
-                  {/* Header / Brand Layout according to company pad */}
-                  <div className="border-b-2 border-slate-900 pb-2">
-                    <div className="quotation-header-grid grid grid-cols-3 items-center gap-3 w-full">
-                      {/* 1 no mark: Company Logo (Left Aligned) */}
-                      <div className="flex items-center justify-start">
+              <div className="relative z-10 w-full">
+                {/* 1. Brand Header Table: Guaranteed 3 columns on all mobile print engines */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginBottom: '6px' }}>
+                  <tbody>
+                    <tr>
+                      {/* Left: Company Logo */}
+                      <td style={{ width: '25%', textAlign: 'left', verticalAlign: 'middle', padding: 0 }}>
                         <img
                           src={GLOBO_TECH_LOGO_DATA_URL}
                           alt="Globo Tech Logo"
-                          className="h-16 w-auto object-contain flex-shrink-0"
+                          style={{ height: '48px', width: 'auto', maxHeight: '48px', objectFit: 'contain', display: 'inline-block' }}
                         />
-                      </div>
-
-                      {/* 2 no mark: Company Name (Centered in the middle, Larger Font, Soft Bold) */}
-                      <div className="flex items-center justify-center text-center">
-                        <h1 className="text-4xl sm:text-[46px] font-bold tracking-tight text-[#008fd5] leading-none whitespace-nowrap">
+                      </td>
+                      {/* Center: Company Name */}
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
+                        <h1 style={{ fontSize: '30px', fontWeight: 800, color: '#008fd5', margin: 0, lineHeight: 1, letterSpacing: '-0.5px' }}>
                           Globo Tech
                         </h1>
-                      </div>
-
-                      {/* 3 no mark: Company Address (Right Aligned) */}
-                      <div className="flex items-center justify-end text-right">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-800 leading-snug whitespace-nowrap">
-                            Rahman Chamber (2nd Floor),
-                          </p>
-                          <p className="text-xs font-semibold text-slate-800 leading-snug whitespace-nowrap">
-                            12/13 Motijheel C/A, Dhaka-1000.
-                          </p>
+                      </td>
+                      {/* Right: Company Address */}
+                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: 0 }}>
+                        <div style={{ fontSize: '10px', fontWeight: 600, color: '#1e293b', lineHeight: 1.35, whiteSpace: 'nowrap' }}>
+                          <div>Rahman Chamber (2nd Floor),</div>
+                          <div>12/13 Motijheel C/A, Dhaka-1000.</div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div style={{ borderBottom: '2px solid #0f172a', marginBottom: '6px' }}></div>
 
-                  {/* 4 no mark: Quotation Title & Meta Details */}
-                  <div className="relative py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between min-h-[42px]">
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <h2 className="text-lg font-black text-[#008fd5] uppercase">
-                        <span className="border-b-2 border-[#008fd5] pb-0.5 tracking-widest inline-block">
+                {/* 2. Quotation Title & Meta Table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '6px' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ width: '25%', padding: '4px 8px', verticalAlign: 'middle' }}></td>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: '4px 0' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: '#008fd5', letterSpacing: '2px', textTransform: 'uppercase', borderBottom: '2px solid #008fd5', paddingBottom: '2px', display: 'inline-block' }}>
                           QUOTATION
                         </span>
-                      </h2>
-                    </div>
+                      </td>
+                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: '4px 8px', fontSize: '10px', color: '#475569', lineHeight: 1.3 }}>
+                        <div>Date: <strong style={{ color: '#0f172a', fontWeight: 600 }}>{formatDate(selectedQuotation.date)}</strong></div>
+                        <div style={{ marginTop: '1px' }}>Quotation Ref: <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 700 }}>{selectedQuotation.quotationNumber}</strong></div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                    <div className="ml-auto text-right z-10 text-[11px] text-slate-600 leading-tight">
-                      <div>
-                        Date: <strong className="text-slate-900 font-semibold">{formatDate(selectedQuotation.date)}</strong>
-                      </div>
-                      <div className="mt-0.5">
-                        Quotation Ref: <strong className="font-mono text-slate-900 font-bold">{selectedQuotation.quotationNumber}</strong>
-                      </div>
-                    </div>
-                  </div>
+                {/* 3. Client & Project Details Table: Guaranteed 2 equal columns on mobile print */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '6px', fontSize: '10.5px' }}>
+                  <tbody>
+                    <tr>
+                      {/* Quotation Prepared For */}
+                      <td style={{ width: '50%', verticalAlign: 'top', padding: '6px 10px', borderRight: '1px solid #e2e8f0' }}>
+                        <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9px', marginBottom: '2px' }}>
+                          Quotation Prepared For:
+                        </div>
+                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px', lineHeight: 1.25 }}>
+                          {selectedQuotation.customerCompany}
+                        </div>
+                        <div style={{ color: '#334155', marginTop: '1px' }}>Attn: {selectedQuotation.customerName}</div>
+                        <div style={{ color: '#475569', marginTop: '1px' }}>{selectedQuotation.customerAddress}</div>
+                        <div style={{ color: '#475569', marginTop: '1px' }}>Phone: {selectedQuotation.customerPhone}</div>
+                        {selectedQuotation.customerBin && (
+                          <div style={{ fontFamily: 'monospace', color: '#475569', marginTop: '1px' }}>BIN: {selectedQuotation.customerBin}</div>
+                        )}
+                      </td>
+                      {/* Project & Delivery Location */}
+                      <td style={{ width: '50%', verticalAlign: 'top', padding: '6px 10px' }}>
+                        <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9px', marginBottom: '2px' }}>
+                          Project & Delivery Location:
+                        </div>
+                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px', lineHeight: 1.25 }}>
+                          {selectedQuotation.projectName}
+                        </div>
+                        <div style={{ color: '#334155', marginTop: '2px' }}>
+                          Delivery Location: {selectedQuotation.projectLocation}
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                  {/* Client & Project Information */}
-                  <div className="quotation-parties-grid grid grid-cols-2 gap-4 p-3 bg-slate-50/80 rounded-lg border border-slate-200 text-xs">
-                    <div>
-                      <span className="font-bold text-slate-500 uppercase text-[10px] block mb-0.5">Quotation Prepared For:</span>
-                      <p className="font-bold text-slate-900 text-sm">{selectedQuotation.customerCompany}</p>
-                      <p className="text-slate-700">Attn: {selectedQuotation.customerName}</p>
-                      <p className="text-slate-600">{selectedQuotation.customerAddress}</p>
-                      <p className="text-slate-600">Phone: {selectedQuotation.customerPhone}</p>
-                      {selectedQuotation.customerBin && <p className="font-mono text-slate-600">BIN: {selectedQuotation.customerBin}</p>}
-                    </div>
+                {/* 4. Customer Facing Item Table */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: '10px', color: '#000000', marginBottom: '6px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#ffffff' }}>
+                      <th style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', fontWeight: 'bold', width: '30px' }}>Sl</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '130px' }}>Product Name</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold' }}>Product Description</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 4px', textAlign: 'center', fontWeight: 'bold', width: '45px' }}>Unite</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 4px', textAlign: 'center', fontWeight: 'bold', width: '38px' }}>Qty</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '85px' }}>Unite Price</th>
+                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '85px' }}>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedQuotation.items.map((item, idx) => {
+                      const unitPriceWithTax = item.unitPrice * (1 + (item.vatPercent || 0) / 100 + (item.taxPercent || 0) / 100);
+                      const lineTotal = item.quantity * unitPriceWithTax;
+                      const description = item.description && item.description.trim()
+                        ? item.description
+                        : [
+                            item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : ''),
+                            item.warranty ? `Warranty: ${item.warranty}` : '',
+                            item.leadTime && item.leadTime !== 'Immediate' ? `Delivery: ${item.leadTime}` : '',
+                            item.remarks || ''
+                          ].filter(Boolean).join('\n') || '--';
 
-                    <div className="pl-6 border-l border-slate-200/80">
-                      <span className="font-bold text-slate-500 uppercase text-[10px] block mb-0.5">Project & Delivery Location:</span>
-                      <p className="font-bold text-slate-900 text-sm">{selectedQuotation.projectName}</p>
-                      <p className="text-slate-700 mt-0.5">Delivery Location: {selectedQuotation.projectLocation}</p>
-                    </div>
-                  </div>
-
-                  {/* Customer Facing Item Table matching requested Globo Tech format */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs border-collapse border border-black text-black">
-                      <thead>
-                        <tr className="bg-white">
-                          <th className="border border-black py-1.5 px-1 text-center font-bold text-black w-10">Sl</th>
-                          <th className="border border-black py-1.5 px-2.5 text-center font-bold text-black w-48">Product Name</th>
-                          <th className="border border-black py-1.5 px-2.5 text-center font-bold text-black">Product Description</th>
-                          <th className="border border-black py-1.5 px-2 text-center font-bold text-black w-16">Unite</th>
-                          <th className="border border-black py-1.5 px-2 text-center font-bold text-black w-14">Qty</th>
-                          <th className="border border-black py-1.5 px-2 text-center font-bold text-black w-28">Unite Price</th>
-                          <th className="border border-black py-1.5 px-2 text-center font-bold text-black w-28">Amount</th>
+                      return (
+                        <tr key={item.id} style={{ backgroundColor: '#ffffff' }}>
+                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>
+                            {idx + 1}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.25 }}>
+                            {item.name}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'left', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.3 }}>
+                            {description}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', verticalAlign: 'middle' }}>
+                            {item.unit || 'pcs'}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 'bold' }}>
+                            {item.quantity}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 600 }}>
+                            {unitPriceWithTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                            {lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {selectedQuotation.items.map((item, idx) => {
-                          const unitPriceWithTax = item.unitPrice * (1 + (item.vatPercent || 0) / 100 + (item.taxPercent || 0) / 100);
-                          const lineTotal = item.quantity * unitPriceWithTax;
-                          const description = item.description && item.description.trim()
-                            ? item.description
-                            : [
-                                item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : ''),
-                                item.warranty ? `Warranty: ${item.warranty}` : '',
-                                item.leadTime && item.leadTime !== 'Immediate' ? `Delivery: ${item.leadTime}` : '',
-                                item.remarks || ''
-                              ].filter(Boolean).join('\n') || '--';
+                      );
+                    })}
+                  </tbody>
+                </table>
 
-                          return (
-                            <tr key={item.id} className="bg-white">
-                              <td className="border border-black p-1.5 text-center font-bold text-black align-middle">
-                                {idx + 1}
-                              </td>
-                              <td className="border border-black p-2 text-center font-bold text-black align-middle whitespace-pre-line leading-snug">
-                                {item.name}
-                              </td>
-                              <td className="border border-black p-2 text-left text-black align-middle whitespace-pre-line leading-relaxed">
-                                {description}
-                              </td>
-                              <td className="border border-black p-1.5 text-center text-black align-middle font-medium">
-                                {item.unit || 'pcs'}
-                              </td>
-                              <td className="border border-black p-1.5 text-center text-black align-middle font-bold">
-                                {item.quantity}
-                              </td>
-                              <td className="border border-black p-1.5 text-right font-mono text-black align-middle font-semibold">
-                                {unitPriceWithTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </td>
-                              <td className="border border-black p-1.5 text-right font-mono font-bold text-black align-middle">
-                                {lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                {/* 5. Totals Table: Amount in Words on Left, Numbers on Right */}
+                {(() => {
+                  const totals = calculateQuotationTotals(selectedQuotation);
+                  const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
+                  return (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '4px', marginBottom: '6px' }}>
+                      <tbody>
+                        <tr>
+                          {/* Left: Amount in Words */}
+                          <td style={{ width: '55%', verticalAlign: 'bottom', paddingRight: '12px' }}>
+                            <div style={{ padding: '5px 8px', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#f8fafc', fontSize: '9.5px', lineHeight: 1.3 }}>
+                              <div style={{ fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', fontSize: '8.5px', letterSpacing: '0.5px', marginBottom: '2px' }}>
+                                Amount in Words:
+                              </div>
+                              <div style={{ fontWeight: 600, color: '#0f172a', fontStyle: 'italic', fontFamily: 'serif' }}>
+                                {numberToWordsBDT(totals.grandTotal, selectedQuotation.currency || 'BDT')}
+                              </div>
+                            </div>
+                          </td>
+                          {/* Right: Numerical Breakdown */}
+                          <td style={{ width: '45%', verticalAlign: 'bottom', padding: 0 }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px', color: '#334155' }}>
+                              <tbody>
+                                <tr>
+                                  <td style={{ padding: '1px 0' }}>Items Subtotal (Incl. VAT & TAX):</td>
+                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
+                                </tr>
+                                <tr style={{ fontSize: '9.5px', color: '#475569' }}>
+                                  <td style={{ padding: '1px 0' }}>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
+                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
+                                </tr>
+                                <tr style={{ fontSize: '9.5px', color: '#475569' }}>
+                                  <td style={{ padding: '1px 0' }}>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</td>
+                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>
+                                    {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
+                                  </td>
+                                </tr>
+                                {totals.totalTax > 0 && (
+                                  <tr style={{ fontSize: '9.5px', color: '#475569' }}>
+                                    <td style={{ padding: '1px 0' }}>Total TAX / AIT (TDS):</td>
+                                    <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.totalTax)}</td>
+                                  </tr>
+                                )}
+                                <tr style={{ borderTop: '2px solid #0f172a', fontSize: '12px', fontWeight: 900, color: '#0f172a' }}>
+                                  <td style={{ paddingTop: '2px' }}>Grand Total (BDT):</td>
+                                  <td style={{ paddingTop: '2px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 900, color: '#000000' }}>{formatBDT(totals.grandTotal)}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
+                  );
+                })()}
+
+                {/* 6. Terms & Conditions */}
+                <div style={{ marginTop: '4px', marginBottom: '8px', fontSize: '9.5px', color: '#1e293b', lineHeight: 1.35 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+                    <span style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>Terms & Conditions:</span>
+                    <button
+                      onClick={() => handleOpenEditTerms(selectedQuotation)}
+                      className="no-print text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-sm transition cursor-pointer"
+                      title="Click to edit Terms and Conditions"
+                    >
+                      <Edit3 className="w-3 h-3" />
+                      <span>Edit Terms & Conditions</span>
+                    </button>
                   </div>
+                  <div>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</div>
+                  <div>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</div>
+                  <div>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</div>
+                  <div>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</div>
+                  <div>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</div>
+                </div>
 
-                  {/* Totals Breakdown with Amount In Words on the Left */}
-                  <div className="pt-1.5">
-                    {(() => {
-                      const totals = calculateQuotationTotals(selectedQuotation);
-                      const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
-                      return (
-                        <div className="quotation-totals-row flex flex-row justify-between items-end gap-4 w-full">
-                          {/* Left Side: Grand Total in Words */}
-                          <div className="flex-1 max-w-[400px] self-end pb-0.5">
-                            <div className="p-2 rounded-lg border border-slate-300 bg-slate-50/80 text-[11px] text-slate-800 leading-snug">
-                              <span className="font-bold text-slate-900 block text-[10px] uppercase tracking-wider mb-0.5">
-                                Amount in Words:
-                              </span>
-                              <span className="font-semibold text-slate-900 italic font-serif">
-                                {numberToWordsBDT(totals.grandTotal, selectedQuotation.currency || 'BDT')}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Right Side: Totals Numerical Breakdown */}
-                          <div className="w-72 space-y-1 text-xs text-slate-700 flex-shrink-0">
-                            <div className="flex justify-between">
-                              <span>Items Subtotal (Incl. VAT & TAX):</span>
-                              <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.grandTotal)}</span>
-                            </div>
-                            <div className="flex justify-between text-[11px] text-slate-600">
-                              <span>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</span>
-                              <span className="font-mono font-medium">{formatBDT(totals.subtotal)}</span>
-                            </div>
-                            <div className="flex justify-between text-[11px] text-slate-600">
-                              <span>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</span>
-                              <span className="font-mono font-medium">
-                                {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
-                              </span>
-                            </div>
-                            {totals.totalTax > 0 && (
-                              <div className="flex justify-between text-[11px] text-slate-600">
-                                <span>Total TAX / AIT (TDS):</span>
-                                <span className="font-mono font-medium">{formatBDT(totals.totalTax)}</span>
-                              </div>
+                {/* 7. Signatures Table: Guaranteed side-by-side on mobile print */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', marginBottom: '6px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <tbody>
+                    <tr>
+                      {/* Left Column: Authorized Signature with Official Seal & Signature */}
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
+                        <div style={{ display: 'inline-block', textAlign: 'center' }}>
+                          <div style={{ position: 'relative', height: '46px', width: '180px', margin: '0 auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                            {includeSealAndSignature && (
+                              <>
+                                <img
+                                  src={GLOBO_TECH_SEAL_DATA_URL}
+                                  alt="Globo Tech Official Seal"
+                                  style={{ position: 'absolute', left: '10px', bottom: '-4px', width: '58px', height: '58px', objectFit: 'contain', mixBlendMode: 'multiply', opacity: 0.9, pointerEvents: 'none', transform: 'rotate(-6deg)' }}
+                                />
+                                <img
+                                  src={GLOBO_TECH_SIGNATURE_DATA_URL}
+                                  alt="Authorized Signature"
+                                  style={{ position: 'relative', zIndex: 10, width: '92px', height: 'auto', maxHeight: '40px', objectFit: 'contain', mixBlendMode: 'multiply', pointerEvents: 'none', marginBottom: '-2px', transform: 'translateX(6px)' }}
+                                />
+                              </>
                             )}
-                            <div className="flex justify-between border-t-2 border-slate-900 pt-1 text-sm font-black text-slate-900">
-                              <span>Grand Total (BDT):</span>
-                              <span className="font-mono text-black font-black">{formatBDT(totals.grandTotal)}</span>
-                            </div>
+                          </div>
+                          <div style={{ width: '170px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
+                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11px', letterSpacing: '0.3px' }}>Authorized Signature</div>
+                          <div style={{ fontWeight: 700, color: '#000000', fontSize: '10px', lineHeight: 1.2 }}>Globo Tech</div>
+                        </div>
+                      </td>
+
+                      {/* Right Column: Customer Acceptance Signature */}
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
+                        <div style={{ display: 'inline-block', textAlign: 'center' }}>
+                          <div style={{ height: '46px', width: '180px', margin: '0 auto' }}></div>
+                          <div style={{ width: '170px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
+                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11px', letterSpacing: '0.3px' }}>Customer Acceptance Signature</div>
+                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '10px', lineHeight: 1.2, maxWidth: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 auto' }}>
+                            {selectedQuotation.customerCompany}
                           </div>
                         </div>
-                      );
-                    })()}
-                  </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
 
-                  {/* Commercial Terms & Conditions */}
-                  <div className="pt-1.5 text-[11px] text-slate-800 space-y-0.5 bg-transparent group relative">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-slate-900 uppercase text-[10px] tracking-wider">Terms & Conditions:</h4>
-                      <button
-                        onClick={() => handleOpenEditTerms(selectedQuotation)}
-                        className="no-print text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-sm transition cursor-pointer"
-                        title="Click to edit Terms and Conditions"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                        <span>Edit Terms & Conditions</span>
-                      </button>
-                    </div>
-                    <p>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</p>
-                    <p>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</p>
-                    <p>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</p>
-                    <p>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</p>
-                    <p>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</p>
-                  </div>
-                </div>
-
-                {/* Signature Block */}
-                <div className="quotation-signatures-grid mt-auto pt-6 pb-2">
-                  <div className="grid grid-cols-2 text-center text-xs items-end w-full">
-                    {/* Left Column: Authorized Signature with Official Seal & Signature */}
-                    <div className="flex flex-col items-center">
-                      <div className="relative h-18 w-52 flex items-end justify-center">
-                        {includeSealAndSignature && (
-                          <>
-                            {/* Official Globo Tech Rubber Stamp (Seal) */}
-                            <img
-                              src={GLOBO_TECH_SEAL_DATA_URL}
-                              alt="Globo Tech Official Seal"
-                              className="absolute left-4 -bottom-2 w-18 h-18 object-contain mix-blend-multiply opacity-90 select-none pointer-events-none transform -rotate-6"
-                            />
-                            {/* Official Executive Signature */}
-                            <img
-                              src={GLOBO_TECH_SIGNATURE_DATA_URL}
-                              alt="Authorized Signature"
-                              className="relative z-10 w-28 h-auto max-h-14 object-contain mix-blend-multiply select-none pointer-events-none -mb-0.5 transform translate-x-2"
-                            />
-                          </>
-                        )}
-                      </div>
-                      <div className="w-48 border-b-2 border-slate-800 mb-1"></div>
-                      <p className="font-bold text-slate-900 text-xs tracking-wide">Authorized Signature</p>
-                      <p className="text-black font-bold text-[11px] leading-tight">Globo Tech</p>
-                    </div>
-
-                    {/* Right Column: Customer Acceptance Signature */}
-                    <div className="flex flex-col items-center">
-                      <div className="h-18 w-52 flex items-end justify-center">
-                        {/* Space for physical client signature & stamp */}
-                      </div>
-                      <div className="w-48 border-b-2 border-slate-800 mb-1"></div>
-                      <p className="font-bold text-slate-900 text-xs tracking-wide">Customer Acceptance Signature</p>
-                      <p className="text-slate-700 font-semibold text-[11px] leading-tight truncate max-w-[200px]">{selectedQuotation.customerCompany}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Company Pad Footer matching official letterhead */}
-                <div className="border-t border-slate-200 pt-1.5 pb-0 mt-auto text-center text-[10px] sm:text-[11px] text-slate-600 space-y-0.5 pad-footer print:pt-1 print:pb-0">
-                  <p className="font-medium text-slate-700">
+                {/* 8. Company Pad Footer matching official letterhead */}
+                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '4px', marginTop: '6px', textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <p style={{ margin: 0, color: '#334155', fontWeight: 500 }}>
                     Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                   </p>
-                  <p className="font-bold text-black">
+                  <p style={{ margin: '1px 0 0 0', color: '#000000', fontWeight: 700 }}>
                     Web: www.globotechbd.com
                   </p>
                 </div>
