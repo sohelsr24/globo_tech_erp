@@ -442,9 +442,9 @@ export function ProjectsView() {
   };
 
   // Material Issue Form
-  const [issueQty, setIssueQty] = useState(1);
+  const [issueQty, setIssueQty] = useState<number | ''>(1);
   const [issueProduct, setIssueProduct] = useState('');
-  const [issueUnitCost, setIssueUnitCost] = useState(0);
+  const [issueUnitCost, setIssueUnitCost] = useState<number | ''>('');
 
   // Labor Form
   const [techName, setTechName] = useState('Md. Al-Amin');
@@ -1098,7 +1098,7 @@ export function ProjectsView() {
                     onClick={() => {
                       setIssueProduct('');
                       setIssueQty(1);
-                      setIssueUnitCost(0);
+                      setIssueUnitCost('');
                       setIsIssueMaterialOpen(true);
                     }}
                     className="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 text-xs font-semibold flex items-center gap-1.5 transition"
@@ -1452,8 +1452,14 @@ export function ProjectsView() {
                   required
                   min="0"
                   step="any"
-                  value={newProject.contractValue}
-                  onChange={(e) => setNewProject({ ...newProject, contractValue: Number(e.target.value) })}
+                  placeholder="0"
+                  value={newProject.contractValue === 0 ? '' : newProject.contractValue}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewProject({ ...newProject, contractValue: val === '' ? '' as any : Number(val) });
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -1549,8 +1555,14 @@ export function ProjectsView() {
                 required
                 min="0"
                 step="any"
-                value={expenseAmount}
-                onChange={(e) => setExpenseAmount(Number(e.target.value))}
+                placeholder="0"
+                value={expenseAmount === 0 ? '' : expenseAmount}
+                onFocus={(e) => e.target.select()}
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setExpenseAmount(val === '' ? '' as any : Number(val));
+                }}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold focus:border-blue-500 focus:outline-none text-sm"
               />
             </div>
@@ -1677,8 +1689,14 @@ export function ProjectsView() {
                   min="0.01"
                   step="any"
                   required
+                  placeholder="1"
                   value={issueQty}
-                  onChange={(e) => setIssueQty(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setIssueQty(val === '' ? '' : Number(val));
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold focus:border-purple-500 focus:outline-none"
                 />
               </div>
@@ -1689,8 +1707,14 @@ export function ProjectsView() {
                   min="0"
                   step="any"
                   required
+                  placeholder="0"
                   value={issueUnitCost}
-                  onChange={(e) => setIssueUnitCost(Number(e.target.value))}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setIssueUnitCost(val === '' ? '' : Number(val));
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-purple-500 focus:outline-none"
                 />
               </div>
@@ -1744,10 +1768,17 @@ export function ProjectsView() {
                 <label className="block text-slate-300 font-semibold mb-1">Work Days</label>
                 <input
                   type="number"
-                  min="1"
-                  value={workDays}
-                  onChange={(e) => setWorkDays(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold"
+                  min="0.5"
+                  step="any"
+                  placeholder="1"
+                  value={workDays === 0 ? '' : workDays}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setWorkDays(val === '' ? '' as any : Number(val));
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-bold focus:border-blue-500 focus:outline-none"
                 />
               </div>
               <div>
@@ -1756,9 +1787,15 @@ export function ProjectsView() {
                   type="number"
                   min="0"
                   step="any"
-                  value={dailyRate}
-                  onChange={(e) => setDailyRate(Number(e.target.value))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono"
+                  placeholder="0"
+                  value={dailyRate === 0 ? '' : dailyRate}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDailyRate(val === '' ? '' as any : Number(val));
+                  }}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
                 />
               </div>
             </div>

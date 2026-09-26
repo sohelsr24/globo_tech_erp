@@ -914,10 +914,16 @@ export function CustomersView() {
                 <input
                   type="number"
                   required
-                  min="1"
+                  min="0"
                   step="any"
-                  value={paymentForm.amount}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: Number(e.target.value) })}
+                  placeholder="0"
+                  value={paymentForm.amount === 0 ? '' : paymentForm.amount}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setPaymentForm({ ...paymentForm, amount: val === '' ? '' as any : Number(val) });
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold text-sm focus:border-emerald-500 focus:outline-none"
                 />
               </div>
@@ -1027,10 +1033,16 @@ export function CustomersView() {
                 <input
                   type="number"
                   required
-                  min="1"
+                  min="0"
                   step="any"
-                  value={billForm.amount}
-                  onChange={(e) => setBillForm({ ...billForm, amount: Number(e.target.value) })}
+                  placeholder="0"
+                  value={billForm.amount === 0 ? '' : billForm.amount}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBillForm({ ...billForm, amount: val === '' ? '' as any : Number(val) });
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono font-bold text-sm focus:border-amber-500 focus:outline-none"
                 />
               </div>
@@ -1384,8 +1396,14 @@ export function CustomersView() {
                   type="number"
                   min="0"
                   step="any"
-                  value={newCustomer.creditLimit}
-                  onChange={(e) => setNewCustomer({ ...newCustomer, creditLimit: Number(e.target.value) })}
+                  placeholder="0"
+                  value={newCustomer.creditLimit === 0 ? '' : newCustomer.creditLimit}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setNewCustomer({ ...newCustomer, creditLimit: val === '' ? '' as any : Number(val) });
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
                 />
               </div>
