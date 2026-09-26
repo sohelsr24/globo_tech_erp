@@ -217,6 +217,29 @@ export const cleanVatTaxTerms = (terms?: string) => {
     .trim();
 };
 
+// Helper to dynamically adjust VAT (10% or 15%) and TAX (5% or 10%) in terms string
+export const updateVatTaxString = (currentText: string = '', newVat?: string, newTax?: string) => {
+  const isExclusive = currentText.toLowerCase().includes('exclusive');
+  const prefix = isExclusive ? 'EXCLUSIVE of' : 'INCLUSIVE of';
+  let vat = newVat;
+  if (!vat) {
+    if (currentText.includes('10% VAT')) vat = '10%';
+    else if (currentText.includes('15% VAT')) vat = '15%';
+    else vat = '15%';
+  }
+  let tax = newTax;
+  if (tax === undefined) {
+    if (currentText.includes('10% TAX')) tax = '10%';
+    else if (currentText.includes('5% TAX')) tax = '5%';
+    else tax = '';
+  }
+  if (tax) {
+    return `${prefix} ${vat} VAT and ${tax} TAX / AIT.`;
+  } else {
+    return `${prefix} ${vat} VAT and TAX / AIT.`;
+  }
+};
+
 // Initial Quotations including Section 31 Example
 const INITIAL_QUOTATIONS: Quotation[] = [
   {
@@ -2193,9 +2216,9 @@ export function QuotationView() {
                           type="button"
                           onClick={() => setNewQuote({
                             ...newQuote,
-                            vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.'
+                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '')
                           })}
-                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition ${
+                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                             newQuote.vatTaxTerms?.toLowerCase().includes('inclusive')
                               ? 'bg-emerald-600 text-white'
                               : 'text-slate-400 hover:text-slate-200'
@@ -2209,7 +2232,7 @@ export function QuotationView() {
                             ...newQuote,
                             vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
                           })}
-                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition ${
+                          className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                             newQuote.vatTaxTerms?.toLowerCase().includes('exclusive')
                               ? 'bg-rose-600 text-white'
                               : 'text-slate-400 hover:text-slate-200'
@@ -2227,15 +2250,103 @@ export function QuotationView() {
                       }}
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
-                      <option value="">Presets...</option>
-                      <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
-                      <option value="Quoted prices are INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
-                      <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
-                      <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
-                      <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
-                      <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                      <option value="">Choose preset...</option>
+                      <optgroup label="VAT 15% Options:">
+                        <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
+                        <option value="INCLUSIVE of 15% VAT and 5% TAX / AIT.">Included: 15% VAT & 5% TAX</option>
+                        <option value="INCLUSIVE of 15% VAT and 10% TAX / AIT.">Included: 15% VAT & 10% TAX</option>
+                        <option value="INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: 15% VAT (AIT by Client)</option>
+                      </optgroup>
+                      <optgroup label="VAT 10% Options:">
+                        <option value="INCLUSIVE of 10% VAT and TAX / AIT.">Included: 10% VAT & TAX</option>
+                        <option value="INCLUSIVE of 10% VAT and 5% TAX / AIT.">Included: 10% VAT & 5% TAX</option>
+                        <option value="INCLUSIVE of 10% VAT and 10% TAX / AIT.">Included: 10% VAT & 10% TAX</option>
+                        <option value="INCLUSIVE of 10% VAT. TAX (AIT) to be deducted at source.">Included: 10% VAT (AIT by Client)</option>
+                      </optgroup>
+                      <optgroup label="Other Options:">
+                        <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                        <option value="EXCLUSIVE of 15% VAT and 5% TAX (Added Extra).">Excluded: 15% VAT & 5% TAX Extra</option>
+                        <option value="EXCLUSIVE of 15% VAT. 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
+                        <option value="EXCLUSIVE of 10% VAT. 10% VAT will be applicable on final billing.">Excluded: 10% VAT Extra</option>
+                        <option value="EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
+                        <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                      </optgroup>
                     </select>
                   </div>
+
+                  {/* Quick Selectors for VAT (10% | 15%) and TAX (5% | 10%) */}
+                  <div className="flex flex-wrap items-center justify-between gap-1.5 py-1 px-2 bg-slate-900/60 border border-slate-800 rounded-md text-[11px] mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400 font-medium text-[10px]">VAT:</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewQuote({
+                          ...newQuote,
+                          vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '10%', undefined)
+                        })}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                          newQuote.vatTaxTerms?.includes('10% VAT')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        10%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewQuote({
+                          ...newQuote,
+                          vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', undefined)
+                        })}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                          newQuote.vatTaxTerms?.includes('15% VAT') || (!newQuote.vatTaxTerms?.includes('10% VAT') && newQuote.vatTaxTerms?.toLowerCase().includes('inclusive'))
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        15%
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-slate-400 font-medium text-[10px]">TAX (AIT):</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextTax = newQuote.vatTaxTerms?.includes('5% TAX') ? '' : '5%';
+                          setNewQuote({
+                            ...newQuote,
+                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', undefined, nextTax)
+                          });
+                        }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                          newQuote.vatTaxTerms?.includes('5% TAX')
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        5%
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextTax = newQuote.vatTaxTerms?.includes('10% TAX') ? '' : '10%';
+                          setNewQuote({
+                            ...newQuote,
+                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', undefined, nextTax)
+                          });
+                        }}
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                          newQuote.vatTaxTerms?.includes('10% TAX')
+                            ? 'bg-amber-600 text-white shadow-sm'
+                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        10%
+                      </button>
+                    </div>
+                  </div>
+
                   <textarea
                     rows={2}
                     value={newQuote.vatTaxTerms || ''}
@@ -3662,9 +3773,9 @@ export function QuotationView() {
                       type="button"
                       onClick={() => setTermsForm({
                         ...termsForm,
-                        vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.'
+                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '15%', '')
                       })}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition ${
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                         termsForm.vatTaxTerms?.toLowerCase().includes('inclusive')
                           ? 'bg-emerald-600 text-white shadow-sm'
                           : 'text-slate-400 hover:text-slate-200'
@@ -3678,7 +3789,7 @@ export function QuotationView() {
                         ...termsForm,
                         vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
                       })}
-                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition ${
+                      className={`px-2 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                         termsForm.vatTaxTerms?.toLowerCase().includes('exclusive')
                           ? 'bg-rose-600 text-white shadow-sm'
                           : 'text-slate-400 hover:text-slate-200'
@@ -3694,14 +3805,102 @@ export function QuotationView() {
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
-                  <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
-                  <option value="Quoted prices are INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: VAT Included, AIT by Client</option>
-                  <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
-                  <option value="Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
-                  <option value="Prices are EXCLUSIVE of VAT (Mushak 6.3). 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
-                  <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                  <optgroup label="VAT 15% Options:">
+                    <option value="INCLUSIVE of 15% VAT and TAX / AIT.">Included: 15% VAT & TAX</option>
+                    <option value="INCLUSIVE of 15% VAT and 5% TAX / AIT.">Included: 15% VAT & 5% TAX</option>
+                    <option value="INCLUSIVE of 15% VAT and 10% TAX / AIT.">Included: 15% VAT & 10% TAX</option>
+                    <option value="INCLUSIVE of 15% VAT. TAX (AIT) to be deducted at source.">Included: 15% VAT (AIT by Client)</option>
+                  </optgroup>
+                  <optgroup label="VAT 10% Options:">
+                    <option value="INCLUSIVE of 10% VAT and TAX / AIT.">Included: 10% VAT & TAX</option>
+                    <option value="INCLUSIVE of 10% VAT and 5% TAX / AIT.">Included: 10% VAT & 5% TAX</option>
+                    <option value="INCLUSIVE of 10% VAT and 10% TAX / AIT.">Included: 10% VAT & 10% TAX</option>
+                    <option value="INCLUSIVE of 10% VAT. TAX (AIT) to be deducted at source.">Included: 10% VAT (AIT by Client)</option>
+                  </optgroup>
+                  <optgroup label="Other Options:">
+                    <option value="INCLUSIVE of VAT & TAX (All Taxes Included).">Included: All Taxes Included</option>
+                    <option value="EXCLUSIVE of 15% VAT and 5% TAX (Added Extra).">Excluded: 15% VAT & 5% TAX Extra</option>
+                    <option value="EXCLUSIVE of 15% VAT. 15% VAT will be applicable on final billing.">Excluded: 15% VAT Extra</option>
+                    <option value="EXCLUSIVE of 10% VAT. 10% VAT will be applicable on final billing.">Excluded: 10% VAT Extra</option>
+                    <option value="EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).">Excluded: VAT & TAX Added Extra</option>
+                    <option value="VAT & TAX Exempted as per Government Statutory Regulatory Order (SRO).">Exempted: Govt SRO Exemption</option>
+                  </optgroup>
                 </select>
               </div>
+
+              {/* Quick Selectors for VAT (10% | 15%) and TAX (5% | 10%) */}
+              <div className="flex flex-wrap items-center justify-between gap-1.5 py-1 px-2 bg-slate-900/60 border border-slate-800 rounded-md text-[11px] mb-1.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium text-[10px]">VAT:</span>
+                  <button
+                    type="button"
+                    onClick={() => setTermsForm({
+                      ...termsForm,
+                      vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '10%', undefined)
+                    })}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                      termsForm.vatTaxTerms?.includes('10% VAT')
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    10%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTermsForm({
+                      ...termsForm,
+                      vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '15%', undefined)
+                    })}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                      termsForm.vatTaxTerms?.includes('15% VAT') || (!termsForm.vatTaxTerms?.includes('10% VAT') && termsForm.vatTaxTerms?.toLowerCase().includes('inclusive'))
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    15%
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <span className="text-slate-400 font-medium text-[10px]">TAX (AIT):</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextTax = termsForm.vatTaxTerms?.includes('5% TAX') ? '' : '5%';
+                      setTermsForm({
+                        ...termsForm,
+                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', undefined, nextTax)
+                      });
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                      termsForm.vatTaxTerms?.includes('5% TAX')
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    5%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextTax = termsForm.vatTaxTerms?.includes('10% TAX') ? '' : '10%';
+                      setTermsForm({
+                        ...termsForm,
+                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', undefined, nextTax)
+                      });
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                      termsForm.vatTaxTerms?.includes('10% TAX')
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    10%
+                  </button>
+                </div>
+              </div>
+
               <textarea
                 required
                 rows={2}
