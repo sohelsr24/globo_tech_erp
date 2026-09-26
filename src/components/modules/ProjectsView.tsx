@@ -956,6 +956,103 @@ export function ProjectsView() {
     setIsEditMaterialCostModalOpen(false);
   };
 
+  // --- PRINT HANDLER FOR PROJECT P&L AUDIT STATEMENT (ISOLATED IFRAME) ---
+  const handlePrintPnLSheet = () => {
+    const printElement = document.getElementById('printable-project-sheet');
+    if (!printElement) {
+      window.print();
+      return;
+    }
+
+    try {
+      const oldFrame = document.getElementById('isolated-pnl-print-frame');
+      if (oldFrame) {
+        oldFrame.remove();
+      }
+
+      const printIframe = document.createElement('iframe');
+      printIframe.id = 'isolated-pnl-print-frame';
+      printIframe.style.position = 'fixed';
+      printIframe.style.right = '0';
+      printIframe.style.bottom = '0';
+      printIframe.style.width = '0';
+      printIframe.style.height = '0';
+      printIframe.style.border = '0';
+      document.body.appendChild(printIframe);
+
+      const frameDoc = printIframe.contentWindow?.document;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      const sheetHtml = printElement.innerHTML;
+
+      frameDoc.open();
+      frameDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <title>Project P&L Statement - ${selectedProject?.projectCode || 'Globo Tech'}</title>
+            <style>
+              @page {
+                size: A4 portrait;
+                margin: 8mm 12mm 8mm 12mm;
+              }
+              *, *::before, *::after {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              html, body {
+                margin: 0;
+                padding: 0;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+              }
+              .pnl-sheet-wrapper {
+                width: 100%;
+                max-width: 186mm;
+                min-height: 275mm;
+                margin: 0 auto;
+                box-sizing: border-box;
+                background: #ffffff;
+                color: #000000;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="pnl-sheet-wrapper">
+              ${sheetHtml}
+            </div>
+          </body>
+        </html>
+      `);
+      frameDoc.close();
+
+      setTimeout(() => {
+        printIframe.contentWindow?.focus();
+        printIframe.contentWindow?.print();
+        setTimeout(() => {
+          printIframe.remove();
+        }, 2000);
+      }, 350);
+    } catch (err) {
+      console.error('Iframe print failed, falling back to window.print()', err);
+      window.print();
+    }
+  };
+
   // --- EDIT & DELETE MATERIAL HANDLERS ---
   const handleUpdateMaterial = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2386,7 +2483,7 @@ export function ProjectsView() {
       )}
 
       {/* ========================================================
-          MODAL: FORMAL PRINTABLE PROJECT P&L STATEMENT SHEET
+          MODAL: PROJECT P&L STATEMENT PRINT & AUDIT SHEET (A4)
           ======================================================== */}
       {isPnLSheetModalOpen && selectedProject && (
         <Modal
@@ -2399,232 +2496,302 @@ export function ProjectsView() {
             {/* Sheet Print Controls */}
             <div className="flex items-center justify-between bg-slate-900 border border-slate-800 p-3 rounded-xl no-print">
               <span className="text-xs text-slate-300">
-                Print or export formal Project Profit & Loss Audit Statement for accounting & management review.
+                Official Project Profit & Loss Audit Statement. Print or save as clean, full-page A4 PDF for accounting & client presentation.
               </span>
               <button
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition"
+                onClick={handlePrintPnLSheet}
+                className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow transition"
               >
-                <Printer className="w-3.5 h-3.5" />
+                <Printer className="w-4 h-4" />
                 <span>Print Statement Sheet (A4)</span>
               </button>
             </div>
 
             {/* A4 Printable White Sheet */}
-            <div className="overflow-x-auto flex justify-center pb-4">
+            <div className="overflow-x-auto flex justify-center pb-6">
               <div
                 id="printable-project-sheet"
                 style={{
                   width: '210mm',
-                  minHeight: '270mm',
+                  minHeight: '285mm',
                   boxSizing: 'border-box',
                   backgroundColor: '#ffffff',
-                  color: '#000000',
+                  color: '#0f172a',
                   padding: '16mm 18mm',
-                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif'
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
                 }}
                 className="shadow-2xl rounded-sm printable-area print:shadow-none print:w-full print:p-0 print:m-0"
               >
-                {/* 1. Brand Header */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '2px solid #0f172a', paddingBottom: '8px', marginBottom: '12px' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: '60%', verticalAlign: 'middle' }}>
-                        <h1 style={{ fontSize: '24px', fontWeight: 900, color: '#008fd5', margin: 0, lineHeight: 1 }}>
-                          Globo Tech
-                        </h1>
-                        <p style={{ fontSize: '11px', color: '#334155', fontWeight: 600, margin: '2px 0 0 0' }}>
-                          Enterprise IT, CCTV & Networking Solutions
-                        </p>
-                        <p style={{ fontSize: '9.5px', color: '#64748b', margin: '2px 0 0 0' }}>
-                          Rahman Chamber (2nd Floor), 12/13 Motijheel C/A, Dhaka-1000 &bull; Phone: +88 01622-152133
-                        </p>
-                      </td>
-                      <td style={{ width: '40%', textAlign: 'right', verticalAlign: 'middle' }}>
-                        <div style={{ display: 'inline-block', padding: '6px 12px', backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', textAlign: 'right' }}>
-                          <span style={{ fontSize: '12px', fontWeight: 900, color: '#0f172a', display: 'block', textTransform: 'uppercase' }}>
-                            PROJECT P&L STATEMENT
+                <div>
+                  {/* 1. Brand Corporate Header */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', borderBottom: '2.5px solid #0f172a', paddingBottom: '10px', marginBottom: '14px' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ width: '60%', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '8px', height: '26px', backgroundColor: '#008fd5', borderRadius: '2px' }}></div>
+                            <h1 style={{ fontSize: '26px', fontWeight: 900, color: '#008fd5', margin: 0, letterSpacing: '-0.5px', lineHeight: 1 }}>
+                              GLOBO TECH
+                            </h1>
+                          </div>
+                          <p style={{ fontSize: '11px', color: '#1e293b', fontWeight: 700, margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            Enterprise IT, CCTV & Networking Solutions
+                          </p>
+                          <p style={{ fontSize: '10px', color: '#475569', margin: '3px 0 0 0', lineHeight: '1.4' }}>
+                            Rahman Chamber (2nd Floor), 12/13 Motijheel C/A, Dhaka-1000<br />
+                            Phone: +880 1711-223344, +88 01622-152133 &bull; Email: info@globotechbd.com &bull; Web: globotechbd.com
+                          </p>
+                        </td>
+                        <td style={{ width: '40%', textAlign: 'right', verticalAlign: 'middle' }}>
+                          <div style={{ display: 'inline-block', padding: '8px 14px', backgroundColor: '#0f172a', borderRadius: '6px', textAlign: 'right', color: '#ffffff' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 900, color: '#38bdf8', display: 'block', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                              PROJECT P&L STATEMENT
+                            </span>
+                            <span style={{ fontSize: '10.5px', color: '#cbd5e1', fontFamily: 'monospace', fontWeight: 700, display: 'block', marginTop: '2px' }}>
+                              Ref: {selectedProject.projectCode}
+                            </span>
+                            <span style={{ fontSize: '9.5px', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
+                              Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* 2. Project Metadata Card */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1.5px solid #cbd5e1', borderRadius: '6px', marginBottom: '14px', fontSize: '11px' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ width: '50%', padding: '10px 14px', borderRight: '1.5px solid #cbd5e1', verticalAlign: 'top' }}>
+                          <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            PROJECT IDENTIFICATION & LOCATION:
+                          </div>
+                          <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a', marginTop: '3px' }}>
+                            {selectedProject.projectName}
+                          </div>
+                          <div style={{ color: '#475569', marginTop: '3px', fontSize: '11px', lineHeight: '1.4' }}>
+                            <strong>Site:</strong> {selectedProject.location}
+                          </div>
+                          <div style={{ color: '#475569', marginTop: '2px', fontSize: '10.5px' }}>
+                            <strong>Status:</strong> <span style={{ fontWeight: 700, color: selectedProject.status === 'COMPLETED' ? '#059669' : '#0284c7' }}>{selectedProject.status.replace(/_/g, ' ')}</span>
+                          </div>
+                        </td>
+                        <td style={{ width: '50%', padding: '10px 14px', verticalAlign: 'top' }}>
+                          <div style={{ fontSize: '9.5px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            CLIENT & COMMERCIAL CONTRACT DETAILS:
+                          </div>
+                          <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#0f172a', marginTop: '3px' }}>
+                            {selectedProject.customerName}
+                          </div>
+                          <div style={{ color: '#0f172a', marginTop: '3px', fontSize: '12px' }}>
+                            Contract Value: <strong style={{ fontFamily: 'monospace', fontSize: '14px', color: '#008fd5' }}>{formatBDT(selectedProject.contractValue)}</strong>
+                          </div>
+                          <div style={{ color: '#64748b', marginTop: '2px', fontSize: '10.5px' }}>
+                            Scope / Notes: {selectedProject.notes || 'Full Turnkey Supply & Implementation'}
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {/* 3. Materials Landed Cost Table */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>1. Warehouse Materials Consumed (Landed Import Cost)</span>
+                      <span style={{ fontSize: '10px', color: '#64748b', fontWeight: 600 }}>Deducted at actual unit import landed cost</span>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1.5px solid #0f172a', fontSize: '10.5px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px', textAlign: 'center', width: '32px' }}>Sl</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'left' }}>Product / Material Description</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px', textAlign: 'center', width: '65px' }}>Quantity</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'right', width: '110px' }}>Unit Landed Cost</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'right', width: '120px' }}>Total Cost (৳)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedProject.materialIssues.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} style={{ border: '1px solid #cbd5e1', padding: '8px 10px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                              No warehouse materials drawn for this project yet.
+                            </td>
+                          </tr>
+                        ) : (
+                          selectedProject.materialIssues.map((m, idx) => (
+                            <tr key={m.id} style={{ backgroundColor: idx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 6px', textAlign: 'center' }}>{idx + 1}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', fontWeight: 600, color: '#0f172a' }}>{m.productName}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold' }}>{m.quantity} pcs</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(m.unitLandedCost)}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(m.totalCost)}</td>
+                            </tr>
+                          ))
+                        )}
+                        <tr style={{ backgroundColor: '#f1f5f9', fontWeight: 'bold' }}>
+                          <td colSpan={4} style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', textTransform: 'uppercase', fontSize: '10px' }}>Subtotal Materials Landed Cost:</td>
+                          <td style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: '11px', color: '#7e22ce' }}>{formatBDT(selectedProject.materialLandedCost)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 4. Labor Breakdown Table */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '5px' }}>
+                      2. Technician & Engineering Labor Costs
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1.5px solid #0f172a', fontSize: '10.5px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px', textAlign: 'center', width: '32px' }}>Sl</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'left' }}>Technician / Field Engineer</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px', textAlign: 'center', width: '65px' }}>Work Days</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'right', width: '110px' }}>Daily Rate (৳)</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'right', width: '120px' }}>Total Labor (৳)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedProject.laborLogs.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} style={{ border: '1px solid #cbd5e1', padding: '8px 10px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                              No technician work days logged for this project (৳ 0.00).
+                            </td>
+                          </tr>
+                        ) : (
+                          selectedProject.laborLogs.map((l, idx) => (
+                            <tr key={l.id} style={{ backgroundColor: idx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 6px', textAlign: 'center' }}>{idx + 1}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', fontWeight: 600 }}>{l.technicianName}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold' }}>{l.workDays} days</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(l.dailyRate)}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(l.totalLabor)}</td>
+                            </tr>
+                          ))
+                        )}
+                        <tr style={{ backgroundColor: '#f1f5f9', fontWeight: 'bold' }}>
+                          <td colSpan={4} style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', textTransform: 'uppercase', fontSize: '10px' }}>Subtotal Labor Cost:</td>
+                          <td style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: '11px', color: '#1d4ed8' }}>{formatBDT(selectedProject.laborCost)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 5. Transport & Site Expenses Table */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '5px' }}>
+                      3. Transport, Site Tools & Direct Expenses
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1.5px solid #0f172a', fontSize: '10.5px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#0f172a', color: '#ffffff' }}>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px', textAlign: 'center', width: '32px' }}>Sl</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'left', width: '130px' }}>Category</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'left' }}>Description & Voucher Reference</th>
+                          <th style={{ border: '1px solid #1e293b', padding: '6px 10px', textAlign: 'right', width: '120px' }}>Amount (৳)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(selectedProject.expenses || []).length === 0 ? (
+                          <tr>
+                            <td colSpan={4} style={{ border: '1px solid #cbd5e1', padding: '8px 10px', textAlign: 'center', color: '#64748b', fontStyle: 'italic' }}>
+                              No direct site or transit expenses recorded (৳ 0.00).
+                            </td>
+                          </tr>
+                        ) : (
+                          (selectedProject.expenses || []).map((exp, idx) => (
+                            <tr key={exp.id} style={{ backgroundColor: idx % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 6px', textAlign: 'center' }}>{idx + 1}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', fontWeight: 600, color: '#b45309' }}>{exp.category}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px' }}>{exp.description}</td>
+                              <td style={{ border: '1px solid #cbd5e1', padding: '5px 10px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(exp.amount)}</td>
+                            </tr>
+                          ))
+                        )}
+                        <tr style={{ backgroundColor: '#f1f5f9', fontWeight: 'bold' }}>
+                          <td colSpan={3} style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', textTransform: 'uppercase', fontSize: '10px' }}>Subtotal Transport & Misc:</td>
+                          <td style={{ border: '1.5px solid #0f172a', padding: '6px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: '11px', color: '#b45309' }}>{formatBDT(selectedProject.transportCost + selectedProject.otherCost)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 6. Comprehensive Financial Summary Box */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #0f172a', marginBottom: '24px' }}>
+                    <tbody>
+                      <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
+                        <td style={{ padding: '7px 14px', fontSize: '12.5px', fontWeight: 800, color: '#0f172a' }}>Gross Contract Revenue:</td>
+                        <td style={{ padding: '7px 14px', textAlign: 'right', fontSize: '14px', fontWeight: 800, fontFamily: 'monospace' }}>{formatBDT(selectedProject.contractValue)}</td>
+                      </tr>
+                      <tr style={{ fontSize: '11px', color: '#475569' }}>
+                        <td style={{ padding: '5px 14px' }}>Less: Material Costs (At Landed Cost)</td>
+                        <td style={{ padding: '5px 14px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.materialLandedCost)}</td>
+                      </tr>
+                      <tr style={{ fontSize: '11px', color: '#475569' }}>
+                        <td style={{ padding: '5px 14px' }}>Less: Direct Technician Labor</td>
+                        <td style={{ padding: '5px 14px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.laborCost)}</td>
+                      </tr>
+                      <tr style={{ fontSize: '11px', color: '#475569', borderBottom: '1px solid #cbd5e1' }}>
+                        <td style={{ padding: '5px 14px' }}>Less: Transport, Site Tools & Misc Expenses</td>
+                        <td style={{ padding: '5px 14px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.transportCost + selectedProject.otherCost)}</td>
+                      </tr>
+                      <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #0f172a', fontSize: '12px', fontWeight: 700 }}>
+                        <td style={{ padding: '6px 14px', color: '#991b1b' }}>Total Direct Project Costs:</td>
+                        <td style={{ padding: '6px 14px', textAlign: 'right', fontFamily: 'monospace', color: '#b91c1c', fontWeight: 800 }}>{formatBDT(selectedProject.totalProjectCost)}</td>
+                      </tr>
+                      <tr style={{ backgroundColor: '#ecfdf5', fontSize: '14px', fontWeight: 900, borderTop: '2px solid #059669' }}>
+                        <td style={{ padding: '10px 14px', color: '#065f46' }}>
+                          NET PROJECT PROFIT (প্রজেক্ট লাভ):
+                          <span style={{ fontSize: '11.5px', fontWeight: 800, marginLeft: '10px', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#d1fae5', color: '#047857' }}>
+                            {selectedProject.profitMarginPercent.toFixed(1)}% Profit Margin
                           </span>
-                          <span style={{ fontSize: '10px', color: '#475569', fontFamily: 'monospace' }}>
-                            Ref: {selectedProject.projectCode}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* 2. Project Metadata */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '14px', fontSize: '11px' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: '50%', padding: '8px 12px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Project Name & Location:</div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>{selectedProject.projectName}</div>
-                        <div style={{ color: '#475569', marginTop: '2px' }}>{selectedProject.location}</div>
-                      </td>
-                      <td style={{ width: '50%', padding: '8px 12px', verticalAlign: 'top' }}>
-                        <div style={{ fontSize: '9px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Client & Contract Details:</div>
-                        <div style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>{selectedProject.customerName}</div>
-                        <div style={{ color: '#0f172a', marginTop: '2px' }}>
-                          Contract Value: <strong style={{ fontFamily: 'monospace', fontSize: '13px' }}>{formatBDT(selectedProject.contractValue)}</strong>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* 3. Materials Landed Cost Table */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    1. Warehouse Materials Consumed (Landed Import Cost)
-                  </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '10px' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f1f5f9' }}>
-                        <th style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', width: '30px' }}>Sl</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'left' }}>Product Name</th>
-                        <th style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', width: '60px' }}>Qty</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', width: '100px' }}>Unit Landed Cost</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', width: '110px' }}>Total Cost (৳)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedProject.materialIssues.map((m, idx) => (
-                        <tr key={m.id}>
-                          <td style={{ border: '1px solid #000', padding: '4px', textAlign: 'center' }}>{idx + 1}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', fontWeight: 600 }}>{m.productName}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>{m.quantity}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(m.unitLandedCost)}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(m.totalCost)}</td>
-                        </tr>
-                      ))}
-                      <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                        <td colSpan={4} style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right' }}>Subtotal Materials Cost:</td>
-                        <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(selectedProject.materialLandedCost)}</td>
+                        </td>
+                        <td style={{ padding: '10px 14px', textAlign: 'right', color: '#065f46', fontFamily: 'monospace', fontSize: '17px' }}>
+                          +{formatBDT(selectedProject.projectGrossProfit)}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
 
-                {/* 4. Labor Breakdown Table */}
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    2. Technician & Engineering Labor Costs
-                  </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '10px' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f1f5f9' }}>
-                        <th style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', width: '30px' }}>Sl</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'left' }}>Technician / Engineer</th>
-                        <th style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', width: '60px' }}>Work Days</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', width: '100px' }}>Daily Rate (৳)</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', width: '110px' }}>Total Labor (৳)</th>
-                      </tr>
-                    </thead>
+                {/* Bottom Block: Sign-off Lines & Footer (Always glued to bottom of A4) */}
+                <div>
+                  {/* 7. Sign-off 3-Party Columns */}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', marginBottom: '14px' }}>
                     <tbody>
-                      {selectedProject.laborLogs.map((l, idx) => (
-                        <tr key={l.id}>
-                          <td style={{ border: '1px solid #000', padding: '4px', textAlign: 'center' }}>{idx + 1}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', fontWeight: 600 }}>{l.technicianName}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', fontWeight: 'bold' }}>{l.workDays}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(l.dailyRate)}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(l.totalLabor)}</td>
-                        </tr>
-                      ))}
-                      <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                        <td colSpan={4} style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right' }}>Subtotal Labor Cost:</td>
-                        <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(selectedProject.laborCost)}</td>
+                      <tr>
+                        <td style={{ width: '33.33%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
+                          <div style={{ width: '140px', borderBottom: '1.5px solid #0f172a', margin: '0 auto 6px auto' }}></div>
+                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a' }}>Prepared By</div>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>Accounts & Audit Officer</div>
+                          <div style={{ fontSize: '9px', color: '#94a3b8' }}>Globo Tech</div>
+                        </td>
+                        <td style={{ width: '33.33%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
+                          <div style={{ width: '140px', borderBottom: '1.5px solid #0f172a', margin: '0 auto 6px auto' }}></div>
+                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a' }}>Verified By</div>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>Project Lead / Site Engineer</div>
+                          <div style={{ fontSize: '9px', color: '#94a3b8' }}>Globo Tech</div>
+                        </td>
+                        <td style={{ width: '33.33%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
+                          <div style={{ width: '140px', borderBottom: '1.5px solid #0f172a', margin: '0 auto 6px auto' }}></div>
+                          <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a' }}>Approved By</div>
+                          <div style={{ fontSize: '10px', color: '#64748b' }}>Managing Director / CEO</div>
+                          <div style={{ fontSize: '9px', color: '#94a3b8' }}>Globo Tech</div>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
-                </div>
 
-                {/* 5. Transport & Site Expenses Table */}
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', marginBottom: '4px' }}>
-                    3. Transport, Tools & Site Expenses
+                  {/* 8. Audit & Security Footer */}
+                  <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '6px', textAlign: 'center', fontSize: '9.5px', color: '#64748b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>Confidential &bull; For Internal Project Financial Audit & Management Review Only</span>
+                    <span>Globo Tech Enterprise ERP &bull; Page 1 of 1</span>
                   </div>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '10px' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f1f5f9' }}>
-                        <th style={{ border: '1px solid #000', padding: '4px', textAlign: 'center', width: '30px' }}>Sl</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'left', width: '110px' }}>Category</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'left' }}>Description</th>
-                        <th style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', width: '110px' }}>Amount (৳)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(selectedProject.expenses || []).map((exp, idx) => (
-                        <tr key={exp.id}>
-                          <td style={{ border: '1px solid #000', padding: '4px', textAlign: 'center' }}>{idx + 1}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', fontWeight: 600 }}>{exp.category}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px' }}>{exp.description}</td>
-                          <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 'bold' }}>{formatBDT(exp.amount)}</td>
-                        </tr>
-                      ))}
-                      <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                        <td colSpan={3} style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right' }}>Subtotal Transport & Misc:</td>
-                        <td style={{ border: '1px solid #000', padding: '4px 6px', textAlign: 'right', fontFamily: 'monospace' }}>{formatBDT(selectedProject.transportCost + selectedProject.otherCost)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
                 </div>
-
-                {/* 6. Comprehensive Financial Summary Box */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: '2px solid #0f172a', marginBottom: '24px' }}>
-                  <tbody>
-                    <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #cbd5e1' }}>
-                      <td style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 700 }}>Gross Contract Revenue:</td>
-                      <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: '13px', fontWeight: 800, fontFamily: 'monospace' }}>{formatBDT(selectedProject.contractValue)}</td>
-                    </tr>
-                    <tr style={{ fontSize: '11px', color: '#475569' }}>
-                      <td style={{ padding: '4px 12px' }}>Less: Material Costs (At Landed Cost)</td>
-                      <td style={{ padding: '4px 12px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.materialLandedCost)}</td>
-                    </tr>
-                    <tr style={{ fontSize: '11px', color: '#475569' }}>
-                      <td style={{ padding: '4px 12px' }}>Less: Direct Technician Labor</td>
-                      <td style={{ padding: '4px 12px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.laborCost)}</td>
-                    </tr>
-                    <tr style={{ fontSize: '11px', color: '#475569', borderBottom: '1px solid #cbd5e1' }}>
-                      <td style={{ padding: '4px 12px' }}>Less: Transport, Site Tools & Misc Expenses</td>
-                      <td style={{ padding: '4px 12px', textAlign: 'right', fontFamily: 'monospace' }}>- {formatBDT(selectedProject.transportCost + selectedProject.otherCost)}</td>
-                    </tr>
-                    <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '2px solid #0f172a', fontSize: '11.5px', fontWeight: 700 }}>
-                      <td style={{ padding: '5px 12px' }}>Total Direct Project Costs:</td>
-                      <td style={{ padding: '5px 12px', textAlign: 'right', fontFamily: 'monospace', color: '#b91c1c' }}>{formatBDT(selectedProject.totalProjectCost)}</td>
-                    </tr>
-                    <tr style={{ backgroundColor: '#ecfdf5', fontSize: '14px', fontWeight: 900 }}>
-                      <td style={{ padding: '8px 12px', color: '#065f46' }}>
-                        NET PROJECT PROFIT (প্রজেক্ট লাভ):
-                        <span style={{ fontSize: '11px', fontWeight: 700, marginLeft: '8px', color: '#047857' }}>
-                          ({selectedProject.profitMarginPercent.toFixed(1)}% Profit Margin)
-                        </span>
-                      </td>
-                      <td style={{ padding: '8px 12px', textAlign: 'right', color: '#065f46', fontFamily: 'monospace', fontSize: '16px' }}>
-                        +{formatBDT(selectedProject.projectGrossProfit)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                {/* 7. Sign-off Lines */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '30px' }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom' }}>
-                        <div style={{ width: '180px', borderBottom: '1.5px solid #000', margin: '0 auto 4px auto' }}></div>
-                        <div style={{ fontSize: '11px', fontWeight: 700 }}>Project Engineer / Lead</div>
-                        <div style={{ fontSize: '9.5px', color: '#64748b' }}>Globo Tech</div>
-                      </td>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom' }}>
-                        <div style={{ width: '180px', borderBottom: '1.5px solid #000', margin: '0 auto 4px auto' }}></div>
-                        <div style={{ fontSize: '11px', fontWeight: 700 }}>Managing Director / Finance Approval</div>
-                        <div style={{ fontSize: '9.5px', color: '#64748b' }}>Globo Tech</div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
