@@ -2040,8 +2040,10 @@ export function QuotationView() {
                           <span className="font-mono text-slate-200">{formatBDT(totals.otherSubtotal)}</span>
                         </div>
                         <div className="flex justify-between text-slate-400">
-                          <span>Calculated VAT (Mushak 6.3):</span>
-                          <span className="font-mono">{formatBDT(totals.totalVat)}</span>
+                          <span>{totals.totalVat > 0 ? 'Calculated VAT (Mushak 6.3):' : 'VAT & TAX (Mushak 6.3):'}</span>
+                          <span className="font-mono">
+                            {totals.totalVat > 0 ? formatBDT(totals.totalVat) : <span className="text-emerald-400 font-semibold">Included</span>}
+                          </span>
                         </div>
                         {totals.totalTax > 0 && (
                           <div className="flex justify-between text-amber-400">
@@ -2450,6 +2452,7 @@ export function QuotationView() {
               <div className="w-72 space-y-1.5 text-xs text-slate-300">
                 {(() => {
                   const totals = calculateQuotationTotals(selectedQuotation);
+                  const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
                   return (
                     <>
                       <div className="flex justify-between">
@@ -2457,8 +2460,10 @@ export function QuotationView() {
                         <span className="font-mono text-slate-200">{formatBDT(totals.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-slate-400">
-                        <span>Total VAT (Mushak 6.3):</span>
-                        <span className="font-mono">{formatBDT(totals.totalVat)}</span>
+                        <span>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</span>
+                        <span className="font-mono">
+                          {hasVatOrTax ? formatBDT(totals.totalVat) : <span className="text-emerald-400 font-semibold">Included</span>}
+                        </span>
                       </div>
                       {totals.totalTax > 0 && (
                         <div className="flex justify-between text-amber-400">
@@ -2680,6 +2685,7 @@ export function QuotationView() {
                 <div className="w-72 space-y-1.5 text-xs text-slate-700">
                   {(() => {
                     const totals = calculateQuotationTotals(selectedQuotation);
+                    const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
                     return (
                       <>
                         <div className="flex justify-between">
@@ -2687,12 +2693,14 @@ export function QuotationView() {
                           <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.grandTotal)}</span>
                         </div>
                         <div className="flex justify-between text-[11px] text-slate-600">
-                          <span>Base Supply Value (Excl. VAT & TAX):</span>
+                          <span>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</span>
                           <span className="font-mono font-medium">{formatBDT(totals.subtotal)}</span>
                         </div>
                         <div className="flex justify-between text-[11px] text-slate-600">
-                          <span>Total VAT (Mushak 6.3):</span>
-                          <span className="font-mono font-medium">{formatBDT(totals.totalVat)}</span>
+                          <span>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</span>
+                          <span className="font-mono font-medium">
+                            {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
+                          </span>
                         </div>
                         {totals.totalTax > 0 && (
                           <div className="flex justify-between text-[11px] text-slate-600">
