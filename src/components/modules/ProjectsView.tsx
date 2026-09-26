@@ -22,11 +22,23 @@ import {
   Filter,
   ArrowRight,
   ShieldCheck,
-  Truck
+  Truck,
+  ChevronDown,
+  Users
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatDate } from '@/lib/formatters';
+import { INITIAL_CUSTOMERS, Customer } from './CustomersView';
+
+export interface ClientOption {
+  id: string;
+  name: string;
+  company?: string;
+  location?: string;
+  phone?: string;
+  source: 'database' | 'past_project';
+}
 
 export interface ProjectExpense {
   id: string;
@@ -308,6 +320,95 @@ export function ProjectsView() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isPnLSheetModalOpen, setIsPnLSheetModalOpen] = useState(false);
 
+  // Saved custom clients directory
+  const [customClients, setCustomClients] = useState<ClientOption[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_client_directory');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error loading client directory:', e);
+        }
+      }
+    }
+    return [
+      { id: 'dir-np', name: 'National Parliament', location: 'Dhaka, Bangladesh', source: 'database' },
+      { id: 'dir-ab', name: 'ABC Bank PLC', company: 'ABC Bank PLC', location: 'ABC Tower, Motijheel C/A, Dhaka-1000', source: 'database' },
+      { id: 'dir-dz', name: 'Daraz Bangladesh Limited', company: 'Daraz Bangladesh Limited', location: 'Tejgaon I/A, Dhaka-1208', source: 'database' },
+      { id: 'dir-sq', name: 'Square Pharmaceuticals Ltd', company: 'Square Pharmaceuticals Ltd', location: 'Kaliakoir, Gazipur Plant', source: 'database' },
+      { id: 'dir-tv', name: 'TechVision Security Systems', company: 'TechVision Security Systems', location: 'Multiplan Center, Level 6, Elephant Road, Dhaka', source: 'database' }
+    ];
+  });
+
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
+  const customerDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close customer dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target as Node)) {
+        setIsCustomerDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Aggregated client options from CustomersView, projects, and custom directory
+  const allClientOptions = useMemo(() => {
+    const map = new Map<string, ClientOption>();
+
+    // 1. Add from customClients
+    customClients.forEach((c) => {
+      if (c.name && c.name.trim()) {
+        map.set(c.name.trim().toLowerCase(), c);
+      }
+    });
+
+    // 2. Add from CustomersView (localStorage or INITIAL_CUSTOMERS)
+    let customersList: Customer[] = INITIAL_CUSTOMERS;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_customers');
+      if (saved) {
+        try {
+          customersList = JSON.parse(saved);
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+    customersList.forEach((cust) => {
+      const displayName = cust.company?.trim() || cust.name.trim();
+      const key = displayName.toLowerCase();
+      if (!map.has(key)) {
+        map.set(key, {
+          id: cust.id,
+          name: displayName,
+          company: cust.company,
+          location: cust.address,
+          phone: cust.phone,
+          source: 'database'
+        });
+      }
+    });
+
+    // 3. Add from existing projects
+    projects.forEach((prj) => {
+      const key = prj.customerName.trim().toLowerCase();
+      if (key && !map.has(key)) {
+        map.set(key, {
+          id: `prj-${prj.id}`,
+          name: prj.customerName.trim(),
+          location: prj.location,
+          source: 'past_project'
+        });
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [customClients, projects]);
+
   // New Project Form
   const [newProject, setNewProject] = useState({
     projectName: '',
@@ -317,6 +418,28 @@ export function ProjectsView() {
     status: 'INSTALLATION_IN_PROGRESS' as ProjectRecord['status'],
     notes: ''
   });
+
+  // Filtered clients based on user typing
+  const filteredClients = useMemo(() => {
+    const query = newProject.customerName.trim().toLowerCase();
+    if (!query) return allClientOptions;
+    return allClientOptions.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        (c.location && c.location.toLowerCase().includes(query)) ||
+        (c.company && c.company.toLowerCase().includes(query)) ||
+        (c.phone && c.phone.includes(query))
+    );
+  }, [allClientOptions, newProject.customerName]);
+
+  const handleSelectClient = (client: ClientOption) => {
+    setNewProject((prev) => ({
+      ...prev,
+      customerName: client.name,
+      location: (!prev.location || prev.location.trim() === '') && client.location ? client.location : prev.location
+    }));
+    setIsCustomerDropdownOpen(false);
+  };
 
   // Material Issue Form
   const [issueQty, setIssueQty] = useState(2);
@@ -415,6 +538,69 @@ export function ProjectsView() {
     setProjects(updated);
     setSelectedProjectId(createdPrj.id);
     setIsNewProjectModalOpen(false);
+    setIsCustomerDropdownOpen(false);
+
+    // Auto-save client to directory if new
+    const trimmedCustomer = newProject.customerName.trim();
+    const clientExists = allClientOptions.some((c) => c.name.toLowerCase() === trimmedCustomer.toLowerCase());
+    if (!clientExists) {
+      const newEntry: ClientOption = {
+        id: `client-${Date.now()}`,
+        name: trimmedCustomer,
+        location: newProject.location.trim() || undefined,
+        source: 'past_project'
+      };
+      const updatedClients = [newEntry, ...customClients];
+      setCustomClients(updatedClients);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('globotech_erp_client_directory', JSON.stringify(updatedClients));
+      }
+    }
+
+    // Auto-sync customer to CustomersView ledger in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const savedCustStr = localStorage.getItem('globotech_erp_customers');
+        let existingCusts: Customer[] = savedCustStr ? JSON.parse(savedCustStr) : INITIAL_CUSTOMERS;
+        const existsInCusts = existingCusts.some(
+          (c) =>
+            (c.company && c.company.toLowerCase() === trimmedCustomer.toLowerCase()) ||
+            c.name.toLowerCase() === trimmedCustomer.toLowerCase()
+        );
+        if (!existsInCusts) {
+          const newCustRecord: Customer = {
+            id: `cust-${Date.now()}`,
+            name: trimmedCustomer,
+            company: trimmedCustomer,
+            type: 'CORPORATE',
+            phone: 'N/A',
+            address: newProject.location.trim() || 'Dhaka, Bangladesh',
+            creditLimit: 500000,
+            totalInvoiced: contractVal,
+            totalPaid: 0,
+            currentDues: contractVal,
+            paymentTerms: 'Net 30 Days',
+            transactions: [
+              {
+                id: `tx-${Date.now()}`,
+                date: new Date().toISOString().split('T')[0],
+                type: 'INVOICE',
+                refNo: projectCode,
+                description: `Project Contract: ${newProject.projectName.trim()}`,
+                invoicedAmount: contractVal,
+                paidAmount: 0,
+                balance: contractVal
+              }
+            ]
+          };
+          existingCusts = [newCustRecord, ...existingCusts];
+          localStorage.setItem('globotech_erp_customers', JSON.stringify(existingCusts));
+        }
+      } catch (e) {
+        console.error('Error syncing customer with directory:', e);
+      }
+    }
+
     setNewProject({
       projectName: '',
       customerName: '',
@@ -1129,16 +1315,112 @@ export function ProjectsView() {
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Customer / Client Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Daraz Bangladesh Limited"
-                  value={newProject.customerName}
-                  onChange={(e) => setNewProject({ ...newProject, customerName: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
-                />
+              <div className="relative" ref={customerDropdownRef}>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-slate-300 font-semibold">
+                    Customer / Client Name *
+                  </label>
+                  <span className="text-[10px] text-blue-400 font-medium flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    Auto-suggest
+                  </span>
+                </div>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    list="customer-suggestions-list"
+                    autoComplete="off"
+                    placeholder="Type 1-2 letters to search or select client..."
+                    value={newProject.customerName}
+                    onFocus={() => setIsCustomerDropdownOpen(true)}
+                    onChange={(e) => {
+                      setNewProject({ ...newProject, customerName: e.target.value });
+                      setIsCustomerDropdownOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') setIsCustomerDropdownOpen(false);
+                    }}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 pr-8 text-slate-100 focus:border-blue-500 focus:outline-none placeholder-slate-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomerDropdownOpen((prev) => !prev)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 p-1.5 transition"
+                    title="Browse Existing Clients"
+                  >
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isCustomerDropdownOpen ? 'rotate-180 text-blue-400' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Native browser datalist fallback */}
+                <datalist id="customer-suggestions-list">
+                  {allClientOptions.map((c) => (
+                    <option key={c.id} value={c.name}>
+                      {c.location ? `${c.name} (${c.location})` : c.name}
+                    </option>
+                  ))}
+                </datalist>
+
+                {/* Rich Autocomplete Dropdown */}
+                {isCustomerDropdownOpen && (
+                  <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl shadow-black max-h-56 overflow-y-auto divide-y divide-slate-800">
+                    <div className="p-2 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-semibold sticky top-0 z-10 backdrop-blur-sm">
+                      <span className="flex items-center gap-1.5 text-blue-400">
+                        <Users className="w-3.5 h-3.5" />
+                        Existing Clients ({filteredClients.length})
+                      </span>
+                      <span className="text-[10px] text-slate-500">
+                        Click to select & autofill
+                      </span>
+                    </div>
+
+                    {filteredClients.length > 0 ? (
+                      filteredClients.map((client) => {
+                        const isMatch = newProject.customerName && client.name.toLowerCase().includes(newProject.customerName.toLowerCase().trim());
+                        return (
+                          <div
+                            key={client.id}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSelectClient(client);
+                            }}
+                            className={`p-2.5 cursor-pointer transition flex items-start justify-between gap-2 hover:bg-blue-600/20 group ${
+                              isMatch && newProject.customerName ? 'bg-blue-950/40' : ''
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="font-semibold text-slate-200 group-hover:text-blue-300 text-xs flex items-center gap-1.5">
+                                <Building className="w-3 h-3 text-slate-400 flex-shrink-0 group-hover:text-blue-400" />
+                                <span className="truncate">{client.name}</span>
+                              </div>
+                              {client.location && (
+                                <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                                  <MapPin className="w-2.5 h-2.5 text-slate-500 flex-shrink-0" />
+                                  <span className="truncate">{client.location}</span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 group-hover:bg-blue-500/20 group-hover:text-blue-300 flex-shrink-0">
+                              {client.source === 'database' ? 'Client' : 'Past Project'}
+                            </span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-3 text-center">
+                        <p className="text-xs text-slate-300">
+                          New client: <span className="text-blue-400 font-bold">"{newProject.customerName}"</span>
+                        </p>
+                        <p className="text-[10px] text-emerald-400 mt-1 flex items-center justify-center gap-1 font-medium">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Will be saved to directory upon project creation
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
