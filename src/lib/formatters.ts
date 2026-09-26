@@ -98,3 +98,75 @@ export const formatUSD = (amount: number | string | null | undefined) => Formatt
 export const formatCompactBDT = (amount: number | string | null | undefined) => Formatters.compactCurrency(amount, 'BDT');
 export const formatDate = (dateVal: Date | string | null | undefined) => Formatters.date(dateVal);
 export const formatDateTime = (dateVal: Date | string | null | undefined) => Formatters.dateTime(dateVal);
+
+// Convert number to words in Bangladeshi/Indian counting standard (Crore, Lakh, Thousand)
+export function numberToWordsBDT(amount: number | string | null | undefined, currency: string = 'BDT'): string {
+  const num = Math.round((Number(amount) || 0) * 100) / 100;
+  if (num === 0) return `${currency} Zero Only`;
+
+  const ones = [
+    '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+    'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+    'Seventeen', 'Eighteen', 'Nineteen'
+  ];
+
+  const tens = [
+    '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+  ];
+
+  const convertLessThanOneThousand = (n: number): string => {
+    let str = '';
+    if (n >= 100) {
+      str += ones[Math.floor(n / 100)] + ' Hundred ';
+      n %= 100;
+    }
+    if (n >= 20) {
+      str += tens[Math.floor(n / 10)] + ' ';
+      n %= 10;
+    }
+    if (n > 0) {
+      str += ones[n] + ' ';
+    }
+    return str.trim();
+  };
+
+  const integerPart = Math.floor(Math.abs(num));
+  const decimalPart = Math.round((Math.abs(num) - integerPart) * 100);
+
+  let crore = Math.floor(integerPart / 10000000);
+  let remainder = integerPart % 10000000;
+
+  let lakh = Math.floor(remainder / 100000);
+  remainder %= 100000;
+
+  let thousand = Math.floor(remainder / 1000);
+  remainder %= 1000;
+
+  let result = '';
+
+  if (crore > 0) {
+    result += convertLessThanOneThousand(crore) + ' Crore ';
+  }
+  if (lakh > 0) {
+    result += convertLessThanOneThousand(lakh) + ' Lakh ';
+  }
+  if (thousand > 0) {
+    result += convertLessThanOneThousand(thousand) + ' Thousand ';
+  }
+  if (remainder > 0) {
+    result += convertLessThanOneThousand(remainder) + ' ';
+  }
+
+  result = result.trim();
+  if (!result) result = 'Zero';
+
+  let finalStr = `${currency} ${result}`;
+  if (decimalPart > 0) {
+    const paisaStr = convertLessThanOneThousand(decimalPart);
+    const subUnit = currency === 'USD' ? 'Cents' : 'Paisa';
+    finalStr += ` and ${paisaStr} ${subUnit}`;
+  }
+  finalStr += ' Only';
+
+  return finalStr;
+}

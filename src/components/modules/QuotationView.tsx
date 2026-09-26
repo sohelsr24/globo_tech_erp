@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { formatBDT, formatCompactBDT, formatDate } from '@/lib/formatters';
+import { formatBDT, formatCompactBDT, formatDate, numberToWordsBDT } from '@/lib/formatters';
 import { GLOBO_TECH_LOGO_DATA_URL, COMPANY_DETAILS, GLOBO_TECH_SEAL_DATA_URL, GLOBO_TECH_SIGNATURE_DATA_URL } from '@/lib/brandAssets';
 import { Customer, INITIAL_CUSTOMERS } from './CustomersView';
 
@@ -2806,14 +2806,27 @@ export function QuotationView() {
                 </table>
               </div>
 
-              {/* Totals Breakdown */}
-              <div className="flex justify-end pt-2">
-                <div className="w-72 space-y-1.5 text-xs text-slate-700">
-                  {(() => {
-                    const totals = calculateQuotationTotals(selectedQuotation);
-                    const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
-                    return (
-                      <>
+              {/* Totals Breakdown with Amount In Words on the Left (Red marked part) */}
+              <div className="pt-2">
+                {(() => {
+                  const totals = calculateQuotationTotals(selectedQuotation);
+                  const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
+                  return (
+                    <div className="flex flex-col sm:flex-row justify-between items-end gap-3 sm:gap-6">
+                      {/* Left Side: Grand Total in Words (Positioned in red marked part) */}
+                      <div className="w-full sm:flex-1 max-w-[420px] self-end pb-0.5">
+                        <div className="p-2 sm:p-2.5 rounded-lg border border-slate-300 bg-slate-50/80 text-[11px] text-slate-800 leading-snug shadow-xs">
+                          <span className="font-bold text-slate-900 block text-[10px] uppercase tracking-wider mb-0.5">
+                            Amount in Words:
+                          </span>
+                          <span className="font-semibold text-slate-900 italic font-serif">
+                            {numberToWordsBDT(totals.grandTotal, selectedQuotation.currency || 'BDT')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right Side: Totals Numerical Breakdown */}
+                      <div className="w-full sm:w-72 space-y-1.5 text-xs text-slate-700 flex-shrink-0">
                         <div className="flex justify-between">
                           <span>Items Subtotal (Incl. VAT & TAX):</span>
                           <span className="font-mono text-slate-900 font-bold">{formatBDT(totals.grandTotal)}</span>
@@ -2838,10 +2851,10 @@ export function QuotationView() {
                           <span>Grand Total (BDT):</span>
                           <span className="font-mono text-black font-black">{formatBDT(totals.grandTotal)}</span>
                         </div>
-                      </>
-                    );
-                  })()}
-                </div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Commercial Terms & Conditions (Clean & Transparent - Watermark Fully Visible) */}
