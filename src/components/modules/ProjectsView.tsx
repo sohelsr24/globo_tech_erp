@@ -324,7 +324,15 @@ export function ProjectsView() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isPnLSheetModalOpen, setIsPnLSheetModalOpen] = useState(false);
   const [isEditMaterialCostModalOpen, setIsEditMaterialCostModalOpen] = useState(false);
-  const [directMaterialCost, setDirectMaterialCost] = useState<number | ''>('');
+  const [editMaterialItems, setEditMaterialItems] = useState<
+    Array<{
+      id: string;
+      productName: string;
+      quantity: number | '';
+      unitLandedCost: number | '';
+      totalCost: number | '';
+    }>
+  >([]);
 
   // Edit states for individual records
   const [editProjectData, setEditProjectData] = useState<{
@@ -802,72 +810,143 @@ export function ProjectsView() {
     }
   };
 
-  // --- DIRECT EDIT TOTAL MATERIALS COST HANDLER ---
-  const openEditMaterialCostModal = (currentCost: number) => {
-    setDirectMaterialCost(currentCost === 0 ? '' : currentCost);
+  // --- DIRECT EDIT TOTAL MATERIALS COST HANDLER (UNIT, UNIT COST, TOTAL) ---
+  const openEditMaterialCostModal = () => {
+    if (!selectedProject) return;
+    if (selectedProject.materialIssues && selectedProject.materialIssues.length > 0) {
+      setEditMaterialItems(
+        selectedProject.materialIssues.map((m) => {
+          const qty = m.quantity === 0 ? '' : m.quantity;
+          const unit = m.unitLandedCost === 0 ? '' : m.unitLandedCost;
+          const tot = m.totalCost === 0 ? '' : m.totalCost;
+          return {
+            id: m.id,
+            productName: m.productName,
+            quantity: qty,
+            unitLandedCost: unit,
+            totalCost: tot !== '' ? tot : (qty !== '' && unit !== '' ? Number((Number(qty) * Number(unit)).toFixed(2)) : '')
+          };
+        })
+      );
+    } else {
+      const initCost = selectedProject.materialLandedCost > 0 ? selectedProject.materialLandedCost : '';
+      setEditMaterialItems([
+        {
+          id: `iss-${Date.now()}`,
+          productName: selectedProject.projectName || 'General Materials',
+          quantity: 1,
+          unitLandedCost: initCost,
+          totalCost: initCost
+        }
+      ]);
+    }
     setIsEditMaterialCostModalOpen(true);
+  };
+
+  const handleMaterialItemChange = (
+    index: number,
+    field: 'productName' | 'quantity' | 'unitLandedCost' | 'totalCost',
+    value: string
+  ) => {
+    setEditMaterialItems((prev) => {
+      const next = [...prev];
+      const item = { ...next[index] };
+
+      if (field === 'productName') {
+        item.productName = value;
+      } else if (field === 'quantity') {
+        const q = value === '' ? '' : Number(value);
+        item.quantity = q;
+        const u = item.unitLandedCost === '' ? '' : Number(item.unitLandedCost);
+        if (q !== '' && u !== '') {
+          item.totalCost = Number((Number(q) * Number(u)).toFixed(2));
+        } else if (q === '') {
+          item.totalCost = '';
+        }
+      } else if (field === 'unitLandedCost') {
+        const u = value === '' ? '' : Number(value);
+        item.unitLandedCost = u;
+        const q = item.quantity === '' ? 1 : Number(item.quantity);
+        if (u !== '') {
+          item.totalCost = Number((Number(q) * Number(u)).toFixed(2));
+        } else {
+          item.totalCost = '';
+        }
+      } else if (field === 'totalCost') {
+        const t = value === '' ? '' : Number(value);
+        item.totalCost = t;
+        const q = item.quantity === '' || Number(item.quantity) <= 0 ? 1 : Number(item.quantity);
+        if (t !== '') {
+          item.unitLandedCost = Number((Number(t) / q).toFixed(2));
+        } else {
+          item.unitLandedCost = '';
+        }
+      }
+
+      next[index] = item;
+      return next;
+    });
+  };
+
+  const handleAddMaterialItem = () => {
+    setEditMaterialItems((prev) => [
+      ...prev,
+      {
+        id: `iss-${Date.now()}-${Math.random()}`,
+        productName: '',
+        quantity: 1,
+        unitLandedCost: '',
+        totalCost: ''
+      }
+    ]);
+  };
+
+  const handleRemoveMaterialItem = (index: number) => {
+    setEditMaterialItems((prev) => {
+      if (prev.length <= 1) {
+        return [
+          {
+            id: `iss-${Date.now()}`,
+            productName: '',
+            quantity: '',
+            unitLandedCost: '',
+            totalCost: ''
+          }
+        ];
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSaveDirectMaterialCost = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProject) return;
-    const newCost = Number(directMaterialCost) || 0;
 
-    let updatedMaterials = [...selectedProject.materialIssues];
-    if (updatedMaterials.length === 0) {
-      if (newCost > 0) {
-        updatedMaterials = [
-          {
-            id: `iss-${Date.now()}`,
-            productName: 'General Materials / Supplies',
-            quantity: 1,
-            unitLandedCost: newCost,
-            totalCost: newCost
-          }
-        ];
-      }
-    } else if (updatedMaterials.length === 1) {
-      const single = updatedMaterials[0];
-      const qty = single.quantity || 1;
-      updatedMaterials = [
-        {
-          ...single,
-          unitLandedCost: Number((newCost / qty).toFixed(2)),
-          totalCost: newCost
-        }
-      ];
-    } else {
-      const currentSum = updatedMaterials.reduce((sum, item) => sum + item.totalCost, 0);
-      if (currentSum > 0) {
-        const ratio = newCost / currentSum;
-        updatedMaterials = updatedMaterials.map((item) => {
-          const itemNewTotal = Number((item.totalCost * ratio).toFixed(2));
-          const itemQty = item.quantity || 1;
-          return {
-            ...item,
-            unitLandedCost: Number((itemNewTotal / itemQty).toFixed(2)),
-            totalCost: itemNewTotal
-          };
-        });
-      } else {
-        const itemQty = updatedMaterials[0].quantity || 1;
-        updatedMaterials[0] = {
-          ...updatedMaterials[0],
-          totalCost: newCost,
-          unitLandedCost: Number((newCost / itemQty).toFixed(2))
+    const validItems = editMaterialItems
+      .filter((it) => it.productName.trim() || Number(it.totalCost) > 0 || Number(it.quantity) > 0)
+      .map((it, idx) => {
+        const qty = it.quantity !== '' && Number(it.quantity) > 0 ? Number(it.quantity) : 1;
+        const total = it.totalCost !== '' ? Number(it.totalCost) : (it.unitLandedCost !== '' ? Number((qty * Number(it.unitLandedCost)).toFixed(2)) : 0);
+        const unit = it.unitLandedCost !== '' ? Number(it.unitLandedCost) : (qty > 0 ? Number((total / qty).toFixed(2)) : total);
+        return {
+          id: it.id || `iss-${Date.now()}-${idx}`,
+          productName: it.productName.trim() || `Material Item #${idx + 1}`,
+          quantity: qty,
+          unitLandedCost: unit,
+          totalCost: total
         };
-      }
-    }
+      });
 
+    const newMaterialCost = validItems.reduce((acc, it) => acc + it.totalCost, 0);
     const newTotalCost =
-      newCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+      newMaterialCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
     const newProfit = selectedProject.contractValue - newTotalCost;
     const newMargin = selectedProject.contractValue > 0 ? (newProfit / selectedProject.contractValue) * 100 : 0;
 
     const updatedPrj: ProjectRecord = {
       ...selectedProject,
-      materialIssues: updatedMaterials,
-      materialLandedCost: newCost,
+      materialIssues: validItems,
+      materialLandedCost: newMaterialCost,
       totalProjectCost: newTotalCost,
       projectGrossProfit: newProfit,
       profitMarginPercent: newMargin
@@ -1533,7 +1612,7 @@ export function ProjectsView() {
                 </div>
 
                 <div
-                  onClick={() => openEditMaterialCostModal(selectedProject.materialLandedCost)}
+                  onClick={() => openEditMaterialCostModal()}
                   className="p-2 rounded-xl bg-purple-950/20 hover:bg-purple-950/40 border border-purple-500/40 hover:border-purple-400 cursor-pointer transition group shadow-sm ring-1 ring-purple-500/20 hover:ring-purple-500/40"
                   title="Click to edit Materials Landed Cost"
                 >
@@ -1590,7 +1669,7 @@ export function ProjectsView() {
                       Total: {formatBDT(selectedProject.materialLandedCost)}
                     </span>
                     <button
-                      onClick={() => openEditMaterialCostModal(selectedProject.materialLandedCost)}
+                      onClick={() => openEditMaterialCostModal()}
                       className="px-2 py-0.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 text-[10px] font-semibold flex items-center gap-1 transition"
                       title="Directly edit Total Materials Cost"
                     >
@@ -3005,7 +3084,7 @@ export function ProjectsView() {
       )}
 
       {/* ========================================================
-          MODAL: DIRECT EDIT TOTAL MATERIALS LANDED COST
+          MODAL: EDIT MATERIALS LANDED COST (UNIT, UNIT COST, TOTAL)
           ======================================================== */}
       {isEditMaterialCostModalOpen && selectedProject && (
         <Modal
@@ -3014,6 +3093,7 @@ export function ProjectsView() {
           title={`Edit Materials Landed Cost: ${selectedProject.projectName}`}
         >
           <form onSubmit={handleSaveDirectMaterialCost} className="space-y-4 text-xs">
+            {/* Project Summary Banner */}
             <div className="p-3 bg-purple-950/30 border border-purple-800/40 rounded-xl space-y-1">
               <div className="flex items-center justify-between text-slate-400">
                 <span>Project Code:</span>
@@ -3029,45 +3109,137 @@ export function ProjectsView() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-purple-300 font-bold mb-1.5 text-sm">
-                Total Materials Landed Cost (৳) *
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                required
-                placeholder="0"
-                value={directMaterialCost === 0 ? '' : directMaterialCost}
-                onFocus={(e) => e.target.select()}
-                onClick={(e) => (e.target as HTMLInputElement).select()}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setDirectMaterialCost(val === '' ? '' : Number(val));
-                }}
-                className="w-full bg-slate-950 border-2 border-purple-500/60 rounded-xl p-3 text-xl font-mono font-black text-purple-300 focus:border-purple-400 focus:outline-none shadow-inner"
-                autoFocus
-              />
-              <span className="text-[11px] text-slate-400 mt-1.5 block">
-                এখানে সরাসরি মোট মেটেরিয়াল খরচ (Landed Cost) লিখে সেভ করুন। প্রজেক্টের লাভ ও মার্জিন স্বয়ংক্রিয়ভাবে আপডেট হবে।
-              </span>
+            {/* Instruction Banner */}
+            <div className="p-2.5 bg-blue-950/30 border border-blue-800/40 rounded-lg text-blue-300 text-[11px] flex items-center gap-2">
+              <span className="font-bold">💡 নির্দেশিকা:</span>
+              <span>Unit (পরিমাণ) এবং Unit Cost (একক দর) দিলে Total Cost অটো হিসাব হবে। অথবা আপনি সরাসরি Total Cost ও লিখতে পারেন।</span>
             </div>
 
-            {/* Projected Financial Impact */}
+            {/* Material Items List */}
+            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+              {editMaterialItems.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3 bg-slate-950/90 border border-purple-500/30 rounded-xl space-y-2.5 relative group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-purple-300 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-purple-600/40 text-purple-200 flex items-center justify-center text-[10px] font-bold">
+                        {idx + 1}
+                      </span>
+                      Material Item #{idx + 1}
+                    </span>
+                    {editMaterialItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMaterialItem(idx)}
+                        className="text-rose-400 hover:text-rose-300 p-1 rounded hover:bg-rose-950/40 transition"
+                        title="Remove Item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 font-medium mb-1">
+                      Material / Product Name *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Leather gift box-1"
+                      value={item.productName}
+                      onChange={(e) => handleMaterialItemChange(idx, 'productName', e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-semibold focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Unit / Quantity (পরিমাণ) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="1"
+                        value={item.quantity === 0 ? '' : item.quantity}
+                        onFocus={(e) => e.target.select()}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        onChange={(e) => handleMaterialItemChange(idx, 'quantity', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-300 font-semibold mb-1">
+                        Unit Cost (একক দর ৳) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={item.unitLandedCost === 0 ? '' : item.unitLandedCost}
+                        onFocus={(e) => e.target.select()}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        onChange={(e) => handleMaterialItemChange(idx, 'unitLandedCost', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-purple-300 font-bold mb-1">
+                        Total Cost (মোট খরচ ৳) *
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        value={item.totalCost === 0 ? '' : item.totalCost}
+                        onFocus={(e) => e.target.select()}
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        onChange={(e) => handleMaterialItemChange(idx, 'totalCost', e.target.value)}
+                        className="w-full bg-slate-900 border-2 border-purple-500/60 rounded-lg p-2 text-purple-300 font-mono font-bold focus:border-purple-400 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Add More Items Button */}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={handleAddMaterialItem}
+                className="px-3 py-1.5 rounded-lg bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-500/40 text-xs font-semibold flex items-center gap-1.5 transition"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Another Material</span>
+              </button>
+            </div>
+
+            {/* Total Summary and Financial Impact Preview */}
             {(() => {
-              const testCost = Number(directMaterialCost) || 0;
-              const testTotalCost = testCost + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
+              const currentTotalMaterials = editMaterialItems.reduce((sum, it) => sum + (Number(it.totalCost) || 0), 0);
+              const testTotalCost = currentTotalMaterials + selectedProject.laborCost + selectedProject.transportCost + selectedProject.otherCost;
               const testProfit = selectedProject.contractValue - testTotalCost;
               const testMargin = selectedProject.contractValue > 0 ? (testProfit / selectedProject.contractValue) * 100 : 0;
+
               return (
-                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5 font-mono">
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-sans font-bold">New Profit Calculation Preview:</div>
-                  <div className="flex justify-between text-slate-300">
-                    <span>New Total Cost:</span>
+                <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2 font-mono">
+                  <div className="flex justify-between items-center pb-2 border-b border-slate-800 text-xs">
+                    <span className="font-bold text-slate-300 uppercase tracking-wide">Total Materials Landed Cost:</span>
+                    <span className="text-base font-black text-purple-400 font-mono">{formatBDT(currentTotalMaterials)}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-400 text-[11px]">
+                    <span>New Total Project Cost:</span>
                     <span className="text-rose-400 font-bold">{formatBDT(testTotalCost)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-300">
+                  <div className="flex justify-between text-slate-300 text-[11px]">
                     <span>Estimated Net Profit (লাভ):</span>
                     <span className={testProfit >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
                       {testProfit >= 0 ? `+${formatBDT(testProfit)}` : `-${formatBDT(Math.abs(testProfit))}`} ({testMargin.toFixed(1)}%)
@@ -3077,6 +3249,7 @@ export function ProjectsView() {
               );
             })()}
 
+            {/* Modal Actions */}
             <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
               <button
                 type="button"
