@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText,
   Plus,
@@ -739,9 +739,66 @@ export const INITIAL_QUOTATIONS: Quotation[] = [
   }
 ];
 
+// Robust generator for next sequential Quotation Number that checks active memory, initial mock quotes, and deleted/saved records in localStorage to guarantee ZERO collisions
+export function generateNextQuotationNumber(existingQuotes: Quotation[] = []): string {
+  const currentYear = new Date().getFullYear();
+  let maxSeq = 0;
+
+  const extractSeq = (str?: string) => {
+    if (!str) return;
+    const match = str.match(/(?:QT-)?(?:20\d{2}-)?0*(\d+)/i);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxSeq && num < 100000) {
+        maxSeq = num;
+      }
+    }
+  };
+
+  // 1. Check existing quotes in memory
+  if (Array.isArray(existingQuotes)) {
+    existingQuotes.forEach((q) => {
+      extractSeq(q.quotationNumber);
+      extractSeq(q.id);
+    });
+  }
+
+  // 2. Check INITIAL_QUOTATIONS
+  INITIAL_QUOTATIONS.forEach((q) => {
+    extractSeq(q.quotationNumber);
+    extractSeq(q.id);
+  });
+
+  // 3. Check browser localStorage (both saved and deleted records)
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('globotech_erp_quotations');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((q: Quotation) => {
+            extractSeq(q.quotationNumber);
+            extractSeq(q.id);
+          });
+        }
+      }
+      const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+      if (delSaved) {
+        const parsedDel = JSON.parse(delSaved);
+        if (Array.isArray(parsedDel)) {
+          parsedDel.forEach((id: string) => extractSeq(id));
+        }
+      }
+    } catch (e) {}
+  }
+
+  return `QT-${currentYear}-${String(maxSeq + 1).padStart(3, '0')}`;
+}
+
 export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string, meta?: any) => void } = {}) {
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
   const [isMounted, setIsMounted] = useState(false);
+  const hasLoadedFromStorage = useRef(false);
 
   // Sync from localStorage on initial client mount
   useEffect(() => {
@@ -764,7 +821,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
             const newInitials = INITIAL_QUOTATIONS.filter(
               (initQ) =>
@@ -773,26 +830,27 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 !deletedIds.has(initQ.id) &&
                 !deletedIds.has(initQ.quotationNumber)
             );
+            // CRITICAL FIX: parsed is the user's saved database! Never filter parsed by deletedIds!
+            // deletedIds is ONLY for INITIAL_QUOTATIONS to avoid resurrecting deleted demo mock quotations.
             const merged = [
-              ...newInitials,
-              ...parsed
-                .filter((q: Quotation) => !deletedIds.has(q.id) && !deletedIds.has(q.quotationNumber))
-                .map((q: Quotation) => {
-                  let fixedCustomerId = q.customerId;
-                  if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
-                    fixedCustomerId = 'cust-002';
-                  } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
-                    fixedCustomerId = 'cust-001';
-                  }
-                  return {
-                    ...q,
-                    customerId: fixedCustomerId,
-                    vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-                  };
-                })
+              ...parsed.map((q: Quotation) => {
+                let fixedCustomerId = q.customerId;
+                if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
+                  fixedCustomerId = 'cust-002';
+                } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
+                  fixedCustomerId = 'cust-001';
+                }
+                return {
+                  ...q,
+                  customerId: fixedCustomerId,
+                  vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+                };
+              }),
+              ...newInitials
             ];
             setQuotations(merged);
             localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));
+            hasLoadedFromStorage.current = true;
             return;
           }
         } catch (e) {
@@ -804,19 +862,39 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       );
       setQuotations(filteredInitials);
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(filteredInitials));
+      hasLoadedFromStorage.current = true;
     }
   }, []);
 
-  // Continuous auto-sync to localStorage whenever quotations state updates
+  // Continuous auto-sync to localStorage whenever quotations state updates (safeguarded: only after initial storage load completes)
   useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
+    if (hasLoadedFromStorage.current && typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_quotations', JSON.stringify(quotations));
+        window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: quotations }));
       } catch (e) {
         console.error('Error syncing quotations to localStorage:', e);
       }
     }
-  }, [quotations, isMounted]);
+  }, [quotations]);
+
+  // Listen for storage update events from other views or tabs
+  useEffect(() => {
+    const handleQuotesUpdated = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setQuotations(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_quotations');
+        if (saved) {
+          try {
+            setQuotations(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_quotations_updated', handleQuotesUpdated);
+    return () => window.removeEventListener('globotech_quotations_updated', handleQuotesUpdated);
+  }, []);
 
   // Listen for global backup restore event
   useEffect(() => {
@@ -826,11 +904,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
-            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
-            setQuotations(
-              parsed.filter((q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber))
-            );
+            if (Array.isArray(parsed)) {
+              setQuotations(parsed);
+              hasLoadedFromStorage.current = true;
+            }
           } catch (e) {
             console.error('Error reloading quotations after restore:', e);
           }
@@ -1100,7 +1177,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // NEW QUOTATION FORM STATE
   // ==========================================
   const [newQuote, setNewQuote] = useState<Partial<Quotation>>({
-    quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+    quotationNumber: generateNextQuotationNumber(INITIAL_QUOTATIONS),
     version: 1,
     type: 'PRODUCT_SERVICE',
     date: new Date().toISOString().split('T')[0],
@@ -1632,10 +1709,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
     const initialStatus: QuotationStatus = requiresApproval ? 'PENDING_APPROVAL' : (newQuote.status || 'DRAFT');
     const isAcceptedInitial = initialStatus === 'ACCEPTED' || initialStatus === 'CONVERTED';
+    const finalQuoteNumber = (newQuote.quotationNumber && newQuote.quotationNumber.trim())
+      ? newQuote.quotationNumber.trim()
+      : generateNextQuotationNumber(quotations);
+
     const savedQuotation: Quotation = {
       ...(newQuote as Quotation),
-      id: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
-      quotationNumber: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
+      id: newQuote.id || finalQuoteNumber || `QT-2026-${Date.now()}`,
+      quotationNumber: finalQuoteNumber,
       customerId: newQuote.customerId || selectedCustomer?.id || 'cust-001',
       customerCompany: finalCustomerCompany,
       customerName: finalCustomerName,
@@ -1668,10 +1749,32 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       ]
     };
 
-    const updatedList = [savedQuotation, ...quotations];
+    // CRITICAL: If this quotation ID or quotationNumber was ever previously deleted, unmark it immediately!
+    if (typeof window !== 'undefined') {
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+        if (delSaved) {
+          const parsedDel = JSON.parse(delSaved);
+          if (Array.isArray(parsedDel)) {
+            const updatedDel = parsedDel.filter(
+              (d: string) => d !== savedQuotation.id && d !== savedQuotation.quotationNumber
+            );
+            localStorage.setItem('globotech_erp_deleted_quotation_ids', JSON.stringify(updatedDel));
+          }
+        }
+      } catch (e) {
+        console.error('Error clearing deleted quotation ID:', e);
+      }
+    }
+
+    const updatedList = [
+      savedQuotation,
+      ...quotations.filter((q) => q.id !== savedQuotation.id && q.quotationNumber !== savedQuotation.quotationNumber)
+    ];
     setQuotations(updatedList);
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedList }));
     }
     setSelectedQuotation(savedQuotation);
     setEditingQuotationId(null);
@@ -1939,9 +2042,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </button>
                 <button
                   onClick={() => {
+                    const nextQuoteNo = generateNextQuotationNumber(quotations);
                     setEditingQuotationId(null);
                     setNewQuote({
-                      quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+                      id: `quote-${Date.now()}`,
+                      quotationNumber: nextQuoteNo,
                       version: 1,
                       type: 'PRODUCT_SERVICE',
                       date: new Date().toISOString().split('T')[0],

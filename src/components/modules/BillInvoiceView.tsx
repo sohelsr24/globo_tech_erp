@@ -423,13 +423,7 @@ export function BillInvoiceView({
         try {
           const parsedQuotes = JSON.parse(savedQuotes);
           if (Array.isArray(parsedQuotes)) {
-            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
-            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
-            setQuotations(
-              parsedQuotes.filter(
-                (q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber)
-              )
-            );
+            setQuotations(parsedQuotes);
           }
         } catch (e) {
           console.error('Error loading quotations', e);
@@ -474,19 +468,33 @@ export function BillInvoiceView({
         if (savedQuotes) {
           try {
             const parsedQuotes = JSON.parse(savedQuotes);
-            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
-            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
-            setQuotations(
-              parsedQuotes.filter(
-                (q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber)
-              )
-            );
+            if (Array.isArray(parsedQuotes)) {
+              setQuotations(parsedQuotes);
+            }
           } catch (e) {}
         }
       }
     };
     window.addEventListener('globotech_backup_restored', handleBackupRestored);
-    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+
+    const handleQuotesUpdated = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setQuotations(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_quotations');
+        if (saved) {
+          try {
+            setQuotations(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_quotations_updated', handleQuotesUpdated);
+
+    return () => {
+      window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+      window.removeEventListener('globotech_quotations_updated', handleQuotesUpdated);
+    };
   }, []);
 
   // Calculate Subtotal & Grand Total for Form
