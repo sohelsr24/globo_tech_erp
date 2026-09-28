@@ -834,19 +834,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             // CRITICAL FIX: parsed is the user's saved database! Never filter parsed by deletedIds!
             // deletedIds is ONLY for INITIAL_QUOTATIONS to avoid resurrecting deleted demo mock quotations.
             const merged = [
-              ...parsed.map((q: Quotation) => {
-                let fixedCustomerId = q.customerId;
-                if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
-                  fixedCustomerId = 'cust-002';
-                } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
-                  fixedCustomerId = 'cust-001';
-                }
-                return {
-                  ...q,
-                  customerId: fixedCustomerId,
-                  vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-                };
-              }),
+              ...parsed.map((q: Quotation) => ({
+                ...q,
+                vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+              })),
               ...newInitials
             ];
             setQuotations(merged);
@@ -1267,24 +1258,24 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     type: 'PRODUCT_SERVICE',
     date: new Date().toISOString().split('T')[0],
     validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    customerId: 'cust-001',
-    customerName: 'Procurement Officer',
-    customerCompany: 'Daraz Bangladesh Limited',
+    customerId: '',
+    customerName: '',
+    customerCompany: '',
     customerType: 'CORPORATE',
-    customerPhone: '+880 1700-112233',
-    customerEmail: 'procurement@daraz.com.bd',
-    customerAddress: 'Tejgaon I/A, Dhaka-1208',
-    customerBin: 'BIN-003928174-0101',
+    customerPhone: '',
+    customerEmail: '',
+    customerAddress: '',
+    customerBin: '',
     salesperson: 'Engr. Sohel Rana',
     projectName: '',
     projectLocation: 'Dhaka',
     reference: '',
     currency: 'BDT',
-    paymentTerms: 'Net 30 Days after Delivery & Invoice',
-    deliveryTerms: 'Within 7 days from PO date',
-    warrantyTerms: 'No Warranty',
+    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+    deliveryTerms: 'Within 15 days from PO date',
+    warrantyTerms: '2 Years Comprehensive Hardware Replacement',
     vatTaxTerms: 'INCLUSIVE of 15% VAT and 10% TAX / AIT.',
-    notes: 'Quotation valid for 7 calendar days due to currency fluctuation.',
+    notes: '',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -1295,57 +1286,77 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Edit Quotation State & Trigger
   const [editingQuotationId, setEditingQuotationId] = useState<string | null>(null);
 
-  // Auto-sync customer details when customerId changes or on edit load
+  // Auto-sync customer details when customerId changes, on edit load, or if customerId becomes invalid/deleted
   useEffect(() => {
-    if (newQuote.customerId && customers.length > 0) {
-      const match = customers.find((c) => c.id === newQuote.customerId);
+    if (customers.length > 0) {
+      // 1. Try finding customer by exact ID
+      let match = customers.find((c) => c.id === newQuote.customerId);
+
+      // 2. If no match by ID and customerCompany is provided, try finding by company name (case-insensitive)
+      if (!match && newQuote.customerCompany) {
+        match = customers.find((c) =>
+          (c.company && c.company.toLowerCase().trim() === newQuote.customerCompany?.toLowerCase().trim()) ||
+          (c.name && c.name.toLowerCase().trim() === newQuote.customerCompany?.toLowerCase().trim())
+        );
+      }
+
+      // 3. If customerId was empty or invalid (e.g. deleted customer) and we don't have a valid match, snap to first customer
+      if (!match && (!newQuote.customerId || !customers.some((c) => c.id === newQuote.customerId))) {
+        match = customers[0];
+      }
+
       if (match) {
         const expectedCompany = match.company || match.name;
         if (
+          newQuote.customerId !== match.id ||
           newQuote.customerCompany !== expectedCompany ||
           newQuote.customerBin !== (match.binNumber || '') ||
-          newQuote.customerPhone !== (match.phone || '')
+          newQuote.customerPhone !== (match.phone || '') ||
+          newQuote.customerAddress !== (match.address || '')
         ) {
           setNewQuote((prev) => ({
             ...prev,
-            customerId: match.id,
+            customerId: match!.id,
             customerCompany: expectedCompany,
-            customerName: match.name,
-            customerType: match.type,
-            customerPhone: match.phone,
-            customerEmail: match.email || '',
-            customerAddress: match.address,
-            customerBin: match.binNumber || ''
+            customerName: match!.name,
+            customerType: match!.type,
+            customerPhone: match!.phone || '',
+            customerEmail: match!.email || '',
+            customerAddress: match!.address || '',
+            customerBin: match!.binNumber || ''
           }));
         }
       }
     }
-  }, [newQuote.customerId, customers]);
+  }, [newQuote.customerId, newQuote.customerCompany, customers]);
 
   const handleStartEditQuotation = (quote: Quotation) => {
     setEditingQuotationId(quote.id);
     setSelectedQuotation(quote);
 
-    // Resolve customer correctly by ID or Company Name
+    // Resolve customer correctly by ID or Company Name from active customers list
     let matchedCustomer = customers.find((c) => c.id === quote.customerId);
-    if (!matchedCustomer || (quote.customerCompany && matchedCustomer.company && !matchedCustomer.company.toLowerCase().includes(quote.customerCompany.toLowerCase()) && !quote.customerCompany.toLowerCase().includes(matchedCustomer.company.toLowerCase()))) {
-      const byCompany = customers.find((c) => c.company && quote.customerCompany && (
-        c.company.toLowerCase().trim() === quote.customerCompany.toLowerCase().trim() ||
-        c.company.toLowerCase().includes(quote.customerCompany.toLowerCase()) ||
-        quote.customerCompany.toLowerCase().includes(c.company.toLowerCase())
-      ));
-      if (byCompany) matchedCustomer = byCompany;
+    if (!matchedCustomer && quote.customerCompany) {
+      matchedCustomer = customers.find((c) =>
+        (c.company && c.company.toLowerCase().trim() === quote.customerCompany.toLowerCase().trim()) ||
+        (c.name && c.name.toLowerCase().trim() === quote.customerCompany.toLowerCase().trim())
+      );
+    }
+
+    // If still not found and customers list has members (e.g. former customer was deleted)
+    if (!matchedCustomer && customers.length > 0) {
+      matchedCustomer = customers[0];
     }
 
     setNewQuote({
       ...quote,
-      customerId: matchedCustomer ? matchedCustomer.id : (quote.customerId || 'cust-001'),
-      customerCompany: matchedCustomer ? (matchedCustomer.company || matchedCustomer.name) : quote.customerCompany,
-      customerName: matchedCustomer ? matchedCustomer.name : quote.customerName,
+      customerId: matchedCustomer ? matchedCustomer.id : (quote.customerId || ''),
+      customerCompany: matchedCustomer ? (matchedCustomer.company || matchedCustomer.name) : (quote.customerCompany || ''),
+      customerName: matchedCustomer ? matchedCustomer.name : (quote.customerName || ''),
       customerType: matchedCustomer ? matchedCustomer.type : (quote.customerType || 'CORPORATE'),
-      customerPhone: matchedCustomer ? matchedCustomer.phone : (quote.customerPhone || ''),
+      customerPhone: matchedCustomer ? (matchedCustomer.phone || '') : (quote.customerPhone || ''),
       customerEmail: matchedCustomer ? (matchedCustomer.email || '') : (quote.customerEmail || ''),
-      customerAddress: matchedCustomer ? matchedCustomer.address : (quote.customerAddress || ''),
+      customerAddress: matchedCustomer ? (matchedCustomer.address || '') : (quote.customerAddress || ''),
       customerBin: matchedCustomer ? (matchedCustomer.binNumber || '') : (quote.customerBin || ''),
       items: quote.items ? quote.items.map((i) => ({ ...i })) : []
     });
@@ -1690,28 +1701,20 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Save Quotation (with validation & approval rule triggers)
   const handleSaveQuotation = () => {
     // Resolve selected customer to guarantee 100% sync
-    const selectedCustomer = customers.find((c) => c.id === newQuote.customerId);
-    const finalCustomerCompany = selectedCustomer
-      ? (selectedCustomer.company || selectedCustomer.name)
-      : (newQuote.customerCompany || 'Daraz Bangladesh Limited');
-    const finalCustomerName = selectedCustomer
-      ? selectedCustomer.name
-      : (newQuote.customerName || 'Procurement Officer');
-    const finalCustomerAddress = selectedCustomer
-      ? selectedCustomer.address
-      : (newQuote.customerAddress || 'Tejgaon I/A, Dhaka-1208');
-    const finalCustomerPhone = selectedCustomer
-      ? selectedCustomer.phone
-      : (newQuote.customerPhone || '');
-    const finalCustomerEmail = selectedCustomer
-      ? (selectedCustomer.email || '')
-      : (newQuote.customerEmail || '');
-    const finalCustomerBin = selectedCustomer
-      ? (selectedCustomer.binNumber || '')
-      : (newQuote.customerBin || '');
-    const finalCustomerType = selectedCustomer
-      ? selectedCustomer.type
-      : (newQuote.customerType || 'CORPORATE');
+    let selectedCustomer = customers.find((c) => c.id === newQuote.customerId);
+    if (!selectedCustomer && newQuote.customerCompany) {
+      selectedCustomer = customers.find((c) =>
+        (c.company && c.company.toLowerCase().trim() === newQuote.customerCompany.toLowerCase().trim()) ||
+        (c.name && c.name.toLowerCase().trim() === newQuote.customerCompany.toLowerCase().trim())
+      );
+    }
+    const finalCustomerCompany = (selectedCustomer?.company || selectedCustomer?.name || newQuote.customerCompany || '').trim();
+    const finalCustomerName = selectedCustomer?.name || newQuote.customerName || (finalCustomerCompany ? `${finalCustomerCompany} Procurement` : 'Client');
+    const finalCustomerAddress = selectedCustomer?.address || newQuote.customerAddress || 'Dhaka, Bangladesh';
+    const finalCustomerPhone = selectedCustomer?.phone || newQuote.customerPhone || '';
+    const finalCustomerEmail = selectedCustomer?.email || newQuote.customerEmail || '';
+    const finalCustomerBin = selectedCustomer?.binNumber || newQuote.customerBin || '';
+    const finalCustomerType = selectedCustomer?.type || newQuote.customerType || 'CORPORATE';
 
     if (!finalCustomerCompany || !newQuote.projectName) {
       alert('Please fill in Customer and Project Name');
@@ -1745,8 +1748,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         ...(existing || {}),
         ...(newQuote as Quotation),
         id: editingQuotationId,
-        quotationNumber: newQuote.quotationNumber || existing?.quotationNumber || editingQuotationId,
-        customerId: newQuote.customerId || selectedCustomer?.id || 'cust-001',
+        customerId: selectedCustomer?.id || newQuote.customerId || (customers[0]?.id || ''),
         customerCompany: finalCustomerCompany,
         customerName: finalCustomerName,
         customerAddress: finalCustomerAddress,
@@ -1801,8 +1803,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     const savedQuotation: Quotation = {
       ...(newQuote as Quotation),
       id: newQuote.id || finalQuoteNumber || `QT-2026-${Date.now()}`,
-      quotationNumber: finalQuoteNumber,
-      customerId: newQuote.customerId || selectedCustomer?.id || 'cust-001',
+      customerId: selectedCustomer?.id || newQuote.customerId || (customers[0]?.id || ''),
       customerCompany: finalCustomerCompany,
       customerName: finalCustomerName,
       customerAddress: finalCustomerAddress,
@@ -2128,6 +2129,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 <button
                   onClick={() => {
                     const nextQuoteNo = generateNextQuotationNumber(quotations);
+                    const defaultCust = customers[0];
                     setEditingQuotationId(null);
                     setNewQuote({
                       id: `quote-${Date.now()}`,
@@ -2136,14 +2138,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       type: 'PRODUCT_SERVICE',
                       date: new Date().toISOString().split('T')[0],
                       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                      customerId: 'cust-001',
-                      customerName: 'Procurement Officer',
-                      customerCompany: 'Daraz Bangladesh Limited',
-                      customerType: 'CORPORATE',
-                      customerPhone: '+880 1700-112233',
-                      customerEmail: 'procurement@daraz.com.bd',
-                      customerAddress: 'Tejgaon I/A, Dhaka-1208',
-                      customerBin: 'BIN-003928174-0101',
+                      customerId: defaultCust ? defaultCust.id : '',
+                      customerName: defaultCust ? defaultCust.name : '',
+                      customerCompany: defaultCust ? (defaultCust.company || defaultCust.name) : '',
+                      customerType: defaultCust ? defaultCust.type : 'CORPORATE',
+                      customerPhone: defaultCust ? (defaultCust.phone || '') : '',
+                      customerEmail: defaultCust ? (defaultCust.email || '') : '',
+                      customerAddress: defaultCust ? (defaultCust.address || '') : '',
+                      customerBin: defaultCust ? (defaultCust.binNumber || '') : '',
                       salesperson: 'Engr. Sohel Rana',
                       projectName: '',
                       projectLocation: 'Dhaka',
@@ -2478,7 +2480,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </div>
                 <div className="flex items-center gap-1.5">
                   <select
-                    value={newQuote.customerId || ''}
+                    value={customers.some((c) => c.id === newQuote.customerId) ? (newQuote.customerId || '') : ''}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val === '__ADD_NEW__') {
@@ -2489,6 +2491,19 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         setIsManageCustomersModalOpen(true);
                         return;
                       }
+                      if (!val) {
+                        setNewQuote((prev) => ({
+                          ...prev,
+                          customerId: '',
+                          customerCompany: '',
+                          customerName: '',
+                          customerPhone: '',
+                          customerEmail: '',
+                          customerAddress: '',
+                          customerBin: ''
+                        }));
+                        return;
+                      }
                       const found = customers.find((c) => c.id === val || c.company === val || c.name === val);
                       if (found) {
                         const updatedCustomerFields = {
@@ -2496,9 +2511,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           customerCompany: found.company || found.name,
                           customerName: found.name,
                           customerType: found.type,
-                          customerPhone: found.phone,
+                          customerPhone: found.phone || '',
                           customerEmail: found.email || '',
-                          customerAddress: found.address,
+                          customerAddress: found.address || '',
                           customerBin: found.binNumber || ''
                         };
                         setNewQuote((prev) => ({
@@ -2512,6 +2527,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     }}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
                   >
+                    <option value="" disabled={customers.length > 0}>
+                      {customers.length > 0 ? '-- Select Customer / Organization --' : '-- No Customers Available --'}
+                    </option>
                     {customers.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.company || c.name} ({c.type})

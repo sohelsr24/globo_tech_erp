@@ -29,6 +29,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Formatters, formatBDT, numberToWordsBDT } from '@/lib/formatters';
 import { Quotation, INITIAL_QUOTATIONS } from '@/components/modules/QuotationView';
+import { Customer, INITIAL_CUSTOMERS } from '@/components/modules/CustomersView';
 
 export interface POAttachment {
   id: string;
@@ -309,7 +310,43 @@ export function BillInvoiceView({
 } = {}) {
   const [bills, setBills] = useState<BillInvoice[]>(INITIAL_BILL_INVOICES);
   const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [customers, setCustomers] = useState<Customer[]>(() => {
+    if (typeof window !== 'undefined') {
+      const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
+      const deletedCustIds = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+
+      const saved = localStorage.getItem('globotech_erp_customers');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e) {}
+      }
+      return INITIAL_CUSTOMERS.filter((c) => !deletedCustIds.has(c.id) && !deletedCustIds.has(c.company || ''));
+    }
+    return INITIAL_CUSTOMERS;
+  });
   const [isMounted, setIsMounted] = useState(false);
+
+  // Sync customer changes across views/tabs
+  useEffect(() => {
+    const handleCustUpdate = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setCustomers(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_customers');
+        if (saved) {
+          try {
+            setCustomers(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_customers_updated', handleCustUpdate);
+    return () => window.removeEventListener('globotech_customers_updated', handleCustUpdate);
+  }, []);
 
   // View Mode: 'LIST' or 'PREVIEW'
   const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'PREVIEW'>('LIST');
@@ -389,6 +426,17 @@ export function BillInvoiceView({
     setIsMounted(true);
     if (typeof window !== 'undefined') {
       // 1. Load Bill Invoices
+      const deletedBillIds = new Set<string>();
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
+        if (delSaved) {
+          const parsedDel = JSON.parse(delSaved);
+          if (Array.isArray(parsedDel)) {
+            parsedDel.forEach((id: string) => deletedBillIds.add(id));
+          }
+        }
+      } catch (e) {}
+
       const savedBills = localStorage.getItem('globotech_erp_bill_invoices');
       if (savedBills) {
         try {
@@ -397,7 +445,7 @@ export function BillInvoiceView({
             const existingIds = new Set(parsed.map((b: BillInvoice) => b.id));
             const merged = [
               ...parsed,
-              ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo))
+              ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo))
             ];
             const hydrated = merged.map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
@@ -414,7 +462,9 @@ export function BillInvoiceView({
           console.error('Error loading bill invoices from localStorage', e);
         }
       } else {
-        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(INITIAL_BILL_INVOICES));
+        const initialFiltered = INITIAL_BILL_INVOICES.filter((initB) => !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo));
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(initialFiltered));
+        setBills(initialFiltered);
       }
 
       // 2. Load Quotations
@@ -520,8 +570,8 @@ export function BillInvoiceView({
       billNo: generatedBillNo,
       date: Formatters.date(new Date()),
       poNumber: '',
-      binNumber: '004728009-0202',
-      tinNumber: '169493772750',
+      binNumber: '',
+      tinNumber: '',
       billToName: '',
       billToAddress: '',
       deliverToAddress: '',
@@ -619,7 +669,7 @@ export function BillInvoiceView({
         poNumber: targetQuote.reference ? targetQuote.reference : (stateToUse.poNumber || ''),
         quotationRef: targetQuote.quotationNumber,
         quotationId: targetQuote.id,
-        binNumber: targetQuote.customerBin || stateToUse.binNumber || '004728009-0202',
+        binNumber: targetQuote.customerBin || stateToUse.binNumber || '',
         billToName: targetQuote.customerCompany || targetQuote.customerName || stateToUse.billToName || '',
         billToAddress: targetQuote.customerAddress || stateToUse.billToAddress || '',
         deliverToAddress: deliveryLocation || stateToUse.deliverToAddress || '',
@@ -670,6 +720,15 @@ export function BillInvoiceView({
     if (confirm('Are you sure you want to delete this Bill Invoice?')) {
       const remaining = bills.filter((b) => b.id !== id);
       setBills(remaining);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(remaining));
+        try {
+          const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
+          const delList: string[] = delSaved ? JSON.parse(delSaved) : [];
+          if (!delList.includes(id)) delList.push(id);
+          localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(delList));
+        } catch (e) {}
+      }
       if (activeBill?.id === id) {
         setActiveBill(remaining[0] || null);
         setActiveViewMode('LIST');
@@ -2070,6 +2129,39 @@ export function BillInvoiceView({
                 <span className="text-[10px] text-emerald-400 font-normal">Purchaser</span>
               </h3>
               <div>
+                <label className="block text-[11px] font-medium text-emerald-400 mb-1 flex items-center justify-between">
+                  <span>Select from Customer Directory</span>
+                  <span className="text-[10px] text-slate-400">Auto-fill details</span>
+                </label>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const custId = e.target.value;
+                    if (!custId) return;
+                    const cust = customers.find((c) => c.id === custId);
+                    if (cust) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        billToName: cust.company || cust.name,
+                        billToAddress: cust.address || '',
+                        binNumber: cust.binNumber || prev.binNumber || '',
+                        deliverToName: prev.deliverToName || cust.name,
+                        deliverToPhone: prev.deliverToPhone || cust.phone || '',
+                        deliverToAddress: prev.deliverToAddress || cust.address || ''
+                      }));
+                    }
+                  }}
+                  className="w-full px-3 py-1.5 bg-slate-950 border border-emerald-500/40 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 text-xs mb-2 font-medium"
+                >
+                  <option value="">-- Choose Existing Customer / Client --</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.company || c.name} ({c.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
                 <label className="block text-[11px] font-medium text-slate-400 mb-1">Company / Client Name *</label>
                 <input
                   type="text"
@@ -2077,7 +2169,7 @@ export function BillInvoiceView({
                   value={formData.billToName || ''}
                   onChange={(e) => setFormData({ ...formData, billToName: e.target.value })}
                   className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 font-semibold"
-                  placeholder="Daraz Bangladesh LTD"
+                  placeholder="e.g. Bangladesh Parliament"
                 />
               </div>
               <div>
@@ -2087,7 +2179,7 @@ export function BillInvoiceView({
                   value={formData.billToAddress || ''}
                   onChange={(e) => setFormData({ ...formData, billToAddress: e.target.value })}
                   className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 resize-none"
-                  placeholder="Asfia Tower, House- 76/B, Road-11, Dhaka-1213"
+                  placeholder="e.g. Sher-e-Bangla Nagar, Dhaka-1207"
                 />
               </div>
             </div>
