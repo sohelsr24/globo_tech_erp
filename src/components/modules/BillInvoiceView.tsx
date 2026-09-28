@@ -17,12 +17,28 @@ import {
   Sparkles,
   Filter,
   X,
-  Info
+  Info,
+  Paperclip,
+  Upload,
+  Download,
+  ExternalLink,
+  File,
+  AlertCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Formatters, formatBDT, numberToWordsBDT } from '@/lib/formatters';
 import { Quotation, INITIAL_QUOTATIONS } from '@/components/modules/QuotationView';
+
+export interface POAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  dataUrl: string;
+  uploadedAt: string;
+  notes?: string;
+}
 
 export interface BillInvoiceItem {
   id: string;
@@ -43,6 +59,7 @@ export interface BillInvoice {
   billNo: string;
   date: string;
   poNumber: string;
+  poAttachment?: POAttachment;
   quotationRef?: string;
   quotationId?: string;
   binNumber: string;
@@ -87,6 +104,54 @@ export interface BillInvoice {
   createdAt: string;
 }
 
+export const SAMPLE_DARAZ_PO_ATTACHMENT: POAttachment = {
+  id: 'po-att-26107',
+  name: 'POBD9729-1_Daraz_Purchase_Order.svg',
+  size: 3840,
+  type: 'image/svg+xml',
+  dataUrl: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="700" height="900" viewBox="0 0 700 900" style="background:%23ffffff;font-family:sans-serif;"><rect width="700" height="900" fill="%23ffffff"/><rect x="30" y="30" width="640" height="840" fill="none" stroke="%23ff6600" stroke-width="3" rx="8"/><text x="50" y="75" font-size="24" font-weight="bold" fill="%23ff6600">DARAZ BANGLADESH LIMITED</text><text x="50" y="100" font-size="12" fill="%23555555">Asfia Tower, House-76/B, Road-11, Banani, Dhaka-1213</text><text x="50" y="118" font-size="12" fill="%23555555">BIN: 004728009-0202 | TIN: 169493772750</text><rect x="50" y="140" width="600" height="40" fill="%23fff2e6" rx="4"/><text x="65" y="166" font-size="18" font-weight="bold" fill="%23d9480f">OFFICIAL PURCHASE ORDER (PO)</text><text x="440" y="166" font-size="14" font-weight="bold" fill="%23333333">PO NO: POBD9729-1</text><rect x="50" y="195" width="290" height="110" fill="%23f8f9fa" stroke="%23e9ecef" rx="4"/><text x="65" y="218" font-size="13" font-weight="bold" fill="%23212529">Vendor / Supplier:</text><text x="65" y="240" font-size="13" font-weight="bold" fill="%23ff6600">GLOBO TECH</text><text x="65" y="258" font-size="11" fill="%23495057">12/13 Motijheel C/A, Dhaka-1000</text><text x="65" y="276" font-size="11" fill="%23495057">Contact: Engr. Sohel Rana (01622-152133)</text><rect x="360" y="195" width="290" height="110" fill="%23f8f9fa" stroke="%23e9ecef" rx="4"/><text x="375" y="218" font-size="13" font-weight="bold" fill="%23212529">Delivery Destination:</text><text x="375" y="240" font-size="12" font-weight="bold" fill="%23212529">Tejgaon Sort DC (Daraz HUB)</text><text x="375" y="258" font-size="11" fill="%23495057">Recipient: Rony (Phone: 01999074461)</text><text x="375" y="276" font-size="11" fill="%23495057">PO Date: 23-Feb-2026</text><rect x="50" y="325" width="600" height="30" fill="%23ff6600"/><text x="65" y="345" font-size="12" font-weight="bold" fill="%23ffffff">SL</text><text x="100" y="345" font-size="12" font-weight="bold" fill="%23ffffff">Item Description</text><text x="360" y="345" font-size="12" font-weight="bold" fill="%23ffffff">Qty</text><text x="420" y="345" font-size="12" font-weight="bold" fill="%23ffffff">Unit</text><text x="480" y="345" font-size="12" font-weight="bold" fill="%23ffffff">Unit Price (BDT)</text><text x="590" y="345" font-size="12" font-weight="bold" fill="%23ffffff">Total (BDT)</text><rect x="50" y="355" width="600" height="40" fill="%23ffffff" stroke="%23e9ecef"/><text x="70" y="380" font-size="12" fill="%23333333">1</text><text x="100" y="375" font-size="12" font-weight="bold" fill="%23333333">Rosenberger UTP Cable</text><text x="100" y="390" font-size="10" fill="%23666666">Cat-6 UTP Pure Copper Cable (305M / Box)</text><text x="365" y="380" font-size="12" font-weight="bold" fill="%23333333">2</text><text x="425" y="380" font-size="12" font-weight="bold" fill="%23333333">Box</text><text x="495" y="380" font-size="12" font-weight="bold" fill="%23333333">19,000.00</text><text x="585" y="380" font-size="12" font-weight="bold" fill="%23333333">38,000.00</text><rect x="50" y="415" width="600" height="35" fill="%23fff2e6" stroke="%23ffd8a8"/><text x="420" y="438" font-size="13" font-weight="bold" fill="%23d9480f">Total PO Value (BDT):</text><text x="585" y="438" font-size="14" font-weight="bold" fill="%23d9480f">38,000.00</text><rect x="50" y="470" width="600" height="90" fill="%23f8f9fa" stroke="%23e9ecef" rx="4"/><text x="65" y="492" font-size="12" font-weight="bold" fill="%23212529">Terms &amp; Instructions:</text><text x="65" y="510" font-size="11" fill="%23495057">1. Payment: Within agreed deadline after supply verification.</text><text x="65" y="528" font-size="11" fill="%23495057">2. Vendor must provide official Pad Bill mentioning PO: POBD9729-1.</text><text x="65" y="546" font-size="11" fill="%23495057">3. Delivery Challan required upon handover at Tejgaon Sort DC.</text><line x1="80" y1="780" x2="220" y2="780" stroke="%23495057" stroke-dasharray="3,3"/><text x="105" y="800" font-size="11" fill="%23495057">Prepared By (Daraz)</text><line x1="480" y1="780" x2="620" y2="780" stroke="%23495057" stroke-dasharray="3,3"/><text x="490" y="800" font-size="11" font-weight="bold" fill="%23ff6600">Authorized Procurement</text><text x="510" y="816" font-size="10" fill="%23666666">Daraz Bangladesh LTD</text></svg>`,
+  uploadedAt: '23-Feb-2026 10:15 AM'
+};
+
+export function fileToPOAttachment(file: File): Promise<POAttachment> {
+  return new Promise((resolve, reject) => {
+    if (file.size > 6 * 1024 * 1024) {
+      reject(new Error('File size exceeds 6MB. Please choose a file under 6MB for smooth browser storage.'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      const attachment: POAttachment = {
+        id: `po-att-${Date.now()}`,
+        name: file.name,
+        size: file.size,
+        type: file.type || 'application/octet-stream',
+        dataUrl,
+        uploadedAt: new Date().toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      };
+      resolve(attachment);
+    };
+    reader.onerror = () => reject(new Error('Failed to read file. Please try again.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+export function downloadPOAttachment(attachment: POAttachment, poNumber?: string) {
+  const link = document.createElement('a');
+  link.href = attachment.dataUrl;
+  link.download = attachment.name || `Customer_PO_${poNumber || 'document'}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // Initial Sample Bill Invoices matching User's exact Pad Print bill (GT/26107)
 export const INITIAL_BILL_INVOICES: BillInvoice[] = [
   {
@@ -94,6 +159,7 @@ export const INITIAL_BILL_INVOICES: BillInvoice[] = [
     billNo: 'GT/26107',
     date: '23-Feb-26',
     poNumber: 'POBD9729-1',
+    poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT,
     quotationRef: 'QT-2026-005',
     quotationId: 'QT-2026-005',
     binNumber: '004728009-0202',
@@ -266,6 +332,15 @@ export function BillInvoiceView({
   const [padTopMarginMm, setPadTopMarginMm] = useState<number>(45); // Standard Bangladesh company pad header = 45mm
   const [usePreprintedPadMode, setUsePreprintedPadMode] = useState<boolean>(true); // TRUE = No digital letterhead/watermark/footer
 
+  // Customer PO Document Attachment States
+  const [selectedPOBill, setSelectedPOBill] = useState<BillInvoice | null>(null);
+  const [isPOViewerOpen, setIsPOViewerOpen] = useState(false);
+  const [isQuickAttachOpen, setIsQuickAttachOpen] = useState(false);
+  const [quickAttachBill, setQuickAttachBill] = useState<BillInvoice | null>(null);
+  const [quickAttachFile, setQuickAttachFile] = useState<File | null>(null);
+  const [isUploadingPO, setIsUploadingPO] = useState(false);
+  const [poFilterOnly, setPoFilterOnly] = useState(false);
+
   // Form State for Create / Edit
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
   const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
@@ -324,9 +399,15 @@ export function BillInvoiceView({
               ...parsed,
               ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo))
             ];
-            setBills(merged);
-            if (merged.length > 0 && !activeBill) {
-              setActiveBill(merged[0]);
+            const hydrated = merged.map((b: BillInvoice) => {
+              if (b.id === 'bill-26107' && !b.poAttachment) {
+                return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
+              }
+              return b;
+            });
+            setBills(hydrated);
+            if (hydrated.length > 0 && !activeBill) {
+              setActiveBill(hydrated[0]);
             }
           }
         } catch (e) {
@@ -565,7 +646,13 @@ export function BillInvoiceView({
       billNo: nextBillNo,
       date: Formatters.date(new Date()),
       status: 'ISSUED',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      poAttachment: bill.poAttachment
+        ? {
+            ...bill.poAttachment,
+            id: `po-att-${Date.now()}`
+          }
+        : undefined
     };
     setBills([newBill, ...bills]);
   };
@@ -580,6 +667,82 @@ export function BillInvoiceView({
         setActiveViewMode('LIST');
       }
     }
+  };
+
+  // Open PO Document Viewer
+  const handleOpenPOViewer = (bill: BillInvoice) => {
+    setSelectedPOBill(bill);
+    setIsPOViewerOpen(true);
+  };
+
+  // Open Quick PO Attachment Modal for a specific row in the table
+  const handleOpenQuickAttach = (bill: BillInvoice) => {
+    setQuickAttachBill(bill);
+    setQuickAttachFile(null);
+    setIsQuickAttachOpen(true);
+  };
+
+  // Handle Quick PO Attachment Submit
+  const handleSaveQuickAttachment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickAttachBill || !quickAttachFile) {
+      alert('Please select a PO document file (PDF or image).');
+      return;
+    }
+    setIsUploadingPO(true);
+    try {
+      const attachment = await fileToPOAttachment(quickAttachFile);
+      const updatedBills = bills.map((b) =>
+        b.id === quickAttachBill.id ? { ...b, poAttachment: attachment } : b
+      );
+      setBills(updatedBills);
+      if (activeBill?.id === quickAttachBill.id) {
+        setActiveBill({ ...activeBill, poAttachment: attachment });
+      }
+      setIsQuickAttachOpen(false);
+      setQuickAttachBill(null);
+      setQuickAttachFile(null);
+    } catch (err: any) {
+      alert(err.message || 'Error processing PO file');
+    } finally {
+      setIsUploadingPO(false);
+    }
+  };
+
+  // Remove PO Attachment from a bill
+  const handleDeletePOAttachment = (billId: string) => {
+    if (confirm('Are you sure you want to remove the PO attachment from this bill?')) {
+      const updatedBills = bills.map((b) => {
+        if (b.id === billId) {
+          const { poAttachment, ...rest } = b;
+          return rest as BillInvoice;
+        }
+        return b;
+      });
+      setBills(updatedBills);
+      if (activeBill?.id === billId) {
+        const { poAttachment, ...rest } = activeBill;
+        setActiveBill(rest as BillInvoice);
+      }
+      if (selectedPOBill?.id === billId) {
+        setIsPOViewerOpen(false);
+        setSelectedPOBill(null);
+      }
+    }
+  };
+
+  // Handle File Upload inside Create/Edit Modal
+  const handleFormFieldFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const attachment = await fileToPOAttachment(file);
+      setFormData((prev) => ({ ...prev, poAttachment: attachment }));
+    } catch (err: any) {
+      alert(err.message || 'Error processing file');
+    }
+    e.target.value = '';
   };
 
   // Save Form
@@ -604,7 +767,8 @@ export function BillInvoiceView({
         items,
         subTotal: totals.subTotal,
         grandTotal: totals.grandTotal,
-        amountInWords: totals.amountInWords
+        amountInWords: totals.amountInWords,
+        poAttachment: formData.poAttachment
       } as BillInvoice;
 
       setBills(bills.map((b) => (b.id === editingBillId ? savedRecord : b)));
@@ -615,6 +779,7 @@ export function BillInvoiceView({
         billNo: formData.billNo?.trim() || generateNextBillNo(bills),
         date: formData.date || Formatters.date(new Date()),
         poNumber: formData.poNumber || '',
+        poAttachment: formData.poAttachment,
         quotationRef: formData.quotationRef || '',
         quotationId: formData.quotationId || '',
         binNumber: formData.binNumber || '004728009-0202',
@@ -881,9 +1046,14 @@ export function BillInvoiceView({
             )
           : false;
 
+        // Check PO Attachment filename
+        const poFileName = (b.poAttachment?.name || '').toLowerCase();
+        const matchesPoFile = poFileName.includes(rawQuery);
+
         matchesSearch =
           matchesBillNo ||
           matchesPo ||
+          matchesPoFile ||
           matchesPhone ||
           matchesClient ||
           matchesQuote ||
@@ -893,9 +1063,13 @@ export function BillInvoiceView({
 
       // 2. Status Filter Match
       const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
-      return matchesSearch && matchesStatus;
+
+      // 3. PO Attachment Only Filter
+      const matchesPoOnly = !poFilterOnly || Boolean(b.poAttachment);
+
+      return matchesSearch && matchesStatus && matchesPoOnly;
     });
-  }, [bills, searchQuery, statusFilter]);
+  }, [bills, searchQuery, statusFilter, poFilterOnly]);
 
   // Statistics
   const stats = useMemo(() => {
@@ -1035,6 +1209,23 @@ export function BillInvoiceView({
                   {st === 'ALL' ? 'All Bills' : st}
                 </button>
               ))}
+
+              <span className="text-slate-700">|</span>
+
+              {/* Filter: PO Attached Only */}
+              <button
+                type="button"
+                onClick={() => setPoFilterOnly(!poFilterOnly)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition flex items-center gap-1.5 ${
+                  poFilterOnly
+                    ? 'bg-teal-600 text-white shadow-sm ring-1 ring-teal-400 font-semibold'
+                    : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                }`}
+                title="Show only bills that have customer Purchase Order (PO) document attached"
+              >
+                <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
+                <span>PO Attached ({bills.filter((b) => !!b.poAttachment).length})</span>
+              </button>
             </div>
           </div>
 
@@ -1103,6 +1294,39 @@ export function BillInvoiceView({
                               <span>Ref: {bill.quotationRef}</span>
                             </div>
                           )}
+
+                          {/* Customer PO Attachment Indicator */}
+                          {bill.poAttachment ? (
+                            <div className="mt-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenPOViewer(bill);
+                                }}
+                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 text-[10px] font-medium transition active:scale-95 group/btn"
+                                title={`View Customer PO Document: ${bill.poAttachment.name} (${(bill.poAttachment.size / 1024).toFixed(0)} KB)`}
+                              >
+                                <Paperclip className="w-2.5 h-2.5 text-emerald-400 group-hover/btn:rotate-12 transition-transform" />
+                                <span className="truncate max-w-[100px]">{bill.poAttachment.name}</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="mt-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenQuickAttach(bill);
+                                }}
+                                className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 hover:underline transition"
+                                title="Attach client PO document to this bill"
+                              >
+                                <Paperclip className="w-2.5 h-2.5" />
+                                <span>+ Attach PO</span>
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-4">
                           <div className="text-slate-300 font-medium truncate max-w-[180px]">
@@ -1143,6 +1367,20 @@ export function BillInvoiceView({
                         </td>
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* PO Attachment quick button */}
+                            <button
+                              type="button"
+                              onClick={() => bill.poAttachment ? handleOpenPOViewer(bill) : handleOpenQuickAttach(bill)}
+                              title={bill.poAttachment ? `View Customer PO (${bill.poAttachment.name})` : "Attach Customer PO Document"}
+                              className={`p-1.5 rounded-lg transition active:scale-95 ${
+                                bill.poAttachment
+                                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
+                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              <Paperclip className="w-3.5 h-3.5" />
+                            </button>
+
                             <button
                               onClick={() => handleOpenPreview(bill)}
                               title="View & Print Pad Invoice"
@@ -1253,6 +1491,29 @@ export function BillInvoiceView({
                     <option value={65}>65 mm (Large Pad)</option>
                   </select>
                 </div>
+              )}
+
+              {/* View/Attach Customer PO Button */}
+              {activeBill.poAttachment ? (
+                <button
+                  type="button"
+                  onClick={() => handleOpenPOViewer(activeBill)}
+                  className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+                  title={`View attached Customer PO: ${activeBill.poAttachment.name}`}
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  <span>View Customer PO</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleOpenQuickAttach(activeBill)}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+                  title="Attach Customer PO document"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  <span>Attach PO</span>
+                </button>
               )}
 
               {/* Edit button */}
@@ -1670,6 +1931,94 @@ export function BillInvoiceView({
             </div>
           </div>
 
+          {/* Customer PO Document Attachment Field */}
+          <div className="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Customer Purchase Order (PO) Attachment</span>
+              </label>
+              <span className="text-[10px] text-slate-400">Upload PDF, JPG, PNG scan / document (Max 6MB)</span>
+            </div>
+
+            {formData.poAttachment ? (
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-slate-950 rounded-lg border border-emerald-500/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                    <FileText className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-200 truncate max-w-xs sm:max-w-md">
+                      {formData.poAttachment.name}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {(formData.poAttachment.size / 1024).toFixed(1)} KB &bull; Uploaded {formData.poAttachment.uploadedAt}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.poAttachment) {
+                        setSelectedPOBill({
+                          ...formData,
+                          id: editingBillId || 'temp',
+                          billNo: formData.billNo || 'Draft',
+                          billToName: formData.billToName || 'Client'
+                        } as BillInvoice);
+                        setIsPOViewerOpen(true);
+                      }
+                    }}
+                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Preview</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.poAttachment) {
+                        downloadPOAttachment(formData.poAttachment, formData.poNumber);
+                      }
+                    }}
+                    className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1"
+                  >
+                    <Download className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Download</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, poAttachment: undefined }))}
+                    className="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-xs font-medium transition flex items-center gap-1 border border-rose-500/20"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-xl cursor-pointer bg-slate-950/40 hover:bg-slate-950 transition group">
+                  <Upload className="w-6 h-6 text-slate-500 group-hover:text-emerald-400 transition mb-1.5" />
+                  <span className="text-xs font-medium text-slate-300 group-hover:text-emerald-400 transition">
+                    Click to attach Customer PO (PDF, JPG, PNG)
+                  </span>
+                  <span className="text-[10px] text-slate-500 mt-0.5">
+                    Link the official client PO document directly with this bill for instant retrieval
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,image/png,image/jpeg,image/webp,image/jpg"
+                    onChange={handleFormFieldFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Tax Identification (BIN & TIN) */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
             <div>
@@ -2019,6 +2368,237 @@ export function BillInvoiceView({
           </div>
         </form>
       </Modal>
+
+      {/* ========================================================
+          3. CUSTOMER PO DOCUMENT VIEWER MODAL
+          ======================================================== */}
+      {isPOViewerOpen && selectedPOBill?.poAttachment && (
+        <Modal
+          isOpen={isPOViewerOpen}
+          onClose={() => setIsPOViewerOpen(false)}
+          title={`Customer Purchase Order (PO) — ${selectedPOBill.billNo}`}
+          maxWidth="4xl"
+        >
+          <div className="space-y-4">
+            {/* Header / Meta bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-100">{selectedPOBill.poAttachment.name}</span>
+                  <span className="text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-400 font-mono rounded border border-emerald-500/20">
+                    {(selectedPOBill.poAttachment.size / 1024).toFixed(1)} KB
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  Client: <strong className="text-slate-300">{selectedPOBill.billToName}</strong> &bull; PO No: <span className="font-mono text-emerald-400 font-bold">{selectedPOBill.poNumber || 'None'}</span> &bull; Attached on {selectedPOBill.poAttachment.uploadedAt}
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadPOAttachment(selectedPOBill.poAttachment!, selectedPOBill.poNumber)}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm"
+                  title="Download PO Document"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newWin = window.open();
+                    if (newWin) {
+                      newWin.document.write(
+                        `<iframe src="${selectedPOBill.poAttachment!.dataUrl}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`
+                      );
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
+                  title="Open in new window"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Full Screen</span>
+                </button>
+
+                <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+                  <Upload className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Replace</span>
+                  <input
+                    type="file"
+                    accept=".pdf,image/png,image/jpeg,image/webp,image/jpg"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      try {
+                        const newAtt = await fileToPOAttachment(file);
+                        const updated = bills.map((b) =>
+                          b.id === selectedPOBill.id ? { ...b, poAttachment: newAtt } : b
+                        );
+                        setBills(updated);
+                        setSelectedPOBill({ ...selectedPOBill, poAttachment: newAtt });
+                        if (activeBill?.id === selectedPOBill.id) {
+                          setActiveBill({ ...activeBill, poAttachment: newAtt });
+                        }
+                      } catch (err: any) {
+                        alert(err.message || 'Error replacing file');
+                      }
+                      e.target.value = '';
+                    }}
+                    className="hidden"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeletePOAttachment(selectedPOBill.id)}
+                  className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-lg transition"
+                  title="Delete Attachment"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Document Viewer Body */}
+            <div className="bg-slate-950 rounded-xl border border-slate-800 p-2 overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+              {selectedPOBill.poAttachment.type.includes('pdf') ? (
+                <div className="w-full flex flex-col items-center">
+                  <iframe
+                    src={selectedPOBill.poAttachment.dataUrl}
+                    className="w-full h-[60vh] rounded-lg border border-slate-800 bg-white"
+                    title={`PO PDF - ${selectedPOBill.poAttachment.name}`}
+                  />
+                  <div className="mt-2 text-center text-xs text-slate-400 flex items-center gap-2">
+                    <span>If the PDF preview is blocked by your browser:</span>
+                    <button
+                      type="button"
+                      onClick={() => downloadPOAttachment(selectedPOBill.poAttachment!, selectedPOBill.poNumber)}
+                      className="text-emerald-400 hover:underline font-semibold"
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              ) : selectedPOBill.poAttachment.type.startsWith('image/') || selectedPOBill.poAttachment.dataUrl.startsWith('data:image/') ? (
+                <div className="max-h-[65vh] overflow-auto p-2">
+                  <img
+                    src={selectedPOBill.poAttachment.dataUrl}
+                    alt={selectedPOBill.poAttachment.name}
+                    className="max-h-[60vh] max-w-full rounded-lg shadow-xl object-contain border border-slate-800"
+                  />
+                </div>
+              ) : (
+                <div className="p-8 text-center space-y-3">
+                  <FileText className="w-16 h-16 text-slate-500 mx-auto" />
+                  <p className="text-sm font-semibold text-slate-200">{selectedPOBill.poAttachment.name}</p>
+                  <p className="text-xs text-slate-400">
+                    This file can be downloaded to your computer and opened with your native app.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => downloadPOAttachment(selectedPOBill.poAttachment!, selectedPOBill.poNumber)}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition"
+                  >
+                    Download PO File
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          4. QUICK ATTACH PO MODAL
+          ======================================================== */}
+      {isQuickAttachOpen && quickAttachBill && (
+        <Modal
+          isOpen={isQuickAttachOpen}
+          onClose={() => {
+            setIsQuickAttachOpen(false);
+            setQuickAttachBill(null);
+            setQuickAttachFile(null);
+          }}
+          title={`Attach Customer PO — Bill ${quickAttachBill.billNo}`}
+          maxWidth="md"
+        >
+          <form onSubmit={handleSaveQuickAttachment} className="space-y-4">
+            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Client:</span>
+                <span className="font-semibold text-slate-200">{quickAttachBill.billToName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">PO Number:</span>
+                <span className="font-mono text-emerald-400 font-bold">{quickAttachBill.poNumber || 'Not specified'}</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Select Customer PO File (PDF, JPG, PNG)
+              </label>
+              <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-700 hover:border-emerald-500 rounded-xl cursor-pointer bg-slate-950/60 transition group">
+                <Upload className="w-8 h-8 text-slate-500 group-hover:text-emerald-400 transition mb-2" />
+                {quickAttachFile ? (
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-emerald-400">{quickAttachFile.name}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {(quickAttachFile.size / 1024).toFixed(1)} KB &bull; Ready to attach
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <span className="text-xs font-medium text-slate-300 group-hover:text-emerald-400 transition">
+                      Click to choose file or drag & drop here
+                    </span>
+                    <span className="text-[10px] text-slate-500 block mt-1">
+                      PDF documents or scan images up to 6MB
+                    </span>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept=".pdf,image/png,image/jpeg,image/webp,image/jpg"
+                  onChange={(e) => setQuickAttachFile(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsQuickAttachOpen(false);
+                  setQuickAttachBill(null);
+                  setQuickAttachFile(null);
+                }}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!quickAttachFile || isUploadingPO}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5"
+              >
+                {isUploadingPO ? (
+                  <span>Attaching...</span>
+                ) : (
+                  <>
+                    <Paperclip className="w-3.5 h-3.5" />
+                    <span>Attach to Bill</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* Embedded Global Print CSS ensuring seamless direct printing */}
       <style jsx global>{`

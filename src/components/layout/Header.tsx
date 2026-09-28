@@ -158,6 +158,7 @@ export function Header({
         b.billToName.toLowerCase().includes(q) ||
         (b.deliverToName && b.deliverToName.toLowerCase().includes(q)) ||
         (b.quotationRef && b.quotationRef.toLowerCase().includes(q)) ||
+        (b.poAttachment?.name && b.poAttachment.name.toLowerCase().includes(q)) ||
         (b.items || []).some(
           (it) =>
             it.name.toLowerCase().includes(q) ||
