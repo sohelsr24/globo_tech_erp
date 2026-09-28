@@ -14,7 +14,9 @@ import {
   CheckCircle2,
   DollarSign,
   Tag,
-  Boxes
+  Boxes,
+  MinusCircle,
+  TrendingDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -100,6 +102,17 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
   const [transferStockItemId, setTransferStockItemId] = useState('');
   const [transferQty, setTransferQty] = useState(5);
   const [transferNotes, setTransferNotes] = useState('');
+
+  // Stock Decrease / Deduction / Adjustment State
+  const [isDecreaseModalOpen, setIsDecreaseModalOpen] = useState(false);
+  const [decreaseWarehouse, setDecreaseWarehouse] = useState('Main Warehouse (Tejgaon)');
+  const [decreaseStockItemId, setDecreaseStockItemId] = useState('');
+  const [decreaseQty, setDecreaseQty] = useState(1);
+  const [decreaseReason, setDecreaseReason] = useState<
+    'SALES_DELIVERY' | 'DAMAGED_RECORD' | 'DAMAGED_WRITE_OFF' | 'SAMPLE_ISSUE' | 'INTERNAL_PROJECT' | 'AUDIT_CORRECTION' | 'RETURN_SUPPLIER'
+  >('SALES_DELIVERY');
+  const [decreaseRefDoc, setDecreaseRefDoc] = useState('');
+  const [decreaseNotes, setDecreaseNotes] = useState('');
 
   // Success Toast state
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -473,6 +486,121 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     showToast(`✓ Transferred ${transferQty} pcs of ${sourceStock.productName} to ${transferToWarehouse}!`);
   };
 
+  // 4. STOCK DECREASE / DEDUCTION / ADJUSTMENT
+  const handleOpenDecreaseModal = (stockItem: WarehouseStockItem) => {
+    setDecreaseWarehouse(stockItem.warehouseName);
+    setDecreaseStockItemId(stockItem.id);
+    setDecreaseQty(1);
+    setDecreaseReason('SALES_DELIVERY');
+    setDecreaseRefDoc('');
+    setDecreaseNotes('');
+    setIsDecreaseModalOpen(true);
+  };
+
+  const handleDecreaseStockSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!decreaseStockItemId) {
+      alert('Please select a product to decrease stock.');
+      return;
+    }
+
+    const targetStock = warehouseStock.find((s) => s.id === decreaseStockItemId);
+    if (!targetStock) {
+      alert('Selected stock item not found.');
+      return;
+    }
+
+    const qtyToDeduct = Math.floor(Number(decreaseQty));
+    if (isNaN(qtyToDeduct) || qtyToDeduct <= 0) {
+      alert('Please enter a valid deduction quantity greater than 0.');
+      return;
+    }
+
+    if (qtyToDeduct > targetStock.available) {
+      alert(`Insufficient available stock! Only ${targetStock.available} pcs available in ${targetStock.warehouseName}.`);
+      return;
+    }
+
+    const newAvailable = targetStock.available - qtyToDeduct;
+    const isDamagedRecord = decreaseReason === 'DAMAGED_RECORD';
+    const newDamaged = isDamagedRecord ? (targetStock.damaged || 0) + qtyToDeduct : targetStock.damaged;
+
+    // 1. Update warehouseStock
+    const updatedStock = warehouseStock.map((s) =>
+      s.id === targetStock.id
+        ? {
+            ...s,
+            available: newAvailable,
+            damaged: newDamaged
+          }
+        : s
+    );
+    setWarehouseStock(updatedStock);
+    saveStoredWarehouseStock(updatedStock);
+
+    // 2. Update global catalog stock count in products
+    const updatedProducts = products.map((p) =>
+      p.sku === targetStock.sku
+        ? {
+            ...p,
+            stock: Math.max(0, (p.stock || 0) - qtyToDeduct)
+          }
+        : p
+    );
+    setProducts(updatedProducts);
+    saveStoredProducts(updatedProducts);
+
+    // 3. Create Audit Stock Ledger Record
+    const reasonLabels: Record<string, string> = {
+      SALES_DELIVERY: 'Sales / Client Delivery (কাস্টমার ডেলিভারি)',
+      DAMAGED_RECORD: 'Damaged Stock Hold (ড্যামেজ মাল সংরক্ষণ)',
+      DAMAGED_WRITE_OFF: 'Damaged Write-Off (নষ্ট মাল বাতিল)',
+      SAMPLE_ISSUE: 'Sample / Testing Issue (স্যাম্পল বা টেস্টে প্রদান)',
+      INTERNAL_PROJECT: 'Project Site Consumption (সাইট প্রজেক্টে ব্যবহার)',
+      AUDIT_CORRECTION: 'Audit Count Correction (স্টক গণনা সংশোধন)',
+      RETURN_SUPPLIER: 'Return to Supplier (সাপ্লায়ারকে ফেরত প্রদান)'
+    };
+
+    const reasonLabel = reasonLabels[decreaseReason] || decreaseReason;
+    const generatedRef = decreaseRefDoc.trim() || `OUT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newEntry: StockLedgerRecord = {
+      id: `led-${Date.now()}`,
+      timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      productName: targetStock.productName,
+      warehouseName: targetStock.warehouseName,
+      movementType: decreaseReason,
+      quantityDelta: -qtyToDeduct, // Negative quantity for decrease
+      balanceAfter: newAvailable,
+      unitLandedCost: targetStock.unitLandedCost,
+      referenceId: generatedRef,
+      reasonNotes: `${reasonLabel}${decreaseNotes.trim() ? `: ${decreaseNotes.trim()}` : ''}`
+    };
+
+    const updatedLedger = [newEntry, ...ledger];
+    setLedger(updatedLedger);
+    saveStoredStockLedger(updatedLedger);
+
+    // 4. Reset & Notify
+    setIsDecreaseModalOpen(false);
+    setDecreaseNotes('');
+    setDecreaseRefDoc('');
+    setDecreaseQty(1);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
+      window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
+      window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+    }
+
+    showToast(
+      `✓ Successfully decreased -${qtyToDeduct} pcs of "${targetStock.productName}" from ${targetStock.warehouseName}! New balance: ${newAvailable} pcs.`
+    );
+  };
+
+  const selectedDecreaseStock = warehouseStock.find((s) => s.id === decreaseStockItemId);
+
   // Filtered Stock Items
   const filteredStock = warehouseStock.filter((st) => {
     if (selectedWarehouseFilter !== 'ALL' && st.warehouseName !== selectedWarehouseFilter) {
@@ -619,6 +747,28 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
             <ArrowRightLeft className="w-3.5 h-3.5 text-blue-400" />
             <span>Transfer</span>
           </button>
+
+          {/* Decrease / Deduct Stock Button */}
+          <button
+            onClick={() => {
+              const availableItems = warehouseStock.filter((s) => s.available > 0);
+              if (availableItems.length > 0) {
+                const first = availableItems[0];
+                setDecreaseWarehouse(first.warehouseName);
+                setDecreaseStockItemId(first.id);
+              }
+              setDecreaseQty(1);
+              setDecreaseReason('SALES_DELIVERY');
+              setDecreaseRefDoc('');
+              setDecreaseNotes('');
+              setIsDecreaseModalOpen(true);
+            }}
+            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-rose-600/20 ring-1 ring-rose-500"
+            title="Deduct or decrease stock for sales, damage, or adjustment"
+          >
+            <MinusCircle className="w-3.5 h-3.5" />
+            <span>Deduct Stock</span>
+          </button>
         </div>
       </div>
 
@@ -737,22 +887,32 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => {
-                              const found = products.find((p) => p.sku === st.sku);
-                              if (found) {
-                                setGrnSelectedProductId(found.id);
-                                setGrnLandedCost(st.unitLandedCost);
-                              }
-                              setGrnWarehouse(st.warehouseName);
-                              setIsGrnModalOpen(true);
-                            }}
-                            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold transition active:scale-95 border border-slate-700 hover:border-slate-600 inline-flex items-center gap-1"
-                            title="Receive more stock for this product"
-                          >
-                            <Plus className="w-3 h-3 text-emerald-400" />
-                            <span>Add Stock</span>
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                const found = products.find((p) => p.sku === st.sku);
+                                if (found) {
+                                  setGrnSelectedProductId(found.id);
+                                  setGrnLandedCost(st.unitLandedCost);
+                                }
+                                setGrnWarehouse(st.warehouseName);
+                                setIsGrnModalOpen(true);
+                              }}
+                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold transition active:scale-95 border border-slate-700 hover:border-slate-600 inline-flex items-center gap-1"
+                              title="Receive / Add more stock"
+                            >
+                              <Plus className="w-3 h-3 text-emerald-400" />
+                              <span>Add Stock</span>
+                            </button>
+                            <button
+                              onClick={() => handleOpenDecreaseModal(st)}
+                              className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[11px] font-semibold transition active:scale-95 border border-rose-500/30 hover:border-rose-500/50 inline-flex items-center gap-1"
+                              title="Decrease / Deduct stock for sales, damage, or adjustment"
+                            >
+                              <MinusCircle className="w-3 h-3 text-rose-400" />
+                              <span>Decrease</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -811,11 +971,15 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                             className={`px-2 py-0.5 rounded text-[10px] ${
                               entry.movementType === 'PURCHASE_GRN' || entry.movementType === 'OPENING_STOCK'
                                 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                                : entry.movementType === 'PROJECT_ISSUE'
+                                : entry.movementType === 'PROJECT_ISSUE' || entry.movementType === 'INTERNAL_PROJECT'
                                 ? 'bg-purple-950 text-purple-400 border border-purple-800'
                                 : entry.movementType === 'TRANSFER_IN' || entry.movementType === 'TRANSFER_OUT'
                                 ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                                : 'bg-blue-950 text-blue-400 border border-blue-800'
+                                : entry.movementType === 'DAMAGED_RECORD' || entry.movementType === 'DAMAGED_WRITE_OFF'
+                                ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                                : entry.movementType === 'SALES_DELIVERY'
+                                ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                                : 'bg-rose-950 text-rose-400 border border-rose-800'
                             }`}
                           >
                             {entry.movementType}
@@ -1438,6 +1602,232 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           </div>
         </div>
       </Modal>
+
+      {/* ========================================================
+          MODAL 4: DECREASE / DEDUCT STOCK (স্টক কমানো ও অ্যাডজাস্টমেন্ট)
+          ======================================================== */}
+      {isDecreaseModalOpen && (
+        <Modal
+          isOpen={isDecreaseModalOpen}
+          onClose={() => setIsDecreaseModalOpen(false)}
+          title="Decrease / Deduct Inventory Stock (স্টক কমানো ও অ্যাডজাস্টমেন্ট)"
+          maxWidth="xl"
+        >
+          <form onSubmit={handleDecreaseStockSubmit} className="space-y-4 text-xs">
+            {/* Warehouse Selector */}
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Source Warehouse / Store (গুদাম নির্বাচন) *
+              </label>
+              <select
+                value={decreaseWarehouse}
+                onChange={(e) => {
+                  const wh = e.target.value;
+                  setDecreaseWarehouse(wh);
+                  const inWh = warehouseStock.filter((s) => s.warehouseName === wh && s.available > 0);
+                  if (inWh.length > 0) {
+                    setDecreaseStockItemId(inWh[0].id);
+                  } else {
+                    setDecreaseStockItemId('');
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
+              >
+                {WAREHOUSE_OPTIONS.map((wh) => (
+                  <option key={wh} value={wh}>
+                    {wh}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Product Selector */}
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Product & Available Balance (পণ্য নির্বাচন) *
+              </label>
+              <select
+                value={decreaseStockItemId}
+                onChange={(e) => {
+                  setDecreaseStockItemId(e.target.value);
+                  const sel = warehouseStock.find((s) => s.id === e.target.value);
+                  if (sel && decreaseQty > sel.available) {
+                    setDecreaseQty(Math.max(1, sel.available));
+                  }
+                }}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
+                required
+              >
+                <option value="">-- Choose Product to Decrease Stock --</option>
+                {warehouseStock
+                  .filter((s) => s.warehouseName === decreaseWarehouse)
+                  .map((st) => (
+                    <option key={st.id} value={st.id} disabled={st.available <= 0}>
+                      {st.productName} ({st.sku}) — Available: {st.available} pcs {st.available <= 0 ? '(Out of Stock)' : ''}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {/* Selected Product Stock Card Preview */}
+            {selectedDecreaseStock && (
+              <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Selected Item:</span>
+                  <span className="text-slate-100 font-bold">{selectedDecreaseStock.productName}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-900 text-center">
+                  <div className="bg-slate-900 p-2 rounded-lg">
+                    <div className="text-[10px] text-slate-400">Current Available</div>
+                    <div className="text-sm font-bold text-emerald-400 mt-0.5">{selectedDecreaseStock.available} pcs</div>
+                  </div>
+                  <div className="bg-slate-900 p-2 rounded-lg">
+                    <div className="text-[10px] text-slate-400">Unit Landed Cost</div>
+                    <div className="text-sm font-bold text-slate-200 mt-0.5">{Formatters.currency(selectedDecreaseStock.unitLandedCost)}</div>
+                  </div>
+                  <div className="bg-slate-900 p-2 rounded-lg">
+                    <div className="text-[10px] text-slate-400">Total Valuation</div>
+                    <div className="text-sm font-bold text-blue-400 mt-0.5">
+                      {Formatters.currency(selectedDecreaseStock.available * selectedDecreaseStock.unitLandedCost)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quantity to Deduct with Presets & Live Calculation */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">
+                  Decrease Quantity (কমানোর পরিমাণ) *
+                </label>
+                {selectedDecreaseStock && (
+                  <div className="flex items-center gap-1">
+                    {[1, 5, 10, 50].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        disabled={selectedDecreaseStock.available < preset}
+                        onClick={() => setDecreaseQty(preset)}
+                        className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:pointer-events-none text-[10px] text-slate-300 rounded font-semibold transition"
+                      >
+                        -{preset}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setDecreaseQty(selectedDecreaseStock.available)}
+                      className="px-2 py-0.5 bg-rose-600/20 hover:bg-rose-600/30 text-[10px] text-rose-300 border border-rose-500/40 rounded font-semibold transition"
+                    >
+                      All ({selectedDecreaseStock.available})
+                    </button>
+                  </div>
+                )}
+              </div>
+              <input
+                type="number"
+                min={1}
+                max={selectedDecreaseStock ? selectedDecreaseStock.available : 999999}
+                value={decreaseQty || ''}
+                onChange={(e) => setDecreaseQty(Math.max(1, Number(e.target.value)))}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-sm font-bold focus:border-rose-500 focus:outline-none"
+                placeholder="Enter quantity to deduct"
+                required
+              />
+
+              {/* Dynamic Balance Preview Badge */}
+              {selectedDecreaseStock && (
+                <div className="mt-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-between text-xs">
+                  <span className="text-slate-300 flex items-center gap-1.5">
+                    <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Deduction: <strong className="text-rose-400">-{decreaseQty || 0} pcs</strong></span>
+                  </span>
+                  <span className="text-slate-300">
+                    New Balance: <strong className="text-emerald-400 font-bold">{Math.max(0, selectedDecreaseStock.available - (decreaseQty || 0))} pcs</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Reason for Stock Decrease */}
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Reason for Stock Deduction (কমানোর কারণ / খাত) *
+              </label>
+              <select
+                value={decreaseReason}
+                onChange={(e) => setDecreaseReason(e.target.value as any)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
+              >
+                <option value="SALES_DELIVERY">📦 Sales / Customer Delivery (কাস্টমার ডেলিভারি / বিক্রয়)</option>
+                <option value="DAMAGED_RECORD">⚠️ Damaged / Broken (Move to Damaged Stock - নষ্ট মাল রেকর্ড)</option>
+                <option value="DAMAGED_WRITE_OFF">🗑️ Damaged / Scrap (Total Write-Off - সম্পূর্ণ স্ক্র্যাপ/নষ্ট মাল বাতিল)</option>
+                <option value="SAMPLE_ISSUE">🎁 Sample / Demo / Testing (স্যাম্পল বা টেস্টে প্রদান)</option>
+                <option value="INTERNAL_PROJECT">🏗️ Project Site Consumption (সাইট প্রজেক্টে ব্যবহার)</option>
+                <option value="AUDIT_CORRECTION">⚖️ Physical Inventory Audit Correction (স্টক গণনা সংশোধন)</option>
+                <option value="RETURN_SUPPLIER">↩️ Return to Supplier / Vendor (সাপ্লায়ারকে ফেরত প্রদান)</option>
+              </select>
+              {decreaseReason === 'DAMAGED_RECORD' && (
+                <p className="text-[11px] text-amber-400 mt-1">
+                  ℹ️ This will deduct {decreaseQty} pcs from Available stock and add {decreaseQty} pcs to Damaged stock.
+                </p>
+              )}
+              {decreaseReason === 'DAMAGED_WRITE_OFF' && (
+                <p className="text-[11px] text-rose-400 mt-1">
+                  ⚠️ This will permanently deduct {decreaseQty} pcs from inventory valuation as an operational loss.
+                </p>
+              )}
+            </div>
+
+            {/* Reference Doc / Challan No */}
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Reference Document / Challan No. (রেফারেন্স বা চালান নং)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. CHL-2026-089, INV-014, AUDIT-SEP-26"
+                value={decreaseRefDoc}
+                onChange={(e) => setDecreaseRefDoc(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
+              />
+            </div>
+
+            {/* Notes / Remarks */}
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">
+                Notes & Justification (মন্তব্য ও বিবরণ)
+              </label>
+              <textarea
+                rows={2}
+                placeholder="Details regarding this inventory deduction..."
+                value={decreaseNotes}
+                onChange={(e) => setDecreaseNotes(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none resize-none"
+              />
+            </div>
+
+            {/* Modal Footer Buttons */}
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsDecreaseModalOpen(false)}
+                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={!selectedDecreaseStock || selectedDecreaseStock.available <= 0 || (decreaseQty || 0) <= 0}
+                className="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-50 disabled:pointer-events-none text-white font-semibold text-xs shadow-md shadow-rose-600/30 transition flex items-center gap-1.5"
+              >
+                <MinusCircle className="w-3.5 h-3.5" />
+                <span>Confirm Stock Deduction (স্টক কমান)</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }
