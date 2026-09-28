@@ -3445,7 +3445,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: '275mm',
+                minHeight: '280mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
