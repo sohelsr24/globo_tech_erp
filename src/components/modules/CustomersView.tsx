@@ -22,7 +22,9 @@ import {
   Wallet,
   Clock,
   Eye,
-  Filter
+  Filter,
+  Trash2,
+  Edit3
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -280,14 +282,21 @@ export const INITIAL_CUSTOMERS: Customer[] = [
 export function CustomersView() {
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (typeof window !== 'undefined') {
+      const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
+      const deletedCustIds = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+
       const saved = localStorage.getItem('globotech_erp_customers');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         } catch (e) {
           console.error(e);
         }
       }
+      return INITIAL_CUSTOMERS.filter((c) => !deletedCustIds.has(c.id) && !deletedCustIds.has(c.company || ''));
     }
     return INITIAL_CUSTOMERS;
   });
@@ -298,12 +307,14 @@ export function CustomersView() {
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCollectPaymentOpen, setIsCollectPaymentOpen] = useState(false);
   const [isAddBillOpen, setIsAddBillOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isLedgerSheetOpen, setIsLedgerSheetOpen] = useState(false);
 
   // Forms
+  const [editCustomerForm, setEditCustomerForm] = useState<Partial<Customer>>({});
   const [paymentForm, setPaymentForm] = useState({
     customerId: '',
     amount: 10000,
@@ -339,6 +350,24 @@ export function CustomersView() {
       localStorage.setItem('globotech_erp_customers', JSON.stringify(customers));
     }
   }, [customers]);
+
+  // Listen for customer update events from other views or tabs
+  useEffect(() => {
+    const handleCustUpdate = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setCustomers(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_customers');
+        if (saved) {
+          try {
+            setCustomers(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_customers_updated', handleCustUpdate);
+    return () => window.removeEventListener('globotech_customers_updated', handleCustUpdate);
+  }, []);
 
   // Listen for global backup restore event
   useEffect(() => {
@@ -538,7 +567,12 @@ export function CustomersView() {
       transactions: []
     };
 
-    setCustomers([created, ...customers]);
+    const updated = [created, ...customers];
+    setCustomers(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('globotech_customers_updated', { detail: updated }));
+    }
     setIsAddModalOpen(false);
     setNewCustomer({
       name: '',
@@ -551,6 +585,79 @@ export function CustomersView() {
       creditLimit: 500000,
       paymentTerms: 'Net 30 Days'
     });
+  };
+
+  // Handle Delete / Remove Customer
+  const handleDeleteCustomer = (customer: Customer) => {
+    const hasDuesOrTransactions =
+      (customer.currentDues && customer.currentDues > 0) ||
+      (customer.transactions && customer.transactions.length > 0);
+    const confirmMsg = hasDuesOrTransactions
+      ? `Warning: Customer "${customer.company || customer.name}" has ${customer.transactions?.length || 0} transaction records or an outstanding balance of ৳${customer.currentDues}.\n\nAre you sure you want to permanently delete this customer from the system?`
+      : `Are you sure you want to permanently delete customer "${customer.company || customer.name}"?`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    const updated = customers.filter((c) => c.id !== customer.id);
+    setCustomers(updated);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+
+      // Record in deleted IDs so initial mock data never resurrects it
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
+        const delList: string[] = delSaved ? JSON.parse(delSaved) : [];
+        if (!delList.includes(customer.id)) delList.push(customer.id);
+        if (customer.company && !delList.includes(customer.company)) delList.push(customer.company);
+        localStorage.setItem('globotech_erp_deleted_customer_ids', JSON.stringify(delList));
+      } catch (e) {
+        console.error('Error persisting deleted customer ID:', e);
+      }
+
+      window.dispatchEvent(new CustomEvent('globotech_customers_updated', { detail: updated }));
+    }
+
+    if (selectedCustomer && selectedCustomer.id === customer.id) {
+      setSelectedCustomer(null);
+      setIsLedgerSheetOpen(false);
+    }
+  };
+
+  // Edit Customer Handlers
+  const handleOpenEditCustomer = (customer: Customer) => {
+    setEditCustomerForm({ ...customer });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCustomerForm.id) return;
+
+    const updated = customers.map((c) => {
+      if (c.id === editCustomerForm.id) {
+        return {
+          ...c,
+          name: editCustomerForm.name || c.name,
+          company: editCustomerForm.company || c.company,
+          type: editCustomerForm.type || c.type,
+          phone: editCustomerForm.phone || c.phone,
+          email: editCustomerForm.email || c.email,
+          address: editCustomerForm.address || c.address,
+          binNumber: editCustomerForm.binNumber || c.binNumber,
+          creditLimit: Number(editCustomerForm.creditLimit) || c.creditLimit,
+          paymentTerms: editCustomerForm.paymentTerms || c.paymentTerms
+        };
+      }
+      return c;
+    });
+
+    setCustomers(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('globotech_customers_updated', { detail: updated }));
+    }
+    setIsEditModalOpen(false);
   };
 
   return (
@@ -869,7 +976,25 @@ export function CustomersView() {
                             title="View complete account statement & transaction ledger"
                           >
                             <Eye className="w-3 h-3" />
-                            <span>Ledger Sheet</span>
+                            <span>Ledger</span>
+                          </button>
+
+                          {/* Edit Customer Button */}
+                          <button
+                            onClick={() => handleOpenEditCustomer(c)}
+                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+                            title="Edit customer details"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Delete Customer Button */}
+                          <button
+                            onClick={() => handleDeleteCustomer(c)}
+                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
+                            title="Delete / Remove this customer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
@@ -1451,6 +1576,151 @@ export function CustomersView() {
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition"
               >
                 Save Customer
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL: EDIT CUSTOMER DETAILS (কাস্টমার তথ্য এডিট)
+          ======================================================== */}
+      {isEditModalOpen && (
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Edit Customer Profile (কাস্টমার তথ্য পরিবর্তন)"
+        >
+          <form onSubmit={handleSaveEditCustomer} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Company / Organization *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Daraz Bangladesh Limited"
+                  value={editCustomerForm.company || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, company: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Primary Contact Person</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Md. Tariqul Islam"
+                  value={editCustomerForm.name || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Account Category</label>
+                <select
+                  value={editCustomerForm.type || 'CORPORATE'}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, type: e.target.value as any })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="CORPORATE">Corporate Enterprise</option>
+                  <option value="WHOLESALE">Wholesale Dealer / Reseller</option>
+                  <option value="RETAIL">Retail Direct</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Phone Number *</label>
+                <input
+                  type="text"
+                  placeholder="+880 1..."
+                  value={editCustomerForm.phone || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, phone: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Email Address</label>
+                <input
+                  type="email"
+                  placeholder="procurement@company.com"
+                  value={editCustomerForm.email || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, email: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">BIN / VAT Registration</label>
+                <input
+                  type="text"
+                  placeholder="BIN-003928174-0101"
+                  value={editCustomerForm.binNumber || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, binNumber: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Payment Terms</label>
+                <select
+                  value={editCustomerForm.paymentTerms || 'Net 30 Days'}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, paymentTerms: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="Net 7 Days">Net 7 Days</option>
+                  <option value="Net 15 Days">Net 15 Days</option>
+                  <option value="Net 30 Days">Net 30 Days (Standard Corporate)</option>
+                  <option value="Net 45 Days">Net 45 Days</option>
+                  <option value="Milestone / Net 45">Milestone / Net 45</option>
+                  <option value="Immediate / Cash">Immediate / Cash On Delivery</option>
+                  <option value="Advance Only">100% Advance Payment</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">Credit Limit (৳)</label>
+                <input
+                  type="number"
+                  placeholder="500000"
+                  value={editCustomerForm.creditLimit === 0 ? '' : editCustomerForm.creditLimit || ''}
+                  onChange={(e) => setEditCustomerForm({ ...editCustomerForm, creditLimit: Number(e.target.value) || 0 })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-300 font-semibold mb-1">Billing & Delivery Address</label>
+              <textarea
+                rows={2}
+                placeholder="Full delivery address..."
+                value={editCustomerForm.address || ''}
+                onChange={(e) => setEditCustomerForm({ ...editCustomerForm, address: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition"
+              >
+                Update Customer
               </button>
             </div>
           </form>

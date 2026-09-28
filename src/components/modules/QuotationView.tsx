@@ -22,6 +22,7 @@ import {
   Send,
   Building,
   User,
+  Users,
   ShieldCheck,
   DollarSign,
   Package,
@@ -998,17 +999,101 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Customer List with localStorage Persistence
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (typeof window !== 'undefined') {
+      const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
+      const deletedCustIds = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+
       const saved = localStorage.getItem('globotech_erp_customers');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
         } catch (e) {
           console.error(e);
         }
       }
+      return INITIAL_CUSTOMERS.filter((c) => !deletedCustIds.has(c.id) && !deletedCustIds.has(c.company || ''));
     }
     return INITIAL_CUSTOMERS;
   });
+
+  const [isManageCustomersModalOpen, setIsManageCustomersModalOpen] = useState(false);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+
+  // Listen for customer update events from CustomersView or other tabs
+  useEffect(() => {
+    const handleCustUpdated = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setCustomers(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_customers');
+        if (saved) {
+          try {
+            setCustomers(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_customers_updated', handleCustUpdated);
+    return () => window.removeEventListener('globotech_customers_updated', handleCustUpdated);
+  }, []);
+
+  const handleDeleteCustomer = (customerId: string) => {
+    const custToDelete = customers.find((c) => c.id === customerId);
+    const name = custToDelete?.company || custToDelete?.name || 'this customer';
+    if (!window.confirm(`Are you sure you want to permanently delete customer "${name}" from your customer directory?`)) {
+      return;
+    }
+
+    const updated = customers.filter((c) => c.id !== customerId);
+    setCustomers(updated);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_customers', JSON.stringify(updated));
+
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
+        const delList: string[] = delSaved ? JSON.parse(delSaved) : [];
+        if (!delList.includes(customerId)) delList.push(customerId);
+        if (custToDelete?.company && !delList.includes(custToDelete.company)) delList.push(custToDelete.company);
+        localStorage.setItem('globotech_erp_deleted_customer_ids', JSON.stringify(delList));
+      } catch (e) {
+        console.error('Error persisting deleted customer ID:', e);
+      }
+
+      window.dispatchEvent(new CustomEvent('globotech_customers_updated', { detail: updated }));
+    }
+
+    // If currently selected in newQuote, pick the next available customer
+    if (newQuote.customerId === customerId) {
+      const nextCust = updated[0];
+      if (nextCust) {
+        setNewQuote((prev) => ({
+          ...prev,
+          customerId: nextCust.id,
+          customerCompany: nextCust.company || nextCust.name,
+          customerName: nextCust.name,
+          customerType: nextCust.type,
+          customerPhone: nextCust.phone,
+          customerEmail: nextCust.email || '',
+          customerAddress: nextCust.address,
+          customerBin: nextCust.binNumber || ''
+        }));
+      } else {
+        setNewQuote((prev) => ({
+          ...prev,
+          customerId: '',
+          customerCompany: '',
+          customerName: '',
+          customerPhone: '',
+          customerEmail: '',
+          customerAddress: '',
+          customerBin: ''
+        }));
+      }
+    }
+  };
 
   // Quick Add Customer Modal State (from Quotation form)
   const [isAddCustomerModalOpen, setIsAddCustomerModalOpen] = useState(false);
@@ -2373,54 +2458,87 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-slate-400 font-semibold">Customer / Organization *</label>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddCustomerModalOpen(true)}
-                    className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/40 text-[10px] font-bold flex items-center gap-1 transition"
-                  >
-                    <Plus className="w-3 h-3" /> New Customer
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsManageCustomersModalOpen(true)}
+                      className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[10px] font-semibold flex items-center gap-1 transition"
+                      title="Manage customer list & remove unwanted/duplicate clients"
+                    >
+                      <Users className="w-3 h-3 text-slate-400" /> Manage
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddCustomerModalOpen(true)}
+                      className="px-2 py-0.5 rounded bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 border border-blue-500/40 text-[10px] font-bold flex items-center gap-1 transition"
+                    >
+                      <Plus className="w-3 h-3" /> New Customer
+                    </button>
+                  </div>
                 </div>
-                <select
-                  value={newQuote.customerId || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === '__ADD_NEW__') {
-                      setIsAddCustomerModalOpen(true);
-                      return;
-                    }
-                    const found = customers.find((c) => c.id === val || c.company === val || c.name === val);
-                    if (found) {
-                      const updatedCustomerFields = {
-                        customerId: found.id,
-                        customerCompany: found.company || found.name,
-                        customerName: found.name,
-                        customerType: found.type,
-                        customerPhone: found.phone,
-                        customerEmail: found.email || '',
-                        customerAddress: found.address,
-                        customerBin: found.binNumber || ''
-                      };
-                      setNewQuote((prev) => ({
-                        ...prev,
-                        ...updatedCustomerFields
-                      }));
-                      if (selectedQuotation && editingQuotationId === selectedQuotation.id) {
-                        setSelectedQuotation((prev) => prev ? ({ ...prev, ...updatedCustomerFields }) : null);
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={newQuote.customerId || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '__ADD_NEW__') {
+                        setIsAddCustomerModalOpen(true);
+                        return;
                       }
-                    }
-                  }}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
-                >
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.company || c.name} ({c.type})
+                      if (val === '__MANAGE__') {
+                        setIsManageCustomersModalOpen(true);
+                        return;
+                      }
+                      const found = customers.find((c) => c.id === val || c.company === val || c.name === val);
+                      if (found) {
+                        const updatedCustomerFields = {
+                          customerId: found.id,
+                          customerCompany: found.company || found.name,
+                          customerName: found.name,
+                          customerType: found.type,
+                          customerPhone: found.phone,
+                          customerEmail: found.email || '',
+                          customerAddress: found.address,
+                          customerBin: found.binNumber || ''
+                        };
+                        setNewQuote((prev) => ({
+                          ...prev,
+                          ...updatedCustomerFields
+                        }));
+                        if (selectedQuotation && editingQuotationId === selectedQuotation.id) {
+                          setSelectedQuotation((prev) => prev ? ({ ...prev, ...updatedCustomerFields }) : null);
+                        }
+                      }
+                    }}
+                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
+                  >
+                    {customers.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.company || c.name} ({c.type})
+                      </option>
+                    ))}
+                    <option value="__ADD_NEW__" className="text-blue-400 font-bold bg-slate-900">
+                      + Add New Customer...
                     </option>
-                  ))}
-                  <option value="__ADD_NEW__" className="text-blue-400 font-bold bg-slate-900">
-                    + Add New Customer...
-                  </option>
-                </select>
+                    <option value="__MANAGE__" className="text-rose-400 font-bold bg-slate-900">
+                      ⚙ Manage / Remove Customers...
+                    </option>
+                  </select>
+                  {newQuote.customerId && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const currentCust = customers.find((c) => c.id === newQuote.customerId);
+                        if (!currentCust) return;
+                        handleDeleteCustomer(currentCust.id);
+                      }}
+                      className="p-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition flex-shrink-0"
+                      title="Delete / Remove this selected customer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
                   <span className="truncate max-w-[190px]" title={newQuote.customerCompany}>
                     Org: <strong className="text-emerald-400 font-bold">{newQuote.customerCompany}</strong>
@@ -4638,6 +4756,113 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          11. MODAL: MANAGE CUSTOMER DIRECTORY & REMOVE UNWANTED CLIENTS
+          ======================================================== */}
+      {isManageCustomersModalOpen && (
+        <Modal
+          isOpen={isManageCustomersModalOpen}
+          onClose={() => setIsManageCustomersModalOpen(false)}
+          title="Customer Directory Management (গ্রাহক তালিকা পরিচালনা)"
+          size="lg"
+        >
+          <div className="space-y-4 text-xs">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <p className="text-slate-400 text-xs">
+                Remove duplicate or unwanted customers, or add new ones. Changes sync across all modules in real-time.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsManageCustomersModalOpen(false);
+                  setIsAddCustomerModalOpen(true);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs flex items-center gap-1.5 shadow transition"
+              >
+                <Plus className="w-3.5 h-3.5" /> + New Customer
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search customers by company name, contact, phone, or BIN..."
+                value={customerSearchQuery}
+                onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="max-h-80 overflow-y-auto divide-y divide-slate-800 border border-slate-800 rounded-xl bg-slate-950/60">
+              {customers
+                .filter((c) => {
+                  if (!customerSearchQuery.trim()) return true;
+                  const q = customerSearchQuery.toLowerCase();
+                  return (
+                    (c.company && c.company.toLowerCase().includes(q)) ||
+                    (c.name && c.name.toLowerCase().includes(q)) ||
+                    (c.phone && c.phone.toLowerCase().includes(q)) ||
+                    (c.binNumber && c.binNumber.toLowerCase().includes(q))
+                  );
+                })
+                .map((c) => (
+                  <div key={c.id} className="p-3 flex items-center justify-between gap-3 hover:bg-slate-900/60 transition">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <strong className="text-slate-200 font-bold text-xs truncate">
+                          {c.company || c.name}
+                        </strong>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-blue-400 border border-slate-700">
+                          {c.type}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5">
+                        {c.name && c.name !== c.company && <span>Attn: {c.name}</span>}
+                        {c.phone && <span>Phone: {c.phone}</span>}
+                        {c.binNumber && <span className="font-mono">BIN: {c.binNumber}</span>}
+                      </div>
+                      {c.address && (
+                        <div className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                          {c.address}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomer(c.id)}
+                      className="px-2.5 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold text-xs flex items-center gap-1 transition flex-shrink-0"
+                      title="Permanently remove this customer from directory"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                ))}
+              {customers.length === 0 && (
+                <div className="p-6 text-center text-slate-500">
+                  No customers found. Click &quot;+ New Customer&quot; above to create one.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center pt-2 border-t border-slate-800">
+              <span className="text-[11px] text-slate-400">
+                Total: <strong className="text-slate-200">{customers.length}</strong> registered customer(s)
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsManageCustomersModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 
