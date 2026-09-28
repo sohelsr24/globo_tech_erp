@@ -3445,7 +3445,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: '265mm',
+                minHeight: '275mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
@@ -3701,7 +3701,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Flexible spacer between Terms and Signatures - brings signatures UP to natural position */}
-              <div style={{ flex: '1 1 0%', minHeight: '24px' }} className="print:hidden" />
+              <div style={{ flex: '1 1 0%', minHeight: '36px' }} className="print:hidden" />
 
               {/* SIGNATURES SECTION */}
               <div className="quotation-signatures-block relative z-10 w-full" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
@@ -3751,7 +3751,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Flexible spacer between Signatures and Footer - creates generous breathing room before the bottom footer */}
-              <div style={{ flex: '1.2 1 0%', minHeight: '28px' }} className="print:hidden" />
+              <div style={{ flex: '1.2 1 0%', minHeight: '44px' }} className="print:hidden" />
 
               {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
               <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
