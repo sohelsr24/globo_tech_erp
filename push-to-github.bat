@@ -2,7 +2,7 @@
 title Push to GitHub - globo_tech_erp
 color 0a
 echo ======================================================================
-echo          BUILDING & PUSHING GLOBO TECH ERP TO GITHUB
+echo          BUILDING AND PUSHING GLOBO TECH ERP TO GITHUB
 echo          Repository: https://github.com/sohelsr24/globo_tech_erp
 echo ======================================================================
 echo.
@@ -10,6 +10,7 @@ echo.
 set "PATH=C:\Users\Sohel\.bin\git\cmd;C:\Users\Sohel\.bin\node-v20.18.0-win-x64;%PATH%"
 
 echo [1/3] Building Next.js static export...
+if exist out rmdir /s /q out
 call npm run build
 
 echo [2/3] Syncing export files to web root...

@@ -250,15 +250,80 @@ export const updateVatTaxString = (currentText: string = '', newVat?: string, ne
 // Initial Quotations including Section 31 Example
 export const INITIAL_QUOTATIONS: Quotation[] = [
   {
+    id: 'QT-2026-007',
+    quotationNumber: 'QT-2026-007',
+    version: 1,
+    type: 'SERVICE',
+    date: '2026-09-26',
+    validUntil: '2026-10-03',
+    customerId: 'cust-001',
+    customerName: 'Farhan',
+    customerCompany: 'Daraz Bangladesh Limited',
+    customerType: 'CORPORATE',
+    customerPhone: '',
+    customerEmail: 'info@daraz.com.bd',
+    customerAddress: 'Asfia Tower, Plot:76, Road: 11, Banani, Dhaka-1213',
+    customerBin: '',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Cumilla HUB',
+    projectLocation: 'Cumilla',
+    currency: 'BDT',
+    paymentTerms: 'Net 30 Days after Delivery & Invoice',
+    deliveryTerms: 'Within 7 days from PO date',
+    warrantyTerms: 'No Warranty',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and 10% TAX / AIT.',
+    notes: 'Quotation valid for 7 calendar days due to currency fluctuation.',
+    status: 'ACCEPTED',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-daraz-007-1',
+        type: 'SERVICE',
+        name: 'IT Equipment Dismantle and\nRe-installation',
+        description: '1. Toten 6U IT rack - 1 pc\n2. Cambium AP - 2 pcs\n3. 1 LAN cable for printer\nand organize the IT rack.',
+        unit: 'job',
+        quantity: 1,
+        unitPrice: 12800,
+        discountPercent: 0,
+        vatPercent: 0,
+        taxPercent: 0,
+        unitCost: 8000,
+        warranty: 'No Warranty',
+        leadTime: '7 Days',
+        remarks: 'Cumilla HUB'
+      }
+    ],
+    versionHistory: [
+      {
+        version: 1,
+        date: '2026-09-26',
+        author: 'Engr. Sohel Rana',
+        oldTotal: 0,
+        newTotal: 12800,
+        notes: 'Quotation prepared for Daraz Bangladesh Limited Cumilla HUB'
+      }
+    ],
+    timeline: [
+      {
+        date: '2026-09-26 10:00 AM',
+        event: 'Quotation Created & Accepted',
+        actor: 'Engr. Sohel Rana',
+        comments: 'Created for Daraz Cumilla HUB'
+      }
+    ]
+  },
+  {
     id: 'QT-2026-001',
     quotationNumber: 'QT-2026-001',
     version: 1,
     type: 'PRODUCT_SERVICE',
     date: '2026-09-20',
     validUntil: '2026-10-20',
-    customerId: 'cust-001',
+    customerId: 'cust-002',
     customerName: 'Md. Tariqul Islam',
-    customerCompany: 'ABC Bank Ltd.',
+    customerCompany: 'ABC Bank PLC',
     customerType: 'CORPORATE',
     customerPhone: '+880 1711-223344',
     customerEmail: 'procurement@abcbank.com.bd',
@@ -688,12 +753,22 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
             const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
+            const newInitials = INITIAL_QUOTATIONS.filter((initQ) => !existingIds.has(initQ.id) && !existingIds.has(initQ.quotationNumber));
             const merged = [
-              ...parsed.map((q: Quotation) => ({
-                ...q,
-                vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-              })),
-              ...INITIAL_QUOTATIONS.filter((initQ) => !existingIds.has(initQ.id) && !existingIds.has(initQ.quotationNumber))
+              ...newInitials,
+              ...parsed.map((q: Quotation) => {
+                let fixedCustomerId = q.customerId;
+                if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
+                  fixedCustomerId = 'cust-002';
+                } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
+                  fixedCustomerId = 'cust-001';
+                }
+                return {
+                  ...q,
+                  customerId: fixedCustomerId,
+                  vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+                };
+              })
             ];
             setQuotations(merged);
             localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));
@@ -983,23 +1058,23 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     date: new Date().toISOString().split('T')[0],
     validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     customerId: 'cust-001',
-    customerName: 'Md. Tariqul Islam',
-    customerCompany: 'ABC Bank Ltd.',
+    customerName: 'Procurement Officer',
+    customerCompany: 'Daraz Bangladesh Limited',
     customerType: 'CORPORATE',
-    customerPhone: '+880 1711-223344',
-    customerEmail: 'procurement@abcbank.com.bd',
-    customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
-    customerBin: 'BIN-001293848-0101',
+    customerPhone: '+880 1700-112233',
+    customerEmail: 'procurement@daraz.com.bd',
+    customerAddress: 'Tejgaon I/A, Dhaka-1208',
+    customerBin: 'BIN-003928174-0101',
     salesperson: 'Engr. Sohel Rana',
     projectName: '',
     projectLocation: 'Dhaka',
     reference: '',
     currency: 'BDT',
-    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
-    deliveryTerms: 'Within 15 days from PO date',
-    warrantyTerms: '2 Years Comprehensive Hardware Replacement',
-    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
-    notes: '',
+    paymentTerms: 'Net 30 Days after Delivery & Invoice',
+    deliveryTerms: 'Within 7 days from PO date',
+    warrantyTerms: 'No Warranty',
+    vatTaxTerms: 'INCLUSIVE of 15% VAT and 10% TAX / AIT.',
+    notes: 'Quotation valid for 7 calendar days due to currency fluctuation.',
     status: 'DRAFT',
     stockReserved: false,
     requiresApproval: false,
@@ -1010,11 +1085,58 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Edit Quotation State & Trigger
   const [editingQuotationId, setEditingQuotationId] = useState<string | null>(null);
 
+  // Auto-sync customer details when customerId changes or on edit load
+  useEffect(() => {
+    if (newQuote.customerId && customers.length > 0) {
+      const match = customers.find((c) => c.id === newQuote.customerId);
+      if (match) {
+        const expectedCompany = match.company || match.name;
+        if (
+          newQuote.customerCompany !== expectedCompany ||
+          newQuote.customerBin !== (match.binNumber || '') ||
+          newQuote.customerPhone !== (match.phone || '')
+        ) {
+          setNewQuote((prev) => ({
+            ...prev,
+            customerId: match.id,
+            customerCompany: expectedCompany,
+            customerName: match.name,
+            customerType: match.type,
+            customerPhone: match.phone,
+            customerEmail: match.email || '',
+            customerAddress: match.address,
+            customerBin: match.binNumber || ''
+          }));
+        }
+      }
+    }
+  }, [newQuote.customerId, customers]);
+
   const handleStartEditQuotation = (quote: Quotation) => {
     setEditingQuotationId(quote.id);
     setSelectedQuotation(quote);
+
+    // Resolve customer correctly by ID or Company Name
+    let matchedCustomer = customers.find((c) => c.id === quote.customerId);
+    if (!matchedCustomer || (quote.customerCompany && matchedCustomer.company && !matchedCustomer.company.toLowerCase().includes(quote.customerCompany.toLowerCase()) && !quote.customerCompany.toLowerCase().includes(matchedCustomer.company.toLowerCase()))) {
+      const byCompany = customers.find((c) => c.company && quote.customerCompany && (
+        c.company.toLowerCase().trim() === quote.customerCompany.toLowerCase().trim() ||
+        c.company.toLowerCase().includes(quote.customerCompany.toLowerCase()) ||
+        quote.customerCompany.toLowerCase().includes(c.company.toLowerCase())
+      ));
+      if (byCompany) matchedCustomer = byCompany;
+    }
+
     setNewQuote({
       ...quote,
+      customerId: matchedCustomer ? matchedCustomer.id : (quote.customerId || 'cust-001'),
+      customerCompany: matchedCustomer ? (matchedCustomer.company || matchedCustomer.name) : quote.customerCompany,
+      customerName: matchedCustomer ? matchedCustomer.name : quote.customerName,
+      customerType: matchedCustomer ? matchedCustomer.type : (quote.customerType || 'CORPORATE'),
+      customerPhone: matchedCustomer ? matchedCustomer.phone : (quote.customerPhone || ''),
+      customerEmail: matchedCustomer ? (matchedCustomer.email || '') : (quote.customerEmail || ''),
+      customerAddress: matchedCustomer ? matchedCustomer.address : (quote.customerAddress || ''),
+      customerBin: matchedCustomer ? (matchedCustomer.binNumber || '') : (quote.customerBin || ''),
       items: quote.items ? quote.items.map((i) => ({ ...i })) : []
     });
     setActiveViewMode('CREATE');
@@ -1357,7 +1479,31 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
   // Save Quotation (with validation & approval rule triggers)
   const handleSaveQuotation = () => {
-    if (!newQuote.customerCompany || !newQuote.projectName) {
+    // Resolve selected customer to guarantee 100% sync
+    const selectedCustomer = customers.find((c) => c.id === newQuote.customerId);
+    const finalCustomerCompany = selectedCustomer
+      ? (selectedCustomer.company || selectedCustomer.name)
+      : (newQuote.customerCompany || 'Daraz Bangladesh Limited');
+    const finalCustomerName = selectedCustomer
+      ? selectedCustomer.name
+      : (newQuote.customerName || 'Procurement Officer');
+    const finalCustomerAddress = selectedCustomer
+      ? selectedCustomer.address
+      : (newQuote.customerAddress || 'Tejgaon I/A, Dhaka-1208');
+    const finalCustomerPhone = selectedCustomer
+      ? selectedCustomer.phone
+      : (newQuote.customerPhone || '');
+    const finalCustomerEmail = selectedCustomer
+      ? (selectedCustomer.email || '')
+      : (newQuote.customerEmail || '');
+    const finalCustomerBin = selectedCustomer
+      ? (selectedCustomer.binNumber || '')
+      : (newQuote.customerBin || '');
+    const finalCustomerType = selectedCustomer
+      ? selectedCustomer.type
+      : (newQuote.customerType || 'CORPORATE');
+
+    if (!finalCustomerCompany || !newQuote.projectName) {
       alert('Please fill in Customer and Project Name');
       return;
     }
@@ -1390,6 +1536,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         ...(newQuote as Quotation),
         id: editingQuotationId,
         quotationNumber: newQuote.quotationNumber || existing?.quotationNumber || editingQuotationId,
+        customerId: newQuote.customerId || selectedCustomer?.id || 'cust-001',
+        customerCompany: finalCustomerCompany,
+        customerName: finalCustomerName,
+        customerAddress: finalCustomerAddress,
+        customerPhone: finalCustomerPhone,
+        customerEmail: finalCustomerEmail,
+        customerBin: finalCustomerBin,
+        customerType: finalCustomerType,
         version: newVersion,
         status: targetStatus,
         stockReserved: isAcceptedStatus ? true : (newQuote.stockReserved !== undefined ? newQuote.stockReserved : existing?.stockReserved || false),
@@ -1434,6 +1588,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       ...(newQuote as Quotation),
       id: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
       quotationNumber: newQuote.quotationNumber || `QT-2026-${Date.now()}`,
+      customerId: newQuote.customerId || selectedCustomer?.id || 'cust-001',
+      customerCompany: finalCustomerCompany,
+      customerName: finalCustomerName,
+      customerAddress: finalCustomerAddress,
+      customerPhone: finalCustomerPhone,
+      customerEmail: finalCustomerEmail,
+      customerBin: finalCustomerBin,
+      customerType: finalCustomerType,
       status: initialStatus,
       stockReserved: isAcceptedInitial ? true : (newQuote.stockReserved || false),
       requiresApproval,
@@ -1637,13 +1799,13 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     date: new Date().toISOString().split('T')[0],
                     validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                     customerId: 'cust-001',
-                    customerName: 'Md. Tariqul Islam',
-                    customerCompany: 'ABC Bank Ltd.',
+                    customerName: 'Procurement Officer',
+                    customerCompany: 'Daraz Bangladesh Limited',
                     customerType: 'CORPORATE',
-                    customerPhone: '+880 1711-223344',
-                    customerEmail: 'procurement@abcbank.com.bd',
-                    customerAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
-                    customerBin: 'BIN-001293848-0101',
+                    customerPhone: '+880 1700-112233',
+                    customerEmail: 'procurement@daraz.com.bd',
+                    customerAddress: 'Tejgaon I/A, Dhaka-1208',
+                    customerBin: 'BIN-003928174-0101',
                     salesperson: 'Engr. Sohel Rana',
                     projectName: '',
                     projectLocation: 'Dhaka',
@@ -1967,8 +2129,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     }
                     const found = customers.find((c) => c.id === val || c.company === val || c.name === val);
                     if (found) {
-                      setNewQuote({
-                        ...newQuote,
+                      const updatedCustomerFields = {
                         customerId: found.id,
                         customerCompany: found.company || found.name,
                         customerName: found.name,
@@ -1977,7 +2138,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         customerEmail: found.email || '',
                         customerAddress: found.address,
                         customerBin: found.binNumber || ''
-                      });
+                      };
+                      setNewQuote((prev) => ({
+                        ...prev,
+                        ...updatedCustomerFields
+                      }));
+                      if (selectedQuotation && editingQuotationId === selectedQuotation.id) {
+                        setSelectedQuotation((prev) => prev ? ({ ...prev, ...updatedCustomerFields }) : null);
+                      }
                     }
                   }}
                   className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500 font-medium"
@@ -1992,12 +2160,19 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   </option>
                 </select>
                 <div className="mt-1 flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="truncate max-w-[190px]" title={newQuote.customerCompany}>
+                    Org: <strong className="text-emerald-400 font-bold">{newQuote.customerCompany}</strong>
+                  </span>
                   <span>
                     Tier: <span className="text-blue-400 font-semibold">{newQuote.customerType}</span>
-                    {newQuote.customerBin && <> &bull; BIN: {newQuote.customerBin}</>}
+                  </span>
+                </div>
+                <div className="mt-0.5 flex items-center justify-between text-[10.5px] text-slate-400">
+                  <span>
+                    {newQuote.customerBin ? <>BIN: <span className="font-mono text-slate-300">{newQuote.customerBin}</span></> : 'BIN: N/A'}
                   </span>
                   {newQuote.customerPhone && (
-                    <span className="text-slate-500">{newQuote.customerPhone}</span>
+                    <span className="text-slate-400 font-mono">{newQuote.customerPhone}</span>
                   )}
                 </div>
               </div>
@@ -3127,49 +3302,49 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: '255mm',
+                minHeight: '297mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                justifyContent: 'space-between',
+                padding: '10px 28px 18px 28px',
               }}
-              className="relative bg-white text-slate-900 rounded-xl p-5 sm:p-7 shadow-2xl printable-area font-sans text-xs flex flex-col justify-between print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
+              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
             >
               {/* Watermark in background matching company pad */}
               <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-[0.07] z-0 overflow-hidden"
-                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.07 }}
               >
                 <img
                   src={GLOBO_TECH_LOGO_DATA_URL}
                   alt="Globo Tech Watermark"
-                  style={{ width: '270px', maxWidth: '75%', objectFit: 'contain' }}
+                  style={{ width: '320px', maxWidth: '80%', objectFit: 'contain' }}
                 />
               </div>
 
               {/* TOP SECTION: Header, Quotation Bar, Parties, Items, Totals, Terms */}
               <div className="relative z-10 w-full">
                 {/* 1. Brand Header Table: Guaranteed 3 columns on all mobile print engines */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginBottom: '6px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginBottom: '4px' }}>
                   <tbody>
                     <tr>
-                      {/* Left: Company Logo */}
+                      {/* Left: Company Logo (Enlarged and shifted up) */}
                       <td style={{ width: '25%', textAlign: 'left', verticalAlign: 'middle', padding: 0 }}>
                         <img
                           src={GLOBO_TECH_LOGO_DATA_URL}
                           alt="Globo Tech Logo"
-                          style={{ height: '48px', width: 'auto', maxHeight: '48px', objectFit: 'contain', display: 'inline-block' }}
+                          style={{ height: '88px', width: 'auto', maxHeight: '92px', objectFit: 'contain', display: 'block', marginTop: '-6px' }}
                         />
                       </td>
-                      {/* Center: Company Name */}
+                      {/* Center: Company Name (Enlarged and shifted up) */}
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
-                        <h1 style={{ fontSize: '30px', fontWeight: 800, color: '#008fd5', margin: 0, lineHeight: 1, letterSpacing: '-0.5px' }}>
+                        <h1 style={{ fontSize: '56px', fontWeight: 900, color: '#008fd5', margin: 0, marginTop: '-8px', lineHeight: 1, letterSpacing: '-0.5px' }}>
                           Globo Tech
                         </h1>
                       </td>
                       {/* Right: Company Address */}
                       <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: 0 }}>
-                        <div style={{ fontSize: '10px', fontWeight: 600, color: '#1e293b', lineHeight: 1.35, whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: '10.5px', fontWeight: 600, color: '#1e293b', lineHeight: 1.4, whiteSpace: 'nowrap', marginTop: '-4px' }}>
                           <div>Rahman Chamber (2nd Floor),</div>
                           <div>12/13 Motijheel C/A, Dhaka-1000.</div>
                         </div>
@@ -3177,55 +3352,73 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     </tr>
                   </tbody>
                 </table>
-                <div style={{ borderBottom: '2px solid #0f172a', marginBottom: '6px' }}></div>
+                <div style={{ borderBottom: '1.5px solid #0f172a', marginBottom: '10px' }}></div>
 
                 {/* 2. Quotation Title & Meta Table */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '6px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: 'none', marginBottom: '10px' }}>
                   <tbody>
                     <tr>
-                      <td style={{ width: '25%', padding: '4px 8px', verticalAlign: 'middle' }}></td>
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: '4px 0' }}>
-                        <span style={{ fontSize: '14px', fontWeight: 900, color: '#008fd5', letterSpacing: '2px', textTransform: 'uppercase', borderBottom: '2px solid #008fd5', paddingBottom: '2px', display: 'inline-block' }}>
+                      <td style={{ width: '25%', verticalAlign: 'middle' }}></td>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div
+                          style={{
+                            display: 'inline-block',
+                            padding: '4px 24px',
+                            borderRadius: '4px',
+                            border: '1.5px solid #008fd5',
+                            backgroundColor: '#f0f9ff',
+                            color: '#008fd5',
+                            fontWeight: 800,
+                            fontSize: '13.5px',
+                            letterSpacing: '2.5px',
+                            textTransform: 'uppercase',
+                            lineHeight: 1.2
+                          }}
+                        >
                           QUOTATION
-                        </span>
+                        </div>
                       </td>
-                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: '4px 8px', fontSize: '10px', color: '#475569', lineHeight: 1.3 }}>
+                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', fontSize: '10px', color: '#475569', lineHeight: 1.4 }}>
                         <div>Date: <strong style={{ color: '#0f172a', fontWeight: 600 }}>{formatDate(selectedQuotation.date)}</strong></div>
-                        <div style={{ marginTop: '1px' }}>Quotation Ref: <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 700 }}>{selectedQuotation.quotationNumber}</strong></div>
+                        <div style={{ marginTop: '2px' }}>
+                          Quotation Ref: <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 700 }}>{selectedQuotation.quotationNumber}</strong>
+                        </div>
                       </td>
                     </tr>
                   </tbody>
                 </table>
 
                 {/* 3. Client & Project Details Table: Guaranteed 2 equal columns on mobile print */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '6px', fontSize: '10.5px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '10px', fontSize: '10.5px' }}>
                   <tbody>
                     <tr>
                       {/* Quotation Prepared For */}
-                      <td style={{ width: '50%', verticalAlign: 'top', padding: '6px 10px', borderRight: '1px solid #e2e8f0' }}>
-                        <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9px', marginBottom: '2px' }}>
+                      <td style={{ width: '52%', verticalAlign: 'top', padding: '10px 14px' }}>
+                        <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.3px', marginBottom: '3px' }}>
                           Quotation Prepared For:
                         </div>
-                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px', lineHeight: 1.25 }}>
+                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '12.5px', lineHeight: 1.25 }}>
                           {selectedQuotation.customerCompany}
                         </div>
-                        <div style={{ color: '#334155', marginTop: '1px' }}>Attn: {selectedQuotation.customerName}</div>
-                        <div style={{ color: '#475569', marginTop: '1px' }}>{selectedQuotation.customerAddress}</div>
-                        <div style={{ color: '#475569', marginTop: '1px' }}>Phone: {selectedQuotation.customerPhone}</div>
+                        <div style={{ color: '#334155', fontSize: '10px', marginTop: '2px' }}>Attn: {selectedQuotation.customerName}</div>
+                        <div style={{ color: '#475569', fontSize: '10px', marginTop: '1px' }}>{selectedQuotation.customerAddress}</div>
+                        <div style={{ color: '#475569', fontSize: '10px', marginTop: '1px' }}>Phone: {selectedQuotation.customerPhone || ''}</div>
                         {selectedQuotation.customerBin && (
-                          <div style={{ fontFamily: 'monospace', color: '#475569', marginTop: '1px' }}>BIN: {selectedQuotation.customerBin}</div>
+                          <div style={{ fontFamily: 'monospace', color: '#475569', fontSize: '9.5px', marginTop: '1px' }}>BIN: {selectedQuotation.customerBin}</div>
                         )}
                       </td>
-                      {/* Project & Delivery Location */}
-                      <td style={{ width: '50%', verticalAlign: 'top', padding: '6px 10px' }}>
-                        <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9px', marginBottom: '2px' }}>
-                          Project & Delivery Location:
-                        </div>
-                        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '12px', lineHeight: 1.25 }}>
-                          {selectedQuotation.projectName}
-                        </div>
-                        <div style={{ color: '#334155', marginTop: '2px' }}>
-                          Delivery Location: {selectedQuotation.projectLocation}
+                      {/* Project & Delivery Location - Shifted smoothly to the right */}
+                      <td style={{ width: '48%', verticalAlign: 'top', padding: '10px 18px', textAlign: 'left' }}>
+                        <div style={{ maxWidth: '260px', marginLeft: 'auto' }}>
+                          <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: '0.3px', marginBottom: '3px' }}>
+                            PROJECT & DELIVERY LOCATION:
+                          </div>
+                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '12.5px', lineHeight: 1.25 }}>
+                            {selectedQuotation.projectName}
+                          </div>
+                          <div style={{ color: '#334155', fontSize: '10px', marginTop: '3px' }}>
+                            Delivery Location: {selectedQuotation.projectLocation}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -3233,16 +3426,16 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </table>
 
                 {/* 4. Customer Facing Item Table */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: '10px', color: '#000000', marginBottom: '6px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: '10px', color: '#000000', marginBottom: '8px' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#ffffff' }}>
-                      <th style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', fontWeight: 'bold', width: '30px' }}>Sl</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '130px' }}>Product Name</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold' }}>Product Description</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 4px', textAlign: 'center', fontWeight: 'bold', width: '45px' }}>Unite</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 4px', textAlign: 'center', fontWeight: 'bold', width: '38px' }}>Qty</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '85px' }}>Unite Price</th>
-                      <th style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', width: '85px' }}>Amount</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 4px', textAlign: 'center', fontWeight: 'bold', width: '32px' }}>Sl</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold', width: '150px' }}>Product Name</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 8px', textAlign: 'center', fontWeight: 'bold' }}>Product Description</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 4px', textAlign: 'center', fontWeight: 'bold', width: '48px' }}>Unite</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 4px', textAlign: 'center', fontWeight: 'bold', width: '40px' }}>Qty</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold', width: '95px' }}>Unite Price</th>
+                      <th style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold', width: '95px' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -3260,25 +3453,25 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
                       return (
                         <tr key={item.id} style={{ backgroundColor: '#ffffff' }}>
-                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', fontSize: '10.5px' }}>
                             {idx + 1}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.25 }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.3, fontSize: '10.5px' }}>
                             {item.name}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'left', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.3 }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'left', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.35, fontSize: '10px' }}>
                             {description}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', verticalAlign: 'middle' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle', fontSize: '10px' }}>
                             {item.unit || 'pcs'}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 2px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 'bold' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 'bold', fontSize: '10.5px' }}>
                             {item.quantity}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 600 }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 600, fontSize: '10.5px' }}>
                             {unitPriceWithTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '3px 6px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 'bold' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '10.5px' }}>
                             {lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
@@ -3292,47 +3485,47 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   const totals = calculateQuotationTotals(selectedQuotation);
                   const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
                   return (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '4px', marginBottom: '6px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '8px' }}>
                       <tbody>
                         <tr>
                           {/* Left: Amount in Words */}
-                          <td style={{ width: '55%', verticalAlign: 'bottom', paddingRight: '12px' }}>
-                            <div style={{ padding: '5px 8px', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#f8fafc', fontSize: '9.5px', lineHeight: 1.3 }}>
-                              <div style={{ fontWeight: 700, color: '#0f172a', textTransform: 'uppercase', fontSize: '8.5px', letterSpacing: '0.5px', marginBottom: '2px' }}>
-                                Amount in Words:
+                          <td style={{ width: '54%', verticalAlign: 'bottom', paddingRight: '12px' }}>
+                            <div style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#f8fafc', fontSize: '10px', lineHeight: 1.4 }}>
+                              <div style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px', marginBottom: '3px' }}>
+                                AMOUNT IN WORDS:
                               </div>
-                              <div style={{ fontWeight: 600, color: '#0f172a', fontStyle: 'italic', fontFamily: 'serif' }}>
+                              <div style={{ fontWeight: 700, color: '#0f172a', fontStyle: 'italic', fontFamily: 'serif', fontSize: '11px' }}>
                                 {numberToWordsBDT(totals.grandTotal, selectedQuotation.currency || 'BDT')}
                               </div>
                             </div>
                           </td>
                           {/* Right: Numerical Breakdown */}
-                          <td style={{ width: '45%', verticalAlign: 'bottom', padding: 0 }}>
+                          <td style={{ width: '46%', verticalAlign: 'bottom', padding: 0 }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px', color: '#334155' }}>
                               <tbody>
                                 <tr>
-                                  <td style={{ padding: '1px 0' }}>Items Subtotal (Incl. VAT & TAX):</td>
-                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
+                                  <td style={{ padding: '2px 0' }}>Items Subtotal (Incl. VAT & TAX):</td>
+                                  <td style={{ padding: '2px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
-                                  <td style={{ padding: '1px 0' }}>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
-                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
+                                  <td style={{ padding: '1.5px 0' }}>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
+                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
-                                  <td style={{ padding: '1px 0' }}>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</td>
-                                  <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>
+                                  <td style={{ padding: '1.5px 0' }}>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</td>
+                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>
                                     {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
                                   </td>
                                 </tr>
                                 {totals.totalTax > 0 && (
                                   <tr style={{ fontSize: '9.5px', color: '#475569' }}>
-                                    <td style={{ padding: '1px 0' }}>Total TAX / AIT (TDS):</td>
-                                    <td style={{ padding: '1px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.totalTax)}</td>
+                                    <td style={{ padding: '1.5px 0' }}>Total TAX / AIT (TDS):</td>
+                                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.totalTax)}</td>
                                   </tr>
                                 )}
-                                <tr style={{ borderTop: '2px solid #0f172a', fontSize: '12px', fontWeight: 900, color: '#0f172a' }}>
-                                  <td style={{ paddingTop: '2px' }}>Grand Total (BDT):</td>
-                                  <td style={{ paddingTop: '2px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 900, color: '#000000' }}>{formatBDT(totals.grandTotal)}</td>
+                                <tr style={{ borderTop: '2px solid #0f172a', fontSize: '12.5px', fontWeight: 900, color: '#0f172a' }}>
+                                  <td style={{ paddingTop: '3px' }}>Grand Total (BDT):</td>
+                                  <td style={{ paddingTop: '3px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 900, color: '#000000' }}>{formatBDT(totals.grandTotal)}</td>
                                 </tr>
                               </tbody>
                             </table>
@@ -3344,9 +3537,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 })()}
 
                 {/* 6. Terms & Conditions */}
-                <div style={{ marginTop: '4px', marginBottom: '4px', fontSize: '9.5px', color: '#1e293b', lineHeight: 1.35 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px' }}>Terms & Conditions:</span>
+                <div style={{ marginTop: '4px', marginBottom: '6px', fontSize: '10px', color: '#1e293b', lineHeight: 1.45 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                    <span style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>TERMS & CONDITIONS:</span>
                     <button
                       onClick={() => handleOpenEditTerms(selectedQuotation)}
                       className="no-print text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-sm transition cursor-pointer"
@@ -3360,48 +3553,51 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <div>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</div>
                   <div>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</div>
                   <div>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</div>
-                  <div>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 30 calendar days from issue date.'}</div>
+                  <div>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 7 calendar days due to currency fluctuation.'}</div>
                 </div>
               </div>
 
-              {/* BOTTOM SECTION: Signatures & Company Pad Footer (Always pushed to page bottom) */}
-              <div className="relative z-10 w-full mt-auto" style={{ marginTop: 'auto', paddingTop: '24px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+              {/* Flexible spacer between Terms and Signatures - brings signatures UP to natural position */}
+              <div style={{ flex: '1 1 0%', minHeight: '36px' }} />
+
+              {/* SIGNATURES SECTION */}
+              <div className="quotation-signatures-block relative z-10 w-full" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 {/* 7. Signatures Table: Guaranteed side-by-side on mobile print */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '8px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <tbody>
                     <tr>
                       {/* Left Column: Authorized Signature with Official Seal & Signature */}
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
                         <div style={{ display: 'inline-block', textAlign: 'center' }}>
-                          <div style={{ position: 'relative', height: '52px', width: '180px', margin: '0 auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                          <div style={{ position: 'relative', height: '54px', width: '190px', margin: '0 auto', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
                             {includeSealAndSignature && (
                               <>
                                 <img
                                   src={GLOBO_TECH_SEAL_DATA_URL}
                                   alt="Globo Tech Official Seal"
-                                  style={{ position: 'absolute', left: '10px', bottom: '-2px', width: '56px', height: '56px', objectFit: 'contain', mixBlendMode: 'multiply', opacity: 0.9, pointerEvents: 'none', transform: 'rotate(-6deg)' }}
+                                  style={{ position: 'absolute', left: '12px', bottom: '-4px', width: '58px', height: '58px', objectFit: 'contain', mixBlendMode: 'multiply', opacity: 0.9, pointerEvents: 'none', transform: 'rotate(-6deg)' }}
                                 />
                                 <img
                                   src={GLOBO_TECH_SIGNATURE_DATA_URL}
                                   alt="Authorized Signature"
-                                  style={{ position: 'relative', zIndex: 10, width: '92px', height: 'auto', maxHeight: '40px', objectFit: 'contain', mixBlendMode: 'multiply', pointerEvents: 'none', marginBottom: '-2px', transform: 'translateX(6px)' }}
+                                  style={{ position: 'relative', zIndex: 10, width: '96px', height: 'auto', maxHeight: '42px', objectFit: 'contain', mixBlendMode: 'multiply', pointerEvents: 'none', marginBottom: '-2px', transform: 'translateX(8px)' }}
                                 />
                               </>
                             )}
                           </div>
-                          <div style={{ width: '170px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
+                          <div style={{ width: '180px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11px', letterSpacing: '0.3px' }}>Authorized Signature</div>
-                          <div style={{ fontWeight: 700, color: '#000000', fontSize: '10px', lineHeight: 1.2 }}>Globo Tech</div>
+                          <div style={{ fontWeight: 700, color: '#000000', fontSize: '10.5px', lineHeight: 1.2 }}>Globo Tech</div>
                         </div>
                       </td>
 
                       {/* Right Column: Customer Acceptance Signature */}
                       <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'bottom', padding: '0 10px' }}>
                         <div style={{ display: 'inline-block', textAlign: 'center' }}>
-                          <div style={{ height: '52px', width: '180px', margin: '0 auto' }}></div>
-                          <div style={{ width: '170px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
+                          <div style={{ height: '54px', width: '190px', margin: '0 auto' }}></div>
+                          <div style={{ width: '180px', borderBottom: '1.5px solid #0f172a', margin: '2px auto 3px auto' }}></div>
                           <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '11px', letterSpacing: '0.3px' }}>Customer Acceptance Signature</div>
-                          <div style={{ fontWeight: 600, color: '#334155', fontSize: '10px', lineHeight: 1.2, maxWidth: '190px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 auto' }}>
+                          <div style={{ fontWeight: 700, color: '#000000', fontSize: '10.5px', lineHeight: 1.2, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '0 auto' }}>
                             {selectedQuotation.customerCompany}
                           </div>
                         </div>
@@ -3409,16 +3605,19 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     </tr>
                   </tbody>
                 </table>
+              </div>
 
-                {/* 8. Company Pad Footer matching official letterhead */}
-                <div style={{ borderTop: '1px solid #cbd5e1', paddingTop: '6px', marginTop: '10px', textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <p style={{ margin: 0, color: '#334155', fontWeight: 500 }}>
-                    Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
-                  </p>
-                  <p style={{ margin: '2px 0 0 0', color: '#000000', fontWeight: 700 }}>
-                    Web: www.globotechbd.com
-                  </p>
-                </div>
+              {/* Flexible spacer between Signatures and Footer - creates generous breathing room before the bottom footer */}
+              <div style={{ flex: '1.3 1 0%', minHeight: '44px' }} />
+
+              {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
+              <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                <p style={{ margin: 0, color: '#334155', fontWeight: 500 }}>
+                  Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
+                </p>
+                <p style={{ margin: '2px 0 0 0', color: '#000000', fontWeight: 700, fontSize: '10px' }}>
+                  Web: www.globotechbd.com
+                </p>
               </div>
             </div>
           </div>

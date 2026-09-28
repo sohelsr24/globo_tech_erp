@@ -113,8 +113,8 @@ body {
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Safe) */
 @media print {
   @page {
-    size: auto;
-    margin: 3mm 5mm 3mm 5mm;
+    size: A4 portrait;
+    margin: 5mm 8mm 5mm 8mm;
   }
 
   /* Reset body and html completely */
@@ -126,8 +126,7 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
+    height: 100% !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -166,11 +165,13 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 255mm !important;
+    min-height: 287mm !important;
+    height: 287mm !important;
+    max-height: 287mm !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    justify-content: flex-start !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
@@ -179,13 +180,40 @@ body {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
-    overflow: visible !important;
+    overflow: hidden !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Pinned footer to prevent floating up in print preview */
+  .print-footer {
+    position: absolute !important;
+    bottom: 1mm !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Pinned signatures block sitting cleanly above the bottom footer in print preview */
+  .quotation-signatures-block {
+    position: absolute !important;
+    bottom: 24mm !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* Force table layout in print across all mobile browsers */
