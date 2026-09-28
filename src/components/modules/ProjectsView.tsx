@@ -377,6 +377,52 @@ export function ProjectsView() {
     ];
   });
 
+  // Save projects to localStorage whenever updated
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_projects', JSON.stringify(projects));
+      } catch (e) {
+        console.error('Error saving projects to localStorage:', e);
+      }
+    }
+  }, [projects]);
+
+  // Save custom client directory to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_client_directory', JSON.stringify(customClients));
+      } catch (e) {
+        console.error('Error saving client directory to localStorage:', e);
+      }
+    }
+  }, [customClients]);
+
+  // Listen for global backup restore event
+  useEffect(() => {
+    const handleBackupRestored = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_projects');
+        if (saved) {
+          try {
+            setProjects(JSON.parse(saved));
+          } catch (e) {
+            console.error('Error reloading projects after backup restore:', e);
+          }
+        }
+        const savedClients = localStorage.getItem('globotech_erp_client_directory');
+        if (savedClients) {
+          try {
+            setCustomClients(JSON.parse(savedClients));
+          } catch (e) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+  }, []);
+
   const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState(false);
   const customerDropdownRef = React.useRef<HTMLDivElement>(null);
 

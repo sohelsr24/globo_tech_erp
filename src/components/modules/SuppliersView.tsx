@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2,
   Search,
@@ -128,6 +128,43 @@ const INITIAL_SUPPLIERS: Supplier[] = [
 
 export function SuppliersView() {
   const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const loadSuppliers = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_suppliers');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSuppliers(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error('Error loading suppliers from localStorage:', e);
+          }
+        }
+        localStorage.setItem('globotech_erp_suppliers', JSON.stringify(INITIAL_SUPPLIERS));
+      }
+    };
+
+    loadSuppliers();
+    window.addEventListener('globotech_backup_restored', loadSuppliers);
+    return () => window.removeEventListener('globotech_backup_restored', loadSuppliers);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_suppliers', JSON.stringify(suppliers));
+      } catch (e) {
+        console.error('Error syncing suppliers to localStorage:', e);
+      }
+    }
+  }, [suppliers, isMounted]);
+
   const [search, setSearch] = useState('');
   const [currencyFilter, setCurrencyFilter] = useState('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);

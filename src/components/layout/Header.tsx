@@ -16,7 +16,8 @@ import {
   FileText,
   ArrowRight,
   CheckCircle2,
-  Building2
+  Building2,
+  Download
 } from 'lucide-react';
 import { UserRole } from '@/lib/permissions';
 import {
@@ -27,6 +28,7 @@ import {
 } from '@/lib/productsStorage';
 import { INITIAL_BILL_INVOICES, BillInvoice } from '@/components/modules/BillInvoiceView';
 import { INITIAL_QUOTATIONS, Quotation } from '@/components/modules/QuotationView';
+import { downloadERPBackupFile } from '@/lib/erpBackup';
 
 interface HeaderProps {
   title: string;
@@ -62,7 +64,18 @@ export function Header({
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'PRODUCTS' | 'WAREHOUSE' | 'BILLS' | 'QUOTATIONS'>('ALL');
+  const [backedUpSuccess, setBackedUpSuccess] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const handleQuickBackup = () => {
+    try {
+      downloadERPBackupFile();
+      setBackedUpSuccess(true);
+      setTimeout(() => setBackedUpSuccess(false), 3500);
+    } catch (e) {
+      console.error('Error creating quick backup:', e);
+    }
+  };
 
   const roles: { id: UserRole; label: string; short: string }[] = [
     { id: 'SUPER_ADMIN', label: 'Super Admin', short: 'Super' },
@@ -510,6 +523,29 @@ export function Header({
             title="Toggle Dark/Light Mode"
           >
             {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
+          </button>
+
+          {/* Quick 1-Click Backup Button */}
+          <button
+            onClick={handleQuickBackup}
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold transition active:scale-95 cursor-pointer ${
+              backedUpSuccess
+                ? 'bg-emerald-950/90 border border-emerald-600 text-emerald-400'
+                : 'bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 text-slate-200 hover:text-emerald-400'
+            }`}
+            title="Download Complete ERP Database Backup to your PC"
+          >
+            {backedUpSuccess ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Backed Up!</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden sm:inline">Backup</span>
+              </>
+            )}
           </button>
 
           {/* Logout Button */}

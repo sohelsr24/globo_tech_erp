@@ -377,6 +377,37 @@ export function BillInvoiceView({
     }
   }, [bills, isMounted]);
 
+  // Listen for global backup restore event
+  useEffect(() => {
+    const handleBackupRestored = () => {
+      if (typeof window !== 'undefined') {
+        const savedBills = localStorage.getItem('globotech_erp_bill_invoices');
+        if (savedBills) {
+          try {
+            setBills(JSON.parse(savedBills));
+          } catch (e) {
+            console.error('Error reloading bills after restore:', e);
+          }
+        }
+        const savedQuotes = localStorage.getItem('globotech_erp_quotations');
+        if (savedQuotes) {
+          try {
+            const parsedQuotes = JSON.parse(savedQuotes);
+            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+            setQuotations(
+              parsedQuotes.filter(
+                (q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber)
+              )
+            );
+          } catch (e) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+  }, []);
+
   // Calculate Subtotal & Grand Total for Form
   const recalculateFormTotals = (items: BillInvoiceItem[], vatIncluded: boolean, customVat: number = 0) => {
     const sub = items.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);

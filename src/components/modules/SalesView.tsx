@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Plus, DollarSign, Printer, ArrowRight, CheckCircle2, Truck } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -66,6 +66,42 @@ const INITIAL_INVOICES: SalesInvoiceRecord[] = [
 
 export function SalesView() {
   const [invoices, setInvoices] = useState<SalesInvoiceRecord[]>(INITIAL_INVOICES);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const loadSales = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_sales');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setInvoices(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error('Error loading sales from localStorage:', e);
+          }
+        }
+        localStorage.setItem('globotech_erp_sales', JSON.stringify(INITIAL_INVOICES));
+      }
+    };
+
+    loadSales();
+    window.addEventListener('globotech_backup_restored', loadSales);
+    return () => window.removeEventListener('globotech_backup_restored', loadSales);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_sales', JSON.stringify(invoices));
+      } catch (e) {
+        console.error('Error syncing sales to localStorage:', e);
+      }
+    }
+  }, [invoices, isMounted]);
   const [activeSubTab, setActiveSubTab] = useState<'invoices' | 'quotes' | 'challans'>('invoices');
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoiceRecord | null>(null);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);

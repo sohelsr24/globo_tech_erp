@@ -817,6 +817,29 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       }
     }
   }, [quotations, isMounted]);
+
+  // Listen for global backup restore event
+  useEffect(() => {
+    const handleBackupRestored = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_quotations');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+            setQuotations(
+              parsed.filter((q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber))
+            );
+          } catch (e) {
+            console.error('Error reloading quotations after restore:', e);
+          }
+        }
+      }
+    };
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+  }, []);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [activeViewMode, setActiveViewMode] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'PDF'>('LIST');

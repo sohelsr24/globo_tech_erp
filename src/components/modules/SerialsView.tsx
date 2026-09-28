@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   QrCode,
   Search,
@@ -135,6 +135,43 @@ const INITIAL_SERIALS: SerialItem[] = [
 
 export function SerialsView() {
   const [serials, setSerials] = useState<SerialItem[]>(INITIAL_SERIALS);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const loadSerials = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_serials');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setSerials(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error('Error loading serials from localStorage:', e);
+          }
+        }
+        localStorage.setItem('globotech_erp_serials', JSON.stringify(INITIAL_SERIALS));
+      }
+    };
+
+    loadSerials();
+    window.addEventListener('globotech_backup_restored', loadSerials);
+    return () => window.removeEventListener('globotech_backup_restored', loadSerials);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_serials', JSON.stringify(serials));
+      } catch (e) {
+        console.error('Error syncing serials to localStorage:', e);
+      }
+    }
+  }, [serials, isMounted]);
+
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedSerial, setSelectedSerial] = useState<SerialItem | null>(null);

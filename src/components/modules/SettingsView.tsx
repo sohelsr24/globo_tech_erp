@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   Building,
@@ -13,17 +13,32 @@ import {
   RefreshCw,
   Server,
   Lock,
-  Globe
+  Globe,
+  Download,
+  Upload,
+  HardDrive,
+  FileJson,
+  AlertCircle,
+  Clock
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { formatBDT } from '@/lib/formatters';
 import { UserRole } from '@/lib/permissions';
+import {
+  downloadERPBackupFile,
+  restoreERPBackupData,
+  getERPStorageStatus,
+  ERP_STORAGE_KEYS
+} from '@/lib/erpBackup';
 
 export function SettingsView() {
   const [cnyRate, setCnyRate] = useState(16.00);
   const [usdRate, setUsdRate] = useState(122.00);
   const [costingMethod, setCostingMethod] = useState('BY_QUANTITY');
   const [isSaved, setIsSaved] = useState(false);
+  const [backupNotification, setBackupNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [storageStatus, setStorageStatus] = useState<ReturnType<typeof getERPStorageStatus> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [companyInfo, setCompanyInfo] = useState({
     name: 'Globo Tech',
@@ -35,10 +50,118 @@ export function SettingsView() {
     contactPhone: '+88 01622-152133, 01715-763303'
   });
 
+  // Refresh storage status
+  const refreshStatus = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        setStorageStatus(getERPStorageStatus());
+      } catch (e) {}
+    }
+  };
+
+  // Load saved settings on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(ERP_STORAGE_KEYS.SETTINGS);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.cnyRate) setCnyRate(parsed.cnyRate);
+          if (parsed.usdRate) setUsdRate(parsed.usdRate);
+          if (parsed.costingMethod) setCostingMethod(parsed.costingMethod);
+          if (parsed.companyInfo) setCompanyInfo(parsed.companyInfo);
+        }
+      } catch (e) {
+        console.error('Error loading settings from storage:', e);
+      }
+      refreshStatus();
+    }
+  }, []);
+
+  // Listen for backup restored event to refresh status
+  useEffect(() => {
+    const handleRestored = () => {
+      refreshStatus();
+      // Also reload settings if present in restored data
+      try {
+        const saved = localStorage.getItem(ERP_STORAGE_KEYS.SETTINGS);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.cnyRate) setCnyRate(parsed.cnyRate);
+          if (parsed.usdRate) setUsdRate(parsed.usdRate);
+          if (parsed.costingMethod) setCostingMethod(parsed.costingMethod);
+          if (parsed.companyInfo) setCompanyInfo(parsed.companyInfo);
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('globotech_backup_restored', handleRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleRestored);
+  }, []);
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== 'undefined') {
+      const payload = {
+        cnyRate,
+        usdRate,
+        costingMethod,
+        companyInfo
+      };
+      localStorage.setItem(ERP_STORAGE_KEYS.SETTINGS, JSON.stringify(payload));
+    }
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  const handleDownloadBackup = () => {
+    try {
+      const result = downloadERPBackupFile();
+      refreshStatus();
+      setBackupNotification({
+        type: 'success',
+        message: `ব্যাকআপ সফলভাবে ডাউনলোড হয়েছে! (${result.totalRecords} টি রেকর্ড সেভ করা হয়েছে: ${result.filename})`
+      });
+      setTimeout(() => setBackupNotification(null), 6000);
+    } catch (err: any) {
+      setBackupNotification({
+        type: 'error',
+        message: `ব্যাকআপ ব্যর্থ হয়েছে: ${err?.message || 'Unknown error'}`
+      });
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const res = restoreERPBackupData(content);
+        refreshStatus();
+        if (res.success) {
+          setBackupNotification({
+            type: 'success',
+            message: `ব্যাকআপ সফলভাবে রিস্টোর হয়েছে! আপনার সকল মডিউলের ডাটা আপডেট করা হয়েছে।`
+          });
+        } else {
+          setBackupNotification({
+            type: 'error',
+            message: res.message
+          });
+        }
+        setTimeout(() => setBackupNotification(null), 7000);
+      }
+    };
+    reader.onerror = () => {
+      setBackupNotification({
+        type: 'error',
+        message: 'ফাইলটি পড়তে ত্রুটি হয়েছে। অনুগ্রহ করে সঠিক JSON ব্যাকআপ ফাইল সিলেক্ট করুন।'
+      });
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const roleMatrix = [
@@ -236,6 +359,159 @@ export function SettingsView() {
               onChange={(e) => setCompanyInfo({ ...companyInfo, address: e.target.value })}
               className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:border-blue-500 focus:outline-none"
             />
+          </div>
+        </div>
+
+        {/* Enterprise Data Backup & Restore Center */}
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-5 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-emerald-400" />
+                Enterprise Data Backup & Restore Center (সম্পূর্ণ ডাটা ব্যাকআপ ও রিস্টোর)
+              </h3>
+              <p className="text-xs text-slate-400">
+                1-Click download and restore all Quotations, Bills, Products, Stock, Customers, Projects, and Settings
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="success">Live Storage Active</Badge>
+              <button
+                type="button"
+                onClick={refreshStatus}
+                className="p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded transition"
+                title="Refresh Record Counts"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Backup & Restore Action Banner / Notification */}
+          {backupNotification && (
+            <div
+              className={`p-3 rounded-lg border flex items-center gap-3 text-xs font-semibold animate-fade-in ${
+                backupNotification.type === 'success'
+                  ? 'bg-emerald-950/80 border-emerald-800 text-emerald-300'
+                  : 'bg-rose-950/80 border-rose-800 text-rose-300'
+              }`}
+            >
+              {backupNotification.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400" />
+              ) : (
+                <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
+              )}
+              <span className="flex-1">{backupNotification.message}</span>
+            </div>
+          )}
+
+          {/* Live Records Overview Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2.5">
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Quotations</span>
+              <span className="text-base font-bold font-mono text-blue-400">
+                {storageStatus?.recordCounts.quotations ?? 0}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Bill Invoices</span>
+              <span className="text-base font-bold font-mono text-purple-400">
+                {storageStatus?.recordCounts.bills ?? 0}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Products</span>
+              <span className="text-base font-bold font-mono text-emerald-400">
+                {storageStatus?.recordCounts.products ?? 0}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Customers</span>
+              <span className="text-base font-bold font-mono text-amber-400">
+                {storageStatus?.recordCounts.customers ?? 0}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Projects</span>
+              <span className="text-base font-bold font-mono text-cyan-400">
+                {storageStatus?.recordCounts.projects ?? 0}
+              </span>
+            </div>
+            <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400 block">Total Records</span>
+              <span className="text-base font-bold font-mono text-white">
+                {storageStatus?.totalRecords ?? 0}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons Row */}
+          <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-lg bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
+                <FileJson className="w-6 h-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-100 flex items-center gap-2">
+                  <span>Offline JSON Database Snapshot</span>
+                  {storageStatus?.lastBackupDate && (
+                    <span className="text-[10px] text-slate-400 font-normal flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-slate-500" />
+                      Last Backup: {new Date(storageStatus.lastBackupDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </p>
+                <p className="text-[11px] text-slate-400">
+                  Save your complete ERP database to a file on your PC or restore from a previous backup anytime.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+              {/* Download Backup Button */}
+              <button
+                type="button"
+                onClick={handleDownloadBackup}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Full Backup (.json)</span>
+              </button>
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              {/* Restore Backup Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs transition active:scale-95 cursor-pointer"
+              >
+                <Upload className="w-4 h-4 text-blue-400" />
+                <span>Restore Backup from File</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Bengali Safety Instructions Box */}
+          <div className="p-3.5 bg-blue-950/30 rounded-lg border border-blue-900/40 text-xs space-y-1.5">
+            <span className="font-bold text-blue-300 block flex items-center gap-1.5">
+              <span>💡 আপনার ডাটা শতভাগ সুরক্ষিত রাখার নিয়মাবলী:</span>
+            </span>
+            <ul className="text-slate-300 text-[11px] list-disc list-inside space-y-1 leading-relaxed">
+              <li>
+                <strong>অফলাইন সংরক্ষণ:</strong> কম্পিউটার বন্ধ করার পূর্বে বা যেকোনো সময় <span className="text-emerald-400 font-semibold">&ldquo;Download Full Backup (.json)&rdquo;</span> বাটনে ক্লিক করে পুরো ব্যাকআপ আপনার পিসিতে ডাউনলোড করে রাখুন।
+              </li>
+              <li>
+                <strong>১-ক্লিক রিস্টোর:</strong> ব্রাউজার ক্লিয়ার হলে বা অন্য কম্পিউটারে ERP ব্যবহার করতে চাইলে <span className="text-blue-400 font-semibold">&ldquo;Restore Backup from File&rdquo;</span> বাটনে ক্লিক করে সংরক্ষিত ফাইলটি সিলেক্ট করলেই সমস্ত Quotation, Bill, Product ও Customer ডাটা ১ সেকেন্ডে ফিরে আসবে।
+              </li>
+            </ul>
           </div>
         </div>
 

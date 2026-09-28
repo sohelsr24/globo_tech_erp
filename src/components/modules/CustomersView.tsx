@@ -340,6 +340,24 @@ export function CustomersView() {
     }
   }, [customers]);
 
+  // Listen for global backup restore event
+  useEffect(() => {
+    const handleBackupRestored = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_customers');
+        if (saved) {
+          try {
+            setCustomers(JSON.parse(saved));
+          } catch (e) {
+            console.error('Error reloading customers after backup restore:', e);
+          }
+        }
+      }
+    };
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
+  }, []);
+
   // Overall Financial Totals
   const totals = useMemo(() => {
     const totalDues = customers.reduce((acc, c) => acc + (c.currentDues || 0), 0);

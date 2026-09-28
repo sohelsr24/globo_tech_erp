@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Ship, Plus, Calculator, CheckCircle2, ArrowRight, DollarSign } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -98,6 +98,43 @@ const INITIAL_IMPORTS: ImportShipmentRecord[] = [
 
 export function ImportsView() {
   const [shipments, setShipments] = useState<ImportShipmentRecord[]>(INITIAL_IMPORTS);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const loadImports = () => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_imports');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setShipments(parsed);
+              return;
+            }
+          } catch (e) {
+            console.error('Error loading imports from localStorage:', e);
+          }
+        }
+        localStorage.setItem('globotech_erp_imports', JSON.stringify(INITIAL_IMPORTS));
+      }
+    };
+
+    loadImports();
+    window.addEventListener('globotech_backup_restored', loadImports);
+    return () => window.removeEventListener('globotech_backup_restored', loadImports);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_imports', JSON.stringify(shipments));
+      } catch (e) {
+        console.error('Error syncing imports to localStorage:', e);
+      }
+    }
+  }, [shipments, isMounted]);
+
   const [activeShipment, setActiveShipment] = useState<ImportShipmentRecord | null>(null);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
