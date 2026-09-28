@@ -747,28 +747,49 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
+      const deletedIds = new Set<string>();
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+        if (delSaved) {
+          const parsedDel = JSON.parse(delSaved);
+          if (Array.isArray(parsedDel)) {
+            parsedDel.forEach((id: string) => deletedIds.add(id));
+          }
+        }
+      } catch (e) {
+        console.error('Error loading deleted quotation ids', e);
+      }
+
       const saved = localStorage.getItem('globotech_erp_quotations');
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
+          if (Array.isArray(parsed)) {
             const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
-            const newInitials = INITIAL_QUOTATIONS.filter((initQ) => !existingIds.has(initQ.id) && !existingIds.has(initQ.quotationNumber));
+            const newInitials = INITIAL_QUOTATIONS.filter(
+              (initQ) =>
+                !existingIds.has(initQ.id) &&
+                !existingIds.has(initQ.quotationNumber) &&
+                !deletedIds.has(initQ.id) &&
+                !deletedIds.has(initQ.quotationNumber)
+            );
             const merged = [
               ...newInitials,
-              ...parsed.map((q: Quotation) => {
-                let fixedCustomerId = q.customerId;
-                if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
-                  fixedCustomerId = 'cust-002';
-                } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
-                  fixedCustomerId = 'cust-001';
-                }
-                return {
-                  ...q,
-                  customerId: fixedCustomerId,
-                  vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-                };
-              })
+              ...parsed
+                .filter((q: Quotation) => !deletedIds.has(q.id) && !deletedIds.has(q.quotationNumber))
+                .map((q: Quotation) => {
+                  let fixedCustomerId = q.customerId;
+                  if (q.customerCompany?.toLowerCase().includes('abc bank') && q.customerId === 'cust-001') {
+                    fixedCustomerId = 'cust-002';
+                  } else if (q.customerCompany?.toLowerCase().includes('daraz') && q.customerId === 'cust-002') {
+                    fixedCustomerId = 'cust-001';
+                  }
+                  return {
+                    ...q,
+                    customerId: fixedCustomerId,
+                    vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+                  };
+                })
             ];
             setQuotations(merged);
             localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));
@@ -778,7 +799,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           console.error('Error loading quotations from localStorage', e);
         }
       }
-      localStorage.setItem('globotech_erp_quotations', JSON.stringify(INITIAL_QUOTATIONS));
+      const filteredInitials = INITIAL_QUOTATIONS.filter(
+        (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+      );
+      setQuotations(filteredInitials);
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(filteredInitials));
     }
   }, []);
 
@@ -1732,6 +1757,96 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
   };
 
+  // Delete a quotation (demo, test, or unwanted quote)
+  const handleDeleteQuotation = (quote: Quotation) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete quotation "${quote.quotationNumber}" (${quote.customerCompany || 'No Client'})?\n\nThis action cannot be undone.`
+    );
+    if (!isConfirmed) return;
+
+    const idToDelete = quote.id;
+    const numToDelete = quote.quotationNumber;
+
+    // Persist deleted quotation ID in localStorage so mock data never resurrects it
+    if (typeof window !== 'undefined') {
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+        const deletedList: string[] = delSaved ? JSON.parse(delSaved) : [];
+        if (!deletedList.includes(idToDelete)) deletedList.push(idToDelete);
+        if (numToDelete && !deletedList.includes(numToDelete)) deletedList.push(numToDelete);
+        localStorage.setItem('globotech_erp_deleted_quotation_ids', JSON.stringify(deletedList));
+      } catch (e) {
+        console.error('Error persisting deleted quotation ID:', e);
+      }
+    }
+
+    const updated = quotations.filter((q) => q.id !== idToDelete && q.quotationNumber !== numToDelete);
+    setQuotations(updated);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updated));
+    }
+
+    if (selectedQuotation && (selectedQuotation.id === idToDelete || selectedQuotation.quotationNumber === numToDelete)) {
+      setSelectedQuotation(null);
+      setActiveViewMode('LIST');
+    }
+
+    if (editingQuotationId && (editingQuotationId === idToDelete || editingQuotationId === numToDelete)) {
+      setEditingQuotationId(null);
+      setActiveViewMode('LIST');
+    }
+  };
+
+  // 1-Click Clean all sample demo quotations
+  const handleCleanDemoQuotations = () => {
+    const DEMO_QUOTE_NUMBERS = ['QT-2026-001', 'QT-2026-002', 'QT-2026-003', 'QT-2026-004', 'QT-2026-005'];
+    const demoFound = quotations.filter(
+      (q) => DEMO_QUOTE_NUMBERS.includes(q.quotationNumber) || DEMO_QUOTE_NUMBERS.includes(q.id)
+    );
+
+    if (demoFound.length === 0) {
+      alert('No demo/sample quotations found. All existing quotations are your real/custom entries.');
+      return;
+    }
+
+    const isConfirmed = window.confirm(
+      `Do you want to permanently delete all ${demoFound.length} sample/demo quotations?\n(${demoFound.map((q) => q.quotationNumber).join(', ')})\n\nYour own created quotations (e.g. Daraz) will remain safe and untouched.`
+    );
+    if (!isConfirmed) return;
+
+    if (typeof window !== 'undefined') {
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+        const deletedList: string[] = delSaved ? JSON.parse(delSaved) : [];
+        demoFound.forEach((q) => {
+          if (!deletedList.includes(q.id)) deletedList.push(q.id);
+          if (q.quotationNumber && !deletedList.includes(q.quotationNumber)) deletedList.push(q.quotationNumber);
+        });
+        localStorage.setItem('globotech_erp_deleted_quotation_ids', JSON.stringify(deletedList));
+      } catch (e) {
+        console.error('Error persisting deleted demo quotations:', e);
+      }
+    }
+
+    const updated = quotations.filter(
+      (q) => !DEMO_QUOTE_NUMBERS.includes(q.quotationNumber) && !DEMO_QUOTE_NUMBERS.includes(q.id)
+    );
+    setQuotations(updated);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('globotech_erp_quotations', JSON.stringify(updated));
+    }
+
+    if (
+      selectedQuotation &&
+      (DEMO_QUOTE_NUMBERS.includes(selectedQuotation.quotationNumber) || DEMO_QUOTE_NUMBERS.includes(selectedQuotation.id))
+    ) {
+      setSelectedQuotation(null);
+      setActiveViewMode('LIST');
+    }
+  };
+
   // Render Status Badge
   const getStatusBadge = (status: QuotationStatus) => {
     switch (status) {
@@ -1789,46 +1904,57 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             )}
 
             {activeViewMode === 'LIST' && (
-              <button
-                onClick={() => {
-                  setEditingQuotationId(null);
-                  setNewQuote({
-                    quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
-                    version: 1,
-                    type: 'PRODUCT_SERVICE',
-                    date: new Date().toISOString().split('T')[0],
-                    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    customerId: 'cust-001',
-                    customerName: 'Procurement Officer',
-                    customerCompany: 'Daraz Bangladesh Limited',
-                    customerType: 'CORPORATE',
-                    customerPhone: '+880 1700-112233',
-                    customerEmail: 'procurement@daraz.com.bd',
-                    customerAddress: 'Tejgaon I/A, Dhaka-1208',
-                    customerBin: 'BIN-003928174-0101',
-                    salesperson: 'Engr. Sohel Rana',
-                    projectName: '',
-                    projectLocation: 'Dhaka',
-                    reference: '',
-                    currency: 'BDT',
-                    paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
-                    deliveryTerms: 'Within 15 days from PO date',
-                    warrantyTerms: '2 Years Comprehensive Hardware Replacement',
-                    vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
-                    notes: '',
-                    status: 'DRAFT',
-                    stockReserved: false,
-                    requiresApproval: false,
-                    additionalDiscount: 0,
-                    items: []
-                  });
-                  setActiveViewMode('CREATE');
-                }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ New Quotation</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCleanDemoQuotations}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold text-xs transition"
+                  title="Permanently remove sample/demo quotations (QT-2026-001 to QT-2026-005)"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Clean Demo Quotes</span>
+                  <span className="sm:hidden">Clean Demo</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingQuotationId(null);
+                    setNewQuote({
+                      quotationNumber: `QT-2026-${String(quotations.length + 1).padStart(3, '0')}`,
+                      version: 1,
+                      type: 'PRODUCT_SERVICE',
+                      date: new Date().toISOString().split('T')[0],
+                      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                      customerId: 'cust-001',
+                      customerName: 'Procurement Officer',
+                      customerCompany: 'Daraz Bangladesh Limited',
+                      customerType: 'CORPORATE',
+                      customerPhone: '+880 1700-112233',
+                      customerEmail: 'procurement@daraz.com.bd',
+                      customerAddress: 'Tejgaon I/A, Dhaka-1208',
+                      customerBin: 'BIN-003928174-0101',
+                      salesperson: 'Engr. Sohel Rana',
+                      projectName: '',
+                      projectLocation: 'Dhaka',
+                      reference: '',
+                      currency: 'BDT',
+                      paymentTerms: '50% Advance with PO, 40% on Delivery, 10% on Commissioning',
+                      deliveryTerms: 'Within 15 days from PO date',
+                      warrantyTerms: '2 Years Comprehensive Hardware Replacement',
+                      vatTaxTerms: 'INCLUSIVE of 15% VAT and TAX / AIT.',
+                      notes: '',
+                      status: 'DRAFT',
+                      stockReserved: false,
+                      requiresApproval: false,
+                      additionalDiscount: 0,
+                      items: []
+                    });
+                    setActiveViewMode('CREATE');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ New Quotation</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1930,7 +2056,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               <span className="font-semibold text-slate-300">{filteredQuotations.length} quotes</span>
             </div>
             <div className="overflow-x-auto touch-scroll">
-              <table className="w-full text-left text-xs text-slate-300 min-w-[850px]">
+              <table className="w-full text-left text-xs text-slate-300 min-w-[960px]">
                 <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
                   <tr>
                     <th className="px-4 py-3">Quote # & Date</th>
@@ -2067,6 +2193,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                             >
                               <Printer className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
                               PDF
+                            </button>
+                            <button
+                              onClick={() => handleDeleteQuotation(q)}
+                              className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs border border-rose-500/30 transition inline-flex items-center gap-1"
+                              title="Delete this Quotation"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              Delete
                             </button>
                           </td>
                         </tr>
@@ -3016,6 +3150,15 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               >
                 <Printer className="w-3.5 h-3.5 inline mr-1" />
                 PDF
+              </button>
+
+              <button
+                onClick={() => handleDeleteQuotation(selectedQuotation)}
+                className="px-3 py-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 font-semibold text-xs border border-rose-500/40 transition inline-flex items-center gap-1.5"
+                title="Delete this Quotation"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
               </button>
             </div>
           </div>

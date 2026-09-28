@@ -341,8 +341,14 @@ export function BillInvoiceView({
       if (savedQuotes) {
         try {
           const parsedQuotes = JSON.parse(savedQuotes);
-          if (Array.isArray(parsedQuotes) && parsedQuotes.length > 0) {
-            setQuotations(parsedQuotes);
+          if (Array.isArray(parsedQuotes)) {
+            const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+            const deletedSet = new Set<string>(delSaved ? JSON.parse(delSaved) : []);
+            setQuotations(
+              parsedQuotes.filter(
+                (q: Quotation) => !deletedSet.has(q.id) && !deletedSet.has(q.quotationNumber)
+              )
+            );
           }
         } catch (e) {
           console.error('Error loading quotations', e);
