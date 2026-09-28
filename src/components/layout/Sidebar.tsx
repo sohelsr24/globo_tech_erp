@@ -16,7 +16,8 @@ import {
   Settings,
   ShieldCheck,
   LogOut,
-  X
+  X,
+  Smartphone
 } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
@@ -75,7 +76,7 @@ export function Sidebar({
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-72 lg:w-64 bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 min-h-screen transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-72 lg:w-64 max-w-[85vw] bg-slate-900 border-r border-slate-800 flex flex-col flex-shrink-0 h-[100dvh] lg:h-auto lg:min-h-screen transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -156,6 +157,25 @@ export function Sidebar({
               </a>
             );
           })}
+
+          {/* Quick Mobile Sync Button in Sidebar */}
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('globotech_open_sync_modal'));
+                if (onClose) onClose();
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold text-sky-400 bg-sky-950/40 hover:bg-sky-900/50 border border-sky-800/50 transition active:scale-[0.99] cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Smartphone className="w-4 h-4 text-sky-400 flex-shrink-0" />
+                <span className="truncate">পিসি ⇄ মোবাইল সিঙ্ক</span>
+              </div>
+              <span className="px-2 py-0.5 text-[10px] rounded-full bg-sky-500/20 text-sky-300 font-mono flex-shrink-0">
+                Sync
+              </span>
+            </button>
+          </div>
         </nav>
 
         {/* Footer Profile */}

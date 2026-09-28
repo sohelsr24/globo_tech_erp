@@ -17,8 +17,10 @@ import {
   ArrowRight,
   CheckCircle2,
   Building2,
-  Download
+  Download,
+  Smartphone
 } from 'lucide-react';
+import { DeviceSyncModal } from '@/components/modals/DeviceSyncModal';
 import { UserRole } from '@/lib/permissions';
 import {
   getStoredProducts,
@@ -65,6 +67,7 @@ export function Header({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'PRODUCTS' | 'WAREHOUSE' | 'BILLS' | 'QUOTATIONS'>('ALL');
   const [backedUpSuccess, setBackedUpSuccess] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const handleQuickBackup = () => {
@@ -108,6 +111,13 @@ export function Header({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Listen for global open sync modal event from sidebar / elsewhere
+  useEffect(() => {
+    const handleOpenSync = () => setIsSyncModalOpen(true);
+    window.addEventListener('globotech_open_sync_modal', handleOpenSync);
+    return () => window.removeEventListener('globotech_open_sync_modal', handleOpenSync);
   }, []);
 
   // Compute live search results across all modules
@@ -482,7 +492,7 @@ export function Header({
           {/* Mobile Search Toggle Button */}
           <button
             onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-slate-200 bg-slate-800/60 border border-slate-700/50 transition active:scale-95"
+            className="md:hidden p-2 rounded-xl text-slate-300 hover:text-white bg-slate-800/80 border border-slate-700/60 transition active:scale-95"
             aria-label="Toggle Search"
           >
             {isMobileSearchOpen ? <X className="w-4 h-4 text-rose-400" /> : <Search className="w-4 h-4" />}
@@ -492,26 +502,27 @@ export function Header({
           {lowStockCount > 0 && (
             <button
               onClick={onLowStockClick}
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-amber-950/80 border border-amber-800/80 text-amber-400 text-xs font-semibold hover:bg-amber-900/60 transition active:scale-95"
+              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-amber-950/80 border border-amber-800/80 text-amber-400 text-xs font-semibold hover:bg-amber-900/60 transition active:scale-95 flex-shrink-0"
               title={`${lowStockCount} items below reorder level`}
             >
               <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="hidden sm:inline">Low Stock ({lowStockCount})</span>
-              <span className="sm:hidden font-bold">{lowStockCount}</span>
+              <span className="sm:hidden font-bold text-[11px]">{lowStockCount}</span>
             </button>
           )}
 
           {/* Role Switcher */}
-          <div className="relative flex items-center gap-1 bg-slate-800/80 border border-slate-700/70 rounded-lg px-2 py-1">
+          <div className="relative flex items-center gap-1 bg-slate-800/80 border border-slate-700/70 rounded-xl px-2 py-1.5 flex-shrink-0">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-400 hidden xs:inline flex-shrink-0" />
             <select
               value={currentRole}
               onChange={(e) => onRoleChange(e.target.value as UserRole)}
-              className="bg-transparent text-[11px] sm:text-xs text-blue-400 font-semibold focus:outline-none cursor-pointer max-w-[85px] sm:max-w-none"
+              className="bg-transparent text-[11px] sm:text-xs text-blue-400 font-semibold focus:outline-none cursor-pointer max-w-[70px] sm:max-w-none"
+              aria-label="Role selector"
             >
               {roles.map((r) => (
                 <option key={r.id} value={r.id} className="bg-slate-900 text-slate-200">
-                  {r.label}
+                  {r.short}
                 </option>
               ))}
             </select>
@@ -520,21 +531,40 @@ export function Header({
           {/* Theme Toggle */}
           <button
             onClick={onToggleTheme}
-            className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition flex-shrink-0"
             title="Toggle Dark/Light Mode"
           >
             {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
           </button>
 
+          {/* Local Storage Live Status Indicator */}
+          <div 
+            className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-[11px] font-medium flex-shrink-0"
+            title="All records are saved to your local disk and persistent database. Safe across computer restarts."
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">Saved to Disk</span>
+          </div>
+
+          {/* Mobile / PC Sync Button */}
+          <button
+            onClick={() => setIsSyncModalOpen(true)}
+            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-400 hover:text-sky-300 transition active:scale-95 cursor-pointer flex-shrink-0"
+            title="পিসি ও মোবাইলের মধ্যে ডেটা সিঙ্ক করুন (PC to Mobile Sync)"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-sky-400" />
+            <span className="font-medium">মোবাইল সিঙ্ক</span>
+          </button>
+
           {/* Quick 1-Click Backup Button */}
           <button
             onClick={handleQuickBackup}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold transition active:scale-95 cursor-pointer ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold transition active:scale-95 cursor-pointer flex-shrink-0 ${
               backedUpSuccess
                 ? 'bg-emerald-950/90 border border-emerald-600 text-emerald-400'
                 : 'bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/70 text-slate-200 hover:text-emerald-400'
             }`}
-            title="Download Complete ERP Database Backup to your PC"
+            title="Download Complete ERP Database Backup to your PC (.json)"
           >
             {backedUpSuccess ? (
               <>
@@ -553,11 +583,11 @@ export function Header({
           {onLogout && (
             <button
               onClick={onLogout}
-              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-transparent sm:border-slate-800 hover:border-rose-900/50 transition text-xs font-semibold"
+              className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-900/50 transition text-xs font-semibold"
               title="Log Out of ERP"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden md:inline">Log Out</span>
+              <span>Log Out</span>
             </button>
           )}
         </div>
@@ -648,6 +678,11 @@ export function Header({
           )}
         </div>
       )}
+      {/* Device Sync Modal */}
+      <DeviceSyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+      />
     </header>
   );
 }

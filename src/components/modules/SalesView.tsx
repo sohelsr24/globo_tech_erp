@@ -65,12 +65,25 @@ const INITIAL_INVOICES: SalesInvoiceRecord[] = [
 ];
 
 export function SalesView() {
-  const [invoices, setInvoices] = useState<SalesInvoiceRecord[]>(INITIAL_INVOICES);
-  const [isMounted, setIsMounted] = useState(false);
+  const [invoices, setInvoices] = useState<SalesInvoiceRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_sales');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e) {
+          console.error('Error loading sales from localStorage:', e);
+        }
+      }
+    }
+    return INITIAL_INVOICES;
+  });
 
   useEffect(() => {
-    setIsMounted(true);
-    const loadSales = () => {
+    const handleBackupRestored = () => {
       if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_sales');
         if (saved) {
@@ -78,30 +91,24 @@ export function SalesView() {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setInvoices(parsed);
-              return;
             }
-          } catch (e) {
-            console.error('Error loading sales from localStorage:', e);
-          }
+          } catch (e) {}
         }
-        localStorage.setItem('globotech_erp_sales', JSON.stringify(INITIAL_INVOICES));
       }
     };
-
-    loadSales();
-    window.addEventListener('globotech_backup_restored', loadSales);
-    return () => window.removeEventListener('globotech_backup_restored', loadSales);
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
   }, []);
 
   useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_sales', JSON.stringify(invoices));
       } catch (e) {
         console.error('Error syncing sales to localStorage:', e);
       }
     }
-  }, [invoices, isMounted]);
+  }, [invoices]);
   const [activeSubTab, setActiveSubTab] = useState<'invoices' | 'quotes' | 'challans'>('invoices');
   const [selectedInvoice, setSelectedInvoice] = useState<SalesInvoiceRecord | null>(null);
   const [isPayModalOpen, setIsPayModalOpen] = useState(false);
@@ -286,13 +293,13 @@ export function SalesView() {
             <>
               <button
                 onClick={() => setIsPayModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRecordPayment}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
               >
                 Confirm Payment Receipt
               </button>
@@ -354,17 +361,17 @@ export function SalesView() {
           footer={
             <>
               <button
-                onClick={() => window.print()}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Invoice (A4)</span>
-              </button>
-              <button
                 onClick={() => setIsPrintModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition"
               >
                 Close
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-lg shadow-blue-600/20 transition"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Print Invoice (A4)</span>
               </button>
             </>
           }

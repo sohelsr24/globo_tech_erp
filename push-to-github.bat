@@ -8,6 +8,7 @@ echo ======================================================================
 echo.
 
 set "PATH=C:\Users\Sohel\.bin\git\cmd;C:\Users\Sohel\.bin\node-v20.18.0-win-x64;%PATH%"
+set "NEXT_TELEMETRY_DISABLED=1"
 
 echo [1/3] Building Next.js static export...
 if exist out rmdir /s /q out

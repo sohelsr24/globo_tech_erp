@@ -308,8 +308,57 @@ export function BillInvoiceView({
   initialSelectedQuoteId?: string;
   globalSearchQuery?: string;
 } = {}) {
-  const [bills, setBills] = useState<BillInvoice[]>(INITIAL_BILL_INVOICES);
-  const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [bills, setBills] = useState<BillInvoice[]>(() => {
+    if (typeof window !== 'undefined') {
+      const deletedBillIds = new Set<string>();
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
+        if (delSaved) {
+          const parsedDel = JSON.parse(delSaved);
+          if (Array.isArray(parsedDel)) {
+            parsedDel.forEach((id: string) => deletedBillIds.add(id));
+          }
+        }
+      } catch (e) {}
+
+      const savedBills = localStorage.getItem('globotech_erp_bill_invoices');
+      if (savedBills) {
+        try {
+          const parsed = JSON.parse(savedBills);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingIds = new Set(parsed.map((b: BillInvoice) => b.id));
+            const merged = [
+              ...parsed,
+              ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo))
+            ];
+            return merged.map((b: BillInvoice) => {
+              if (b.id === 'bill-26107' && !b.poAttachment) {
+                return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
+              }
+              return b;
+            });
+          }
+        } catch (e) {}
+      }
+      return INITIAL_BILL_INVOICES.filter((initB) => !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo));
+    }
+    return INITIAL_BILL_INVOICES;
+  });
+
+  const [quotations, setQuotations] = useState<Quotation[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedQuotes = localStorage.getItem('globotech_erp_quotations');
+      if (savedQuotes) {
+        try {
+          const parsedQuotes = JSON.parse(savedQuotes);
+          if (Array.isArray(parsedQuotes)) {
+            return parsedQuotes;
+          }
+        } catch (e) {}
+      }
+    }
+    return INITIAL_QUOTATIONS;
+  });
   const [customers, setCustomers] = useState<Customer[]>(() => {
     if (typeof window !== 'undefined') {
       const delSaved = localStorage.getItem('globotech_erp_deleted_customer_ids');
@@ -1296,128 +1345,30 @@ export function BillInvoiceView({
             </div>
           </div>
 
-          {/* Bill Invoices Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl no-print">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
-                    <th className="py-3.5 px-4">Bill NO</th>
-                    <th className="py-3.5 px-4">Date</th>
-                    <th className="py-3.5 px-4">Client (Bill To)</th>
-                    <th className="py-3.5 px-4">PO / Quote Ref</th>
-                    <th className="py-3.5 px-4">Delivered To</th>
-                    <th className="py-3.5 px-4 text-right">Items</th>
-                    <th className="py-3.5 px-4 text-right">Grand Total</th>
-                    <th className="py-3.5 px-4 text-center">Status</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {filteredBills.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="py-12 text-center text-slate-500">
-                        <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
-                        <p className="text-sm font-medium">No bill invoices found</p>
-                        <p className="text-xs text-slate-600 mt-1">
-                          Click &ldquo;Create Bill Invoice&rdquo; above to generate your first company pad bill from quotation.
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredBills.map((bill) => (
-                      <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
-                        <td className="py-3 px-4 font-mono font-bold text-emerald-400">
-                          <div className="flex items-center gap-1.5">
-                            <span>{bill.billNo}</span>
-                            {searchQuery &&
-                              (bill.billNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                bill.billNo.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(searchQuery.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())) && (
-                                <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded font-sans uppercase font-bold">
-                                  Match
-                                </span>
-                              )}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 whitespace-nowrap text-slate-400">
-                          {bill.date}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-slate-200">{bill.billToName}</div>
-                          <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="font-mono text-slate-200 font-medium">
-                            {bill.poNumber ? (
-                              <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[11px]">
-                                {bill.poNumber}
-                              </span>
-                            ) : (
-                              <span className="text-slate-600 italic">No PO</span>
-                            )}
-                          </div>
-                          {bill.quotationRef && (
-                            <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1 mt-0.5">
-                              <span>Ref: {bill.quotationRef}</span>
-                            </div>
-                          )}
-
-                          {/* Customer PO Attachment Indicator */}
-                          {bill.poAttachment ? (
-                            <div className="mt-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenPOViewer(bill);
-                                }}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 text-[10px] font-medium transition active:scale-95 group/btn"
-                                title={`View Customer PO Document: ${bill.poAttachment.name} (${(bill.poAttachment.size / 1024).toFixed(0)} KB)`}
-                              >
-                                <Paperclip className="w-2.5 h-2.5 text-emerald-400 group-hover/btn:rotate-12 transition-transform" />
-                                <span className="truncate max-w-[100px]">{bill.poAttachment.name}</span>
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="mt-1">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleOpenQuickAttach(bill);
-                                }}
-                                className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 hover:underline transition"
-                                title="Attach client PO document to this bill"
-                              >
-                                <Paperclip className="w-2.5 h-2.5" />
-                                <span>+ Attach PO</span>
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="text-slate-300 font-medium truncate max-w-[180px]">
-                            {bill.deliverToAddress || '—'}
-                          </div>
-                          {(bill.deliverToName || bill.deliverToPhone) && (
-                            <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                              {bill.deliverToName && <span>{bill.deliverToName}</span>}
-                              {bill.deliverToName && bill.deliverToPhone && <span className="text-slate-600">&bull;</span>}
-                              {bill.deliverToPhone && (
-                                <span className="font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded text-[10px]">
-                                  {bill.deliverToPhone}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium">
-                          {bill.items.length} {bill.items.length === 1 ? 'item' : 'items'}
-                        </td>
-                        <td className="py-3 px-4 text-right font-bold text-slate-100">
-                          {formatBDT(bill.grandTotal)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
+          {/* Bill Invoices Table & Mobile Cards */}
+          <div className="space-y-4 no-print">
+            {/* Mobile Cards View (md:hidden) */}
+            <div className="md:hidden space-y-3">
+              {filteredBills.length === 0 ? (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
+                  <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
+                  <p className="text-sm font-medium">No bill invoices found</p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Click &ldquo;Create Bill Invoice&rdquo; above to generate your first company pad bill from quotation.
+                  </p>
+                </div>
+              ) : (
+                filteredBills.map((bill) => (
+                  <div
+                    key={bill.id}
+                    className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-bold text-emerald-400">
+                            {bill.billNo}
+                          </span>
                           <Badge
                             variant={
                               bill.status === 'PAID'
@@ -1431,59 +1382,306 @@ export function BillInvoiceView({
                           >
                             {bill.status}
                           </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* PO Attachment quick button */}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{bill.date}</p>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 uppercase block font-semibold">Grand Total</span>
+                        <span className="font-mono font-bold text-slate-100 text-base">
+                          {formatBDT(bill.grandTotal)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 space-y-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Client (Bill To)</span>
+                        <p className="font-semibold text-slate-200">{bill.billToName}</p>
+                        {bill.billToAddress && (
+                          <p className="text-[11px] text-slate-400 truncate">{bill.billToAddress}</p>
+                        )}
+                      </div>
+
+                      {(bill.deliverToName || bill.deliverToPhone || bill.deliverToAddress) && (
+                        <div className="pt-1.5 border-t border-slate-800/60">
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">Delivered To</span>
+                          <p className="text-slate-300 truncate">{bill.deliverToAddress || '—'}</p>
+                          {(bill.deliverToName || bill.deliverToPhone) && (
+                            <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                              {bill.deliverToName && <span>{bill.deliverToName}</span>}
+                              {bill.deliverToName && bill.deliverToPhone && <span className="text-slate-600">&bull;</span>}
+                              {bill.deliverToPhone && (
+                                <a
+                                  href={`tel:${bill.deliverToPhone}`}
+                                  className="font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded text-[10px] underline"
+                                >
+                                  {bill.deliverToPhone}
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="pt-1.5 border-t border-slate-800/60 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">PO Number</span>
+                          {bill.poNumber ? (
+                            <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[11px]">
+                              {bill.poNumber}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 italic text-[11px]">None</span>
+                          )}
+                          {bill.quotationRef && (
+                            <span className="text-[10px] text-sky-400 font-mono ml-2">
+                              Ref: {bill.quotationRef}
+                            </span>
+                          )}
+                        </div>
+
+                        <div>
+                          {bill.poAttachment ? (
                             <button
                               type="button"
-                              onClick={() => bill.poAttachment ? handleOpenPOViewer(bill) : handleOpenQuickAttach(bill)}
-                              title={bill.poAttachment ? `View Customer PO (${bill.poAttachment.name})` : "Attach Customer PO Document"}
-                              className={`p-1.5 rounded-lg transition active:scale-95 ${
-                                bill.poAttachment
-                                  ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
-                                  : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200'
-                              }`}
+                              onClick={() => handleOpenPOViewer(bill)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[11px] font-medium"
                             >
-                              <Paperclip className="w-3.5 h-3.5" />
+                              <Paperclip className="w-3 h-3 text-emerald-400" />
+                              <span className="truncate max-w-[110px]">{bill.poAttachment.name}</span>
                             </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenQuickAttach(bill)}
+                              className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-emerald-400 py-1"
+                            >
+                              <Paperclip className="w-3 h-3" />
+                              <span>+ Attach PO</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-                            <button
-                              onClick={() => handleOpenPreview(bill)}
-                              title="View & Print Pad Invoice"
-                              className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/20 transition flex items-center gap-1"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>View / Print</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenEditModal(bill)}
-                              title="Edit Bill"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                            >
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDuplicateBill(bill)}
-                              title="Duplicate"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBill(bill.id)}
-                              title="Delete"
-                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
+                    <div className="grid grid-cols-4 gap-2 pt-1">
+                      <button
+                        onClick={() => handleOpenPreview(bill)}
+                        className="col-span-2 min-h-[42px] px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition flex items-center justify-center gap-1.5 active:scale-95"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View / Print</span>
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditModal(bill)}
+                        className="min-h-[42px] p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center justify-center active:scale-95"
+                        title="Edit Bill"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBill(bill.id)}
+                        className="min-h-[42px] p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center justify-center active:scale-95"
+                        title="Delete Bill"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Desktop Table View (hidden md:block) */}
+            <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div className="overflow-x-auto touch-scroll">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+                      <th className="py-3.5 px-4">Bill NO</th>
+                      <th className="py-3.5 px-4">Date</th>
+                      <th className="py-3.5 px-4">Client (Bill To)</th>
+                      <th className="py-3.5 px-4">PO / Quote Ref</th>
+                      <th className="py-3.5 px-4">Delivered To</th>
+                      <th className="py-3.5 px-4 text-right">Items</th>
+                      <th className="py-3.5 px-4 text-right">Grand Total</th>
+                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {filteredBills.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} className="py-12 text-center text-slate-500">
+                          <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
+                          <p className="text-sm font-medium">No bill invoices found</p>
+                          <p className="text-xs text-slate-600 mt-1">
+                            Click &ldquo;Create Bill Invoice&rdquo; above to generate your first company pad bill from quotation.
+                          </p>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredBills.map((bill) => (
+                        <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
+                          <td className="py-3 px-4 font-mono font-bold text-emerald-400">
+                            <div className="flex items-center gap-1.5">
+                              <span>{bill.billNo}</span>
+                              {searchQuery &&
+                                (bill.billNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  bill.billNo.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(searchQuery.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())) && (
+                                  <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-1 py-0.2 rounded font-sans uppercase font-bold">
+                                    Match
+                                  </span>
+                                )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 whitespace-nowrap text-slate-400">
+                            {bill.date}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-slate-200">{bill.billToName}</div>
+                            <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-mono text-slate-200 font-medium">
+                              {bill.poNumber ? (
+                                <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[11px]">
+                                  {bill.poNumber}
+                                </span>
+                              ) : (
+                                <span className="text-slate-600 italic">No PO</span>
+                              )}
+                            </div>
+                            {bill.quotationRef && (
+                              <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1 mt-0.5">
+                                <span>Ref: {bill.quotationRef}</span>
+                              </div>
+                            )}
+
+                            {/* Customer PO Attachment Indicator */}
+                            {bill.poAttachment ? (
+                              <div className="mt-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenPOViewer(bill);
+                                  }}
+                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/80 hover:bg-emerald-900 text-emerald-400 border border-emerald-800 text-[10px] font-medium transition active:scale-95 group/btn"
+                                  title={`View Customer PO Document: ${bill.poAttachment.name} (${(bill.poAttachment.size / 1024).toFixed(0)} KB)`}
+                                >
+                                  <Paperclip className="w-2.5 h-2.5 text-emerald-400 group-hover/btn:rotate-12 transition-transform" />
+                                  <span className="truncate max-w-[100px]">{bill.poAttachment.name}</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenQuickAttach(bill);
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-emerald-400 hover:underline transition"
+                                  title="Attach client PO document to this bill"
+                                >
+                                  <Paperclip className="w-2.5 h-2.5" />
+                                  <span>+ Attach PO</span>
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="text-slate-300 font-medium truncate max-w-[180px]">
+                              {bill.deliverToAddress || '—'}
+                            </div>
+                            {(bill.deliverToName || bill.deliverToPhone) && (
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                {bill.deliverToName && <span>{bill.deliverToName}</span>}
+                                {bill.deliverToName && bill.deliverToPhone && <span className="text-slate-600">&bull;</span>}
+                                {bill.deliverToPhone && (
+                                  <span className="font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded text-[10px]">
+                                    {bill.deliverToPhone}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-right font-medium">
+                            {bill.items.length} {bill.items.length === 1 ? 'item' : 'items'}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold text-slate-100">
+                            {formatBDT(bill.grandTotal)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge
+                              variant={
+                                bill.status === 'PAID'
+                                  ? 'success'
+                                  : bill.status === 'ISSUED'
+                                  ? 'warning'
+                                  : bill.status === 'DRAFT'
+                                  ? 'neutral'
+                                  : 'info'
+                              }
+                            >
+                              {bill.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* PO Attachment quick button */}
+                              <button
+                                type="button"
+                                onClick={() => bill.poAttachment ? handleOpenPOViewer(bill) : handleOpenQuickAttach(bill)}
+                                title={bill.poAttachment ? `View Customer PO (${bill.poAttachment.name})` : "Attach Customer PO Document"}
+                                className={`p-1.5 rounded-lg transition active:scale-95 ${
+                                  bill.poAttachment
+                                    ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
+                                    : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200'
+                                }`}
+                              >
+                                <Paperclip className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => handleOpenPreview(bill)}
+                                title="View & Print Pad Invoice"
+                                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/20 transition flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View / Print</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenEditModal(bill)}
+                                title="Edit Bill"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDuplicateBill(bill)}
+                                title="Duplicate"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteBill(bill.id)}
+                                title="Delete"
+                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </>
@@ -1617,7 +1815,7 @@ export function BillInvoiceView({
           </div>
 
           {/* A4 PRINTABLE BILL INVOICE SHEET (Pure White Sheet Container) */}
-          <div className="flex justify-center pb-12">
+          <div className="w-full overflow-x-auto touch-scroll pb-12 flex justify-start sm:justify-center">
             <div
               id="printable-bill-invoice"
               style={{
@@ -2451,17 +2649,17 @@ export function BillInvoiceView({
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-4 border-t border-slate-800">
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(false)}
-              className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
+              className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition"
+              className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
             >
               {editingBillId ? 'Update & Preview' : 'Save & Preview'}
             </button>
@@ -2669,7 +2867,7 @@ export function BillInvoiceView({
               </label>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+            <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => {
@@ -2677,14 +2875,14 @@ export function BillInvoiceView({
                   setQuickAttachBill(null);
                   setQuickAttachFile(null);
                 }}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!quickAttachFile || isUploadingPO}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center gap-1.5"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-semibold shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-1.5"
               >
                 {isUploadingPO ? (
                   <span>Attaching...</span>

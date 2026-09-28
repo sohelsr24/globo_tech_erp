@@ -134,12 +134,25 @@ const INITIAL_SERIALS: SerialItem[] = [
 ];
 
 export function SerialsView() {
-  const [serials, setSerials] = useState<SerialItem[]>(INITIAL_SERIALS);
-  const [isMounted, setIsMounted] = useState(false);
+  const [serials, setSerials] = useState<SerialItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_serials');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e) {
+          console.error('Error loading serials from localStorage:', e);
+        }
+      }
+    }
+    return INITIAL_SERIALS;
+  });
 
   useEffect(() => {
-    setIsMounted(true);
-    const loadSerials = () => {
+    const handleBackupRestored = () => {
       if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_serials');
         if (saved) {
@@ -147,30 +160,24 @@ export function SerialsView() {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setSerials(parsed);
-              return;
             }
-          } catch (e) {
-            console.error('Error loading serials from localStorage:', e);
-          }
+          } catch (e) {}
         }
-        localStorage.setItem('globotech_erp_serials', JSON.stringify(INITIAL_SERIALS));
       }
     };
-
-    loadSerials();
-    window.addEventListener('globotech_backup_restored', loadSerials);
-    return () => window.removeEventListener('globotech_backup_restored', loadSerials);
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
   }, []);
 
   useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_serials', JSON.stringify(serials));
       } catch (e) {
         console.error('Error syncing serials to localStorage:', e);
       }
     }
-  }, [serials, isMounted]);
+  }, [serials]);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');

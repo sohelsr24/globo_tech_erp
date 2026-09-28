@@ -19,8 +19,10 @@ import {
   HardDrive,
   FileJson,
   AlertCircle,
-  Clock
+  Clock,
+  Smartphone
 } from 'lucide-react';
+import { DeviceSyncModal } from '@/components/modals/DeviceSyncModal';
 import { Badge } from '@/components/ui/Badge';
 import { formatBDT } from '@/lib/formatters';
 import { UserRole } from '@/lib/permissions';
@@ -38,6 +40,7 @@ export function SettingsView() {
   const [isSaved, setIsSaved] = useState(false);
   const [backupNotification, setBackupNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [storageStatus, setStorageStatus] = useState<ReturnType<typeof getERPStorageStatus> | null>(null);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [companyInfo, setCompanyInfo] = useState({
@@ -467,12 +470,22 @@ export function SettingsView() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+              {/* Mobile Sync via WhatsApp / Quick Code Button */}
+              <button
+                type="button"
+                onClick={() => setIsSyncModalOpen(true)}
+                className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition shadow-lg shadow-sky-600/20 active:scale-95 cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4 text-white" />
+                <span>মোবাইল সিঙ্ক (WhatsApp Code)</span>
+              </button>
+
               {/* Download Backup Button */}
               <button
                 type="button"
                 onClick={handleDownloadBackup}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-500/20 active:scale-95 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Full Backup (.json)</span>
@@ -491,7 +504,7 @@ export function SettingsView() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs transition active:scale-95 cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs transition active:scale-95 cursor-pointer"
               >
                 <Upload className="w-4 h-4 text-blue-400" />
                 <span>Restore Backup from File</span>
@@ -589,6 +602,15 @@ export function SettingsView() {
           </div>
         </div>
       </form>
+
+      {/* Device Sync Modal */}
+      <DeviceSyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => {
+          setIsSyncModalOpen(false);
+          refreshStatus();
+        }}
+      />
     </div>
   );
 }

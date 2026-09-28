@@ -1464,7 +1464,7 @@ export function ProjectsView() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto touch-scroll">
             <table className="w-full text-left text-xs text-slate-300 min-w-[900px] border-collapse">
               <thead>
                 <tr className="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-800">

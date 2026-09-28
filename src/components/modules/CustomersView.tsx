@@ -844,176 +844,327 @@ export function CustomersView() {
         </div>
       </div>
 
-      {/* Customer Directory & Due/Credit Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl no-print">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300 min-w-[850px] border-collapse">
-            <thead>
-              <tr className="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-800">
-                <th className="py-3 px-4">Client / Company Name</th>
-                <th className="py-3 px-4">Contact & BIN</th>
-                <th className="py-3 px-3 text-right">Total Invoiced</th>
-                <th className="py-3 px-3 text-right">Total Paid</th>
-                <th className="py-3 px-4 text-right text-rose-400">Current Due (বকেয়া)</th>
-                <th className="py-3 px-4 text-right text-emerald-400">Advance Credit (অগ্রিম)</th>
-                <th className="py-3 px-3 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {filteredCustomers.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500 italic">
-                    No clients found matching the selected filter.
-                  </td>
-                </tr>
-              ) : (
-                filteredCustomers.map((c) => {
-                  const hasDue = (c.currentDues || 0) > 0;
-                  const hasCredit = (c.advanceCredit || 0) > 0;
+      {/* Customer Directory: Mobile Cards & Desktop Table */}
+      <div className="space-y-4 no-print">
+        {/* Mobile Cards (md:hidden) */}
+        <div className="md:hidden space-y-3">
+          {filteredCustomers.length === 0 ? (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500 italic">
+              No clients found matching the selected filter.
+            </div>
+          ) : (
+            filteredCustomers.map((c) => {
+              const hasDue = (c.currentDues || 0) > 0;
+              const hasCredit = (c.advanceCredit || 0) > 0;
 
-                  return (
-                    <tr key={c.id} className="hover:bg-slate-800/40 transition">
-                      <td className="py-3 px-4">
-                        <span className="font-bold text-slate-100 text-sm block leading-snug">
+              return (
+                <div
+                  key={c.id}
+                  className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-100 text-sm">
                           {c.company || c.name}
                         </span>
-                        {c.company && (
-                          <span className="text-[11px] text-slate-400 block">Attn: {c.name}</span>
-                        )}
-                        <span className="text-[10px] text-slate-500">{c.address}</span>
-                      </td>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                          {c.type}
+                        </span>
+                      </div>
+                      {c.company && (
+                        <p className="text-[11px] text-slate-400 mt-0.5">Attn: {c.name}</p>
+                      )}
+                    </div>
 
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-1.5 text-slate-300">
-                          <Phone className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{c.phone}</span>
-                        </div>
-                        {c.binNumber ? (
-                          <div className="font-mono text-[10px] text-blue-400 mt-0.5">
-                            {c.binNumber}
-                          </div>
-                        ) : (
-                          <div className="text-[10px] text-slate-500">No BIN</div>
-                        )}
-                      </td>
+                    <div>
+                      {hasDue ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                          PAYMENT DUE
+                        </span>
+                      ) : hasCredit ? (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          IN ADVANCE
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400">
+                          CLEARED
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-                      <td className="py-3 px-3 text-right font-mono font-medium text-slate-300">
-                        {formatBDT(c.totalInvoiced || 0)}
-                      </td>
+                  {/* Contact & Address */}
+                  <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <a
+                          href={`tel:${c.phone}`}
+                          className="font-mono text-emerald-400 underline"
+                        >
+                          {c.phone}
+                        </a>
+                      </div>
+                      {c.binNumber && (
+                        <span className="font-mono text-[10px] text-blue-400">
+                          BIN: {c.binNumber}
+                        </span>
+                      )}
+                    </div>
+                    {c.address && (
+                      <p className="text-[11px] text-slate-400 truncate">{c.address}</p>
+                    )}
+                  </div>
 
-                      <td className="py-3 px-3 text-right font-mono font-medium text-emerald-300">
-                        {formatBDT(c.totalPaid || 0)}
-                      </td>
+                  {/* Financial Metrics 2x2 Grid */}
+                  <div className="grid grid-cols-2 gap-2 bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/60 text-xs">
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase block font-semibold">Total Invoiced</span>
+                      <span className="font-mono text-slate-200 font-bold">{formatBDT(c.totalInvoiced || 0)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase block font-semibold">Total Paid</span>
+                      <span className="font-mono text-emerald-400 font-bold">{formatBDT(c.totalPaid || 0)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-rose-400 uppercase block font-semibold">Current Due (বকেয়া)</span>
+                      <span className={`font-mono font-bold ${hasDue ? 'text-rose-400' : 'text-slate-500'}`}>
+                        {formatBDT(c.currentDues || 0)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-emerald-400 uppercase block font-semibold">Advance Credit (অগ্রিম)</span>
+                      <span className={`font-mono font-bold ${hasCredit ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {hasCredit ? `+${formatBDT(c.advanceCredit || 0)}` : '৳ 0.00'}
+                      </span>
+                    </div>
+                  </div>
 
-                      {/* Current Due Column */}
-                      <td className="py-3 px-4 text-right font-mono">
-                        {hasDue ? (
-                          <div className="inline-block px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-xs">
-                            {formatBDT(c.currentDues)}
-                          </div>
-                        ) : (
-                          <span className="text-slate-500 text-xs">৳ 0.00</span>
-                        )}
-                      </td>
+                  {/* Mobile Action Buttons */}
+                  <div className="grid grid-cols-5 gap-1.5 pt-1">
+                    <button
+                      onClick={() => {
+                        setPaymentForm({
+                          customerId: c.id,
+                          amount: c.currentDues > 0 ? c.currentDues : 10000,
+                          date: new Date().toISOString().split('T')[0],
+                          method: 'BANK',
+                          refNo: '',
+                          description: `Payment against ${c.company || c.name}`
+                        });
+                        setIsCollectPaymentOpen(true);
+                      }}
+                      className="col-span-2 min-h-[42px] px-3 py-2 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-1 transition active:scale-95"
+                    >
+                      <ArrowDownLeft className="w-3.5 h-3.5" />
+                      <span>Collect</span>
+                    </button>
 
-                      {/* Advance Credit Column */}
-                      <td className="py-3 px-4 text-right font-mono">
-                        {hasCredit ? (
-                          <div className="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs">
-                            +{formatBDT(c.advanceCredit)}
-                          </div>
-                        ) : (
-                          <span className="text-slate-500 text-xs">৳ 0.00</span>
-                        )}
-                      </td>
+                    <button
+                      onClick={() => {
+                        setSelectedCustomer(c);
+                        setIsLedgerSheetOpen(true);
+                      }}
+                      className="col-span-1 min-h-[42px] px-2 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 font-semibold text-xs flex items-center justify-center gap-1 transition active:scale-95"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Ledger</span>
+                    </button>
 
-                      <td className="py-3 px-3 text-center">
-                        {hasDue ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300">
-                            PAYMENT DUE
+                    <button
+                      onClick={() => handleOpenEditCustomer(c)}
+                      className="col-span-1 min-h-[42px] p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center active:scale-95"
+                      title="Edit Customer"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteCustomer(c)}
+                      className="col-span-1 min-h-[42px] p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition flex items-center justify-center active:scale-95"
+                      title="Delete Customer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View (hidden md:block) */}
+        <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full text-left text-xs text-slate-300 min-w-[850px] border-collapse">
+              <thead>
+                <tr className="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold tracking-wider border-b border-slate-800">
+                  <th className="py-3 px-4">Client / Company Name</th>
+                  <th className="py-3 px-4">Contact & BIN</th>
+                  <th className="py-3 px-3 text-right">Total Invoiced</th>
+                  <th className="py-3 px-3 text-right">Total Paid</th>
+                  <th className="py-3 px-4 text-right text-rose-400">Current Due (বকেয়া)</th>
+                  <th className="py-3 px-4 text-right text-emerald-400">Advance Credit (অগ্রিম)</th>
+                  <th className="py-3 px-3 text-center">Status</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80">
+                {filteredCustomers.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-8 text-center text-slate-500 italic">
+                      No clients found matching the selected filter.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredCustomers.map((c) => {
+                    const hasDue = (c.currentDues || 0) > 0;
+                    const hasCredit = (c.advanceCredit || 0) > 0;
+
+                    return (
+                      <tr key={c.id} className="hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-4">
+                          <span className="font-bold text-slate-100 text-sm block leading-snug">
+                            {c.company || c.name}
                           </span>
-                        ) : hasCredit ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
-                            IN ADVANCE
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400">
-                            CLEARED
-                          </span>
-                        )}
-                      </td>
+                          {c.company && (
+                            <span className="text-[11px] text-slate-400 block">Attn: {c.name}</span>
+                          )}
+                          <span className="text-[10px] text-slate-500">{c.address}</span>
+                        </td>
 
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Collect Money Button */}
-                          <button
-                            onClick={() => {
-                              setPaymentForm({
-                                customerId: c.id,
-                                amount: c.currentDues > 0 ? c.currentDues : 10000,
-                                date: new Date().toISOString().split('T')[0],
-                                method: 'BANK',
-                                refNo: '',
-                                description: `Payment against ${c.company || c.name}`
-                              });
-                              setIsCollectPaymentOpen(true);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-semibold text-xs flex items-center gap-1 transition"
-                            title="Collect payment / deposit from this client"
-                          >
-                            <ArrowDownLeft className="w-3 h-3" />
-                            <span>Collect</span>
-                          </button>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-1.5 text-slate-300">
+                            <Phone className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{c.phone}</span>
+                          </div>
+                          {c.binNumber ? (
+                            <div className="font-mono text-[10px] text-blue-400 mt-0.5">
+                              {c.binNumber}
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-slate-500">No BIN</div>
+                          )}
+                        </td>
 
-                          {/* View Statement & Ledger */}
-                          <button
-                            onClick={() => {
-                              setSelectedCustomer(c);
-                              setIsLedgerSheetOpen(true);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 font-semibold text-xs flex items-center gap-1 transition"
-                            title="View complete account statement & transaction ledger"
-                          >
-                            <Eye className="w-3 h-3" />
-                            <span>Ledger</span>
-                          </button>
+                        <td className="py-3 px-3 text-right font-mono font-medium text-slate-300">
+                          {formatBDT(c.totalInvoiced || 0)}
+                        </td>
 
-                          {/* Edit Customer Button */}
-                          <button
-                            onClick={() => handleOpenEditCustomer(c)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
-                            title="Edit customer details"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
+                        <td className="py-3 px-3 text-right font-mono font-medium text-emerald-300">
+                          {formatBDT(c.totalPaid || 0)}
+                        </td>
 
-                          {/* Delete Customer Button */}
-                          <button
-                            onClick={() => handleDeleteCustomer(c)}
-                            className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
-                            title="Delete / Remove this customer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-            <tfoot>
-              <tr className="bg-slate-950 font-bold border-t-2 border-slate-700 text-slate-100">
-                <td colSpan={2} className="py-3.5 px-4 uppercase text-xs">Total Across All Filtered Clients:</td>
-                <td className="py-3.5 px-3 text-right font-mono">{formatBDT(totals.totalInvoiced)}</td>
-                <td className="py-3.5 px-3 text-right font-mono text-emerald-400">{formatBDT(totals.totalPaid)}</td>
-                <td className="py-3.5 px-4 text-right font-mono text-rose-400 text-sm font-black">{formatBDT(totals.totalDues)}</td>
-                <td className="py-3.5 px-4 text-right font-mono text-emerald-400 text-sm font-black">+{formatBDT(totals.totalCredit)}</td>
-                <td colSpan={2}></td>
-              </tr>
-            </tfoot>
-          </table>
+                        {/* Current Due Column */}
+                        <td className="py-3 px-4 text-right font-mono">
+                          {hasDue ? (
+                            <div className="inline-block px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 font-bold text-xs">
+                              {formatBDT(c.currentDues)}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-xs">৳ 0.00</span>
+                          )}
+                        </td>
+
+                        {/* Advance Credit Column */}
+                        <td className="py-3 px-4 text-right font-mono">
+                          {hasCredit ? (
+                            <div className="inline-block px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-xs">
+                              +{formatBDT(c.advanceCredit)}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500 text-xs">৳ 0.00</span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-3 text-center">
+                          {hasDue ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300">
+                              PAYMENT DUE
+                            </span>
+                          ) : hasCredit ? (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                              IN ADVANCE
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-400">
+                              CLEARED
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Collect Money Button */}
+                            <button
+                              onClick={() => {
+                                setPaymentForm({
+                                  customerId: c.id,
+                                  amount: c.currentDues > 0 ? c.currentDues : 10000,
+                                  date: new Date().toISOString().split('T')[0],
+                                  method: 'BANK',
+                                  refNo: '',
+                                  description: `Payment against ${c.company || c.name}`
+                                });
+                                setIsCollectPaymentOpen(true);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-semibold text-xs flex items-center gap-1 transition"
+                              title="Collect payment / deposit from this client"
+                            >
+                              <ArrowDownLeft className="w-3 h-3" />
+                              <span>Collect</span>
+                            </button>
+
+                            {/* View Statement & Ledger */}
+                            <button
+                              onClick={() => {
+                                setSelectedCustomer(c);
+                                setIsLedgerSheetOpen(true);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 font-semibold text-xs flex items-center gap-1 transition"
+                              title="View complete account statement & transaction ledger"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span>Ledger</span>
+                            </button>
+
+                            {/* Edit Customer Button */}
+                            <button
+                              onClick={() => handleOpenEditCustomer(c)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition"
+                              title="Edit customer details"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+
+                            {/* Delete Customer Button */}
+                            <button
+                              onClick={() => handleDeleteCustomer(c)}
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition"
+                              title="Delete / Remove this customer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+              <tfoot>
+                <tr className="bg-slate-950 font-bold border-t-2 border-slate-700 text-slate-100">
+                  <td colSpan={2} className="py-3.5 px-4 uppercase text-xs">Total Across All Filtered Clients:</td>
+                  <td className="py-3.5 px-3 text-right font-mono">{formatBDT(totals.totalInvoiced)}</td>
+                  <td className="py-3.5 px-3 text-right font-mono text-emerald-400">{formatBDT(totals.totalPaid)}</td>
+                  <td className="py-3.5 px-4 text-right font-mono text-rose-400 text-sm font-black">{formatBDT(totals.totalDues)}</td>
+                  <td className="py-3.5 px-4 text-right font-mono text-emerald-400 text-sm font-black">+{formatBDT(totals.totalCredit)}</td>
+                  <td colSpan={2}></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1124,17 +1275,17 @@ export function CustomersView() {
               ⚡ <strong>Instant Ledger Settlement:</strong> This entry will automatically deduct <strong>{formatBDT(paymentForm.amount)}</strong> from client&rsquo;s outstanding dues. Any excess amount will be safely credited as advance balance.
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsCollectPaymentOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg shadow-emerald-600/30 transition"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-1.5"
               >
                 Save Payment Entry
               </button>
@@ -1226,17 +1377,17 @@ export function CustomersView() {
               </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsAddBillOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow transition"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg shadow transition flex items-center justify-center gap-1.5"
               >
                 Add Bill Due
               </button>
@@ -1563,17 +1714,17 @@ export function CustomersView() {
               />
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-1.5"
               >
                 Save Customer
               </button>
@@ -1708,17 +1859,17 @@ export function CustomersView() {
               />
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-1.5"
               >
                 Update Customer
               </button>

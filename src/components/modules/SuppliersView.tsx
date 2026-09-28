@@ -127,12 +127,25 @@ const INITIAL_SUPPLIERS: Supplier[] = [
 ];
 
 export function SuppliersView() {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(INITIAL_SUPPLIERS);
-  const [isMounted, setIsMounted] = useState(false);
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_suppliers');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e) {
+          console.error('Error loading suppliers from localStorage:', e);
+        }
+      }
+    }
+    return INITIAL_SUPPLIERS;
+  });
 
   useEffect(() => {
-    setIsMounted(true);
-    const loadSuppliers = () => {
+    const handleBackupRestored = () => {
       if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_suppliers');
         if (saved) {
@@ -140,30 +153,24 @@ export function SuppliersView() {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setSuppliers(parsed);
-              return;
             }
-          } catch (e) {
-            console.error('Error loading suppliers from localStorage:', e);
-          }
+          } catch (e) {}
         }
-        localStorage.setItem('globotech_erp_suppliers', JSON.stringify(INITIAL_SUPPLIERS));
       }
     };
-
-    loadSuppliers();
-    window.addEventListener('globotech_backup_restored', loadSuppliers);
-    return () => window.removeEventListener('globotech_backup_restored', loadSuppliers);
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
   }, []);
 
   useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_suppliers', JSON.stringify(suppliers));
       } catch (e) {
         console.error('Error syncing suppliers to localStorage:', e);
       }
     }
-  }, [suppliers, isMounted]);
+  }, [suppliers]);
 
   const [search, setSearch] = useState('');
   const [currencyFilter, setCurrencyFilter] = useState('ALL');

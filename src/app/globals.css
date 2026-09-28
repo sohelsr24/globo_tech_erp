@@ -75,39 +75,51 @@ body {
 
 /* Prevent auto zoom on iOS Safari inputs */
 @media screen and (max-width: 768px) {
-  input, select, textarea {
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
     font-size: 16px !important;
   }
 }
 
 /* Safe area for notched devices (iPhone Home Bar, Android Gestures) */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
 }
 .pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: max(env(safe-area-inset-top, 0px), 0px);
 }
 
 /* Smooth touch scrolling */
 .touch-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+}
+
+/* Touch action optimization */
+button, a, input, select, textarea {
+  touch-action: manipulation;
 }
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--border));
-  border-radius: 3px;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
+}
+
+/* Mobile swipe hint glow */
+.scroll-shadow-right {
+  background: linear-gradient(to left, rgba(2, 6, 23, 0.8) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Safe) */

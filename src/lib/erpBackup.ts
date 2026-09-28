@@ -6,8 +6,11 @@ export const ERP_STORAGE_KEYS = {
   QUOTATIONS: 'globotech_erp_quotations',
   DELETED_QUOTATION_IDS: 'globotech_erp_deleted_quotation_ids',
   BILLS: 'globotech_erp_bill_invoices',
+  DELETED_BILL_IDS: 'globotech_erp_deleted_bill_ids',
   CUSTOMERS: 'globotech_erp_customers',
+  DELETED_CUSTOMER_IDS: 'globotech_erp_deleted_customer_ids',
   PROJECTS: 'globotech_erp_projects',
+  CLIENT_DIRECTORY: 'globotech_erp_client_directory',
   PRODUCTS: 'globotech_erp_products',
   WAREHOUSE_STOCK: 'globotech_erp_warehouse_stock',
   STOCK_LEDGER: 'globotech_erp_stock_ledger',
@@ -17,7 +20,9 @@ export const ERP_STORAGE_KEYS = {
   SUPPLIERS: 'globotech_erp_suppliers',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
-  LAST_BACKUP_DATE: 'globotech_erp_last_backup_date'
+  LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
+  AUTO_SNAPSHOT: 'globotech_erp_auto_snapshot',
+  PERSISTENCE_STATUS: 'globotech_erp_persistence_status'
 } as const;
 
 export interface ERPBackupPayload {
@@ -46,8 +51,11 @@ export interface ERPBackupPayload {
     quotations: any[];
     deletedQuotationIds: string[];
     bills: any[];
+    deletedBillIds?: string[];
     customers: any[];
+    deletedCustomerIds?: string[];
     projects: any[];
+    clientDirectory?: any[];
     products: any[];
     warehouseStock: any[];
     stockLedger: any[];
@@ -63,7 +71,7 @@ export interface ERPBackupPayload {
 /**
  * Reads a JSON string from localStorage safely with a fallback
  */
-function readStorage<T>(key: string, fallback: T): T {
+export function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
     const item = localStorage.getItem(key);
@@ -82,8 +90,11 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const quotations = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
   const deletedQuotationIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, []);
   const bills = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
+  const deletedBillIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_BILL_IDS, []);
   const customers = readStorage<any[]>(ERP_STORAGE_KEYS.CUSTOMERS, []);
+  const deletedCustomerIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, []);
   const projects = readStorage<any[]>(ERP_STORAGE_KEYS.PROJECTS, []);
+  const clientDirectory = readStorage<any[]>(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, []);
   const products = readStorage<any[]>(ERP_STORAGE_KEYS.PRODUCTS, []);
   const warehouseStock = readStorage<any[]>(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, []);
   const stockLedger = readStorage<any[]>(ERP_STORAGE_KEYS.STOCK_LEDGER, []);
@@ -122,8 +133,11 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       quotations,
       deletedQuotationIds,
       bills,
+      deletedBillIds,
       customers,
+      deletedCustomerIds,
       projects,
+      clientDirectory,
       products,
       warehouseStock,
       stockLedger,
@@ -157,9 +171,10 @@ export function downloadERPBackupFile(): { filename: string; totalRecords: numbe
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 
-  // Update last backup date
+  // Update last backup date & mirror to IndexedDB
   if (typeof window !== 'undefined') {
     localStorage.setItem(ERP_STORAGE_KEYS.LAST_BACKUP_DATE, new Date().toISOString());
+    mirrorToIndexedDB(payload);
   }
 
   const counts = payload.meta.recordCounts;
@@ -191,11 +206,20 @@ export function restoreERPBackupData(jsonString: string): { success: boolean; me
       if (Array.isArray(data.bills)) {
         localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(data.bills));
       }
+      if (Array.isArray(data.deletedBillIds)) {
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(data.deletedBillIds));
+      }
       if (Array.isArray(data.customers)) {
         localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers));
       }
+      if (Array.isArray(data.deletedCustomerIds)) {
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, JSON.stringify(data.deletedCustomerIds));
+      }
       if (Array.isArray(data.projects)) {
         localStorage.setItem(ERP_STORAGE_KEYS.PROJECTS, JSON.stringify(data.projects));
+      }
+      if (Array.isArray(data.clientDirectory)) {
+        localStorage.setItem(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, JSON.stringify(data.clientDirectory));
       }
       if (Array.isArray(data.products)) {
         localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
@@ -227,6 +251,9 @@ export function restoreERPBackupData(jsonString: string): { success: boolean; me
 
       localStorage.setItem(ERP_STORAGE_KEYS.LAST_BACKUP_DATE, new Date().toISOString());
 
+      // Mirror directly to IndexedDB as hard copy
+      mirrorToIndexedDB(payload);
+
       // Dispatch global events to inform active views
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
@@ -242,6 +269,167 @@ export function restoreERPBackupData(jsonString: string): { success: boolean; me
       success: false,
       message: `Failed to restore backup: ${err?.message || 'Corrupted or unreadable JSON file.'}`
     };
+  }
+}
+
+/**
+ * Generates an encoded compact string for instant copy/paste synchronization across devices (PC to Mobile via WhatsApp/Messenger)
+ */
+export function generateQuickSyncCode(): { code: string; totalRecords: number; counts: any } {
+  const payload = generateERPBackupPayload();
+  const jsonStr = JSON.stringify(payload);
+  // Unicode-safe base64 encoding
+  const code = btoa(
+    encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (_, p1) => {
+      return String.fromCharCode(parseInt(p1, 16));
+    })
+  );
+  const counts = payload.meta.recordCounts;
+  const totalRecords = Object.values(counts).reduce((acc: number, c: any) => acc + (Number(c) || 0), 0);
+  return { code, totalRecords, counts };
+}
+
+/**
+ * Restores ERP database from a quick sync code (supports both base64 sync code and raw JSON)
+ */
+export function restoreFromQuickSyncCode(syncCode: string): { success: boolean; message: string; counts?: any } {
+  try {
+    const cleanCode = syncCode.trim();
+    if (!cleanCode) {
+      return { success: false, message: 'সিঙ্ক কোড খালি! অনুগ্রহ করে পিসি থেকে কপি করা কোডটি পেস্ট করুন।' };
+    }
+
+    let jsonString: string;
+    if (cleanCode.startsWith('{') && cleanCode.endsWith('}')) {
+      jsonString = cleanCode;
+    } else {
+      // Decode unicode-safe base64
+      jsonString = decodeURIComponent(
+        Array.prototype.map
+          .call(atob(cleanCode), (c: string) => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join('')
+      );
+    }
+
+    return restoreERPBackupData(jsonString);
+  } catch (err: any) {
+    return {
+      success: false,
+      message: `সিঙ্ক কোড অকার্যকর বা অসম্পূর্ণ: ${err?.message || 'Invalid sync code format'}`
+    };
+  }
+}
+
+/**
+ * Clears mobile browser application cache & reloads the web application
+ */
+export function clearAppCacheAndReload(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => caches.delete(name));
+      });
+    }
+  } catch (e) {}
+
+  // Reload with cache busting timestamp
+  const url = new URL(window.location.href);
+  url.searchParams.set('_v', Date.now().toString());
+  window.location.href = url.toString();
+}
+
+/**
+ * IndexedDB Enterprise Mirror Engine
+ * Provides dual-layer redundancy: Even if browser localStorage is cleared, IndexedDB preserves all data.
+ */
+const IDB_NAME = 'GloboTech_ERP_EnterpriseDB';
+const IDB_STORE = 'enterprise_mirror';
+const IDB_VERSION = 1;
+
+function openIDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      return reject(new Error('IndexedDB not supported'));
+    }
+    const request = indexedDB.open(IDB_NAME, IDB_VERSION);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { keyPath: 'key' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**
+ * Saves complete ERP payload into IndexedDB
+ */
+export async function mirrorToIndexedDB(payload?: ERPBackupPayload): Promise<void> {
+  try {
+    const dataToSave = payload || generateERPBackupPayload();
+    const db = await openIDB();
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    const store = tx.objectStore(IDB_STORE);
+    store.put({
+      key: 'latest_full_snapshot',
+      timestamp: Date.now(),
+      savedAt: new Date().toISOString(),
+      payload: dataToSave
+    });
+  } catch (e) {
+    // Non-fatal fallback
+    console.warn('IndexedDB mirror sync skipped:', e);
+  }
+}
+
+/**
+ * Auto-recovery verification on system boot
+ * Checks if localStorage is intact; if missing or empty, recovers from IndexedDB
+ */
+export async function verifyAndRestoreStorageIntegrity(): Promise<{ recovered: boolean; message: string }> {
+  if (typeof window === 'undefined') return { recovered: false, message: 'Server environment' };
+
+  try {
+    const currentPayload = generateERPBackupPayload();
+    const totalLocalRecords = Object.values(currentPayload.meta.recordCounts).reduce((a, b) => a + b, 0);
+
+    const db = await openIDB();
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const store = tx.objectStore(IDB_STORE);
+
+    return new Promise((resolve) => {
+      const getReq = store.get('latest_full_snapshot');
+      getReq.onsuccess = () => {
+        const result = getReq.result;
+        if (result && result.payload) {
+          const snapshotPayload = result.payload as ERPBackupPayload;
+          const snapshotRecords = Object.values(snapshotPayload.meta.recordCounts).reduce((a, b) => a + b, 0);
+
+          // If localStorage has 0 records but IndexedDB has a snapshot, restore!
+          if (totalLocalRecords === 0 && snapshotRecords > 0) {
+            restoreERPBackupData(JSON.stringify(snapshotPayload));
+            return resolve({
+              recovered: true,
+              message: `অটো-রিকভারি সফল: হার্ড ড্রাইভ মিরর থেকে ${snapshotRecords} টি রেকর্ড রিস্টোর করা হয়েছে!`
+            });
+          }
+        }
+        // Save current snapshot to ensure IndexedDB is always up to date
+        mirrorToIndexedDB(currentPayload);
+        resolve({ recovered: false, message: 'Storage verified and fully intact.' });
+      };
+      getReq.onerror = () => {
+        mirrorToIndexedDB(currentPayload);
+        resolve({ recovered: false, message: 'IndexedDB read error.' });
+      };
+    });
+  } catch (err: any) {
+    return { recovered: false, message: `Integrity check complete: ${err?.message || 'Ready'}` };
   }
 }
 

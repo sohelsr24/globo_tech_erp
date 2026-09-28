@@ -16,7 +16,9 @@ import {
   Tag,
   Boxes,
   MinusCircle,
-  TrendingDown
+  TrendingDown,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -45,12 +47,20 @@ const WAREHOUSE_OPTIONS = [
 
 export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } = {}) {
   const [activeTab, setActiveTab] = useState<'inventory' | 'ledger'>('inventory');
+  const [stockViewMode, setStockViewMode] = useState<'cards' | 'table'>('cards');
+
+  // Automatically default to table view on desktop screens (>=1024px)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setStockViewMode('table');
+    }
+  }, []);
   
   // Storage state
-  const [warehouseStock, setWarehouseStock] = useState<WarehouseStockItem[]>([]);
-  const [ledger, setLedger] = useState<StockLedgerRecord[]>([]);
-  const [products, setProducts] = useState<ProductItem[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [warehouseStock, setWarehouseStock] = useState<WarehouseStockItem[]>(() => getStoredWarehouseStock());
+  const [ledger, setLedger] = useState<StockLedgerRecord[]>(() => getStoredStockLedger());
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
   const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState('');
 
@@ -707,68 +717,97 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           </select>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap">
-          {/* PRIMARY: Add New Product Button */}
-          <button
-            onClick={() => setIsAddProductModalOpen(true)}
-            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-blue-600/20 ring-1 ring-blue-500"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add New Product</span>
-          </button>
+        {/* View Mode Switcher & Right Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+          {/* Card / Table Switcher */}
+          <div className="flex items-center justify-center bg-slate-800/90 border border-slate-700/80 rounded-lg p-0.5 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setStockViewMode('cards')}
+              className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                stockViewMode === 'cards'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Cards View (Optimized for Mobile)"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStockViewMode('table')}
+              className={`flex-1 sm:flex-initial px-2.5 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                stockViewMode === 'table'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Table View (Full Spreadsheet)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
 
-          {/* Receive Goods GRN */}
-          <button
-            onClick={() => {
-              if (products.length > 0 && !grnSelectedProductId) {
-                setGrnSelectedProductId(products[0].id);
-                setGrnLandedCost(products[0].currentLandedCost);
-              }
-              setIsGrnModalOpen(true);
-            }}
-            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95"
-          >
-            <PackageCheck className="w-3.5 h-3.5" />
-            <span>Receive Goods</span>
-          </button>
+          {/* Action buttons in a 2x2 grid on mobile */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setIsAddProductModalOpen(true)}
+              className="px-3 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-blue-600/20 ring-1 ring-blue-500 min-h-[40px] sm:min-h-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="truncate">Add Product</span>
+            </button>
 
-          {/* Transfer */}
-          <button
-            onClick={() => {
-              const eligible = warehouseStock.filter((s) => s.warehouseName === transferFromWarehouse && s.available > 0);
-              if (eligible.length > 0) {
-                setTransferStockItemId(eligible[0].id);
-              }
-              setIsTransferModalOpen(true);
-            }}
-            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-700"
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5 text-blue-400" />
-            <span>Transfer</span>
-          </button>
+            <button
+              onClick={() => {
+                if (products.length > 0 && !grnSelectedProductId) {
+                  setGrnSelectedProductId(products[0].id);
+                  setGrnLandedCost(products[0].currentLandedCost);
+                }
+                setIsGrnModalOpen(true);
+              }}
+              className="px-3 py-2 sm:py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 min-h-[40px] sm:min-h-0"
+            >
+              <PackageCheck className="w-3.5 h-3.5" />
+              <span className="truncate">Receive Goods</span>
+            </button>
 
-          {/* Decrease / Deduct Stock Button */}
-          <button
-            onClick={() => {
-              const availableItems = warehouseStock.filter((s) => s.available > 0);
-              if (availableItems.length > 0) {
-                const first = availableItems[0];
-                setDecreaseWarehouse(first.warehouseName);
-                setDecreaseStockItemId(first.id);
-              }
-              setDecreaseQty(1);
-              setDecreaseReason('SALES_DELIVERY');
-              setDecreaseRefDoc('');
-              setDecreaseNotes('');
-              setIsDecreaseModalOpen(true);
-            }}
-            className="flex-1 sm:flex-initial px-3.5 py-2 sm:py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-rose-600/20 ring-1 ring-rose-500"
-            title="Deduct or decrease stock for sales, damage, or adjustment"
-          >
-            <MinusCircle className="w-3.5 h-3.5" />
-            <span>Deduct Stock</span>
-          </button>
+            <button
+              onClick={() => {
+                const eligible = warehouseStock.filter((s) => s.warehouseName === transferFromWarehouse && s.available > 0);
+                if (eligible.length > 0) {
+                  setTransferStockItemId(eligible[0].id);
+                }
+                setIsTransferModalOpen(true);
+              }}
+              className="px-3 py-2 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 border border-slate-700 min-h-[40px] sm:min-h-0"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5 text-blue-400" />
+              <span className="truncate">Transfer</span>
+            </button>
+
+            <button
+              onClick={() => {
+                const availableItems = warehouseStock.filter((s) => s.available > 0);
+                if (availableItems.length > 0) {
+                  const first = availableItems[0];
+                  setDecreaseWarehouse(first.warehouseName);
+                  setDecreaseStockItemId(first.id);
+                }
+                setDecreaseQty(1);
+                setDecreaseReason('SALES_DELIVERY');
+                setDecreaseRefDoc('');
+                setDecreaseNotes('');
+                setIsDecreaseModalOpen(true);
+              }}
+              className="px-3 py-2 sm:py-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-rose-600/20 ring-1 ring-rose-500 min-h-[40px] sm:min-h-0"
+              title="Deduct or decrease stock for sales, damage, or adjustment"
+            >
+              <MinusCircle className="w-3.5 h-3.5" />
+              <span className="truncate">Deduct Stock</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -802,218 +841,409 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
 
       {activeTab === 'inventory' ? (
         /* Inventory by Warehouse */
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div className="px-4 py-3 bg-slate-800/40 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
-            <span className="font-semibold flex items-center gap-2">
-              <Boxes className="w-4 h-4 text-blue-400" />
-              <span>Warehouse Stock Inventory</span>
-            </span>
-            <span className="text-[11px] text-slate-400">
-              Showing {filteredStock.length} of {warehouseStock.length} entries
-            </span>
-          </div>
+        stockViewMode === 'cards' ? (
+          <div className="space-y-3">
+            {filteredStock.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
+                <Boxes className="w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50" />
+                <p className="text-sm font-semibold text-slate-300">No stock records found</p>
+                <button
+                  onClick={() => setIsAddProductModalOpen(true)}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add New Product</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {filteredStock.map((st) => {
+                  const valuation = st.available * st.unitLandedCost;
+                  const matchingProd = products.find((p) => p.sku === st.sku);
+                  const isLow = matchingProd ? st.available <= matchingProd.minStock : st.available <= 10;
 
-          <div className="overflow-x-auto touch-scroll">
-            <table className="w-full text-left text-xs min-w-[760px]">
-              <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                <tr>
-                  <th className="py-3 px-4">Warehouse</th>
-                  <th className="py-3 px-4">Product & SKU</th>
-                  <th className="py-3 px-4 text-center">Available Stock</th>
-                  <th className="py-3 px-4 text-center">Reserved</th>
-                  <th className="py-3 px-4 text-center">Damaged</th>
-                  <th className="py-3 px-4 text-right">Landed Cost</th>
-                  <th className="py-3 px-4 text-right">Valuation (Cost)</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-center">Quick Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-200">
-                {filteredStock.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-slate-500">
-                      No stock records found matching your query. Click{' '}
-                      <span
-                        onClick={() => setIsAddProductModalOpen(true)}
-                        className="text-blue-400 font-semibold cursor-pointer underline hover:text-blue-300"
-                      >
-                        Add New Product
-                      </span>{' '}
-                      to create one.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStock.map((st) => {
-                    const valuation = st.available * st.unitLandedCost;
-                    const matchingProd = products.find((p) => p.sku === st.sku);
-                    const isLow = matchingProd ? st.available <= matchingProd.minStock : st.available <= 10;
-
-                    return (
-                      <tr key={st.id} className="hover:bg-slate-800/40 transition">
-                        <td className="py-3 px-4 font-sans font-medium text-slate-300">
-                          <span className="inline-flex items-center gap-1.5">
+                  return (
+                    <div
+                      key={st.id}
+                      className="bg-slate-900/90 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-4 space-y-3 transition shadow-lg flex flex-col justify-between"
+                    >
+                      <div>
+                        {/* Top Warehouse Badge & Stock Status */}
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-700/60 truncate">
                             <Warehouse className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-                            <span>{st.warehouseName}</span>
+                            <span className="truncate">{st.warehouseName}</span>
                           </span>
-                        </td>
-                        <td className="py-3 px-4 font-sans max-w-xs">
-                          <div className="font-semibold text-slate-100">{st.productName}</div>
-                          <div className="text-[10px] font-mono text-slate-400">{st.sku}</div>
-                        </td>
-                        <td className="py-3 px-4 text-center font-bold text-sm">
-                          <span className={isLow ? 'text-amber-400' : 'text-emerald-400'}>
-                            {st.available} pcs
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-center font-sans text-slate-400">
-                          {st.reserved} pcs
-                        </td>
-                        <td className="py-3 px-4 text-center font-sans text-slate-400">
-                          {st.damaged} pcs
-                        </td>
-                        <td className="py-3 px-4 text-right font-sans font-medium text-slate-300">
-                          {Formatters.currency(st.unitLandedCost)}
-                        </td>
-                        <td className="py-3 px-4 text-right font-bold font-sans text-blue-400">
-                          {Formatters.currency(valuation)}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {st.available === 0 ? (
-                            <Badge variant="danger">Out of Stock</Badge>
-                          ) : isLow ? (
-                            <Badge variant="warning">Low Stock</Badge>
-                          ) : (
-                            <Badge variant="success">Normal</Badge>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => {
-                                const found = products.find((p) => p.sku === st.sku);
-                                if (found) {
-                                  setGrnSelectedProductId(found.id);
-                                  setGrnLandedCost(st.unitLandedCost);
-                                }
-                                setGrnWarehouse(st.warehouseName);
-                                setIsGrnModalOpen(true);
-                              }}
-                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold transition active:scale-95 border border-slate-700 hover:border-slate-600 inline-flex items-center gap-1"
-                              title="Receive / Add more stock"
-                            >
-                              <Plus className="w-3 h-3 text-emerald-400" />
-                              <span>Add Stock</span>
-                            </button>
-                            <button
-                              onClick={() => handleOpenDecreaseModal(st)}
-                              className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[11px] font-semibold transition active:scale-95 border border-rose-500/30 hover:border-rose-500/50 inline-flex items-center gap-1"
-                              title="Decrease / Deduct stock for sales, damage, or adjustment"
-                            >
-                              <MinusCircle className="w-3 h-3 text-rose-400" />
-                              <span>Decrease</span>
-                            </button>
+                          <div>
+                            {st.available === 0 ? (
+                              <Badge variant="danger">Out of Stock</Badge>
+                            ) : isLow ? (
+                              <Badge variant="warning">Low Stock</Badge>
+                            ) : (
+                              <Badge variant="success">Normal</Badge>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                        </div>
+
+                        {/* Product Name & SKU */}
+                        <h3 className="font-bold text-slate-100 text-sm leading-snug line-clamp-2">
+                          {st.productName}
+                        </h3>
+                        <div className="font-mono text-xs text-blue-400 mt-1 font-semibold">
+                          {st.sku}
+                        </div>
+                      </div>
+
+                      {/* Stock Metrics 2x2 */}
+                      <div className="grid grid-cols-2 gap-2 bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">Available</span>
+                          <div className={`font-bold text-base ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                            {st.available} pcs
+                          </div>
+                          <span className="text-[10px] text-slate-500">Reserved: {st.reserved} pcs</span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">Landed Cost</span>
+                          <div className="font-bold text-sm text-slate-200">
+                            {Formatters.currency(st.unitLandedCost)}
+                          </div>
+                          <span className="text-[10px] text-slate-500">Per unit</span>
+                        </div>
+
+                        <div className="col-span-2 pt-1.5 border-t border-slate-800/60 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-400 font-medium">Batch Valuation:</span>
+                          <span className="font-bold text-xs text-blue-400">{Formatters.currency(valuation)}</span>
+                        </div>
+                      </div>
+
+                      {/* Quick action buttons with 42px touch targets */}
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                        <button
+                          onClick={() => {
+                            const found = products.find((p) => p.sku === st.sku);
+                            if (found) {
+                              setGrnSelectedProductId(found.id);
+                              setGrnLandedCost(st.unitLandedCost);
+                            }
+                            setGrnWarehouse(st.warehouseName);
+                            setIsGrnModalOpen(true);
+                          }}
+                          className="flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 border border-slate-700 flex items-center justify-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Add Stock</span>
+                        </button>
+                        <button
+                          onClick={() => handleOpenDecreaseModal(st)}
+                          className="flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition active:scale-95 border border-rose-500/30 flex items-center justify-center gap-1.5"
+                        >
+                          <MinusCircle className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Deduct</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="px-4 py-3 bg-slate-800/40 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
+              <span className="font-semibold flex items-center gap-2">
+                <Boxes className="w-4 h-4 text-blue-400" />
+                <span>Warehouse Stock Inventory</span>
+              </span>
+              <span className="text-[11px] text-slate-400">
+                Showing {filteredStock.length} of {warehouseStock.length} entries &bull; <span className="sm:hidden text-blue-400">👉 Swipe table</span>
+              </span>
+            </div>
+
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs min-w-[760px]">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Warehouse</th>
+                    <th className="py-3 px-4">Product & SKU</th>
+                    <th className="py-3 px-4 text-center">Available Stock</th>
+                    <th className="py-3 px-4 text-center">Reserved</th>
+                    <th className="py-3 px-4 text-center">Damaged</th>
+                    <th className="py-3 px-4 text-right">Landed Cost</th>
+                    <th className="py-3 px-4 text-right">Valuation (Cost)</th>
+                    <th className="py-3 px-4 text-center">Status</th>
+                    <th className="py-3 px-4 text-center">Quick Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-200">
+                  {filteredStock.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-slate-500">
+                        No stock records found matching your query. Click{' '}
+                        <span
+                          onClick={() => setIsAddProductModalOpen(true)}
+                          className="text-blue-400 font-semibold cursor-pointer underline hover:text-blue-300"
+                        >
+                          Add New Product
+                        </span>{' '}
+                        to create one.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredStock.map((st) => {
+                      const valuation = st.available * st.unitLandedCost;
+                      const matchingProd = products.find((p) => p.sku === st.sku);
+                      const isLow = matchingProd ? st.available <= matchingProd.minStock : st.available <= 10;
+
+                      return (
+                        <tr key={st.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-3 px-4 font-sans font-medium text-slate-300">
+                            <span className="inline-flex items-center gap-1.5">
+                              <Warehouse className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+                              <span>{st.warehouseName}</span>
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-sans max-w-xs">
+                            <div className="font-semibold text-slate-100">{st.productName}</div>
+                            <div className="text-[10px] font-mono text-slate-400">{st.sku}</div>
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold text-sm">
+                            <span className={isLow ? 'text-amber-400' : 'text-emerald-400'}>
+                              {st.available} pcs
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-center font-sans text-slate-400">
+                            {st.reserved} pcs
+                          </td>
+                          <td className="py-3 px-4 text-center font-sans text-slate-400">
+                            {st.damaged} pcs
+                          </td>
+                          <td className="py-3 px-4 text-right font-sans font-medium text-slate-300">
+                            {Formatters.currency(st.unitLandedCost)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-bold font-sans text-blue-400">
+                            {Formatters.currency(valuation)}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {st.available === 0 ? (
+                              <Badge variant="danger">Out of Stock</Badge>
+                            ) : isLow ? (
+                              <Badge variant="warning">Low Stock</Badge>
+                            ) : (
+                              <Badge variant="success">Normal</Badge>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => {
+                                  const found = products.find((p) => p.sku === st.sku);
+                                  if (found) {
+                                    setGrnSelectedProductId(found.id);
+                                    setGrnLandedCost(st.unitLandedCost);
+                                  }
+                                  setGrnWarehouse(st.warehouseName);
+                                  setIsGrnModalOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-semibold transition active:scale-95 border border-slate-700 hover:border-slate-600 inline-flex items-center gap-1"
+                                title="Receive / Add more stock"
+                              >
+                                <Plus className="w-3 h-3 text-emerald-400" />
+                                <span>Add Stock</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenDecreaseModal(st)}
+                                className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-[11px] font-semibold transition active:scale-95 border border-rose-500/30 hover:border-rose-500/50 inline-flex items-center gap-1"
+                                title="Decrease / Deduct stock for sales, damage, or adjustment"
+                              >
+                                <MinusCircle className="w-3 h-3 text-rose-400" />
+                                <span>Decrease</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
       ) : (
         /* Immutable Stock Movement Ledger */
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div className="p-3 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
-            <span className="flex items-center gap-2">
-              <History className="w-4 h-4 text-sky-400" />
-              <span>Immutable Stock Ledger: Every physical quantity modification is recorded.</span>
-            </span>
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Audit Compliance Active
-            </span>
-          </div>
-
-          <div className="overflow-x-auto touch-scroll">
-            <table className="w-full text-left text-xs min-w-[850px]">
-              <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-                <tr>
-                  <th className="py-3 px-4">Timestamp</th>
-                  <th className="py-3 px-4">Movement Type</th>
-                  <th className="py-3 px-4">Product</th>
-                  <th className="py-3 px-4">Warehouse</th>
-                  <th className="py-3 px-4 text-center">Quantity Delta</th>
-                  <th className="py-3 px-4 text-center">Balance After</th>
-                  <th className="py-3 px-4 text-right">Landed Cost</th>
-                  <th className="py-3 px-4">Reference Document</th>
-                  <th className="py-3 px-4">Reason / Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-200">
-                {filteredLedger.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-slate-500">
-                      No ledger transactions found matching filter.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredLedger.map((entry) => {
-                    const isPositive = entry.quantityDelta > 0;
-                    return (
-                      <tr key={entry.id} className="hover:bg-slate-800/40 transition">
-                        <td className="py-3 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap">
+        stockViewMode === 'cards' ? (
+          <div className="space-y-3">
+            {filteredLedger.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
+                <History className="w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50" />
+                <p className="text-sm font-semibold text-slate-300">No stock movement records found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {filteredLedger.map((entry) => {
+                  const isPositive = entry.quantityDelta > 0;
+                  return (
+                    <div
+                      key={entry.id}
+                      className="bg-slate-900/90 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-4 space-y-3 transition shadow-lg"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-xs text-slate-400">
                           {entry.timestamp}
-                        </td>
-                        <td className="py-3 px-4 font-sans font-bold">
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] ${
-                              entry.movementType === 'PURCHASE_GRN' || entry.movementType === 'OPENING_STOCK'
-                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                                : entry.movementType === 'PROJECT_ISSUE' || entry.movementType === 'INTERNAL_PROJECT'
-                                ? 'bg-purple-950 text-purple-400 border border-purple-800'
-                                : entry.movementType === 'TRANSFER_IN' || entry.movementType === 'TRANSFER_OUT'
-                                ? 'bg-amber-950 text-amber-400 border border-amber-800'
-                                : entry.movementType === 'DAMAGED_RECORD' || entry.movementType === 'DAMAGED_WRITE_OFF'
-                                ? 'bg-rose-950 text-rose-400 border border-rose-800'
-                                : entry.movementType === 'SALES_DELIVERY'
-                                ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
-                                : 'bg-rose-950 text-rose-400 border border-rose-800'
-                            }`}
-                          >
-                            {entry.movementType}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-sans font-medium text-slate-200">
-                          {entry.productName}
-                        </td>
-                        <td className="py-3 px-4 font-sans text-slate-400">{entry.warehouseName}</td>
-                        <td
-                          className={`py-3 px-4 text-center font-bold text-sm ${
-                            isPositive ? 'text-emerald-400' : 'text-rose-400'
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            entry.movementType === 'PURCHASE_GRN' || entry.movementType === 'OPENING_STOCK'
+                              ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                              : entry.movementType === 'PROJECT_ISSUE' || entry.movementType === 'INTERNAL_PROJECT'
+                              ? 'bg-purple-950 text-purple-400 border border-purple-800'
+                              : entry.movementType === 'TRANSFER_IN' || entry.movementType === 'TRANSFER_OUT'
+                              ? 'bg-amber-950 text-amber-400 border border-amber-800'
+                              : entry.movementType === 'DAMAGED_RECORD' || entry.movementType === 'DAMAGED_WRITE_OFF'
+                              ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                              : entry.movementType === 'SALES_DELIVERY'
+                              ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                              : 'bg-rose-950 text-rose-400 border border-rose-800'
                           }`}
                         >
-                          {isPositive ? `+${entry.quantityDelta}` : entry.quantityDelta} pcs
-                        </td>
-                        <td className="py-3 px-4 text-center font-bold text-slate-100 text-sm">
-                          {entry.balanceAfter} pcs
-                        </td>
-                        <td className="py-3 px-4 text-right font-sans text-slate-300 font-medium">
-                          {Formatters.currency(entry.unitLandedCost)}
-                        </td>
-                        <td className="py-3 px-4 text-blue-400 font-bold">{entry.referenceId}</td>
-                        <td className="py-3 px-4 font-sans text-slate-400 text-[11px] max-w-xs truncate">
-                          {entry.reasonNotes || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                          {entry.movementType}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="font-bold text-slate-100 text-sm">{entry.productName}</h4>
+                        <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+                          <Warehouse className="w-3 h-3 text-slate-500" />
+                          <span>{entry.warehouseName}</span>
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-xs">
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">Quantity Delta</span>
+                          <div className={`font-bold text-base ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isPositive ? `+${entry.quantityDelta}` : entry.quantityDelta} pcs
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] text-slate-500 uppercase font-semibold block">Balance After</span>
+                          <div className="font-bold text-base text-slate-100">
+                            {entry.balanceAfter} pcs
+                          </div>
+                        </div>
+
+                        <div className="col-span-2 pt-1 border-t border-slate-800/60 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-400 font-medium">Ref Doc:</span>
+                          <span className="font-mono font-bold text-blue-400">{entry.referenceId}</span>
+                        </div>
+                      </div>
+
+                      {entry.reasonNotes && (
+                        <p className="text-[11px] text-slate-400 italic bg-slate-800/40 p-2 rounded-lg border border-slate-800">
+                          {entry.reasonNotes}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+            <div className="p-3 bg-slate-800/60 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
+              <span className="flex items-center gap-2">
+                <History className="w-4 h-4 text-sky-400" />
+                <span>Immutable Stock Ledger</span>
+              </span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Audit Active
+              </span>
+            </div>
+
+            <div className="overflow-x-auto touch-scroll">
+              <table className="w-full text-left text-xs min-w-[850px]">
+                <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                  <tr>
+                    <th className="py-3 px-4">Timestamp</th>
+                    <th className="py-3 px-4">Movement Type</th>
+                    <th className="py-3 px-4">Product</th>
+                    <th className="py-3 px-4">Warehouse</th>
+                    <th className="py-3 px-4 text-center">Quantity Delta</th>
+                    <th className="py-3 px-4 text-center">Balance After</th>
+                    <th className="py-3 px-4 text-right">Landed Cost</th>
+                    <th className="py-3 px-4">Reference Document</th>
+                    <th className="py-3 px-4">Reason / Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800 text-slate-200">
+                  {filteredLedger.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-8 text-center text-slate-500">
+                        No ledger transactions found matching filter.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredLedger.map((entry) => {
+                      const isPositive = entry.quantityDelta > 0;
+                      return (
+                        <tr key={entry.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-3 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap">
+                            {entry.timestamp}
+                          </td>
+                          <td className="py-3 px-4 font-sans font-bold">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] ${
+                                entry.movementType === 'PURCHASE_GRN' || entry.movementType === 'OPENING_STOCK'
+                                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
+                                  : entry.movementType === 'PROJECT_ISSUE' || entry.movementType === 'INTERNAL_PROJECT'
+                                  ? 'bg-purple-950 text-purple-400 border border-purple-800'
+                                  : entry.movementType === 'TRANSFER_IN' || entry.movementType === 'TRANSFER_OUT'
+                                  ? 'bg-amber-950 text-amber-400 border border-amber-800'
+                                  : entry.movementType === 'DAMAGED_RECORD' || entry.movementType === 'DAMAGED_WRITE_OFF'
+                                  ? 'bg-rose-950 text-rose-400 border border-rose-800'
+                                  : entry.movementType === 'SALES_DELIVERY'
+                                  ? 'bg-cyan-950 text-cyan-400 border border-cyan-800'
+                                  : 'bg-rose-950 text-rose-400 border border-rose-800'
+                              }`}
+                            >
+                              {entry.movementType}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 font-sans font-medium text-slate-200">
+                            {entry.productName}
+                          </td>
+                          <td className="py-3 px-4 font-sans text-slate-400">{entry.warehouseName}</td>
+                          <td
+                            className={`py-3 px-4 text-center font-bold text-sm ${
+                              isPositive ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {isPositive ? `+${entry.quantityDelta}` : entry.quantityDelta} pcs
+                          </td>
+                          <td className="py-3 px-4 text-center font-bold text-slate-100 text-sm">
+                            {entry.balanceAfter} pcs
+                          </td>
+                          <td className="py-3 px-4 text-right font-sans text-slate-300 font-medium">
+                            {Formatters.currency(entry.unitLandedCost)}
+                          </td>
+                          <td className="py-3 px-4 text-blue-400 font-bold">{entry.referenceId}</td>
+                          <td className="py-3 px-4 font-sans text-slate-400 text-[11px] max-w-xs truncate">
+                            {entry.reasonNotes || '—'}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
       )}
 
       {/* MODAL 1: ADD NEW PRODUCT TO WAREHOUSE STOCK */}
@@ -1025,13 +1255,13 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           <>
             <button
               onClick={() => setIsAddProductModalOpen(false)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold min-h-[42px] transition active:scale-95"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveNewProduct}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/30"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Save & Add Product</span>
@@ -1374,13 +1604,13 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           <>
             <button
               onClick={() => setIsGrnModalOpen(false)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold min-h-[42px] transition active:scale-95"
             >
               Cancel
             </button>
             <button
               onClick={handleReceiveGrn}
-              className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/30 min-h-[42px] transition active:scale-95"
             >
               <PackageCheck className="w-3.5 h-3.5" />
               <span>Confirm Goods Receiving</span>
@@ -1504,13 +1734,13 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           <>
             <button
               onClick={() => setIsTransferModalOpen(false)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold min-h-[42px] transition active:scale-95"
             >
               Cancel
             </button>
             <button
               onClick={handleStockTransfer}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95"
             >
               <ArrowRightLeft className="w-3.5 h-3.5" />
               <span>Authorize Transfer</span>
@@ -1808,18 +2038,18 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
             </div>
 
             {/* Modal Footer Buttons */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+            <div className="pt-3 border-t border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setIsDecreaseModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition active:scale-95 min-h-[42px]"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!selectedDecreaseStock || selectedDecreaseStock.available <= 0 || (decreaseQty || 0) <= 0}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-50 disabled:pointer-events-none text-white font-semibold text-xs shadow-md shadow-rose-600/30 transition flex items-center gap-1.5"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 disabled:opacity-50 disabled:pointer-events-none text-white font-semibold text-xs shadow-md shadow-rose-600/30 transition active:scale-95 flex items-center justify-center gap-1.5 min-h-[42px]"
               >
                 <MinusCircle className="w-3.5 h-3.5" />
                 <span>Confirm Stock Deduction (স্টক কমান)</span>

@@ -797,9 +797,50 @@ export function generateNextQuotationNumber(existingQuotes: Quotation[] = []): s
 }
 
 export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string, meta?: any) => void } = {}) {
-  const [quotations, setQuotations] = useState<Quotation[]>(INITIAL_QUOTATIONS);
+  const [quotations, setQuotations] = useState<Quotation[]>(() => {
+    if (typeof window !== 'undefined') {
+      const deletedIds = new Set<string>();
+      try {
+        const delSaved = localStorage.getItem('globotech_erp_deleted_quotation_ids');
+        if (delSaved) {
+          const parsedDel = JSON.parse(delSaved);
+          if (Array.isArray(parsedDel)) {
+            parsedDel.forEach((id: string) => deletedIds.add(id));
+          }
+        }
+      } catch (e) {}
+
+      const saved = localStorage.getItem('globotech_erp_quotations');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingIds = new Set(parsed.map((q: Quotation) => q.id || q.quotationNumber));
+            const newInitials = INITIAL_QUOTATIONS.filter(
+              (initQ) =>
+                !existingIds.has(initQ.id) &&
+                !existingIds.has(initQ.quotationNumber) &&
+                !deletedIds.has(initQ.id) &&
+                !deletedIds.has(initQ.quotationNumber)
+            );
+            return [
+              ...parsed.map((q: Quotation) => ({
+                ...q,
+                vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
+              })),
+              ...newInitials
+            ];
+          }
+        } catch (e) {}
+      }
+      return INITIAL_QUOTATIONS.filter(
+        (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+      );
+    }
+    return INITIAL_QUOTATIONS;
+  });
   const [isMounted, setIsMounted] = useState(false);
-  const hasLoadedFromStorage = useRef(false);
+  const hasLoadedFromStorage = useRef(true);
 
   // Sync from localStorage on initial client mount
   useEffect(() => {
@@ -2264,12 +2305,137 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             </div>
           </div>
 
-          {/* Quotations Master Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-            <div className="sm:hidden px-3 py-2 bg-slate-800/40 border-b border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-              <span>👉 Swipe table horizontally for full details & actions</span>
-              <span className="font-semibold text-slate-300">{filteredQuotations.length} quotes</span>
-            </div>
+          {/* MOBILE VIEW: Quotation Cards for Small Screens */}
+          <div className="md:hidden space-y-3">
+            {filteredQuotations.length === 0 ? (
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-slate-500">
+                <FileText className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
+                <p className="text-sm font-semibold text-slate-300">No matching quotations found</p>
+              </div>
+            ) : (
+              filteredQuotations.map((q) => {
+                const totals = calculateQuotationTotals(q);
+                return (
+                  <div
+                    key={q.id}
+                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 shadow-md"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-mono font-bold text-xs text-blue-400 bg-blue-950/80 px-2 py-0.5 rounded-lg border border-blue-800/60">
+                          {q.quotationNumber}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-normal">v{q.version}</span>
+                      </div>
+                      <span className="text-[11px] text-slate-500">{formatDate(q.date)}</span>
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-slate-100 text-sm leading-snug">{q.customerCompany}</h4>
+                      <p className="text-xs text-slate-400 mt-0.5">{q.projectName}</p>
+                      <p className="text-[11px] text-slate-500 truncate mt-1">
+                        {q.items.map((i) => i.name).join(', ')}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block uppercase font-semibold">Grand Total</span>
+                        <span className="font-mono font-bold text-base text-slate-100">{formatBDT(totals.grandTotal)}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-500 block uppercase font-semibold mb-1">Status</span>
+                        <div className="relative inline-flex items-center">
+                          <select
+                            value={q.status}
+                            onChange={(e) => handleQuickUpdateStatus(q.id, e.target.value as QuotationStatus)}
+                            className="text-[11px] font-bold rounded-lg pl-2 pr-5 py-1 appearance-none cursor-pointer border bg-slate-800 text-slate-200 border-slate-700"
+                          >
+                            <option value="DRAFT">● Draft</option>
+                            <option value="SENT">● Sent</option>
+                            <option value="PENDING_APPROVAL">● Pending</option>
+                            <option value="APPROVED">● Approved</option>
+                            <option value="ACCEPTED">● Accepted</option>
+                            <option value="CONVERTED">● Converted</option>
+                            <option value="REJECTED">● Rejected</option>
+                          </select>
+                          <ChevronDown className="w-3 h-3 absolute right-1 pointer-events-none text-slate-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stock State */}
+                    <div className="flex items-center justify-between text-xs pt-1">
+                      <span className="text-slate-500">Stock State:</span>
+                      {q.stockReserved ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                          <ShieldCheck className="w-3 h-3" /> Reserved
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-500">Unreserved</span>
+                      )}
+                    </div>
+
+                    {/* Action buttons in a 5-column touch grid */}
+                    <div className="grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-800">
+                      <button
+                        onClick={() => {
+                          setSelectedQuotation(q);
+                          setActiveViewMode('DETAIL');
+                        }}
+                        className="py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-xs border border-slate-700 transition flex items-center justify-center min-h-[40px] active:scale-95"
+                      >
+                        Inspect
+                      </button>
+                      <button
+                        onClick={() => handleStartEditQuotation(q)}
+                        className="py-2 px-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition flex items-center justify-center gap-0.5 min-h-[40px] active:scale-95"
+                        title="Edit Quotation"
+                      >
+                        <Edit3 className="w-3 h-3" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (onNavigateTab) {
+                            onNavigateTab('bill-invoice', q.id);
+                          } else {
+                            sessionStorage.setItem('globotech_pending_bill_quote_id', q.id);
+                          }
+                        }}
+                        className="py-2 px-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition flex items-center justify-center gap-0.5 min-h-[40px] active:scale-95"
+                        title="Create Bill Invoice"
+                      >
+                        <Receipt className="w-3 h-3" />
+                        <span>Bill</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedQuotation(q);
+                          setActiveViewMode('PDF');
+                        }}
+                        className="py-2 px-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition flex items-center justify-center gap-0.5 min-h-[40px] active:scale-95"
+                        title="Print / View Customer PDF"
+                      >
+                        <Printer className="w-3 h-3 text-slate-400" />
+                        <span>PDF</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteQuotation(q)}
+                        className="py-2 px-1 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs border border-rose-500/30 transition flex items-center justify-center min-h-[40px] active:scale-95"
+                        title="Delete this Quotation"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* DESKTOP VIEW: Quotations Master Table */}
+          <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
             <div className="overflow-x-auto touch-scroll">
               <table className="w-full text-left text-xs text-slate-300 min-w-[960px]">
                 <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">

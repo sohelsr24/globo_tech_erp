@@ -24,6 +24,7 @@ import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
+import { verifyAndRestoreStorageIntegrity } from '@/lib/erpBackup';
 
 const VALID_TABS = [
   'dashboard',
@@ -53,7 +54,7 @@ export default function AppHome() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
-  // Verify authentication on mount from browser storage
+  // Verify authentication and storage integrity on mount from browser storage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('apex_erp_session') || sessionStorage.getItem('apex_erp_session');
@@ -69,6 +70,11 @@ export default function AppHome() {
     } finally {
       setIsCheckingAuth(false);
     }
+
+    // Verify storage integrity and dual-layer mirror across reboots
+    verifyAndRestoreStorageIntegrity().catch((err) => {
+      console.warn('Storage integrity check notice:', err);
+    });
   }, []);
 
   // Synchronize active tab with URL query parameter (?tab=...) on mount & browser back/forward

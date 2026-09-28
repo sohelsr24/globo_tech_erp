@@ -13,7 +13,9 @@ import {
   CheckCircle2,
   Warehouse,
   Boxes,
-  Layers
+  Layers,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -51,11 +53,19 @@ interface ProductsViewProps {
 }
 
 export function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery }: ProductsViewProps) {
-  const [products, setProducts] = useState<ProductItem[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [products, setProducts] = useState<ProductItem[]>(() => getStoredProducts());
+  const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
   const [search, setSearch] = useState(globalSearchQuery || '');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [showLowStockOnly, setShowLowStockOnly] = useState(filterLowStock);
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+
+  // Automatically default to table view on desktop screens (>=1024px)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setViewMode('table');
+    }
+  }, []);
 
   useEffect(() => {
     if (globalSearchQuery !== undefined && globalSearchQuery !== search) {
@@ -392,136 +402,304 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
           </div>
         </div>
 
-        {/* PRIMARY: Add New Product Button */}
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="w-full sm:w-auto px-4 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 flex-shrink-0 shadow-blue-600/20 ring-1 ring-blue-500"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Product</span>
-        </button>
+        {/* View Mode Switcher & Add Button */}
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center bg-slate-800/90 border border-slate-700/80 rounded-lg p-0.5 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('cards')}
+              className={`px-2.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+                viewMode === 'cards'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Card View (Optimized for Mobile)"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Cards</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={`px-2.5 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition ${
+                viewMode === 'table'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Table View (Full Spreadsheet)"
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>Table</span>
+            </button>
+          </div>
+
+          {/* PRIMARY: Add New Product Button */}
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex-1 sm:flex-initial px-4 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 flex-shrink-0 shadow-blue-600/20 ring-1 ring-blue-500"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Product</span>
+          </button>
+        </div>
       </div>
 
-      {/* Main Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div className="px-4 py-3 bg-slate-800/40 border-b border-slate-800 text-xs text-slate-300 flex items-center justify-between">
-          <span className="font-semibold flex items-center gap-2">
-            <Package className="w-4 h-4 text-blue-400" />
-            <span>Product Catalog & Multi-Tier Pricing ({filtered.length} products)</span>
-          </span>
-          <span className="text-[11px] text-slate-400 sm:hidden">👉 Swipe horizontally</span>
-        </div>
+      {/* VIEW MODE 1: MOBILE PRODUCT CARDS GRID */}
+      {viewMode === 'cards' && (
+        <div className="space-y-3">
+          {filtered.length === 0 ? (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
+              <Package className="w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50" />
+              <p className="text-sm font-semibold text-slate-300">No products found matching criteria</p>
+              <p className="text-xs text-slate-500 mt-1">Try adjusting your search query or category filter</p>
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add New Product</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {filtered.map((item) => {
+                const isLow = item.stock <= item.minStock;
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-slate-900/90 border border-slate-800/90 hover:border-slate-700/80 rounded-2xl p-4 space-y-3.5 transition shadow-lg flex flex-col justify-between"
+                  >
+                    {/* Header info */}
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-mono font-bold text-xs text-blue-400 bg-blue-950/70 border border-blue-800/60 px-2 py-0.5 rounded-lg">
+                            {item.sku}
+                          </span>
+                          {item.barcode && (
+                            <span className="font-mono text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
+                              {item.barcode}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          {isLow ? (
+                            <Badge variant="warning">
+                              <span className="flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3" /> Low Stock
+                              </span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="success">In Stock</Badge>
+                          )}
+                        </div>
+                      </div>
 
-        <div className="overflow-x-auto touch-scroll">
-          <table className="w-full text-left text-xs min-w-[880px]">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
-              <tr>
-                <th className="py-3 px-4">SKU / Barcode</th>
-                <th className="py-3 px-4">Product Details</th>
-                <th className="py-3 px-4">Category & Brand</th>
-                <th className="py-3 px-4 text-center">Stock / Reorder</th>
-                {canViewCosts && <th className="py-3 px-4 text-right">China Cost (CNY)</th>}
-                {canViewCosts && <th className="py-3 px-4 text-right">Landed Cost (BDT)</th>}
-                <th className="py-3 px-4 text-right">Retail (BDT)</th>
-                <th className="py-3 px-4 text-right">Wholesale (BDT)</th>
-                <th className="py-3 px-4 text-right">Project (BDT)</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800 text-slate-200">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-500">
-                    No products found matching criteria. Click{' '}
-                    <span
-                      onClick={() => setIsAddModalOpen(true)}
-                      className="text-blue-400 font-semibold cursor-pointer underline hover:text-blue-300"
-                    >
-                      Add New Product
-                    </span>{' '}
-                    to create one.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((item) => {
-                  const isLow = item.stock <= item.minStock;
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-800/40 transition">
-                      <td className="py-3 px-4 font-mono font-bold text-slate-300">
-                        <div>{item.sku}</div>
-                        <div className="text-[10px] text-slate-500 font-normal">{item.barcode}</div>
-                      </td>
-                      <td className="py-3 px-4 font-medium max-w-xs">
-                        <div className="text-slate-100 font-semibold">{item.name}</div>
+                      {/* Product Name */}
+                      <h3 className="font-bold text-slate-100 text-sm leading-snug line-clamp-2">
+                        {item.name}
+                      </h3>
+
+                      {/* Category & Brand */}
+                      <div className="flex items-center gap-2 text-xs text-slate-400 mt-1.5 flex-wrap">
+                        <span>{item.category}</span>
+                        <span>&bull;</span>
+                        <span className="font-semibold text-slate-300">{item.brand}</span>
                         {item.isSerialTracked && (
-                          <span className="text-[10px] text-blue-400 flex items-center gap-1 mt-0.5 font-sans">
-                            &bull; Serial Tracked
+                          <span className="text-[10px] text-sky-400 bg-sky-950/40 border border-sky-800/40 px-1.5 py-0.2 rounded font-sans">
+                            Serial Tracked
                           </span>
                         )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="text-slate-300">{item.category}</div>
-                        <div className="text-[10px] text-slate-500 font-medium">{item.brand}</div>
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className={`font-bold ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      </div>
+                    </div>
+
+                    {/* Stock & Multi-tier Pricing 2x2 Grid */}
+                    <div className="grid grid-cols-2 gap-2 bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Available Stock</span>
+                        <div className={`font-bold text-sm ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
                           {item.stock} {item.unit}
                         </div>
-                        <div className="text-[10px] text-slate-500">Min: {item.minStock}</div>
-                      </td>
-                      {canViewCosts && (
-                        <td className="py-3 px-4 text-right text-slate-300 font-medium">
-                          ¥ {item.purchasePriceCNY.toLocaleString()}
-                        </td>
-                      )}
-                      {canViewCosts && (
-                        <td className="py-3 px-4 text-right font-bold text-blue-400">
-                          {Formatters.currency(item.currentLandedCost)}
-                        </td>
-                      )}
-                      <td className="py-3 px-4 text-right font-semibold text-slate-100">
-                        {Formatters.currency(item.retailPrice)}
-                      </td>
-                      <td className="py-3 px-4 text-right font-semibold text-cyan-400">
-                        {Formatters.currency(item.wholesalePrice)}
-                      </td>
-                      <td className="py-3 px-4 text-right font-semibold text-purple-400">
-                        {Formatters.currency(item.projectPrice)}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {isLow ? (
-                          <Badge variant="warning">Low Stock</Badge>
-                        ) : (
-                          <Badge variant="success">In Stock</Badge>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(item)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
-                            title="Edit Product"
-                          >
-                            <Edit2 className="w-3.5 h-3.5 text-blue-400" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteProduct(item.id, item.name)}
-                            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-rose-400 transition"
-                            title="Delete Product"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                        <span className="text-[10px] text-slate-500">Min: {item.minStock} {item.unit}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Retail Price</span>
+                        <div className="font-bold text-sm text-slate-100">
+                          {Formatters.currency(item.retailPrice)}
                         </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        <span className="text-[10px] text-slate-500">Standard MRP</span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">Wholesale Price</span>
+                        <div className="font-bold text-sm text-cyan-400">
+                          {Formatters.currency(item.wholesalePrice)}
+                        </div>
+                        <span className="text-[10px] text-slate-500">Dealer/B2B</span>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase font-semibold block">
+                          {canViewCosts ? 'Landed Cost' : 'Project Price'}
+                        </span>
+                        <div className="font-bold text-sm text-purple-400">
+                          {canViewCosts ? Formatters.currency(item.currentLandedCost) : Formatters.currency(item.projectPrice)}
+                        </div>
+                        <span className="text-[10px] text-slate-500">
+                          {canViewCosts ? `¥${item.purchasePriceCNY}` : 'Tender / Contract'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons with 44px touch targets */}
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                      <button
+                        onClick={() => handleOpenEdit(item)}
+                        className="flex-1 min-h-[42px] py-2 px-3 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-blue-400 hover:text-blue-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition active:scale-95"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Product</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(item.id, item.name)}
+                        className="min-h-[42px] min-w-[42px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-rose-950/40 border border-slate-700 hover:border-rose-800/50 text-slate-400 hover:text-rose-400 transition active:scale-95 flex items-center justify-center"
+                        title="Delete Product"
+                        aria-label={`Delete ${item.name}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
-      </div>
+      )}
+
+      {/* VIEW MODE 2: MAIN SPREADSHEET TABLE */}
+      {viewMode === 'table' && (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div className="px-4 py-3 bg-slate-800/40 border-b border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+            <span className="font-semibold flex items-center gap-2">
+              <Package className="w-4 h-4 text-blue-400" />
+              <span>Product Catalog & Multi-Tier Pricing ({filtered.length} products)</span>
+            </span>
+            <span className="text-[11px] text-slate-400 sm:hidden">👉 Swipe horizontally</span>
+          </div>
+
+          <div className="overflow-x-auto touch-scroll">
+            <table className="w-full text-left text-xs min-w-[880px]">
+              <thead className="bg-slate-800/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+                <tr>
+                  <th className="py-3 px-4">SKU / Barcode</th>
+                  <th className="py-3 px-4">Product Details</th>
+                  <th className="py-3 px-4">Category & Brand</th>
+                  <th className="py-3 px-4 text-center">Stock / Reorder</th>
+                  {canViewCosts && <th className="py-3 px-4 text-right">China Cost (CNY)</th>}
+                  {canViewCosts && <th className="py-3 px-4 text-right">Landed Cost (BDT)</th>}
+                  <th className="py-3 px-4 text-right">Retail (BDT)</th>
+                  <th className="py-3 px-4 text-right">Wholesale (BDT)</th>
+                  <th className="py-3 px-4 text-right">Project (BDT)</th>
+                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-slate-200">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-8 text-center text-slate-500">
+                      No products found matching criteria. Click{' '}
+                      <span
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="text-blue-400 font-semibold cursor-pointer underline hover:text-blue-300"
+                      >
+                        Add New Product
+                      </span>{' '}
+                      to create one.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((item) => {
+                    const isLow = item.stock <= item.minStock;
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-800/40 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-slate-300">
+                          <div>{item.sku}</div>
+                          <div className="text-[10px] text-slate-500 font-normal">{item.barcode}</div>
+                        </td>
+                        <td className="py-3 px-4 font-medium max-w-xs">
+                          <div className="text-slate-100 font-semibold">{item.name}</div>
+                          {item.isSerialTracked && (
+                            <span className="text-[10px] text-blue-400 flex items-center gap-1 mt-0.5 font-sans">
+                              &bull; Serial Tracked
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="text-slate-300">{item.category}</div>
+                          <div className="text-[10px] text-slate-500 font-medium">{item.brand}</div>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className={`font-bold ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                            {item.stock} {item.unit}
+                          </div>
+                          <div className="text-[10px] text-slate-500">Min: {item.minStock}</div>
+                        </td>
+                        {canViewCosts && (
+                          <td className="py-3 px-4 text-right text-slate-300 font-medium">
+                            ¥ {item.purchasePriceCNY.toLocaleString()}
+                          </td>
+                        )}
+                        {canViewCosts && (
+                          <td className="py-3 px-4 text-right font-bold text-blue-400">
+                            {Formatters.currency(item.currentLandedCost)}
+                          </td>
+                        )}
+                        <td className="py-3 px-4 text-right font-semibold text-slate-100">
+                          {Formatters.currency(item.retailPrice)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-semibold text-cyan-400">
+                          {Formatters.currency(item.wholesalePrice)}
+                        </td>
+                        <td className="py-3 px-4 text-right font-semibold text-purple-400">
+                          {Formatters.currency(item.projectPrice)}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {isLow ? (
+                            <Badge variant="warning">Low Stock</Badge>
+                          ) : (
+                            <Badge variant="success">In Stock</Badge>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEdit(item)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                              title="Edit Product"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-blue-400" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(item.id, item.name)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-rose-400 transition"
+                              title="Delete Product"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* MODAL 1: ADD NEW PRODUCT */}
       <Modal
@@ -532,13 +710,13 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
           <>
             <button
               onClick={() => setIsAddModalOpen(false)}
-              className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold min-h-[42px] transition active:scale-95"
             >
               Cancel
             </button>
             <button
               onClick={handleAddProduct}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/30"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Save & Register Product</span>
@@ -827,13 +1005,13 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
                   setIsEditModalOpen(false);
                   setEditingProduct(null);
                 }}
-                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold min-h-[42px] transition active:scale-95"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold min-h-[42px] transition active:scale-95 shadow-md shadow-blue-600/30"
               >
                 Save Changes
               </button>

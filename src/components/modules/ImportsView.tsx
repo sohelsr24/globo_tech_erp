@@ -97,12 +97,25 @@ const INITIAL_IMPORTS: ImportShipmentRecord[] = [
 ];
 
 export function ImportsView() {
-  const [shipments, setShipments] = useState<ImportShipmentRecord[]>(INITIAL_IMPORTS);
-  const [isMounted, setIsMounted] = useState(false);
+  const [shipments, setShipments] = useState<ImportShipmentRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('globotech_erp_imports');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (e) {
+          console.error('Error loading imports from localStorage:', e);
+        }
+      }
+    }
+    return INITIAL_IMPORTS;
+  });
 
   useEffect(() => {
-    setIsMounted(true);
-    const loadImports = () => {
+    const handleBackupRestored = () => {
       if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_imports');
         if (saved) {
@@ -110,30 +123,24 @@ export function ImportsView() {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setShipments(parsed);
-              return;
             }
-          } catch (e) {
-            console.error('Error loading imports from localStorage:', e);
-          }
+          } catch (e) {}
         }
-        localStorage.setItem('globotech_erp_imports', JSON.stringify(INITIAL_IMPORTS));
       }
     };
-
-    loadImports();
-    window.addEventListener('globotech_backup_restored', loadImports);
-    return () => window.removeEventListener('globotech_backup_restored', loadImports);
+    window.addEventListener('globotech_backup_restored', handleBackupRestored);
+    return () => window.removeEventListener('globotech_backup_restored', handleBackupRestored);
   }, []);
 
   useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_imports', JSON.stringify(shipments));
       } catch (e) {
         console.error('Error syncing imports to localStorage:', e);
       }
     }
-  }, [shipments, isMounted]);
+  }, [shipments]);
 
   const [activeShipment, setActiveShipment] = useState<ImportShipmentRecord | null>(null);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
@@ -292,13 +299,13 @@ export function ImportsView() {
             <>
               <button
                 onClick={() => setIsCalculatorOpen(false)}
-                className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-4 py-2.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition"
               >
                 Close
               </button>
               <button
                 onClick={handleSaveLandedCost}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
+                className="w-full sm:w-auto min-h-[42px] px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/20 transition flex items-center justify-center gap-1.5"
               >
                 Apply & Save Landed Cost
               </button>
