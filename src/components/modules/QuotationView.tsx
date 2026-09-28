@@ -3439,17 +3439,17 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           </div>
 
           {/* Printable White Sheet Document */}
-          <div className="overflow-x-auto w-full pb-8 flex justify-center">
+          <div className="overflow-x-auto w-full pb-8 flex justify-center print:p-0 print:m-0 print:pb-0 print:overflow-visible print:block">
             <div
               id="printable-quotation-sheet"
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: '297mm',
+                minHeight: '265mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '10px 28px 18px 28px',
+                padding: '10px 24px 14px 24px',
               }}
               className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
             >
@@ -3701,7 +3701,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Flexible spacer between Terms and Signatures - brings signatures UP to natural position */}
-              <div style={{ flex: '1 1 0%', minHeight: '36px' }} />
+              <div style={{ flex: '1 1 0%', minHeight: '24px' }} className="print:hidden" />
 
               {/* SIGNATURES SECTION */}
               <div className="quotation-signatures-block relative z-10 w-full" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
@@ -3751,7 +3751,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Flexible spacer between Signatures and Footer - creates generous breathing room before the bottom footer */}
-              <div style={{ flex: '1.3 1 0%', minHeight: '44px' }} />
+              <div style={{ flex: '1.2 1 0%', minHeight: '28px' }} className="print:hidden" />
 
               {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
               <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
