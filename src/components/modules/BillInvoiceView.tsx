@@ -25,7 +25,10 @@ import {
   File,
   AlertCircle,
   ChevronDown,
-  Truck
+  Truck,
+  Tag,
+  Barcode,
+  Hash
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -47,6 +50,8 @@ export interface BillInvoiceItem {
   id: string;
   itemNo: number;
   sku?: string;
+  partNo?: string;        // e.g. "CP-UTP-C6-305M" or Manufacturer Model
+  serialNumbers?: string; // e.g. "HK-2026-9812A, HK-2026-9813B"
   name: string;
   description: string;
   unit: string;
@@ -225,6 +230,9 @@ export const INITIAL_BILL_INVOICES: BillInvoice[] = [
       {
         id: 'bi-item-1',
         itemNo: 1,
+        sku: 'RB-CAT6-305M',
+        partNo: 'CP-UTP-C6-305M',
+        serialNumbers: 'RB-2026-9901A, RB-2026-9902B',
         name: 'Rosenberger UTP Cable',
         description: 'Rosenberger Cat-6 UTP Cable, 305M',
         unit: 'Box',
@@ -419,6 +427,10 @@ export function BillInvoiceView({
   const [challanTransportNo, setChallanTransportNo] = useState<string>('');
   const [challanShowPrices, setChallanShowPrices] = useState<boolean>(false);
 
+  // Quick Serials & Part Numbers Editor for Challan
+  const [isSerialsModalOpen, setIsSerialsModalOpen] = useState<boolean>(false);
+  const [serialsItems, setSerialsItems] = useState<BillInvoiceItem[]>([]);
+
   // Customer PO Document Attachment States
   const [selectedPOBill, setSelectedPOBill] = useState<BillInvoice | null>(null);
   const [isPOViewerOpen, setIsPOViewerOpen] = useState(false);
@@ -453,6 +465,8 @@ export function BillInvoiceView({
       {
         id: 'new-1',
         itemNo: 1,
+        partNo: '',
+        serialNumbers: '',
         name: '',
         description: '',
         unit: 'Box',
@@ -698,6 +712,8 @@ export function BillInvoiceView({
       id: `bi-${it.id || idx}-${Date.now()}`,
       itemNo: idx + 1,
       sku: (it as any).sku || '',
+      partNo: (it as any).partNo || (it as any).model || (it as any).sku || '',
+      serialNumbers: (it as any).serialNumbers || (it as any).serialNo || '',
       name: it.name || '',
       description: it.description || it.model || it.brand || '',
       unit: it.unit || 'Box',
@@ -1006,6 +1022,8 @@ export function BillInvoiceView({
         id: `item-${Date.now()}`,
         itemNo: nextItemNo,
         name: '',
+        partNo: '',
+        serialNumbers: '',
         description: '',
         unit: 'Box',
         quantity: 1,
@@ -1054,6 +1072,54 @@ export function BillInvoiceView({
   // Open Delivery Challan Directly
   const handleOpenChallan = (bill: BillInvoice) => {
     handleOpenPreview(bill, 'CHALLAN');
+  };
+
+  // Open Quick Serials & Part Numbers Modal for Delivery Challan
+  const handleOpenSerialsModal = () => {
+    if (!activeBill) return;
+    setSerialsItems(
+      (activeBill.items || []).map((it) => ({
+        ...it,
+        partNo: it.partNo || '',
+        serialNumbers: it.serialNumbers || ''
+      }))
+    );
+    setIsSerialsModalOpen(true);
+  };
+
+  const handleUpdateSerialItem = (index: number, field: 'partNo' | 'serialNumbers', value: string) => {
+    setSerialsItems((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const handleSaveSerialsModal = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!activeBill) return;
+
+    const updatedBill: BillInvoice = {
+      ...activeBill,
+      items: serialsItems
+    };
+
+    setActiveBill(updatedBill);
+    const updatedBills = bills.map((b) => (b.id === updatedBill.id ? updatedBill : b));
+    setBills(updatedBills);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updatedBills }));
+      } catch (err) {
+        console.error('Failed to save serials to localStorage:', err);
+      }
+    }
+
+    setIsSerialsModalOpen(false);
+    showToast(`Updated Serial Numbers & Part Nos for Challan DC/${updatedBill.billNo.replace('GT/', '')}`);
   };
 
   // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
@@ -1911,6 +1977,15 @@ export function BillInvoiceView({
               {/* Challan Specific Controls */}
               {previewDocType === 'CHALLAN' && (
                 <>
+                  <button
+                    type="button"
+                    onClick={handleOpenSerialsModal}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/35 rounded-lg text-xs font-semibold transition active:scale-95 shadow-sm"
+                    title="Edit or assign product serial numbers (S/N) and part numbers (P/N) for this Challan"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Serials &amp; Part Nos</span>
+                  </button>
                   <div className="flex items-center gap-1.5 text-xs">
                     <span className="text-slate-400 hidden xl:inline">Dispatch:</span>
                     <select
@@ -2166,8 +2241,8 @@ export function BillInvoiceView({
                       <thead>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
                           <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '160px' : '220px', fontWeight: 'bold' }}>Item Name</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Specifications</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '160px' : '220px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Serial Numbers (S/N)</th>
                           <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
                           <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
                           {challanShowPrices && (
@@ -2185,11 +2260,27 @@ export function BillInvoiceView({
                             <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
                               {idx + 1}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
-                              {item.name}
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px' }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{item.name}</div>
+                              {item.partNo ? (
+                                <div style={{ marginTop: '4px', fontSize: '11px', color: '#111' }}>
+                                  <span style={{ fontWeight: 'bold', color: '#333' }}>P/N:</span>{' '}
+                                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', backgroundColor: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', border: '1px solid #cbd5e1' }}>
+                                    {item.partNo}
+                                  </span>
+                                </div>
+                              ) : null}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
-                              {item.description || item.name}
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.45' }}>
+                              <div>{item.description || item.name}</div>
+                              {item.serialNumbers ? (
+                                <div style={{ marginTop: '6px', padding: '4px 8px', backgroundColor: '#f8fafc', border: '1px dashed #64748b', borderRadius: '4px', fontSize: '11.5px', color: '#0f172a' }}>
+                                  <strong style={{ color: '#0f172a' }}>S/N (Serial No):</strong>{' '}
+                                  <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#0f172a', wordBreak: 'break-word' }}>
+                                    {item.serialNumbers}
+                                  </span>
+                                </div>
+                              ) : null}
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
                               {item.unit}
@@ -2397,11 +2488,21 @@ export function BillInvoiceView({
                             <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
                               {idx + 1}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
-                              {item.name}
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px' }}>
+                              <div style={{ fontWeight: 'bold' }}>{item.name}</div>
+                              {item.partNo ? (
+                                <div style={{ fontSize: '10px', color: '#555', marginTop: '2px', fontWeight: '500' }}>
+                                  P/N: {item.partNo}
+                                </div>
+                              ) : null}
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
-                              {item.description || item.name}
+                              <div>{item.description || item.name}</div>
+                              {item.serialNumbers ? (
+                                <div style={{ fontSize: '10px', color: '#555', marginTop: '3px' }}>
+                                  <span style={{ fontWeight: '600' }}>S/N:</span> {item.serialNumbers}
+                                </div>
+                              ) : null}
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
                               {item.unit}
@@ -2923,8 +3024,8 @@ export function BillInvoiceView({
                 <thead>
                   <tr className="bg-slate-900 border-b border-slate-800 text-slate-300 font-semibold text-[11px] uppercase tracking-wider">
                     <th className="py-3 px-3 w-12 text-center">SN</th>
-                    <th className="py-3 px-3 min-w-[190px]">Item Name *</th>
-                    <th className="py-3 px-3 min-w-[230px]">Description / Specification</th>
+                    <th className="py-3 px-3 min-w-[210px]">Item Name &amp; Part No *</th>
+                    <th className="py-3 px-3 min-w-[250px]">Description &amp; Serial Numbers (S/N)</th>
                     <th className="py-3 px-3 w-24 text-center">Unit</th>
                     <th className="py-3 px-3 w-28 text-center">Quantity *</th>
                     <th className="py-3 px-3 w-36 text-right">Unit Price (৳) *</th>
@@ -2944,18 +3045,42 @@ export function BillInvoiceView({
                           required
                           value={item.name}
                           onChange={(e) => handleUpdateItem(index, 'name', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium text-xs"
+                          className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium text-xs mb-1.5"
                           placeholder="e.g. Rosenberger UTP Cable"
                         />
+                        <div className="flex items-center gap-1.5 bg-slate-900/90 px-2 py-1 rounded-md border border-slate-800">
+                          <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1 rounded border border-sky-500/20 whitespace-nowrap">
+                            P/N
+                          </span>
+                          <input
+                            type="text"
+                            value={item.partNo || ''}
+                            onChange={(e) => handleUpdateItem(index, 'partNo', e.target.value)}
+                            className="w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none font-mono"
+                            placeholder="Part No / Model (e.g. CP-UTP-C6)"
+                          />
+                        </div>
                       </td>
                       <td className="py-2.5 px-3">
                         <input
                           type="text"
                           value={item.description}
                           onChange={(e) => handleUpdateItem(index, 'description', e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs"
+                          className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs mb-1.5"
                           placeholder="e.g. Cat-6 UTP Cable, 305M"
                         />
+                        <div className="flex items-center gap-1.5 bg-slate-900/90 px-2 py-1 rounded-md border border-slate-800">
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1 rounded border border-amber-500/20 whitespace-nowrap">
+                            S/N
+                          </span>
+                          <input
+                            type="text"
+                            value={item.serialNumbers || ''}
+                            onChange={(e) => handleUpdateItem(index, 'serialNumbers', e.target.value)}
+                            className="w-full bg-transparent font-mono text-[11px] text-amber-300 placeholder-slate-500 focus:outline-none"
+                            placeholder="Serial Nos for Challan (e.g. SN-001, SN-002)"
+                          />
+                        </div>
                       </td>
                       <td className="py-2.5 px-3">
                         <input
@@ -3365,6 +3490,106 @@ export function BillInvoiceView({
                     <span>Attach to Bill</span>
                   </>
                 )}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          5. QUICK SERIAL NUMBERS & PART NUMBERS MODAL FOR CHALLAN
+          ======================================================== */}
+      {isSerialsModalOpen && activeBill && (
+        <Modal
+          isOpen={isSerialsModalOpen}
+          onClose={() => setIsSerialsModalOpen(false)}
+          title="Delivery Challan Serial & Part Numbers (চালান সিরিয়াল ও পার্ট নম্বর)"
+          size="3xl"
+        >
+          <form onSubmit={handleSaveSerialsModal} className="space-y-4 text-xs text-slate-200">
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-slate-300 space-y-1">
+              <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs">
+                <Tag className="w-4 h-4 text-amber-400" />
+                <span>Challan Item Identification (DC/{activeBill.billNo.replace('GT/', '')})</span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Add product Part Numbers (P/N / Model) and Serial Numbers (S/N) for goods handover, store gate pass, and warranty tracking. You can enter multiple serial numbers separated by commas.
+              </p>
+            </div>
+
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {serialsItems.map((item, idx) => (
+                <div
+                  key={item.id || idx}
+                  className="p-3.5 bg-slate-900/80 rounded-xl border border-slate-800 space-y-2.5"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-slate-800 text-slate-300 font-mono font-bold flex items-center justify-center text-[10px]">
+                        {idx + 1}
+                      </span>
+                      <span className="font-bold text-slate-100 text-xs">{item.name || `Item #${idx + 1}`}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                      <span>Delivered Qty:</span>
+                      <span className="px-2 py-0.5 rounded bg-slate-800 font-bold text-emerald-400">
+                        {item.quantity} {item.unit}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-300 mb-1 flex items-center gap-1.5">
+                        <span className="text-sky-400 font-bold">P/N:</span>
+                        <span>Part Number / Model</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={item.partNo || ''}
+                        onChange={(e) => handleUpdateSerialItem(idx, 'partNo', e.target.value)}
+                        placeholder="e.g. CP-UTP-C6 / DS-2CD2047G2"
+                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono text-xs"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-[11px] font-medium text-slate-300 flex items-center gap-1.5">
+                          <span className="text-amber-400 font-bold">S/N:</span>
+                          <span>Serial Numbers</span>
+                        </label>
+                        <span className="text-[10px] text-slate-500">
+                          {item.quantity > 1 ? `Expected ${item.quantity} serials` : '1 serial'}
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        value={item.serialNumbers || ''}
+                        onChange={(e) => handleUpdateSerialItem(idx, 'serialNumbers', e.target.value)}
+                        placeholder={item.quantity > 1 ? "e.g. HK-9812A, HK-9813B (comma separated)" : "e.g. HK-2026-9812A"}
+                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsSerialsModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold text-xs transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold text-xs transition flex items-center gap-1.5 shadow-md"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save &amp; Update Challan</span>
               </button>
             </div>
           </form>
