@@ -23,7 +23,8 @@ import {
   Download,
   ExternalLink,
   File,
-  AlertCircle
+  AlertCircle,
+  ChevronDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -54,6 +55,52 @@ export interface BillInvoiceItem {
 }
 
 export type BillInvoiceStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'PARTIAL' | 'CANCELLED';
+
+export const BILL_STATUS_THEME: Record<
+  BillInvoiceStatus,
+  { label: string; dot: string; bg: string; text: string; border: string; desc: string }
+> = {
+  ISSUED: {
+    label: 'ISSUED',
+    dot: 'bg-amber-400',
+    bg: 'bg-amber-950/80 hover:bg-amber-900/90',
+    text: 'text-amber-300',
+    border: 'border-amber-800/80 hover:border-amber-600',
+    desc: 'Issued & Awaiting Collection'
+  },
+  PAID: {
+    label: 'PAID',
+    dot: 'bg-emerald-400',
+    bg: 'bg-emerald-950/80 hover:bg-emerald-900/90',
+    text: 'text-emerald-300',
+    border: 'border-emerald-800/80 hover:border-emerald-600',
+    desc: 'Fully Paid & Collected'
+  },
+  PARTIAL: {
+    label: 'PARTIAL',
+    dot: 'bg-cyan-400',
+    bg: 'bg-cyan-950/80 hover:bg-cyan-900/90',
+    text: 'text-cyan-300',
+    border: 'border-cyan-800/80 hover:border-cyan-600',
+    desc: 'Partially Paid'
+  },
+  DRAFT: {
+    label: 'DRAFT',
+    dot: 'bg-slate-400',
+    bg: 'bg-slate-800 hover:bg-slate-750',
+    text: 'text-slate-300',
+    border: 'border-slate-700 hover:border-slate-500',
+    desc: 'Draft Invoice'
+  },
+  CANCELLED: {
+    label: 'CANCELLED',
+    dot: 'bg-rose-400',
+    bg: 'bg-rose-950/80 hover:bg-rose-900/90',
+    text: 'text-rose-300',
+    border: 'border-rose-800/80 hover:border-rose-600',
+    desc: 'Void or Cancelled'
+  }
+};
 
 export interface BillInvoice {
   id: string;
@@ -373,6 +420,13 @@ export function BillInvoiceView({
   const [quickAttachFile, setQuickAttachFile] = useState<File | null>(null);
   const [isUploadingPO, setIsUploadingPO] = useState(false);
   const [poFilterOnly, setPoFilterOnly] = useState(false);
+
+  // Toast Notification
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
 
   // Form State for Create / Edit
   const [editingBillId, setEditingBillId] = useState<string | null>(null);
@@ -695,6 +749,31 @@ export function BillInvoiceView({
         termsAndConditions: terms
       };
     });
+  };
+
+  // Quick Update Bill Status (ISSUED, PAID, PARTIAL, DRAFT, CANCELLED)
+  const handleUpdateBillStatus = (billId: string, newStatus: BillInvoiceStatus) => {
+    const target = bills.find((b) => b.id === billId);
+    const targetNo = target?.billNo || billId;
+
+    const updated = bills.map((b) => (b.id === billId ? { ...b, status: newStatus } : b));
+    setBills(updated);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updated));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updated }));
+      } catch (e) {
+        console.error('Failed to save updated bill status:', e);
+      }
+    }
+
+    if (activeBill && activeBill.id === billId) {
+      setActiveBill((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
+
+    showToast(`Bill ${targetNo} status set to ${newStatus}`);
   };
 
   // Open Edit Modal
@@ -1175,6 +1254,14 @@ export function BillInvoiceView({
           ======================================================== */}
       {activeViewMode === 'LIST' && (
         <>
+          {/* Toast Notification */}
+          {toastMsg && (
+            <div className="fixed top-20 right-6 z-50 bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 border border-emerald-400/40 animate-bounce">
+              <CheckCircle2 className="w-4 h-4 text-white" />
+              <span>{toastMsg}</span>
+            </div>
+          )}
+
           {/* Module Title & Quick Action Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-4 sm:p-5 rounded-2xl shadow-xl backdrop-blur-md no-print">
             <div className="flex items-center gap-3">
@@ -1284,7 +1371,7 @@ export function BillInvoiceView({
 
             <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
               <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              {(['ALL', 'ISSUED', 'PAID', 'PARTIAL', 'DRAFT'] as const).map((st) => (
+              {(['ALL', 'ISSUED', 'PAID', 'PARTIAL', 'DRAFT', 'CANCELLED'] as const).map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
@@ -1341,19 +1428,35 @@ export function BillInvoiceView({
                           <span className="font-mono text-sm font-bold text-emerald-400">
                             {bill.billNo}
                           </span>
-                          <Badge
-                            variant={
-                              bill.status === 'PAID'
-                                ? 'success'
-                                : bill.status === 'ISSUED'
-                                ? 'warning'
-                                : bill.status === 'DRAFT'
-                                ? 'neutral'
-                                : 'info'
-                            }
-                          >
-                            {bill.status}
-                          </Badge>
+                          <div className="relative inline-flex items-center group" title="Tap to update Bill Status">
+                            <select
+                              value={bill.status}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleUpdateBillStatus(bill.id, e.target.value as BillInvoiceStatus);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className={`appearance-none cursor-pointer pl-5 pr-5 py-0.5 rounded-full text-[11px] font-semibold border transition shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 ${
+                                BILL_STATUS_THEME[bill.status]?.bg || 'bg-slate-800'
+                              } ${
+                                BILL_STATUS_THEME[bill.status]?.text || 'text-slate-300'
+                              } ${
+                                BILL_STATUS_THEME[bill.status]?.border || 'border-slate-700'
+                              }`}
+                            >
+                              <option value="ISSUED" className="bg-slate-900 text-amber-300 font-medium">ISSUED</option>
+                              <option value="PAID" className="bg-slate-900 text-emerald-300 font-medium">PAID</option>
+                              <option value="PARTIAL" className="bg-slate-900 text-cyan-300 font-medium">PARTIAL</option>
+                              <option value="DRAFT" className="bg-slate-900 text-slate-300 font-medium">DRAFT</option>
+                              <option value="CANCELLED" className="bg-slate-900 text-rose-300 font-medium">CANCELLED</option>
+                            </select>
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full absolute left-2 pointer-events-none ${
+                                BILL_STATUS_THEME[bill.status]?.dot || 'bg-slate-400'
+                              }`}
+                            />
+                            <ChevronDown className="w-2.5 h-2.5 absolute right-1.5 pointer-events-none opacity-60" />
+                          </div>
                         </div>
                         <p className="text-[11px] text-slate-400 mt-0.5">{bill.date}</p>
                       </div>
@@ -1478,7 +1581,12 @@ export function BillInvoiceView({
                       <th className="py-3.5 px-4">Delivered To</th>
                       <th className="py-3.5 px-4 text-right">Items</th>
                       <th className="py-3.5 px-4 text-right">Grand Total</th>
-                      <th className="py-3.5 px-4 text-center">Status</th>
+                      <th className="py-3.5 px-4 text-center">
+                        <span className="inline-flex items-center gap-1">
+                          Status
+                          <span className="text-[10px] text-slate-500 font-normal hidden xl:inline">(&#9662; Quick Change)</span>
+                        </span>
+                      </th>
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -1587,19 +1695,35 @@ export function BillInvoiceView({
                             {formatBDT(bill.grandTotal)}
                           </td>
                           <td className="py-3 px-4 text-center">
-                            <Badge
-                              variant={
-                                bill.status === 'PAID'
-                                  ? 'success'
-                                  : bill.status === 'ISSUED'
-                                  ? 'warning'
-                                  : bill.status === 'DRAFT'
-                                  ? 'neutral'
-                                  : 'info'
-                              }
-                            >
-                              {bill.status}
-                            </Badge>
+                            <div className="relative inline-flex items-center group" title="Click to update Bill Status">
+                              <select
+                                value={bill.status}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateBillStatus(bill.id, e.target.value as BillInvoiceStatus);
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                className={`appearance-none cursor-pointer pl-6 pr-6 py-1 rounded-full text-xs font-semibold border transition shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 ${
+                                  BILL_STATUS_THEME[bill.status]?.bg || 'bg-slate-800'
+                                } ${
+                                  BILL_STATUS_THEME[bill.status]?.text || 'text-slate-300'
+                                } ${
+                                  BILL_STATUS_THEME[bill.status]?.border || 'border-slate-700'
+                                }`}
+                              >
+                                <option value="ISSUED" className="bg-slate-900 text-amber-300 font-medium">ISSUED</option>
+                                <option value="PAID" className="bg-slate-900 text-emerald-300 font-medium">PAID</option>
+                                <option value="PARTIAL" className="bg-slate-900 text-cyan-300 font-medium">PARTIAL</option>
+                                <option value="DRAFT" className="bg-slate-900 text-slate-300 font-medium">DRAFT</option>
+                                <option value="CANCELLED" className="bg-slate-900 text-rose-300 font-medium">CANCELLED</option>
+                              </select>
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full absolute left-2.5 pointer-events-none ${
+                                  BILL_STATUS_THEME[bill.status]?.dot || 'bg-slate-400'
+                                }`}
+                              />
+                              <ChevronDown className="w-3 h-3 absolute right-2 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-right whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
@@ -1682,6 +1806,33 @@ export function BillInvoiceView({
                 <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
                   <span>Bill Invoice: {activeBill.billNo}</span>
                   <span className="font-normal text-xs text-slate-400">({activeBill.billToName})</span>
+                  <div className="relative inline-flex items-center group ml-1" title="Click to update status">
+                    <select
+                      value={activeBill.status}
+                      onChange={(e) => {
+                        handleUpdateBillStatus(activeBill.id, e.target.value as BillInvoiceStatus);
+                      }}
+                      className={`appearance-none cursor-pointer pl-5 pr-5 py-0.5 rounded-full text-[11px] font-semibold border transition shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 ${
+                        BILL_STATUS_THEME[activeBill.status]?.bg || 'bg-slate-800'
+                      } ${
+                        BILL_STATUS_THEME[activeBill.status]?.text || 'text-slate-300'
+                      } ${
+                        BILL_STATUS_THEME[activeBill.status]?.border || 'border-slate-700'
+                      }`}
+                    >
+                      <option value="ISSUED" className="bg-slate-900 text-amber-300 font-medium">ISSUED</option>
+                      <option value="PAID" className="bg-slate-900 text-emerald-300 font-medium">PAID</option>
+                      <option value="PARTIAL" className="bg-slate-900 text-cyan-300 font-medium">PARTIAL</option>
+                      <option value="DRAFT" className="bg-slate-900 text-slate-300 font-medium">DRAFT</option>
+                      <option value="CANCELLED" className="bg-slate-900 text-rose-300 font-medium">CANCELLED</option>
+                    </select>
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full absolute left-2 pointer-events-none ${
+                        BILL_STATUS_THEME[activeBill.status]?.dot || 'bg-slate-400'
+                      }`}
+                    />
+                    <ChevronDown className="w-2.5 h-2.5 absolute right-1.5 pointer-events-none opacity-60" />
+                  </div>
                 </h2>
               </div>
             </div>
