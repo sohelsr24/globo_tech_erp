@@ -49,7 +49,7 @@ export function Sidebar({
     { id: 'customers', label: 'Customer Directory', icon: Users },
     { id: 'suppliers', label: 'China Suppliers', icon: Building2 },
     { id: 'quotation', label: 'Quotation', icon: FileText },
-    { id: 'bill-invoice', label: 'Bill Invoice', icon: Receipt },
+    { id: 'bill-invoice', label: 'Bill & Challan', icon: Receipt },
     { id: 'sales', label: 'Sales & Invoicing', icon: FileText },
     { id: 'projects', label: 'Projects & Installation', icon: Wrench },
     { id: 'reports', label: 'P&L & Cash Flow', icon: BarChart3 },

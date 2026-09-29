@@ -24,7 +24,8 @@ import {
   ExternalLink,
   File,
   AlertCircle,
-  ChevronDown
+  ChevronDown,
+  Truck
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -411,6 +412,12 @@ export function BillInvoiceView({
   // Pad Print Settings
   const [padTopMarginMm, setPadTopMarginMm] = useState<number>(45); // Standard Bangladesh company pad header = 45mm
   const [usePreprintedPadMode, setUsePreprintedPadMode] = useState<boolean>(true); // TRUE = No digital letterhead/watermark/footer
+
+  // Document Type for Preview & Print ('BILL' or 'CHALLAN')
+  const [previewDocType, setPreviewDocType] = useState<'BILL' | 'CHALLAN'>('BILL');
+  const [challanDeliveryMethod, setChallanDeliveryMethod] = useState<string>('Office Staff / By Hand');
+  const [challanTransportNo, setChallanTransportNo] = useState<string>('');
+  const [challanShowPrices, setChallanShowPrices] = useState<boolean>(false);
 
   // Customer PO Document Attachment States
   const [selectedPOBill, setSelectedPOBill] = useState<BillInvoice | null>(null);
@@ -1038,9 +1045,15 @@ export function BillInvoiceView({
   };
 
   // Switch to Full-Screen Preview
-  const handleOpenPreview = (bill: BillInvoice) => {
+  const handleOpenPreview = (bill: BillInvoice, docType: 'BILL' | 'CHALLAN' = 'BILL') => {
     setActiveBill(bill);
+    setPreviewDocType(docType);
     setActiveViewMode('PREVIEW');
+  };
+
+  // Open Delivery Challan Directly
+  const handleOpenChallan = (bill: BillInvoice) => {
+    handleOpenPreview(bill, 'CHALLAN');
   };
 
   // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
@@ -1077,6 +1090,9 @@ export function BillInvoiceView({
 
       const billHtml = printElement.innerHTML;
       const topPaddingMm = usePreprintedPadMode ? padTopMarginMm : 20;
+      const docTitle = previewDocType === 'CHALLAN'
+        ? `Delivery Challan - DC-${activeBill?.billNo ? activeBill.billNo.replace('GT/', '') : 'GT'}`
+        : `Bill Invoice - ${activeBill?.billNo || 'GT'}`;
 
       frameDoc.open();
       frameDoc.write(`
@@ -1084,7 +1100,7 @@ export function BillInvoiceView({
         <html>
           <head>
             <meta charset="utf-8" />
-            <title>Bill Invoice - ${activeBill?.billNo || 'GT'}</title>
+            <title>${docTitle}</title>
             <style>
               @page {
                 size: A4 portrait;
@@ -1270,13 +1286,16 @@ export function BillInvoiceView({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-slate-100">Bill Invoices</h1>
+                  <h1 className="text-xl font-bold text-slate-100">Bill Invoices &amp; Delivery Challans</h1>
                   <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    Printed Pad Ready
+                    Pad Ready
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 hidden sm:inline">
+                    Delivery Challan Ready
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
-                  Generate & print dynamic client supply bills directly on pre-printed company pad paper
+                  Generate &amp; print client supply bills and official delivery challans (চালান) on pre-printed company pad or plain paper
                 </p>
               </div>
             </div>
@@ -1540,27 +1559,35 @@ export function BillInvoiceView({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-2 pt-1">
+                    <div className="grid grid-cols-5 gap-1.5 pt-1">
                       <button
-                        onClick={() => handleOpenPreview(bill)}
-                        className="col-span-2 min-h-[42px] px-3 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition flex items-center justify-center gap-1.5 active:scale-95"
+                        onClick={() => handleOpenPreview(bill, 'BILL')}
+                        className="col-span-2 min-h-[40px] px-2 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition flex items-center justify-center gap-1 active:scale-95"
                       >
-                        <Eye className="w-4 h-4" />
-                        <span>View / Print</span>
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Bill (বিল)</span>
+                      </button>
+                      <button
+                        onClick={() => handleOpenChallan(bill)}
+                        className="col-span-1 min-h-[40px] px-1.5 py-1.5 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 font-bold text-xs border border-blue-500/30 transition flex items-center justify-center gap-1 active:scale-95"
+                        title="Delivery Challan"
+                      >
+                        <Truck className="w-3.5 h-3.5" />
+                        <span>চালান</span>
                       </button>
                       <button
                         onClick={() => handleOpenEditModal(bill)}
-                        className="min-h-[42px] p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center justify-center active:scale-95"
+                        className="min-h-[40px] p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition flex items-center justify-center active:scale-95"
                         title="Edit Bill"
                       >
-                        <Edit className="w-4 h-4" />
+                        <Edit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteBill(bill.id)}
-                        className="min-h-[42px] p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center justify-center active:scale-95"
+                        className="min-h-[40px] p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition flex items-center justify-center active:scale-95"
                         title="Delete Bill"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -1746,13 +1773,20 @@ export function BillInvoiceView({
                               </button>
 
                               <button
-                                onClick={() => handleOpenPreview(bill)}
-                                title="View & Print Pad Invoice"
+                                onClick={() => handleOpenPreview(bill, 'BILL')}
+                                title="View & Print Pad Bill Invoice"
                                 className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition flex items-center gap-1 active:scale-95"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span className="hidden xl:inline">View / Print</span>
-                                <span className="xl:hidden">View</span>
+                                <span className="hidden xl:inline">Bill</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenChallan(bill)}
+                                title="Generate & Print Delivery Challan (চালান)"
+                                className="px-2 py-1 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-400 font-semibold text-xs border border-blue-500/30 transition flex items-center gap-1 active:scale-95"
+                              >
+                                <Truck className="w-3.5 h-3.5" />
+                                <span className="hidden xl:inline">Challan</span>
                               </button>
                               <button
                                 onClick={() => handleOpenEditModal(bill)}
@@ -1807,10 +1841,41 @@ export function BillInvoiceView({
 
               <div className="h-5 w-px bg-slate-800 hidden sm:block" />
 
+              {/* Document Switcher: Bill Invoice vs Delivery Challan */}
+              <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPreviewDocType('BILL')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition ${
+                    previewDocType === 'BILL'
+                      ? 'bg-emerald-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  <span>Bill Invoice (বিল)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDocType('CHALLAN')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold transition ${
+                    previewDocType === 'CHALLAN'
+                      ? 'bg-blue-600 text-white shadow'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Truck className="w-3.5 h-3.5" />
+                  <span>Delivery Challan (চালান)</span>
+                </button>
+              </div>
+
               <div>
                 <h2 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                  <span>Bill Invoice: {activeBill.billNo}</span>
-                  <span className="font-normal text-xs text-slate-400">({activeBill.billToName})</span>
+                  <span>
+                    {previewDocType === 'CHALLAN' ? 'Challan:' : 'Bill:'}{' '}
+                    {previewDocType === 'CHALLAN' ? `DC/${activeBill.billNo.replace('GT/', '')}` : activeBill.billNo}
+                  </span>
+                  <span className="font-normal text-xs text-slate-400 hidden lg:inline">({activeBill.billToName})</span>
                   <div className="relative inline-flex items-center group ml-1" title="Click to update status">
                     <select
                       value={activeBill.status}
@@ -1843,6 +1908,44 @@ export function BillInvoiceView({
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {/* Challan Specific Controls */}
+              {previewDocType === 'CHALLAN' && (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-slate-400 hidden xl:inline">Dispatch:</span>
+                    <select
+                      value={challanDeliveryMethod}
+                      onChange={(e) => setChallanDeliveryMethod(e.target.value)}
+                      className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs"
+                    >
+                      <option value="Office Delivery Staff / By Hand">Office Staff / By Hand</option>
+                      <option value="Company Delivery Van">Company Delivery Van</option>
+                      <option value="Pickup / Dedicated Transport">Dedicated Transport</option>
+                      <option value="Sundarban Courier Service">Sundarban Courier</option>
+                      <option value="SA Paribahan Courier">SA Paribahan</option>
+                      <option value="Steadfast Courier">Steadfast Courier</option>
+                      <option value="Customer Self-Pickup">Customer Self-Pickup</option>
+                    </select>
+                  </div>
+                  <input
+                    type="text"
+                    value={challanTransportNo}
+                    onChange={(e) => setChallanTransportNo(e.target.value)}
+                    placeholder="Vehicle / Memo # (optional)"
+                    className="px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs placeholder-slate-600 w-36"
+                  />
+                  <label className="flex items-center gap-1.5 text-xs text-slate-300 cursor-pointer select-none px-2 py-1 bg-slate-950 rounded-lg border border-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={challanShowPrices}
+                      onChange={(e) => setChallanShowPrices(e.target.checked)}
+                      className="rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Show Prices</span>
+                  </label>
+                </>
+              )}
+
               {/* Pad Mode Toggle */}
               <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
                 <button
@@ -1854,7 +1957,7 @@ export function BillInvoiceView({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  Pre-Printed Pad (No Header/Footer)
+                  Pre-Printed Pad (No Header)
                 </button>
                 <button
                   type="button"
@@ -1895,7 +1998,7 @@ export function BillInvoiceView({
                   title={`View attached Customer PO: ${activeBill.poAttachment.name}`}
                 >
                   <Paperclip className="w-3.5 h-3.5" />
-                  <span>View Customer PO</span>
+                  <span>PO Doc</span>
                 </button>
               ) : (
                 <button
@@ -1923,21 +2026,33 @@ export function BillInvoiceView({
               <button
                 type="button"
                 onClick={handlePrintBill}
-                className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all"
+                className={`flex items-center gap-2 px-5 py-2 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg transition-all ${
+                  previewDocType === 'CHALLAN'
+                    ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30'
+                    : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30'
+                }`}
               >
                 <Printer className="w-4 h-4" />
-                <span>Print to Pad (A4)</span>
+                <span>{previewDocType === 'CHALLAN' ? 'Print Delivery Challan (A4)' : 'Print Bill to Pad (A4)'}</span>
               </button>
             </div>
           </div>
 
-          {/* Pad Printing Notice */}
-          <div className="p-3.5 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-emerald-400 text-xs flex items-start gap-2.5 no-print">
+          {/* Notice Banner */}
+          <div className={`p-3.5 rounded-xl text-xs flex items-start gap-2.5 no-print border ${
+            previewDocType === 'CHALLAN'
+              ? 'bg-blue-950/30 border-blue-500/20 text-blue-300'
+              : 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400'
+          }`}>
             <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold">Company Pad Printing Notice:</p>
-              <p className="text-[11px] text-emerald-300/80 mt-0.5">
-                This document is designed for your printed company pad (No digital logo, no watermark, and no footer). When clicking <strong>&ldquo;Print to Pad (A4)&rdquo;</strong>, select <strong>A4</strong> paper and <strong>Margins: Default / None</strong>.
+              <p className="font-semibold">
+                {previewDocType === 'CHALLAN' ? 'Official Delivery Challan (চালান) Notice:' : 'Company Pad Printing Notice:'}
+              </p>
+              <p className="text-[11px] mt-0.5 opacity-90">
+                {previewDocType === 'CHALLAN'
+                  ? 'Delivery Challan serves as official goods handover & gate pass proof with customer receiving seal & sign. Use "Pre-Printed Pad" mode to print on official letterhead pad, or "Plain White Paper" mode for full digital header.'
+                  : 'This document is designed for your printed company pad (No digital logo, no watermark, and no footer). When clicking "Print to Pad (A4)", select A4 paper and Margins: Default / None.'}
               </p>
             </div>
           </div>
@@ -1960,226 +2075,456 @@ export function BillInvoiceView({
               }}
               className="shadow-2xl rounded-sm text-black select-text relative print:shadow-none print:w-full print:m-0 print:p-0"
             >
-              {/* Optional Plain Paper Header */}
-              {!usePreprintedPadMode && (
-                <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              {/* ========================================================
+                  DOCUMENT RENDERER: CHALLAN vs BILL INVOICE
+                  ======================================================== */}
+              {previewDocType === 'CHALLAN' ? (
+                <>
+                  {/* Optional Plain Paper Header */}
+                  {!usePreprintedPadMode && (
+                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
+                            GLOBO TECH
+                          </h1>
+                          <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
+                            Enterprise Supply & Engineering Solutions
+                          </p>
+                          <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
+                            Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
+                          </p>
+                        </div>
+                        <div style={{ textAlign: 'right', fontSize: '11px', color: '#444' }}>
+                          <p style={{ margin: '0' }}><strong>BIN:</strong> 004728009-0202</p>
+                          <p style={{ margin: '2px 0 0 0' }}><strong>TIN:</strong> 169493772750</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TOP SECTION: Boxed "Delivery Challan" on Left, Metadata on Right */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
+                    {/* Title Box */}
+                    <div style={{ paddingTop: '2px' }}>
+                      <div style={{ border: '2.5px solid #000', padding: '7px 22px', display: 'inline-block', backgroundColor: '#fff' }}>
+                        <span style={{ fontSize: '22px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
+                          DELIVERY CHALLAN
+                        </span>
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#444', display: 'block', marginTop: '2px', textAlign: 'center' }}>
+                          ডেলিভারি চালান
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Metadata List */}
+                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
+                      <div><strong>Challan NO:</strong> DC/{activeBill.billNo.replace('GT/', '')}</div>
+                      <div><strong>Challan Date:</strong> {activeBill.date}</div>
+                      <div><strong>Bill/Inv Ref:</strong> {activeBill.billNo}</div>
+                      <div><strong>Customer PO:</strong> {activeBill.poNumber || '—'}</div>
+                      {activeBill.quotationRef && <div><strong>Quote Ref:</strong> {activeBill.quotationRef}</div>}
+                      <div><strong>Dispatch Mode:</strong> {challanDeliveryMethod}</div>
+                      {challanTransportNo && <div><strong>Vehicle/Memo:</strong> {challanTransportNo}</div>}
+                    </div>
+                  </div>
+
+                  {/* TWO COLUMN PARTY DETAILS: Consignee / Bill To vs Delivery Destination */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '22px', fontSize: '12px', color: '#000' }}>
+                    {/* Consignee / Bill To */}
+                    <div style={{ width: '56%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '130px' }}>
+                        Consignee (Bill To)
+                      </div>
+                      <div style={{ lineHeight: '1.45' }}>
+                        <div><strong>Name:</strong> {activeBill.billToName}</div>
+                        <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
+                        {activeBill.binNumber && <div style={{ marginTop: '2px' }}><strong>BIN:</strong> {activeBill.binNumber}</div>}
+                      </div>
+                    </div>
+
+                    {/* Deliver To / Destination */}
+                    <div style={{ width: '38%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '130px' }}>
+                        Delivery Destination
+                      </div>
+                      <div style={{ lineHeight: '1.45' }}>
+                        <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
+                        {activeBill.deliverToName && (
+                          <div style={{ marginTop: '2px' }}><strong>Contact Person:</strong> {activeBill.deliverToName}</div>
+                        )}
+                        {activeBill.deliverToPhone && (
+                          <div style={{ marginTop: '2px' }}><strong>Phone No:</strong> {activeBill.deliverToPhone}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ITEMS TABLE */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '160px' : '220px', fontWeight: 'bold' }}>Item Name</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Specifications</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
+                          {challanShowPrices && (
+                            <>
+                              <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
+                              <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                            </>
+                          )}
+                          <th style={{ padding: '8px 6px', width: challanShowPrices ? '100px' : '130px', textAlign: 'center', fontWeight: 'bold' }}>Remarks / Condition</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeBill.items.map((item, idx) => (
+                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
+                              {idx + 1}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
+                              {item.name}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
+                              {item.description || item.name}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
+                              {item.unit}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }}>
+                              {item.quantity}
+                            </td>
+                            {challanShowPrices && (
+                              <>
+                                <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
+                                  {Number(item.unitPrice).toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                  })}
+                                </td>
+                                <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                                  {Number(item.amount).toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                  })}
+                                </td>
+                              </>
+                            )}
+                            <td style={{ padding: '10px 6px', textAlign: 'center', fontSize: '11px', color: '#444' }}>
+                              Intact &amp; Sound
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ backgroundColor: '#fcfcfc', borderTop: '2px solid #000' }}>
+                          <td colSpan={challanShowPrices ? 4 : 4} style={{ padding: '8px 10px', fontWeight: 'bold', textAlign: 'right', borderRight: '1px solid #000' }}>
+                            Total Delivered Quantity:
+                          </td>
+                          <td style={{ padding: '8px 4px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid #000', fontSize: '13px' }}>
+                            {activeBill.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)}
+                          </td>
+                          {challanShowPrices && (
+                            <>
+                              <td style={{ borderRight: '1px solid #000', padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                                Grand Total:
+                              </td>
+                              <td style={{ borderRight: '1px solid #000', padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                                {Number(activeBill.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </td>
+                            </>
+                          )}
+                          <td style={{ padding: '8px 6px', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                            {activeBill.items.length} {activeBill.items.length === 1 ? 'Line Item' : 'Line Items'}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  {/* CHALLAN TERMS & RECEIVING DECLARATION */}
+                  <div style={{ border: '1px solid #000', padding: '10px 14px', marginBottom: '35px', fontSize: '11px', lineHeight: '1.5', color: '#000' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
+                      Delivery &amp; Handover Declaration / চালানের শর্তাবলী:
+                    </div>
+                    <div>1. Received the above-mentioned goods and supplies in sound condition, correct quantity, and intact packaging.</div>
+                    <div>2. Warranty claims are subject to physical inspection and verification of intact serial numbers and warranty stickers.</div>
+                    <div>3. Any discrepancy must be reported within 24 hours of delivery handover.</div>
+                  </div>
+
+                  {/* 4-COLUMN OFFICIAL SIGNATURE BLOCK */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '70px', fontSize: '11px', fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
                     <div>
-                      <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
-                        GLOBO TECH
-                      </h1>
-                      <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
-                        Enterprise Supply & Engineering Solutions
-                      </p>
-                      <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
-                        Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
-                      </p>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                        Prepared By
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
+                        {activeBill.preparedBy || 'Engr. Sohel Rana'}
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: '11px', color: '#444' }}>
-                      <p style={{ margin: '0' }}><strong>BIN:</strong> 004728009-0202</p>
-                      <p style={{ margin: '2px 0 0 0' }}><strong>TIN:</strong> 169493772750</p>
+
+                    <div>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                        Store Checked By
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
+                        Warehouse In-Charge
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                        Delivered By
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
+                        Driver / Carrier Sign
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ borderTop: '2px solid #000', paddingTop: '6px' }}>
+                        Received By
+                      </div>
+                      <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
+                        Customer Seal &amp; Signature
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* TOP SECTION: Boxed "Bill Invoice" on Left, Date/Bill No/PO/BIN/TIN on Right */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                {/* Title Box */}
-                <div style={{ paddingTop: '2px' }}>
-                  <div style={{ border: '2.5px solid #000', padding: '8px 28px', display: 'inline-block', backgroundColor: '#fff' }}>
-                    <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
-                      Bill Invoice
-                    </span>
-                  </div>
-                </div>
+                  {/* Plain Paper Footer */}
+                  {!usePreprintedPadMode && (
+                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+                      Official Delivery Challan &bull; Globo Tech &bull; Motijheel, Dhaka
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Optional Plain Paper Header */}
+                  {!usePreprintedPadMode && (
+                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
+                            GLOBO TECH
+                          </h1>
+                          <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
+                            Enterprise Supply & Engineering Solutions
+                          </p>
+                          <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
+                            Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
+                          </p>
+                        </div>
+                        <div style={{ textAlign: 'right', fontSize: '11px', color: '#444' }}>
+                          <p style={{ margin: '0' }}><strong>BIN:</strong> 004728009-0202</p>
+                          <p style={{ margin: '2px 0 0 0' }}><strong>TIN:</strong> 169493772750</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                {/* Metadata List */}
-                <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
-                  <div><strong>Date:</strong> {activeBill.date}</div>
-                  <div><strong>Bill NO:</strong> {activeBill.billNo}</div>
-                  <div><strong>PO :</strong> {activeBill.poNumber || '—'}</div>
-                  <div><strong>BIN:</strong> {activeBill.binNumber || '004728009-0202'}</div>
-                  <div><strong>TIN:</strong> {activeBill.tinNumber || '169493772750'}</div>
-                </div>
-              </div>
+                  {/* TOP SECTION: Boxed "Bill Invoice" on Left, Date/Bill No/PO/BIN/TIN on Right */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                    {/* Title Box */}
+                    <div style={{ paddingTop: '2px' }}>
+                      <div style={{ border: '2.5px solid #000', padding: '8px 28px', display: 'inline-block', backgroundColor: '#fff' }}>
+                        <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
+                          Bill Invoice
+                        </span>
+                      </div>
+                    </div>
 
-              {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
-                {/* Bill To */}
-                <div style={{ width: '58%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
-                    Bill To
+                    {/* Metadata List */}
+                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
+                      <div><strong>Date:</strong> {activeBill.date}</div>
+                      <div><strong>Bill NO:</strong> {activeBill.billNo}</div>
+                      <div><strong>PO :</strong> {activeBill.poNumber || '—'}</div>
+                      <div><strong>BIN:</strong> {activeBill.binNumber || '004728009-0202'}</div>
+                      <div><strong>TIN:</strong> {activeBill.tinNumber || '169493772750'}</div>
+                    </div>
                   </div>
-                  <div style={{ lineHeight: '1.45' }}>
-                    <div><strong>Name:</strong> {activeBill.billToName}</div>
-                    <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
-                  </div>
-                </div>
 
-                {/* Deliver To (aligned nicely to right column) */}
-                <div style={{ width: '34%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
-                    Deliver To
-                  </div>
-                  <div style={{ lineHeight: '1.45' }}>
-                    <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
-                    {activeBill.deliverToName && (
-                      <div style={{ marginTop: '2px' }}><strong>Name:</strong> {activeBill.deliverToName}</div>
-                    )}
-                    {activeBill.deliverToPhone && (
-                      <div style={{ marginTop: '2px' }}><strong>Phone No:</strong> {activeBill.deliverToPhone}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
+                  {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
+                    {/* Bill To */}
+                    <div style={{ width: '58%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                        Bill To
+                      </div>
+                      <div style={{ lineHeight: '1.45' }}>
+                        <div><strong>Name:</strong> {activeBill.billToName}</div>
+                        <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
+                      </div>
+                    </div>
 
-              {/* ITEMS TABLE (Exact black-bordered layout matching PDF) */}
-              <div style={{ marginBottom: '16px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '165px', fontWeight: 'bold' }}>Item name</th>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Discription</th>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unite</th>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '45px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
-                      <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Unite Price</th>
-                      <th style={{ padding: '8px 6px', width: '105px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeBill.items.map((item, idx) => (
-                      <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
-                          {idx + 1}
-                        </td>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
-                          {item.name}
-                        </td>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
-                          {item.description || item.name}
-                        </td>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
-                          {item.unit}
-                        </td>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold' }}>
-                          {item.quantity}
-                        </td>
-                        <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
-                          {Number(item.unitPrice).toLocaleString('en-US', {
+                    {/* Deliver To (aligned nicely to right column) */}
+                    <div style={{ width: '34%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                        Deliver To
+                      </div>
+                      <div style={{ lineHeight: '1.45' }}>
+                        <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
+                        {activeBill.deliverToName && (
+                          <div style={{ marginTop: '2px' }}><strong>Name:</strong> {activeBill.deliverToName}</div>
+                        )}
+                        {activeBill.deliverToPhone && (
+                          <div style={{ marginTop: '2px' }}><strong>Phone No:</strong> {activeBill.deliverToPhone}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ITEMS TABLE (Exact black-bordered layout matching PDF) */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '165px', fontWeight: 'bold' }}>Item name</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Discription</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unite</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '45px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Unite Price</th>
+                          <th style={{ padding: '8px 6px', width: '105px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeBill.items.map((item, idx) => (
+                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
+                              {idx + 1}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', fontWeight: 'bold' }}>
+                              {item.name}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
+                              {item.description || item.name}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
+                              {item.unit}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold' }}>
+                              {item.quantity}
+                            </td>
+                            <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
+                              {Number(item.unitPrice).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                            <td style={{ padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                              {Number(item.amount).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* BOTTOM TOTALS: Boxed Amount In Word (Left) vs Summary Rows (Right) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
+                    {/* Left: Amount In Word Box */}
+                    <div style={{ width: '58%', border: '1px solid #000', padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
+                        Amount In Word
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: '500', fontStyle: 'italic', lineHeight: '1.4' }}>
+                        {activeBill.amountInWords || numberToWordsBDT(activeBill.grandTotal, 'BDT', { style: 'suffix', suffixUnit: 'Taka', dotEnd: true })}
+                      </div>
+                    </div>
+
+                    {/* Right: SubTotal / VAT & TAX / Grand Total */}
+                    <div style={{ width: '38%', fontSize: '12px', fontWeight: '600' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
+                        <span>Sub Total</span>
+                        <span>
+                          {Number(activeBill.subTotal).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                           })}
-                        </td>
-                        <td style={{ padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
-                          {Number(item.amount).toLocaleString('en-US', {
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
+                        <span>VAT &amp; TAX Included</span>
+                        <span>
+                          {activeBill.vatTaxIncluded
+                            ? '0.00'
+                            : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: '3px double #000' }}>
+                        <span>Grand Total</span>
+                        <span>
+                          {Number(activeBill.grandTotal).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                           })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* BOTTOM TOTALS: Boxed Amount In Word (Left) vs Summary Rows (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
-                {/* Left: Amount In Word Box */}
-                <div style={{ width: '58%', border: '1px solid #000', padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
-                    Amount In Word
-                  </div>
-                  <div style={{ fontSize: '12px', fontWeight: '500', fontStyle: 'italic', lineHeight: '1.4' }}>
-                    {activeBill.amountInWords || numberToWordsBDT(activeBill.grandTotal, 'BDT', { style: 'suffix', suffixUnit: 'Taka', dotEnd: true })}
-                  </div>
-                </div>
-
-                {/* Right: SubTotal / VAT & TAX / Grand Total */}
-                <div style={{ width: '38%', fontSize: '12px', fontWeight: '600' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
-                    <span>Sub Total</span>
-                    <span>
-                      {Number(activeBill.subTotal).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      })}
-                    </span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
-                    <span>VAT & TAX Included</span>
-                    <span>
-                      {activeBill.vatTaxIncluded
-                        ? '0.00'
-                        : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                          })}
-                    </span>
+                  {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '45px', fontSize: '12px', color: '#000' }}>
+                    {/* Terms & Conditions */}
+                    <div style={{ width: '58%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                        Terms &amp; Conditions
+                      </div>
+                      <div style={{ lineHeight: '1.6', fontWeight: '500' }}>
+                        {activeBill.termsAndConditions.map((term, tIdx) => (
+                          <div key={tIdx}>{term}</div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Payment Details (aligned to right column) */}
+                    <div style={{ width: '34%' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                        Payment Details
+                      </div>
+                      <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
+                        <div><strong>Account No :</strong> {activeBill.bankAccountNo}</div>
+                        <div><strong>Account Title:</strong> {activeBill.bankAccountTitle}</div>
+                        <div><strong>Bank Name :</strong> {activeBill.bankName}</div>
+                        <div><strong>Branch Name:</strong> {activeBill.bankBranchName}</div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: '3px double #000' }}>
-                    <span>Grand Total</span>
-                    <span>
-                      {Number(activeBill.grandTotal).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                  {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '140px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
+                    <div style={{ textAlign: 'center', minWidth: '200px' }}>
+                      <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
+                        Received By
+                      </div>
+                    </div>
 
-              {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '45px', fontSize: '12px', color: '#000' }}>
-                {/* Terms & Conditions */}
-                <div style={{ width: '58%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
-                    Terms & Conditions
+                    <div style={{ textAlign: 'center', minWidth: '200px' }}>
+                      <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
+                        Prepared By
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ lineHeight: '1.6', fontWeight: '500' }}>
-                    {activeBill.termsAndConditions.map((term, tIdx) => (
-                      <div key={tIdx}>{term}</div>
-                    ))}
-                  </div>
-                </div>
 
-                {/* Payment Details (aligned to right column) */}
-                <div style={{ width: '34%' }}>
-                  <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
-                    Payment Details
-                  </div>
-                  <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
-                    <div><strong>Account No :</strong> {activeBill.bankAccountNo}</div>
-                    <div><strong>Account Title:</strong> {activeBill.bankAccountTitle}</div>
-                    <div><strong>Bank Name :</strong> {activeBill.bankName}</div>
-                    <div><strong>Branch Name:</strong> {activeBill.bankBranchName}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '140px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
-                <div style={{ textAlign: 'center', minWidth: '200px' }}>
-                  <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
-                    Received By
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'center', minWidth: '200px' }}>
-                  <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
-                    Prepared By
-                  </div>
-                </div>
-              </div>
-
-              {/* Plain Paper Footer (Only if Pre-printed Pad Mode is Disabled) */}
-              {!usePreprintedPadMode && (
-                <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
-                  This is an electronically generated bill invoice. For questions, contact info@globotechbd.com.
-                </div>
+                  {/* Plain Paper Footer (Only if Pre-printed Pad Mode is Disabled) */}
+                  {!usePreprintedPadMode && (
+                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+                      This is an electronically generated bill invoice. For questions, contact info@globotechbd.com.
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
