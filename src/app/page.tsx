@@ -71,6 +71,23 @@ export default function AppHome() {
       setIsCheckingAuth(false);
     }
 
+    // Self-healing: eradicate demo bill GT/26108 permanently from browser storage
+    try {
+      const storedBills = localStorage.getItem('globotech_erp_bill_invoices');
+      if (storedBills) {
+        const parsedBills = JSON.parse(storedBills);
+        if (Array.isArray(parsedBills) && parsedBills.some((b: any) => b && (b.id === 'bill-26108' || b.billNo === 'GT/26108'))) {
+          const cleanedBills = parsedBills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
+          localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(cleanedBills));
+        }
+      }
+      const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
+      const delList: string[] = delSaved ? JSON.parse(delSaved) : [];
+      if (!delList.includes('bill-26108')) delList.push('bill-26108');
+      if (!delList.includes('GT/26108')) delList.push('GT/26108');
+      localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(delList));
+    } catch (e) {}
+
     // Verify storage integrity and dual-layer mirror across reboots
     verifyAndRestoreStorageIntegrity().catch((err) => {
       console.warn('Storage integrity check notice:', err);

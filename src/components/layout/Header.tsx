@@ -163,18 +163,20 @@ export function Header({
     }
     const matchedBills = allBills.filter(
       (b) =>
-        b.billNo.toLowerCase().includes(q) ||
-        (b.poNumber && b.poNumber.toLowerCase().includes(q)) ||
-        b.billToName.toLowerCase().includes(q) ||
-        (b.deliverToName && b.deliverToName.toLowerCase().includes(q)) ||
-        (b.quotationRef && b.quotationRef.toLowerCase().includes(q)) ||
-        (b.poAttachment?.name && b.poAttachment.name.toLowerCase().includes(q)) ||
-        (b.items || []).some(
-          (it) =>
-            it.name.toLowerCase().includes(q) ||
-            (it.sku && it.sku.toLowerCase().includes(q)) ||
-            (it.description && it.description.toLowerCase().includes(q))
-        )
+        b.id !== 'bill-26108' &&
+        b.billNo !== 'GT/26108' &&
+        (b.billNo.toLowerCase().includes(q) ||
+          (b.poNumber && b.poNumber.toLowerCase().includes(q)) ||
+          b.billToName.toLowerCase().includes(q) ||
+          (b.deliverToName && b.deliverToName.toLowerCase().includes(q)) ||
+          (b.quotationRef && b.quotationRef.toLowerCase().includes(q)) ||
+          (b.poAttachment?.name && b.poAttachment.name.toLowerCase().includes(q)) ||
+          (b.items || []).some(
+            (it) =>
+              it.name.toLowerCase().includes(q) ||
+              (it.sku && it.sku.toLowerCase().includes(q)) ||
+              (it.description && it.description.toLowerCase().includes(q))
+          ))
     );
 
     // 4. Quotations (matching Quote No, Customer, Project, Items, SKU)

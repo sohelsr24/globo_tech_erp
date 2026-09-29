@@ -207,67 +207,6 @@ export const INITIAL_BILL_INVOICES: BillInvoice[] = [
     status: 'ISSUED',
     paidAmount: 0,
     createdAt: '2026-02-23'
-  },
-  {
-    id: 'bill-26108',
-    billNo: 'GT/26108',
-    date: '24-Feb-26',
-    poNumber: 'PO-ABC-9921',
-    quotationRef: 'QT-2026-001',
-    quotationId: 'QT-2026-001',
-    binNumber: '001293848-0101',
-    tinNumber: '169493772750',
-
-    billToName: 'ABC Bank Ltd.',
-    billToAddress: 'ABC Tower, Motijheel C/A, Dhaka-1000',
-
-    deliverToAddress: 'ABC Tower Level-4, Motijheel C/A, Dhaka',
-    deliverToName: 'Md. Tariqul Islam',
-    deliverToPhone: '+880 1711-223344',
-
-    items: [
-      {
-        id: 'bi-item-201',
-        itemNo: 1,
-        name: 'Hikvision 4MP ColorVu IP Camera',
-        description: 'Model: DS-2CD2047G2-LU with audio & night color',
-        unit: 'pcs',
-        quantity: 15,
-        unitPrice: 12500,
-        amount: 187500
-      },
-      {
-        id: 'bi-item-202',
-        itemNo: 2,
-        name: 'Hikvision 32-Channel NVR 4K',
-        description: 'Model: DS-7732NI-K4 4x SATA NVR',
-        unit: 'pcs',
-        quantity: 1,
-        unitPrice: 38500,
-        amount: 38500
-      }
-    ],
-
-    subTotal: 226000,
-    vatTaxIncluded: true,
-    vatTaxAmount: 0,
-    grandTotal: 226000,
-    amountInWords: 'Two Lakh Twenty Six Thousand Taka Only.',
-
-    termsAndConditions: [
-      '1. VAT&TAX : Included',
-      '2. Payment: Within 15 Days of Submission'
-    ],
-
-    bankAccountNo: '2051923010001',
-    bankAccountTitle: 'Globo Tech',
-    bankName: 'Brac Bank',
-    bankBranchName: 'Bijoynagar',
-
-    preparedBy: 'Engr. Sohel Rana',
-    status: 'PAID',
-    paidAmount: 226000,
-    createdAt: '2026-02-24'
   }
 ];
 
@@ -310,7 +249,7 @@ export function BillInvoiceView({
 } = {}) {
   const [bills, setBills] = useState<BillInvoice[]>(() => {
     if (typeof window !== 'undefined') {
-      const deletedBillIds = new Set<string>();
+      const deletedBillIds = new Set<string>(['bill-26108', 'GT/26108']);
       try {
         const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
         if (delSaved) {
@@ -326,12 +265,14 @@ export function BillInvoiceView({
         try {
           const parsed = JSON.parse(savedBills);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            const existingIds = new Set(parsed.map((b: BillInvoice) => b.id));
-            const merged = [
-              ...parsed,
-              ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo))
-            ];
-            return merged.map((b: BillInvoice) => {
+            const cleanBills = parsed.filter(
+              (b: BillInvoice) =>
+                !deletedBillIds.has(b.id) &&
+                !deletedBillIds.has(b.billNo) &&
+                b.id !== 'bill-26108' &&
+                b.billNo !== 'GT/26108'
+            );
+            return cleanBills.map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
               }
@@ -340,7 +281,13 @@ export function BillInvoiceView({
           }
         } catch (e) {}
       }
-      return INITIAL_BILL_INVOICES.filter((initB) => !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo));
+      return INITIAL_BILL_INVOICES.filter(
+        (initB) =>
+          !deletedBillIds.has(initB.id) &&
+          !deletedBillIds.has(initB.billNo) &&
+          initB.id !== 'bill-26108' &&
+          initB.billNo !== 'GT/26108'
+      );
     }
     return INITIAL_BILL_INVOICES;
   });
@@ -474,8 +421,8 @@ export function BillInvoiceView({
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
-      // 1. Load Bill Invoices
-      const deletedBillIds = new Set<string>();
+      // 1. Load Bill Invoices & permanently eradicate bill-26108
+      const deletedBillIds = new Set<string>(['bill-26108', 'GT/26108']);
       try {
         const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
         if (delSaved) {
@@ -486,23 +433,31 @@ export function BillInvoiceView({
         }
       } catch (e) {}
 
+      // Keep blacklist updated in localStorage
+      try {
+        localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(Array.from(deletedBillIds)));
+      } catch (e) {}
+
       const savedBills = localStorage.getItem('globotech_erp_bill_invoices');
       if (savedBills) {
         try {
           const parsed = JSON.parse(savedBills);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const existingIds = new Set(parsed.map((b: BillInvoice) => b.id));
-            const merged = [
-              ...parsed,
-              ...INITIAL_BILL_INVOICES.filter((initB) => !existingIds.has(initB.id) && !existingIds.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo))
-            ];
-            const hydrated = merged.map((b: BillInvoice) => {
+          if (Array.isArray(parsed)) {
+            const cleanBills = parsed.filter(
+              (b: BillInvoice) =>
+                !deletedBillIds.has(b.id) &&
+                !deletedBillIds.has(b.billNo) &&
+                b.id !== 'bill-26108' &&
+                b.billNo !== 'GT/26108'
+            );
+            const hydrated = cleanBills.map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
               }
               return b;
             });
             setBills(hydrated);
+            localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(hydrated));
             if (hydrated.length > 0 && !activeBill) {
               setActiveBill(hydrated[0]);
             }
@@ -511,7 +466,13 @@ export function BillInvoiceView({
           console.error('Error loading bill invoices from localStorage', e);
         }
       } else {
-        const initialFiltered = INITIAL_BILL_INVOICES.filter((initB) => !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo));
+        const initialFiltered = INITIAL_BILL_INVOICES.filter(
+          (initB) =>
+            !deletedBillIds.has(initB.id) &&
+            !deletedBillIds.has(initB.billNo) &&
+            initB.id !== 'bill-26108' &&
+            initB.billNo !== 'GT/26108'
+        );
         localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(initialFiltered));
         setBills(initialFiltered);
       }
@@ -767,7 +728,10 @@ export function BillInvoiceView({
   // Delete bill
   const handleDeleteBill = (id: string) => {
     if (confirm('Are you sure you want to delete this Bill Invoice?')) {
-      const remaining = bills.filter((b) => b.id !== id);
+      const targetBill = bills.find((b) => b.id === id);
+      const remaining = bills.filter(
+        (b) => b.id !== id && (targetBill ? b.billNo !== targetBill.billNo : true)
+      );
       setBills(remaining);
       if (typeof window !== 'undefined') {
         localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(remaining));
@@ -775,10 +739,18 @@ export function BillInvoiceView({
           const delSaved = localStorage.getItem('globotech_erp_deleted_bill_ids');
           const delList: string[] = delSaved ? JSON.parse(delSaved) : [];
           if (!delList.includes(id)) delList.push(id);
+          if (targetBill && targetBill.billNo && !delList.includes(targetBill.billNo)) {
+            delList.push(targetBill.billNo);
+          }
           localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(delList));
         } catch (e) {}
+
+        // Mirror to IndexedDB immediately so dual-layer mirror doesn't bring it back
+        try {
+          window.dispatchEvent(new Event('storage'));
+        } catch (e) {}
       }
-      if (activeBill?.id === id) {
+      if (activeBill?.id === id || (targetBill && activeBill?.billNo === targetBill.billNo)) {
         setActiveBill(remaining[0] || null);
         setActiveViewMode('LIST');
       }

@@ -204,10 +204,14 @@ export function restoreERPBackupData(jsonString: string): { success: boolean; me
         localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(data.deletedQuotationIds));
       }
       if (Array.isArray(data.bills)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(data.bills));
+        const cleanBills = data.bills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
+        localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(cleanBills));
       }
       if (Array.isArray(data.deletedBillIds)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(data.deletedBillIds));
+        const delSet = new Set<string>(data.deletedBillIds);
+        delSet.add('bill-26108');
+        delSet.add('GT/26108');
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(Array.from(delSet)));
       }
       if (Array.isArray(data.customers)) {
         localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers));
@@ -408,6 +412,11 @@ export async function verifyAndRestoreStorageIntegrity(): Promise<{ recovered: b
         const result = getReq.result;
         if (result && result.payload) {
           const snapshotPayload = result.payload as ERPBackupPayload;
+          if (snapshotPayload.data && Array.isArray(snapshotPayload.data.bills)) {
+            snapshotPayload.data.bills = snapshotPayload.data.bills.filter(
+              (b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108'
+            );
+          }
           const snapshotRecords = Object.values(snapshotPayload.meta.recordCounts).reduce((a, b) => a + b, 0);
 
           // If localStorage has 0 records but IndexedDB has a snapshot, restore!
