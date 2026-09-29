@@ -1570,30 +1570,32 @@ export function BillInvoiceView({
 
             {/* Desktop Table View (hidden md:block) */}
             <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-              <div className="overflow-x-auto touch-scroll">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="overflow-x-auto touch-scroll max-h-[calc(100vh-250px)] min-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+                <table className="w-full text-left border-separate border-spacing-0 text-xs">
                   <thead>
-                    <tr className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
-                      <th className="py-3.5 px-4">Bill NO</th>
-                      <th className="py-3.5 px-4">Date</th>
-                      <th className="py-3.5 px-4">Client (Bill To)</th>
-                      <th className="py-3.5 px-4">PO / Quote Ref</th>
-                      <th className="py-3.5 px-4">Delivered To</th>
-                      <th className="py-3.5 px-4 text-right">Items</th>
-                      <th className="py-3.5 px-4 text-right">Grand Total</th>
-                      <th className="py-3.5 px-4 text-center">
+                    <tr className="bg-slate-950/95 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+                      <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Bill NO</th>
+                      <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Date</th>
+                      <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Client (Bill To)</th>
+                      <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">PO / Quote Ref</th>
+                      <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Delivered To</th>
+                      <th className="py-2.5 px-2 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-right whitespace-nowrap">Items</th>
+                      <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-right whitespace-nowrap">Grand Total</th>
+                      <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-center whitespace-nowrap">
                         <span className="inline-flex items-center gap-1">
                           Status
-                          <span className="text-[10px] text-slate-500 font-normal hidden xl:inline">(&#9662; Quick Change)</span>
+                          <span className="text-[10px] text-slate-500 font-normal hidden 2xl:inline">(&#9662; Quick Change)</span>
                         </span>
                       </th>
-                      <th className="py-3.5 px-4 text-right">Actions</th>
+                      <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 right-0 z-30 border-b border-l border-slate-800 shadow-[-8px_0_12px_rgba(0,0,0,0.5)] text-right whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                  <tbody className="text-slate-300">
                     {filteredBills.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="py-12 text-center text-slate-500">
+                        <td colSpan={9} className="py-12 text-center text-slate-500 border-b border-slate-800/60">
                           <Receipt className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
                           <p className="text-sm font-medium">No bill invoices found</p>
                           <p className="text-xs text-slate-600 mt-1">
@@ -1604,7 +1606,7 @@ export function BillInvoiceView({
                     ) : (
                       filteredBills.map((bill) => (
                         <tr key={bill.id} className="hover:bg-slate-800/40 transition group">
-                          <td className="py-3 px-4 font-mono font-bold text-emerald-400">
+                          <td className="py-2.5 px-3 font-mono font-bold text-emerald-400 border-b border-slate-800/60 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <span>{bill.billNo}</span>
                               {searchQuery &&
@@ -1616,25 +1618,27 @@ export function BillInvoiceView({
                                 )}
                             </div>
                           </td>
-                          <td className="py-3 px-4 whitespace-nowrap text-slate-400">
+                          <td className="py-2.5 px-2.5 whitespace-nowrap text-slate-400 text-[11px] border-b border-slate-800/60">
                             {bill.date}
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="font-semibold text-slate-200">{bill.billToName}</div>
-                            <div className="text-[11px] text-slate-500 truncate max-w-xs">{bill.billToAddress}</div>
+                          <td className="py-2.5 px-3 border-b border-slate-800/60 max-w-[160px] xl:max-w-[200px]">
+                            <div className="font-semibold text-slate-200 truncate" title={bill.billToName}>{bill.billToName}</div>
+                            {bill.billToAddress && (
+                              <div className="text-[11px] text-slate-500 truncate" title={bill.billToAddress}>{bill.billToAddress}</div>
+                            )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 max-w-[125px]">
                             <div className="font-mono text-slate-200 font-medium">
                               {bill.poNumber ? (
-                                <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[11px]">
+                                <span className="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-400 border border-slate-700/60 font-mono text-[10px]">
                                   {bill.poNumber}
                                 </span>
                               ) : (
-                                <span className="text-slate-600 italic">No PO</span>
+                                <span className="text-slate-600 italic text-[11px]">No PO</span>
                               )}
                             </div>
                             {bill.quotationRef && (
-                              <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1 mt-0.5">
+                              <div className="text-[10px] text-sky-400 font-mono flex items-center gap-1 mt-0.5 truncate" title={`Quotation Ref: ${bill.quotationRef}`}>
                                 <span>Ref: {bill.quotationRef}</span>
                               </div>
                             )}
@@ -1652,7 +1656,7 @@ export function BillInvoiceView({
                                   title={`View Customer PO Document: ${bill.poAttachment.name} (${(bill.poAttachment.size / 1024).toFixed(0)} KB)`}
                                 >
                                   <Paperclip className="w-2.5 h-2.5 text-emerald-400 group-hover/btn:rotate-12 transition-transform" />
-                                  <span className="truncate max-w-[100px]">{bill.poAttachment.name}</span>
+                                  <span className="truncate max-w-[95px]">{bill.poAttachment.name}</span>
                                 </button>
                               </div>
                             ) : (
@@ -1672,29 +1676,29 @@ export function BillInvoiceView({
                               </div>
                             )}
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="text-slate-300 font-medium truncate max-w-[180px]">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 max-w-[130px] xl:max-w-[160px]">
+                            <div className="text-slate-300 font-medium truncate" title={bill.deliverToAddress || '—'}>
                               {bill.deliverToAddress || '—'}
                             </div>
                             {(bill.deliverToName || bill.deliverToPhone) && (
-                              <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                                {bill.deliverToName && <span>{bill.deliverToName}</span>}
+                              <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5 truncate">
+                                {bill.deliverToName && <span className="truncate" title={bill.deliverToName}>{bill.deliverToName}</span>}
                                 {bill.deliverToName && bill.deliverToPhone && <span className="text-slate-600">&bull;</span>}
                                 {bill.deliverToPhone && (
-                                  <span className="font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded text-[10px]">
+                                  <span className="font-mono text-emerald-400 bg-emerald-500/10 px-1 rounded text-[10px] shrink-0">
                                     {bill.deliverToPhone}
                                   </span>
                                 )}
                               </div>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-right font-medium">
+                          <td className="py-2.5 px-2 text-right font-medium text-[11px] text-slate-400 border-b border-slate-800/60 whitespace-nowrap">
                             {bill.items.length} {bill.items.length === 1 ? 'item' : 'items'}
                           </td>
-                          <td className="py-3 px-4 text-right font-bold text-slate-100">
+                          <td className="py-2.5 px-2.5 text-right font-bold text-slate-100 border-b border-slate-800/60 whitespace-nowrap">
                             {formatBDT(bill.grandTotal)}
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td className="py-2.5 px-2.5 text-center border-b border-slate-800/60 whitespace-nowrap">
                             <div className="relative inline-flex items-center group" title="Click to update Bill Status">
                               <select
                                 value={bill.status}
@@ -1703,7 +1707,7 @@ export function BillInvoiceView({
                                   handleUpdateBillStatus(bill.id, e.target.value as BillInvoiceStatus);
                                 }}
                                 onClick={(e) => e.stopPropagation()}
-                                className={`appearance-none cursor-pointer pl-6 pr-6 py-1 rounded-full text-xs font-semibold border transition shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 ${
+                                className={`appearance-none cursor-pointer pl-6 pr-6 py-0.5 rounded-full text-xs font-semibold border transition shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/50 ${
                                   BILL_STATUS_THEME[bill.status]?.bg || 'bg-slate-800'
                                 } ${
                                   BILL_STATUS_THEME[bill.status]?.text || 'text-slate-300'
@@ -1725,8 +1729,8 @@ export function BillInvoiceView({
                               <ChevronDown className="w-3 h-3 absolute right-2 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1.5">
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap sticky right-0 z-10 bg-slate-900/95 group-hover:bg-slate-850/95 backdrop-blur-md border-b border-l border-slate-800 shadow-[-8px_0_12px_rgba(0,0,0,0.5)]">
+                            <div className="flex items-center justify-end gap-1">
                               {/* PO Attachment quick button */}
                               <button
                                 type="button"
@@ -1744,29 +1748,30 @@ export function BillInvoiceView({
                               <button
                                 onClick={() => handleOpenPreview(bill)}
                                 title="View & Print Pad Invoice"
-                                className="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/20 transition flex items-center gap-1"
+                                className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition flex items-center gap-1 active:scale-95"
                               >
                                 <Eye className="w-3.5 h-3.5" />
-                                <span>View / Print</span>
+                                <span className="hidden xl:inline">View / Print</span>
+                                <span className="xl:hidden">View</span>
                               </button>
                               <button
                                 onClick={() => handleOpenEditModal(bill)}
                                 title="Edit Bill"
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
                               >
                                 <Edit className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDuplicateBill(bill)}
                                 title="Duplicate"
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition active:scale-95"
                               >
                                 <Copy className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => handleDeleteBill(bill.id)}
                                 title="Delete"
-                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition"
+                                className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition active:scale-95"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
