@@ -4028,7 +4028,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 flexDirection: 'column',
                 padding: '10px 24px 14px 24px',
               }}
-              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:pt-3 print:m-0 print:w-full print:max-w-none print:shadow-none"
+              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
             >
               {/* Watermark in background matching company pad */}
               <div
@@ -4049,7 +4049,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <tbody>
                     <tr>
                       {/* Left: Company Logo (Balanced spacing to prevent top clipping) */}
-                      <td style={{ width: '25%', textAlign: 'left', verticalAlign: 'middle', padding: '2px 0 0 0' }}>
+                      <td style={{ width: '25%', textAlign: 'left', verticalAlign: 'middle', padding: 0 }}>
                         <img
                           src={GLOBO_TECH_LOGO_DATA_URL}
                           alt="Globo Tech Logo"
@@ -4057,13 +4057,13 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         />
                       </td>
                       {/* Center: Company Name */}
-                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: '2px 0 0 0' }}>
+                      <td style={{ width: '50%', textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
                         <h1 style={{ fontSize: '46px', fontWeight: 900, color: '#008fd5', margin: 0, marginTop: '0px', lineHeight: 1, letterSpacing: '-0.5px' }}>
                           Globo Tech
                         </h1>
                       </td>
                       {/* Right: Company Address */}
-                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: '2px 0 0 0' }}>
+                      <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', padding: 0 }}>
                         <div style={{ fontSize: '10.5px', fontWeight: 600, color: '#1e293b', lineHeight: 1.4, whiteSpace: 'nowrap', marginTop: '0px' }}>
                           <div>Rahman Chamber (2nd Floor),</div>
                           <div>12/13 Motijheel C/A, Dhaka-1000.</div>

@@ -126,7 +126,7 @@ button, a, input, select, textarea {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 8mm 6mm 8mm;
+    margin: 5mm 8mm 4mm 8mm;
   }
 
   /* Reset body and html completely */
@@ -178,15 +178,15 @@ button, a, input, select, textarea {
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 278mm !important;
-    height: 278mm !important;
-    max-height: 278mm !important;
+    min-height: 284mm !important;
+    height: 284mm !important;
+    max-height: 284mm !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
     margin: 0 !important;
-    padding: 3mm 4mm 0 4mm !important;
+    padding: 0 4mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
