@@ -713,7 +713,10 @@ export function BillInvoiceView({
       id: `bi-${it.id || idx}-${Date.now()}`,
       itemNo: idx + 1,
       sku: (it as any).sku || '',
-      partNo: (it as any).partNo || (it as any).model || (it as any).sku || '',
+      partNo: (() => {
+        const raw = (it as any).partNo || (it as any).model || '';
+        return (raw && raw.trim().toLowerCase() !== (it.name || '').trim().toLowerCase()) ? raw : '';
+      })(),
       serialNumbers: (it as any).serialNumbers || (it as any).serialNo || '',
       name: it.name || '',
       description: it.description || it.model || it.brand || '',
@@ -2334,7 +2337,7 @@ export function BillInvoiceView({
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px' }}>
                               <div style={{ fontWeight: 'bold', fontSize: '12.5px' }}>{item.name}</div>
-                              {item.partNo ? (
+                              {item.partNo && item.partNo.trim().toLowerCase() !== item.name.trim().toLowerCase() ? (
                                 <div style={{ marginTop: '3px', fontSize: '10.5px', color: '#111' }}>
                                   <span style={{ fontWeight: 'bold', color: '#333' }}>P/N:</span>{' '}
                                   <span style={{ fontFamily: 'monospace', fontWeight: 'bold', backgroundColor: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', border: '1px solid #cbd5e1' }}>
@@ -2572,11 +2575,6 @@ export function BillInvoiceView({
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px' }}>
                               <div style={{ fontWeight: 'bold' }}>{item.name}</div>
-                              {item.partNo ? (
-                                <div style={{ fontSize: '10px', color: '#555', marginTop: '2px', fontWeight: '500' }}>
-                                  P/N: {item.partNo}
-                                </div>
-                              ) : null}
                             </td>
                             <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px', lineHeight: '1.35' }}>
                               <div>{item.description || item.name}</div>
