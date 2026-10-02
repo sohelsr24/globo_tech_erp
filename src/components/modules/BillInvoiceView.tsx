@@ -35,6 +35,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Formatters, formatBDT, numberToWordsBDT } from '@/lib/formatters';
 import { Quotation, INITIAL_QUOTATIONS } from '@/components/modules/QuotationView';
 import { Customer, INITIAL_CUSTOMERS } from '@/components/modules/CustomersView';
+import { mirrorToIndexedDB } from '@/lib/erpBackup';
 
 export interface POAttachment {
   id: string;
@@ -742,9 +743,10 @@ export function BillInvoiceView({
     const deliverContactPhone = targetQuote.customerPhone || '';
     const deliveryLocation = targetQuote.projectLocation || targetQuote.deliveryTerms || targetQuote.customerAddress || '';
 
-    // Terms & Conditions
+    // Terms & Conditions (automatically reflect quotation VAT mode)
+    const isQuoteExclusive = (targetQuote.vatTaxTerms || '').toLowerCase().includes('exclusive');
     const terms = [
-      '1. VAT&TAX : Included',
+      isQuoteExclusive ? '1. VAT&TAX : Excluded' : '1. VAT&TAX : Included',
       targetQuote.paymentTerms ? `2. Payment: ${targetQuote.paymentTerms}` : '2. Payment: Within Deadline'
     ];
 
@@ -765,7 +767,7 @@ export function BillInvoiceView({
         deliverToPhone: stateToUse.deliverToPhone || deliverContactPhone || '',
         items: mappedItems,
         subTotal: totals.subTotal,
-        vatTaxIncluded: true,
+        vatTaxIncluded: !isQuoteExclusive,
         vatTaxAmount: 0,
         grandTotal: totals.grandTotal,
         amountInWords: totals.amountInWords,
@@ -1120,6 +1122,50 @@ export function BillInvoiceView({
 
     setIsSerialsModalOpen(false);
     showToast(`Updated Serial Numbers & Part Nos for Challan DC/${updatedBill.billNo.replace('GT/', '')}`);
+  };
+
+  // 1-Click Interactive VAT/TAX Mode Toggle (Included vs Excluded)
+  const handleToggleBillVatMode = (mode: 'INCLUDED' | 'EXCLUDED') => {
+    if (!activeBill) return;
+    const isIncluded = mode === 'INCLUDED';
+
+    // Update terms and conditions: replace or update the VAT&TAX line
+    const currentTerms = Array.isArray(activeBill.termsAndConditions) ? [...activeBill.termsAndConditions] : [];
+    let foundVatLine = false;
+    const updatedTerms = currentTerms.map((term) => {
+      if (/vat\s*&?\s*tax/i.test(term)) {
+        foundVatLine = true;
+        return isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded';
+      }
+      return term;
+    });
+
+    if (!foundVatLine) {
+      updatedTerms.unshift(isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded');
+    }
+
+    const updatedBill: BillInvoice = {
+      ...activeBill,
+      vatTaxIncluded: isIncluded,
+      termsAndConditions: updatedTerms
+    };
+
+    setActiveBill(updatedBill);
+    const updatedBills = bills.map((b) => (b.id === updatedBill.id ? updatedBill : b));
+    setBills(updatedBills);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updatedBills }));
+        mirrorToIndexedDB().catch(() => {});
+      } catch (err) {
+        console.error('Failed to save bill VAT mode to localStorage:', err);
+      }
+    }
+
+    showToast(`✓ VAT & TAX set to ${isIncluded ? 'Included' : 'Excluded'}`);
   };
 
   // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
@@ -2552,15 +2598,46 @@ export function BillInvoiceView({
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #000' }}>
-                        <span>VAT &amp; TAX Included</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #000' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>{activeBill.vatTaxIncluded ? 'VAT & TAX Included' : 'VAT & TAX Excluded'}</span>
+                          {/* 1-Click Interactive VAT Mode Toggle (Hidden when printing/PDF) */}
+                          <span className="print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 ml-1 shadow-sm text-[10px]">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleBillVatMode('INCLUDED')}
+                              title="Set VAT & TAX as Included in price"
+                              className={`px-1.5 py-0.5 font-bold rounded transition cursor-pointer ${
+                                activeBill.vatTaxIncluded
+                                  ? 'bg-emerald-600 text-white shadow-sm'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                              }`}
+                            >
+                              Included
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleBillVatMode('EXCLUDED')}
+                              title="Set VAT & TAX as Excluded (Applicable Extra)"
+                              className={`px-1.5 py-0.5 font-bold rounded transition cursor-pointer ${
+                                !activeBill.vatTaxIncluded
+                                  ? 'bg-rose-600 text-white shadow-sm'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                              }`}
+                            >
+                              Excluded
+                            </button>
+                          </span>
+                        </div>
                         <span>
                           {activeBill.vatTaxIncluded
                             ? '0.00'
-                            : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                              })}
+                            : (activeBill.vatTaxAmount && activeBill.vatTaxAmount > 0
+                                ? Number(activeBill.vatTaxAmount).toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                  })
+                                : '0.00')}
                         </span>
                       </div>
 
@@ -2584,9 +2661,38 @@ export function BillInvoiceView({
                         Terms &amp; Conditions
                       </div>
                       <div style={{ lineHeight: '1.6', fontWeight: '500' }}>
-                        {activeBill.termsAndConditions.map((term, tIdx) => (
-                          <div key={tIdx}>{term}</div>
-                        ))}
+                        {activeBill.termsAndConditions.map((term, tIdx) => {
+                          const isVatLine = /vat\s*&?\s*tax/i.test(term);
+                          return (
+                            <div key={tIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span>{term}</span>
+                              {isVatLine && (
+                                <span className="print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-sm text-[9px]">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleBillVatMode('INCLUDED')}
+                                    title="Set VAT & TAX as Included"
+                                    className={`px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${
+                                      activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    Included
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleBillVatMode('EXCLUDED')}
+                                    title="Set VAT & TAX as Excluded"
+                                    className={`px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${
+                                      !activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                  >
+                                    Excluded
+                                  </button>
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -3152,26 +3258,60 @@ export function BillInvoiceView({
                 <span className="font-mono font-semibold text-slate-200">{formatBDT(formData.subTotal || 0)}</span>
               </div>
 
-              <div className="flex justify-between items-center text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <input
-                    type="checkbox"
-                    id="vatTaxInc"
-                    checked={formData.vatTaxIncluded ?? true}
-                    onChange={(e) => {
-                      const inc = e.target.checked;
+              <div className="flex justify-between items-center text-slate-300 py-1 border-b border-slate-800/60 pb-2">
+                <span className="text-xs font-semibold">VAT &amp; TAX Policy:</span>
+                <div className="inline-flex items-center rounded-lg bg-slate-950 p-1 border border-slate-800 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const inc = true;
                       const totals = recalculateFormTotals(formData.items || [], inc, formData.vatTaxAmount || 0);
-                      setFormData({ ...formData, vatTaxIncluded: inc, ...totals });
+                      const currentTerms = Array.isArray(formData.termsAndConditions) ? [...formData.termsAndConditions] : [];
+                      let found = false;
+                      const updatedTerms = currentTerms.map((t) => {
+                        if (/vat\s*&?\s*tax/i.test(t)) {
+                          found = true;
+                          return '1. VAT&TAX : Included';
+                        }
+                        return t;
+                      });
+                      if (!found) updatedTerms.unshift('1. VAT&TAX : Included');
+                      setFormData({ ...formData, vatTaxIncluded: inc, termsAndConditions: updatedTerms, ...totals });
                     }}
-                    className="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0"
-                  />
-                  <label htmlFor="vatTaxInc" className="cursor-pointer text-xs">
-                    VAT & TAX Included in Total
-                  </label>
-                </span>
-                <span className="font-mono text-emerald-400">
-                  {formData.vatTaxIncluded ? 'Included' : formatBDT(formData.vatTaxAmount || 0)}
-                </span>
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
+                      formData.vatTaxIncluded ?? true
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Included
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const inc = false;
+                      const totals = recalculateFormTotals(formData.items || [], inc, formData.vatTaxAmount || 0);
+                      const currentTerms = Array.isArray(formData.termsAndConditions) ? [...formData.termsAndConditions] : [];
+                      let found = false;
+                      const updatedTerms = currentTerms.map((t) => {
+                        if (/vat\s*&?\s*tax/i.test(t)) {
+                          found = true;
+                          return '1. VAT&TAX : Excluded';
+                        }
+                        return t;
+                      });
+                      if (!found) updatedTerms.unshift('1. VAT&TAX : Excluded');
+                      setFormData({ ...formData, vatTaxIncluded: inc, termsAndConditions: updatedTerms, ...totals });
+                    }}
+                    className={`px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${
+                      !(formData.vatTaxIncluded ?? true)
+                        ? 'bg-rose-600 text-white shadow'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Excluded
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-between items-center text-base font-bold text-slate-100 pt-2 border-t border-slate-800">
