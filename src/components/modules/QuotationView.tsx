@@ -3982,7 +3982,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       <td style={{ width: '25%', textAlign: 'right', verticalAlign: 'middle', fontSize: '10px', color: '#475569', lineHeight: 1.4 }}>
                         <div>Date: <strong style={{ color: '#0f172a', fontWeight: 600 }}>{formatDate(selectedQuotation.date)}</strong></div>
                         <div style={{ marginTop: '2px' }}>
-                          Quotation Ref: <strong style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 700 }}>{selectedQuotation.quotationNumber}</strong>
+                          Quotation Ref: <strong style={{ color: '#0f172a', fontWeight: 700 }}>{selectedQuotation.quotationNumber}</strong>
                         </div>
                       </td>
                     </tr>
@@ -4005,7 +4005,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         <div style={{ color: '#475569', fontSize: '10px', marginTop: '1px' }}>{selectedQuotation.customerAddress}</div>
                         <div style={{ color: '#475569', fontSize: '10px', marginTop: '1px' }}>Phone: {selectedQuotation.customerPhone || ''}</div>
                         {selectedQuotation.customerBin && (
-                          <div style={{ fontFamily: 'monospace', color: '#475569', fontSize: '9.5px', marginTop: '1px' }}>BIN: {selectedQuotation.customerBin}</div>
+                          <div style={{ color: '#475569', fontSize: '9.5px', marginTop: '1px' }}>BIN: {selectedQuotation.customerBin}</div>
                         )}
                       </td>
                       {/* Project & Delivery Location - Shifted smoothly to the right */}
@@ -4069,10 +4069,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle', fontWeight: 'bold', fontSize: '10.5px' }}>
                             {item.quantity}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 600, fontSize: '10.5px' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, fontSize: '10.5px' }}>
                             {unitPriceWithTax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontFamily: 'monospace', fontWeight: 'bold', fontSize: '10.5px' }}>
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'right', verticalAlign: 'middle', fontWeight: 'bold', fontSize: '10.5px' }}>
                             {lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
@@ -4106,27 +4106,27 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               <tbody>
                                 <tr>
                                   <td style={{ padding: '2px 0' }}>Items Subtotal (Incl. VAT & TAX):</td>
-                                  <td style={{ padding: '2px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
+                                  <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
                                   <td style={{ padding: '1.5px 0' }}>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
-                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
+                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
                                   <td style={{ padding: '1.5px 0' }}>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</td>
-                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>
+                                  <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 500 }}>
                                     {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
                                   </td>
                                 </tr>
                                 {totals.totalTax > 0 && (
                                   <tr style={{ fontSize: '9.5px', color: '#475569' }}>
                                     <td style={{ padding: '1.5px 0' }}>Total TAX / AIT (TDS):</td>
-                                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontFamily: 'monospace', fontWeight: 500 }}>{formatBDT(totals.totalTax)}</td>
+                                    <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 500 }}>{formatBDT(totals.totalTax)}</td>
                                   </tr>
                                 )}
                                 <tr style={{ borderTop: '2px solid #0f172a', fontSize: '12.5px', fontWeight: 900, color: '#0f172a' }}>
                                   <td style={{ paddingTop: '3px' }}>Grand Total (BDT):</td>
-                                  <td style={{ paddingTop: '3px', textAlign: 'right', fontFamily: 'monospace', fontWeight: 900, color: '#000000' }}>{formatBDT(totals.grandTotal)}</td>
+                                  <td style={{ paddingTop: '3px', textAlign: 'right', fontWeight: 900, color: '#000000' }}>{formatBDT(totals.grandTotal)}</td>
                                 </tr>
                               </tbody>
                             </table>
