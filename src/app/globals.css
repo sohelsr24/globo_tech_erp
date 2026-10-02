@@ -149,6 +149,7 @@ button, a, input, select, textarea {
   nav,
   aside,
   .no-print,
+  .print\:hidden,
   .mobile-bottom-nav,
   [role="navigation"],
   button,

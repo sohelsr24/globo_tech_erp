@@ -1201,7 +1201,6 @@ export function BillInvoiceView({
       }
 
       const billHtml = printElement.innerHTML;
-      const topPaddingMm = usePreprintedPadMode ? padTopMarginMm : 20;
       const docTitle = previewDocType === 'CHALLAN'
         ? `Delivery Challan - DC-${activeBill?.billNo ? activeBill.billNo.replace('GT/', '') : 'GT'}`
         : `Bill Invoice - ${activeBill?.billNo || 'GT'}`;
@@ -1216,7 +1215,7 @@ export function BillInvoiceView({
             <style>
               @page {
                 size: A4 portrait;
-                margin: 0;
+                margin: 8mm 10mm 8mm 10mm;
               }
               *, *::before, *::after {
                 box-sizing: border-box;
@@ -1224,28 +1223,45 @@ export function BillInvoiceView({
                 print-color-adjust: exact !important;
               }
               html, body {
-                margin: 0;
-                padding: 0;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
                 background-color: #ffffff !important;
                 color: #000000 !important;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 -webkit-font-smoothing: antialiased;
               }
               .print-sheet {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0 auto;
-                padding-top: ${topPaddingMm}mm;
-                padding-left: 20mm;
-                padding-right: 20mm;
-                padding-bottom: 15mm;
-                box-sizing: border-box;
+                width: 100% !important;
+                max-width: 190mm !important;
+                min-height: auto !important;
+                margin: 0 auto !important;
+                padding-top: ${usePreprintedPadMode ? `${Math.max(0, padTopMarginMm - 8)}mm` : '2mm'} !important;
+                padding-left: 2mm !important;
+                padding-right: 2mm !important;
+                padding-bottom: 4mm !important;
+                box-sizing: border-box !important;
                 background: #ffffff;
                 color: #000000;
               }
               table {
-                width: 100%;
-                border-collapse: collapse;
+                width: 100% !important;
+                border-collapse: collapse !important;
+              }
+              thead {
+                display: table-header-group !important;
+              }
+              tfoot {
+                display: table-footer-group !important;
+              }
+              tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .no-print,
+              .print\\:hidden,
+              button {
+                display: none !important;
               }
             </style>
           </head>
@@ -2184,14 +2200,14 @@ export function BillInvoiceView({
               id="printable-bill-invoice"
               style={{
                 width: '210mm',
-                minHeight: '297mm',
+                minHeight: 'auto',
                 boxSizing: 'border-box',
                 backgroundColor: '#ffffff',
                 color: '#000000',
-                paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '20mm',
-                paddingLeft: '20mm',
-                paddingRight: '20mm',
-                paddingBottom: '15mm',
+                paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '10mm',
+                paddingLeft: '14mm',
+                paddingRight: '14mm',
+                paddingBottom: '10mm',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif'
               }}
               className="shadow-2xl rounded-sm text-black select-text relative print:shadow-none print:w-full print:m-0 print:p-0"
@@ -2203,16 +2219,16 @@ export function BillInvoiceView({
                 <>
                   {/* Optional Plain Paper Header */}
                   {!usePreprintedPadMode && (
-                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
+                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                          <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
+                          <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
                             GLOBO TECH
                           </h1>
                           <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
                             Enterprise Supply & Engineering Solutions
                           </p>
-                          <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
+                          <p style={{ fontSize: '10px', color: '#555', margin: '2px 0 0 0' }}>
                             Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
                           </p>
                         </div>
@@ -2225,11 +2241,11 @@ export function BillInvoiceView({
                   )}
 
                   {/* TOP SECTION: Boxed "Delivery Challan" on Left, Metadata on Right */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '22px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
                     {/* Title Box */}
                     <div style={{ paddingTop: '2px' }}>
-                      <div style={{ border: '2.5px solid #000', padding: '7px 22px', display: 'inline-block', backgroundColor: '#fff' }}>
-                        <span style={{ fontSize: '22px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
+                      <div style={{ border: '2.5px solid #000', padding: '6px 20px', display: 'inline-block', backgroundColor: '#fff' }}>
+                        <span style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
                           DELIVERY CHALLAN
                         </span>
                         <span style={{ fontSize: '11px', fontWeight: '700', color: '#444', display: 'block', marginTop: '2px', textAlign: 'center' }}>
@@ -2239,7 +2255,7 @@ export function BillInvoiceView({
                     </div>
 
                     {/* Metadata List */}
-                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
+                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.4', fontWeight: '500', color: '#000' }}>
                       <div><strong>Challan NO:</strong> DC/{activeBill.billNo.replace('GT/', '')}</div>
                       <div><strong>Challan Date:</strong> {activeBill.date}</div>
                       <div><strong>Bill/Inv Ref:</strong> {activeBill.billNo}</div>
@@ -2251,13 +2267,13 @@ export function BillInvoiceView({
                   </div>
 
                   {/* TWO COLUMN PARTY DETAILS: Consignee / Bill To vs Delivery Destination */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '22px', fontSize: '12px', color: '#000' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '12px', color: '#000' }}>
                     {/* Consignee / Bill To */}
                     <div style={{ width: '56%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '130px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '5px', display: 'inline-block', minWidth: '130px' }}>
                         Consignee (Bill To)
                       </div>
-                      <div style={{ lineHeight: '1.45' }}>
+                      <div style={{ lineHeight: '1.4' }}>
                         <div><strong>Name:</strong> {activeBill.billToName}</div>
                         <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
                         {activeBill.binNumber && <div style={{ marginTop: '2px' }}><strong>BIN:</strong> {activeBill.binNumber}</div>}
@@ -2266,10 +2282,10 @@ export function BillInvoiceView({
 
                     {/* Deliver To / Destination */}
                     <div style={{ width: '38%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '130px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '5px', display: 'inline-block', minWidth: '130px' }}>
                         Delivery Destination
                       </div>
-                      <div style={{ lineHeight: '1.45' }}>
+                      <div style={{ lineHeight: '1.4' }}>
                         <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
                         {activeBill.deliverToName && (
                           <div style={{ marginTop: '2px' }}><strong>Contact Person:</strong> {activeBill.deliverToName}</div>
@@ -2282,34 +2298,44 @@ export function BillInvoiceView({
                   </div>
 
                   {/* ITEMS TABLE */}
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '12px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
+                        {/* Multi-page continuation banner: repeats on every page automatically */}
+                        <tr className="print-continuation-banner" style={{ borderBottom: '1px solid #000', backgroundColor: '#f8fafc' }}>
+                          <th colSpan={challanShowPrices ? 8 : 6} style={{ padding: '4px 8px', textAlign: 'left', fontWeight: 'normal', fontSize: '10.5px', color: '#1e293b' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span><strong>GLOBO TECH</strong> &bull; Delivery Challan: <strong>DC/{activeBill.billNo.replace('GT/', '')}</strong></span>
+                              <span>Consignee: <strong>{activeBill.billToName}</strong></span>
+                              <span>Date: <strong>{activeBill.date}</strong></span>
+                            </div>
+                          </th>
+                        </tr>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '130px' : '180px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Serial Numbers (S/N)</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '50px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', width: challanShowPrices ? '130px' : '180px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Serial Numbers (S/N)</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '50px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
                           {challanShowPrices && (
                             <>
-                              <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
-                              <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                              <th style={{ borderRight: '1px solid #000', padding: '7px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
+                              <th style={{ borderRight: '1px solid #000', padding: '7px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
                             </>
                           )}
-                          <th style={{ padding: '8px 6px', width: challanShowPrices ? '100px' : '130px', textAlign: 'center', fontWeight: 'bold' }}>Remarks / Condition</th>
+                          <th style={{ padding: '7px 6px', width: challanShowPrices ? '100px' : '130px', textAlign: 'center', fontWeight: 'bold' }}>Remarks / Condition</th>
                         </tr>
                       </thead>
                       <tbody>
                         {activeBill.items.map((item, idx) => (
-                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
+                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center', fontWeight: '500' }}>
                               {idx + 1}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px' }}>
-                              <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{item.name}</div>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px' }}>
+                              <div style={{ fontWeight: 'bold', fontSize: '12.5px' }}>{item.name}</div>
                               {item.partNo ? (
-                                <div style={{ marginTop: '4px', fontSize: '11px', color: '#111' }}>
+                                <div style={{ marginTop: '3px', fontSize: '10.5px', color: '#111' }}>
                                   <span style={{ fontWeight: 'bold', color: '#333' }}>P/N:</span>{' '}
                                   <span style={{ fontFamily: 'monospace', fontWeight: 'bold', backgroundColor: '#f1f5f9', padding: '1px 5px', borderRadius: '3px', border: '1px solid #cbd5e1' }}>
                                     {item.partNo}
@@ -2317,10 +2343,10 @@ export function BillInvoiceView({
                                 </div>
                               ) : null}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.45' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px', lineHeight: '1.4' }}>
                               <div>{item.description || item.name}</div>
                               {item.serialNumbers ? (
-                                <div style={{ marginTop: '6px', padding: '4px 8px', backgroundColor: '#f8fafc', border: '1px dashed #64748b', borderRadius: '4px', fontSize: '11.5px', color: '#0f172a' }}>
+                                <div style={{ marginTop: '4px', padding: '3px 6px', backgroundColor: '#f8fafc', border: '1px dashed #64748b', borderRadius: '4px', fontSize: '11px', color: '#0f172a' }}>
                                   <strong style={{ color: '#0f172a' }}>S/N (Serial No):</strong>{' '}
                                   <span style={{ fontFamily: 'monospace', fontWeight: 'bold', color: '#0f172a', wordBreak: 'break-word' }}>
                                     {item.serialNumbers}
@@ -2328,21 +2354,21 @@ export function BillInvoiceView({
                                 </div>
                               ) : null}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center' }}>
                               {item.unit}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold', fontSize: '13px' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center', fontWeight: 'bold', fontSize: '12.5px' }}>
                               {item.quantity}
                             </td>
                             {challanShowPrices && (
                               <>
-                                <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
+                                <td style={{ borderRight: '1px solid #000', padding: '6.5px 6px', textAlign: 'right', fontWeight: '500' }}>
                                   {Number(item.unitPrice).toLocaleString('en-US', {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
                                   })}
                                 </td>
-                                <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                                <td style={{ borderRight: '1px solid #000', padding: '6.5px 6px', textAlign: 'right', fontWeight: 'bold' }}>
                                   {Number(item.amount).toLocaleString('en-US', {
                                     minimumFractionDigits: 2,
                                     maximumFractionDigits: 2
@@ -2350,31 +2376,31 @@ export function BillInvoiceView({
                                 </td>
                               </>
                             )}
-                            <td style={{ padding: '10px 6px', textAlign: 'center', fontSize: '11px', color: '#444' }}>
+                            <td style={{ padding: '6.5px 6px', textAlign: 'center', fontSize: '11px', color: '#444' }}>
                               Intact &amp; Sound
                             </td>
                           </tr>
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr style={{ backgroundColor: '#fcfcfc', borderTop: '2px solid #000' }}>
-                          <td colSpan={challanShowPrices ? 4 : 4} style={{ padding: '8px 10px', fontWeight: 'bold', textAlign: 'right', borderRight: '1px solid #000' }}>
+                        <tr style={{ backgroundColor: '#fcfcfc', borderTop: '2px solid #000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                          <td colSpan={challanShowPrices ? 4 : 4} style={{ padding: '7px 10px', fontWeight: 'bold', textAlign: 'right', borderRight: '1px solid #000' }}>
                             Total Delivered Quantity:
                           </td>
-                          <td style={{ padding: '8px 4px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid #000', fontSize: '13px' }}>
+                          <td style={{ padding: '7px 4px', fontWeight: 'bold', textAlign: 'center', borderRight: '1px solid #000', fontSize: '13px' }}>
                             {activeBill.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)}
                           </td>
                           {challanShowPrices && (
                             <>
-                              <td style={{ borderRight: '1px solid #000', padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                              <td style={{ borderRight: '1px solid #000', padding: '7px 6px', textAlign: 'right', fontWeight: 'bold' }}>
                                 Grand Total:
                               </td>
-                              <td style={{ borderRight: '1px solid #000', padding: '8px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                              <td style={{ borderRight: '1px solid #000', padding: '7px 6px', textAlign: 'right', fontWeight: 'bold' }}>
                                 {Number(activeBill.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                             </>
                           )}
-                          <td style={{ padding: '8px 6px', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
+                          <td style={{ padding: '7px 6px', textAlign: 'center', fontSize: '11px', fontWeight: '600' }}>
                             {activeBill.items.length} {activeBill.items.length === 1 ? 'Line Item' : 'Line Items'}
                           </td>
                         </tr>
@@ -2383,8 +2409,8 @@ export function BillInvoiceView({
                   </div>
 
                   {/* CHALLAN TERMS & RECEIVING DECLARATION */}
-                  <div style={{ border: '1px solid #000', padding: '10px 14px', marginBottom: '35px', fontSize: '11px', lineHeight: '1.5', color: '#000' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
+                  <div style={{ border: '1px solid #000', padding: '8px 12px', marginBottom: '16px', fontSize: '11px', lineHeight: '1.45', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '11.5px', marginBottom: '2px' }}>
                       Delivery &amp; Handover Declaration / চালানের শর্তাবলী:
                     </div>
                     <div>1. Received the above-mentioned goods and supplies in sound condition, correct quantity, and intact packaging.</div>
@@ -2393,9 +2419,9 @@ export function BillInvoiceView({
                   </div>
 
                   {/* 4-COLUMN OFFICIAL SIGNATURE BLOCK */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '70px', fontSize: '11px', fontWeight: 'bold', color: '#000', textAlign: 'center' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '30px', fontSize: '11px', fontWeight: 'bold', color: '#000', textAlign: 'center', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <div>
-                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Prepared By
                       </div>
                       <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
@@ -2404,7 +2430,7 @@ export function BillInvoiceView({
                     </div>
 
                     <div>
-                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Store Checked By
                       </div>
                       <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
@@ -2413,7 +2439,7 @@ export function BillInvoiceView({
                     </div>
 
                     <div>
-                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '6px' }}>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Delivered By
                       </div>
                       <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
@@ -2422,7 +2448,7 @@ export function BillInvoiceView({
                     </div>
 
                     <div>
-                      <div style={{ borderTop: '2px solid #000', paddingTop: '6px' }}>
+                      <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
                         Received By
                       </div>
                       <div style={{ fontSize: '10px', fontWeight: 'normal', color: '#555', marginTop: '2px' }}>
@@ -2433,7 +2459,7 @@ export function BillInvoiceView({
 
                   {/* Plain Paper Footer */}
                   {!usePreprintedPadMode && (
-                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '8px', marginTop: '16px', textAlign: 'center', fontSize: '10px', color: '#777', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       Official Delivery Challan &bull; Globo Tech &bull; Motijheel, Dhaka
                     </div>
                   )}
@@ -2442,16 +2468,16 @@ export function BillInvoiceView({
                 <>
                   {/* Optional Plain Paper Header */}
                   {!usePreprintedPadMode && (
-                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '12px', marginBottom: '20px' }}>
+                    <div style={{ borderBottom: '2px solid #000', paddingBottom: '8px', marginBottom: '14px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                          <h1 style={{ fontSize: '24px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
+                          <h1 style={{ fontSize: '22px', fontWeight: '900', margin: '0 0 2px 0', letterSpacing: '-0.5px' }}>
                             GLOBO TECH
                           </h1>
                           <p style={{ fontSize: '11px', fontWeight: '600', margin: '0', color: '#333' }}>
                             Enterprise Supply & Engineering Solutions
                           </p>
-                          <p style={{ fontSize: '10px', color: '#555', margin: '3px 0 0 0' }}>
+                          <p style={{ fontSize: '10px', color: '#555', margin: '2px 0 0 0' }}>
                             Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com
                           </p>
                         </div>
@@ -2464,18 +2490,18 @@ export function BillInvoiceView({
                   )}
 
                   {/* TOP SECTION: Boxed "Bill Invoice" on Left, Date/Bill No/PO/BIN/TIN on Right */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
                     {/* Title Box */}
                     <div style={{ paddingTop: '2px' }}>
-                      <div style={{ border: '2.5px solid #000', padding: '8px 28px', display: 'inline-block', backgroundColor: '#fff' }}>
-                        <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
+                      <div style={{ border: '2.5px solid #000', padding: '6px 20px', display: 'inline-block', backgroundColor: '#fff' }}>
+                        <span style={{ fontSize: '20px', fontWeight: '900', letterSpacing: '0.8px', color: '#000', display: 'block', lineHeight: 1.1 }}>
                           Bill Invoice
                         </span>
                       </div>
                     </div>
 
                     {/* Metadata List */}
-                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.45', fontWeight: '500', color: '#000' }}>
+                    <div style={{ textAlign: 'right', fontSize: '12px', lineHeight: '1.4', fontWeight: '500', color: '#000' }}>
                       <div><strong>Date:</strong> {activeBill.date}</div>
                       <div><strong>Bill NO:</strong> {activeBill.billNo}</div>
                       <div><strong>PO :</strong> {activeBill.poNumber || '—'}</div>
@@ -2485,13 +2511,13 @@ export function BillInvoiceView({
                   </div>
 
                   {/* TWO COLUMN PARTY DETAILS: Bill To vs Deliver To */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px', fontSize: '12px', color: '#000' }}>
                     {/* Bill To */}
                     <div style={{ width: '58%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '5px', display: 'inline-block', minWidth: '120px' }}>
                         Bill To
                       </div>
-                      <div style={{ lineHeight: '1.45' }}>
+                      <div style={{ lineHeight: '1.4' }}>
                         <div><strong>Name:</strong> {activeBill.billToName}</div>
                         <div style={{ marginTop: '2px' }}><strong>Address:</strong> {activeBill.billToAddress}</div>
                       </div>
@@ -2499,10 +2525,10 @@ export function BillInvoiceView({
 
                     {/* Deliver To (aligned nicely to right column) */}
                     <div style={{ width: '34%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '6px', display: 'inline-block', minWidth: '120px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '13px', borderBottom: '1.5px solid #000', paddingBottom: '3px', marginBottom: '5px', display: 'inline-block', minWidth: '120px' }}>
                         Deliver To
                       </div>
-                      <div style={{ lineHeight: '1.45' }}>
+                      <div style={{ lineHeight: '1.4' }}>
                         <div><strong>Address:</strong> {activeBill.deliverToAddress || '—'}</div>
                         {activeBill.deliverToName && (
                           <div style={{ marginTop: '2px' }}><strong>Name:</strong> {activeBill.deliverToName}</div>
@@ -2515,26 +2541,36 @@ export function BillInvoiceView({
                   </div>
 
                   {/* ITEMS TABLE (Exact black-bordered layout matching PDF) */}
-                  <div style={{ marginBottom: '16px' }}>
+                  <div style={{ marginBottom: '12px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
+                        {/* Multi-page continuation banner: repeats on every page automatically */}
+                        <tr className="print-continuation-banner" style={{ borderBottom: '1px solid #000', backgroundColor: '#f8fafc' }}>
+                          <th colSpan={7} style={{ padding: '4px 8px', textAlign: 'left', fontWeight: 'normal', fontSize: '10.5px', color: '#1e293b' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span><strong>GLOBO TECH</strong> &bull; Bill Invoice: <strong>{activeBill.billNo}</strong></span>
+                              <span>Client: <strong>{activeBill.billToName}</strong></span>
+                              <span>Date: <strong>{activeBill.date}</strong></span>
+                            </div>
+                          </th>
+                        </tr>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '125px', fontWeight: 'bold' }}>Item name</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '44px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
-                          <th style={{ padding: '8px 6px', width: '98px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', width: '125px', fontWeight: 'bold' }}>Item name</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '44px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '7px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
+                          <th style={{ padding: '7px 6px', width: '98px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
                         </tr>
                       </thead>
                       <tbody>
                         {activeBill.items.map((item, idx) => (
-                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top' }}>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: '500' }}>
+                          <tr key={item.id} style={{ borderBottom: '1px solid #000', verticalAlign: 'top', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center', fontWeight: '500' }}>
                               {idx + 1}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px' }}>
                               <div style={{ fontWeight: 'bold' }}>{item.name}</div>
                               {item.partNo ? (
                                 <div style={{ fontSize: '10px', color: '#555', marginTop: '2px', fontWeight: '500' }}>
@@ -2542,7 +2578,7 @@ export function BillInvoiceView({
                                 </div>
                               ) : null}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 8px', lineHeight: '1.4' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 8px', lineHeight: '1.35' }}>
                               <div>{item.description || item.name}</div>
                               {item.serialNumbers ? (
                                 <div style={{ fontSize: '10px', color: '#555', marginTop: '3px' }}>
@@ -2550,19 +2586,19 @@ export function BillInvoiceView({
                                 </div>
                               ) : null}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center' }}>
                               {item.unit}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 4px', textAlign: 'center', fontWeight: 'bold' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 4px', textAlign: 'center', fontWeight: 'bold' }}>
                               {item.quantity}
                             </td>
-                            <td style={{ borderRight: '1px solid #000', padding: '10px 6px', textAlign: 'right', fontWeight: '500' }}>
+                            <td style={{ borderRight: '1px solid #000', padding: '6.5px 6px', textAlign: 'right', fontWeight: '500' }}>
                               {Number(item.unitPrice).toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
                               })}
                             </td>
-                            <td style={{ padding: '10px 6px', textAlign: 'right', fontWeight: 'bold' }}>
+                            <td style={{ padding: '6.5px 6px', textAlign: 'right', fontWeight: 'bold' }}>
                               {Number(item.amount).toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2
@@ -2575,9 +2611,9 @@ export function BillInvoiceView({
                   </div>
 
                   {/* BOTTOM TOTALS: Boxed Amount In Word (Left) vs Summary Rows (Right) */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '24px', fontSize: '12px', color: '#000' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', marginBottom: '14px', fontSize: '12px', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     {/* Left: Amount In Word Box */}
-                    <div style={{ width: '58%', border: '1px solid #000', padding: '10px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div style={{ width: '58%', border: '1px solid #000', padding: '8px 12px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <div style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '3px' }}>
                         Amount In Word
                       </div>
@@ -2602,7 +2638,7 @@ export function BillInvoiceView({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span>{activeBill.vatTaxIncluded ? 'VAT & TAX Included' : 'VAT & TAX Excluded'}</span>
                           {/* 1-Click Interactive VAT Mode Toggle (Hidden when printing/PDF) */}
-                          <span className="print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 ml-1 shadow-sm text-[10px]">
+                          <span className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 ml-1 shadow-sm text-[10px]">
                             <button
                               type="button"
                               onClick={() => handleToggleBillVatMode('INCLUDED')}
@@ -2641,7 +2677,7 @@ export function BillInvoiceView({
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: '3px double #000' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', fontSize: '13px', fontWeight: 'bold', borderBottom: '3px double #000' }}>
                         <span>Grand Total</span>
                         <span>
                           {Number(activeBill.grandTotal).toLocaleString('en-US', {
@@ -2654,20 +2690,20 @@ export function BillInvoiceView({
                   </div>
 
                   {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '45px', fontSize: '12px', color: '#000' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '11.5px', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     {/* Terms & Conditions */}
                     <div style={{ width: '58%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '5px', display: 'inline-block', minWidth: '140px' }}>
                         Terms &amp; Conditions
                       </div>
-                      <div style={{ lineHeight: '1.6', fontWeight: '500' }}>
+                      <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
                         {activeBill.termsAndConditions.map((term, tIdx) => {
                           const isVatLine = /vat\s*&?\s*tax/i.test(term);
                           return (
                             <div key={tIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span>{term}</span>
                               {isVatLine && (
-                                <span className="print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-sm text-[9px]">
+                                <span className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-sm text-[9px]">
                                   <button
                                     type="button"
                                     onClick={() => handleToggleBillVatMode('INCLUDED')}
@@ -2698,10 +2734,10 @@ export function BillInvoiceView({
 
                     {/* Payment Details (aligned to right column) */}
                     <div style={{ width: '34%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '6px', display: 'inline-block', minWidth: '140px' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '5px', display: 'inline-block', minWidth: '140px' }}>
                         Payment Details
                       </div>
-                      <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
+                      <div style={{ lineHeight: '1.45', fontWeight: '500' }}>
                         <div><strong>Account No :</strong> {activeBill.bankAccountNo}</div>
                         <div><strong>Account Title:</strong> {activeBill.bankAccountTitle}</div>
                         <div><strong>Bank Name :</strong> {activeBill.bankName}</div>
@@ -2711,15 +2747,15 @@ export function BillInvoiceView({
                   </div>
 
                   {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '140px', fontSize: '12px', fontWeight: 'bold', color: '#000' }}>
-                    <div style={{ textAlign: 'center', minWidth: '200px' }}>
-                      <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '36px', fontSize: '12px', fontWeight: 'bold', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                    <div style={{ textAlign: 'center', minWidth: '180px' }}>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Received By
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'center', minWidth: '200px' }}>
-                      <div style={{ borderTop: '2px solid #000', paddingTop: '5px' }}>
+                    <div style={{ textAlign: 'center', minWidth: '180px' }}>
+                      <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Prepared By
                       </div>
                     </div>
@@ -2727,7 +2763,7 @@ export function BillInvoiceView({
 
                   {/* Plain Paper Footer (Only if Pre-printed Pad Mode is Disabled) */}
                   {!usePreprintedPadMode && (
-                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '10px', marginTop: '30px', textAlign: 'center', fontSize: '10px', color: '#777' }}>
+                    <div style={{ borderTop: '1px solid #ddd', paddingTop: '8px', marginTop: '16px', textAlign: 'center', fontSize: '10px', color: '#777', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       This is an electronically generated bill invoice. For questions, contact info@globotechbd.com.
                     </div>
                   )}
