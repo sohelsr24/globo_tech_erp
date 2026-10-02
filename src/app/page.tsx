@@ -24,7 +24,7 @@ import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
-import { verifyAndRestoreStorageIntegrity } from '@/lib/erpBackup';
+import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB } from '@/lib/erpBackup';
 
 const VALID_TABS = [
   'dashboard',
@@ -88,10 +88,30 @@ export default function AppHome() {
       localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(delList));
     } catch (e) {}
 
+    // Request persistent storage so browser never evicts ERP data
+    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
+
     // Verify storage integrity and dual-layer mirror across reboots
     verifyAndRestoreStorageIntegrity().catch((err) => {
       console.warn('Storage integrity check notice:', err);
     });
+
+    // Auto-mirror to IndexedDB whenever any data changes
+    const handleGlobalSync = () => {
+      mirrorToIndexedDB().catch(() => {});
+    };
+    window.addEventListener('storage', handleGlobalSync);
+    window.addEventListener('globotech_products_updated', handleGlobalSync);
+    window.addEventListener('globotech_stock_updated', handleGlobalSync);
+    window.addEventListener('globotech_categories_updated', handleGlobalSync);
+    return () => {
+      window.removeEventListener('storage', handleGlobalSync);
+      window.removeEventListener('globotech_products_updated', handleGlobalSync);
+      window.removeEventListener('globotech_stock_updated', handleGlobalSync);
+      window.removeEventListener('globotech_categories_updated', handleGlobalSync);
+    };
   }, []);
 
   // Synchronize active tab with URL query parameter (?tab=...) on mount & browser back/forward

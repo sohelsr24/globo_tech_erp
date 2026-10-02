@@ -124,6 +124,7 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
 
     window.addEventListener('globotech_products_updated', handleProductsUpdate);
     window.addEventListener('globotech_categories_updated', handleCategoriesUpdate);
+    window.addEventListener('storage', handleProductsUpdate);
     const handleBackupRestored = () => {
       setProducts(getStoredProducts());
       setCategories(getStoredCategories());
@@ -132,6 +133,7 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
     return () => {
       window.removeEventListener('globotech_products_updated', handleProductsUpdate);
       window.removeEventListener('globotech_categories_updated', handleCategoriesUpdate);
+      window.removeEventListener('storage', handleProductsUpdate);
       window.removeEventListener('globotech_backup_restored', handleBackupRestored);
     };
   }, []);

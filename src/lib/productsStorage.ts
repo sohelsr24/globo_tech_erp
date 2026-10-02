@@ -329,11 +329,15 @@ export function getStoredCategories(): string[] {
   return INITIAL_CATEGORIES;
 }
 
+import { mirrorToIndexedDB } from '@/lib/erpBackup';
+
 export function saveStoredCategories(categories: string[]): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
     window.dispatchEvent(new CustomEvent('globotech_categories_updated', { detail: categories }));
+    window.dispatchEvent(new Event('storage'));
+    mirrorToIndexedDB().catch(() => {});
   } catch (e) {
     console.error('Error saving categories to storage:', e);
   }
@@ -355,6 +359,8 @@ export function saveStoredProducts(products: ProductItem[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
     window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: products }));
+    window.dispatchEvent(new Event('storage'));
+    mirrorToIndexedDB().catch(() => {});
   } catch (e) {
     console.error('Error saving products to storage:', e);
   }
@@ -376,6 +382,8 @@ export function saveStoredWarehouseStock(stock: WarehouseStockItem[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(stock));
     window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: stock }));
+    window.dispatchEvent(new Event('storage'));
+    mirrorToIndexedDB().catch(() => {});
   } catch (e) {
     console.error('Error saving warehouse stock to storage:', e);
   }
@@ -397,6 +405,8 @@ export function saveStoredStockLedger(ledger: StockLedgerRecord[]): void {
   try {
     localStorage.setItem(STORAGE_KEYS.LEDGER, JSON.stringify(ledger));
     window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: ledger }));
+    window.dispatchEvent(new Event('storage'));
+    mirrorToIndexedDB().catch(() => {});
   } catch (e) {
     console.error('Error saving stock ledger to storage:', e);
   }

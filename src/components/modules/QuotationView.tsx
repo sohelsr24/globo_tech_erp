@@ -1258,12 +1258,20 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
     const handleStockUpdate = () => setWarehouseStockList(getStoredWarehouseStock());
     const handleProductsUpdate = () => setProductList(getStoredProducts());
+    const handleStorageChange = () => {
+      setWarehouseStockList(getStoredWarehouseStock());
+      setProductList(getStoredProducts());
+    };
 
     window.addEventListener('globotech_stock_updated', handleStockUpdate);
     window.addEventListener('globotech_products_updated', handleProductsUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('globotech_backup_restored', handleStorageChange);
     return () => {
       window.removeEventListener('globotech_stock_updated', handleStockUpdate);
       window.removeEventListener('globotech_products_updated', handleProductsUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('globotech_backup_restored', handleStorageChange);
     };
   }, []);
 

@@ -14,14 +14,17 @@ echo [1/3] Building Next.js static export...
 if exist out rmdir /s /q out
 call npm run build
 
-echo [2/3] Syncing export files to web root...
+echo [2/4] Syncing export files to web root...
 copy /Y out\index.html index.html
 copy /Y out\404.html 404.html
 copy /Y out\index.txt index.txt
 if exist _next rmdir /s /q _next
 xcopy /E /I /Y out\_next _next
 
-echo [3/3] Committing and pushing to GitHub...
+echo [3/4] Creating updated globotech-erp-hostinger-live.zip...
+powershell.exe -Command "Compress-Archive -Path 'out\*' -DestinationPath 'globotech-erp-hostinger-live.zip' -Force"
+
+echo [4/4] Committing and pushing to GitHub...
 git add .
 git commit -m "deploy: update live build and sync latest changes"
 git push origin main
