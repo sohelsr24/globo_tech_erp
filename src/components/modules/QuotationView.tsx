@@ -226,8 +226,15 @@ export const cleanVatTaxTerms = (terms?: string) => {
 };
 
 // Helper to dynamically adjust VAT (10% or 15%) and TAX (5% or 10%) in terms string
-export const updateVatTaxString = (currentText: string = '', newVat?: string, newTax?: string) => {
-  const isExclusive = currentText.toLowerCase().includes('exclusive');
+export const updateVatTaxString = (
+  currentText: string = '',
+  newVat?: string,
+  newTax?: string,
+  forceMode?: 'INCLUSIVE' | 'EXCLUSIVE'
+) => {
+  const isExclusive = forceMode
+    ? forceMode === 'EXCLUSIVE'
+    : currentText.toLowerCase().includes('exclusive');
   const prefix = isExclusive ? 'EXCLUSIVE of' : 'INCLUSIVE of';
   let vat = newVat;
   if (!vat) {
@@ -1026,6 +1033,48 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
 
     setIsEditTermsModalOpen(false);
+  };
+
+  // 1-Click Interactive VAT Mode Toggle for Selected Quotation
+  const handleToggleQuotationVatMode = (mode: 'INCLUDED' | 'EXCLUDED') => {
+    if (!selectedQuotation) return;
+    const isExcl = mode === 'EXCLUDED';
+    const newVatTerms = isExcl
+      ? (selectedQuotation.vatTaxTerms && selectedQuotation.vatTaxTerms.includes('VAT')
+          ? updateVatTaxString(selectedQuotation.vatTaxTerms, undefined, undefined, 'EXCLUSIVE')
+          : 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).')
+      : (selectedQuotation.vatTaxTerms && selectedQuotation.vatTaxTerms.includes('VAT')
+          ? updateVatTaxString(selectedQuotation.vatTaxTerms, undefined, undefined, 'INCLUSIVE')
+          : 'INCLUSIVE of 15% VAT and 10% TAX / AIT.');
+
+    const updatedQuote: Quotation = {
+      ...selectedQuotation,
+      vatTaxTerms: newVatTerms
+    };
+
+    setSelectedQuotation(updatedQuote);
+    setQuotations((currentList) =>
+      currentList.map((q) => (q.id === updatedQuote.id ? updatedQuote : q))
+    );
+
+    if (editingQuotationId === updatedQuote.id) {
+      setNewQuote((prev) => ({
+        ...prev,
+        vatTaxTerms: newVatTerms
+      }));
+    }
+
+    // Persist immediately to localStorage
+    try {
+      const stored = localStorage.getItem('globotech_erp_quotations');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const updatedStored = parsed.map((q: any) => (q.id === updatedQuote.id ? updatedQuote : q));
+        localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedStored));
+      }
+    } catch (e) {
+      console.error('Error saving updated vat terms to localStorage:', e);
+    }
   };
 
   // Customer List with localStorage Persistence
@@ -3138,11 +3187,49 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <span>Transportation & Other Charges:</span>
                           <span className="font-mono text-slate-200">{formatBDT(totals.otherSubtotal)}</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between items-center text-slate-400">
                           <span>{totals.totalVat > 0 ? 'Calculated VAT (Mushak 6.3):' : 'VAT & TAX (Mushak 6.3):'}</span>
-                          <span className="font-mono">
-                            {totals.totalVat > 0 ? formatBDT(totals.totalVat) : <span className="text-emerald-400 font-semibold">Included</span>}
-                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono">
+                              {totals.totalVat > 0 ? formatBDT(totals.totalVat) : (
+                                (newQuote.vatTaxTerms || '').toLowerCase().includes('exclusive') ? (
+                                  <span className="text-rose-400 font-semibold">Excluded</span>
+                                ) : (
+                                  <span className="text-emerald-400 font-semibold">Included</span>
+                                )
+                              )}
+                            </span>
+                            <div className="inline-flex items-center rounded bg-slate-900 border border-slate-700/80 p-0.5 ml-1">
+                              <button
+                                type="button"
+                                onClick={() => setNewQuote({
+                                  ...newQuote,
+                                  vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '', 'INCLUSIVE')
+                                })}
+                                className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                  !(newQuote.vatTaxTerms || '').toLowerCase().includes('exclusive')
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                              >
+                                Included
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setNewQuote({
+                                  ...newQuote,
+                                  vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '', 'EXCLUSIVE')
+                                })}
+                                className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                  (newQuote.vatTaxTerms || '').toLowerCase().includes('exclusive')
+                                    ? 'bg-rose-600 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                              >
+                                Excluded
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         {totals.totalTax > 0 && (
                           <div className="flex justify-between text-amber-400">
@@ -3305,10 +3392,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           type="button"
                           onClick={() => setNewQuote({
                             ...newQuote,
-                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '')
+                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '', 'INCLUSIVE')
                           })}
                           className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
-                            newQuote.vatTaxTerms?.toLowerCase().includes('inclusive')
+                            !newQuote.vatTaxTerms?.toLowerCase().includes('exclusive')
                               ? 'bg-emerald-600 text-white'
                               : 'text-slate-400 hover:text-slate-200'
                           }`}
@@ -3319,7 +3406,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           type="button"
                           onClick={() => setNewQuote({
                             ...newQuote,
-                            vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
+                            vatTaxTerms: updateVatTaxString(newQuote.vatTaxTerms || '', '15%', '', 'EXCLUSIVE')
                           })}
                           className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                             newQuote.vatTaxTerms?.toLowerCase().includes('exclusive')
@@ -3802,11 +3889,43 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         <span>Subtotal (Base Value):</span>
                         <span className="font-mono text-slate-200">{formatBDT(totals.subtotal)}</span>
                       </div>
-                      <div className="flex justify-between text-slate-400">
+                      <div className="flex justify-between items-center text-slate-400">
                         <span>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</span>
-                        <span className="font-mono">
-                          {hasVatOrTax ? formatBDT(totals.totalVat) : <span className="text-emerald-400 font-semibold">Included</span>}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono">
+                            {hasVatOrTax ? formatBDT(totals.totalVat) : (
+                              (selectedQuotation.vatTaxTerms || '').toLowerCase().includes('exclusive') ? (
+                                <span className="text-rose-400 font-semibold">Excluded</span>
+                              ) : (
+                                <span className="text-emerald-400 font-semibold">Included</span>
+                              )
+                            )}
+                          </span>
+                          <div className="inline-flex items-center rounded bg-slate-800 border border-slate-700 p-0.5 print:hidden">
+                            <button
+                              type="button"
+                              onClick={() => handleToggleQuotationVatMode('INCLUDED')}
+                              className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                !(selectedQuotation.vatTaxTerms || '').toLowerCase().includes('exclusive')
+                                  ? 'bg-emerald-600 text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              Included
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleQuotationVatMode('EXCLUDED')}
+                              className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                (selectedQuotation.vatTaxTerms || '').toLowerCase().includes('exclusive')
+                                  ? 'bg-rose-600 text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-slate-200'
+                              }`}
+                            >
+                              Excluded
+                            </button>
+                          </div>
+                        </div>
                       </div>
                       {totals.totalTax > 0 && (
                         <div className="flex justify-between text-amber-400">
@@ -4085,6 +4204,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 {(() => {
                   const totals = calculateQuotationTotals(selectedQuotation);
                   const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
+                  const isExclusive = (selectedQuotation.vatTaxTerms || '').toLowerCase().includes('exclusive');
                   return (
                     <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '8px' }}>
                       <tbody>
@@ -4105,17 +4225,48 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px', color: '#334155' }}>
                               <tbody>
                                 <tr>
-                                  <td style={{ padding: '2px 0' }}>Items Subtotal (Incl. VAT & TAX):</td>
+                                  <td style={{ padding: '2px 0' }}>Items Subtotal {isExclusive ? '(Excl. VAT & TAX):' : '(Incl. VAT & TAX):'}</td>
                                   <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>{formatBDT(totals.grandTotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
-                                  <td style={{ padding: '1.5px 0' }}>Base Supply Value {hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
+                                  <td style={{ padding: '1.5px 0' }}>Base Supply Value {isExclusive || hasVatOrTax ? '(Excl. VAT & TAX):' : '(VAT & TAX Included):'}</td>
                                   <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 500 }}>{formatBDT(totals.subtotal)}</td>
                                 </tr>
                                 <tr style={{ fontSize: '9.5px', color: '#475569' }}>
                                   <td style={{ padding: '1.5px 0' }}>{hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'}</td>
                                   <td style={{ padding: '1.5px 0', textAlign: 'right', fontWeight: 500 }}>
-                                    {hasVatOrTax ? formatBDT(totals.totalVat) : 'Included'}
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                                      <span style={{ fontWeight: 700, color: isExclusive ? '#e11d48' : '#059669' }}>
+                                        {hasVatOrTax ? formatBDT(totals.totalVat) : (isExclusive ? 'Excluded' : 'Included')}
+                                      </span>
+                                      {/* Interactive 1-click Included/Excluded Toggle Pills (hidden on paper print) */}
+                                      <span className="print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 ml-1 shadow-sm">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleQuotationVatMode('INCLUDED')}
+                                          title="Set VAT & TAX as Included in price"
+                                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                            !isExclusive
+                                              ? 'bg-emerald-600 text-white shadow-sm'
+                                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                                          }`}
+                                        >
+                                          Included
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleQuotationVatMode('EXCLUDED')}
+                                          title="Set VAT & TAX as Excluded (Applicable Extra)"
+                                          className={`px-1.5 py-0.5 text-[9px] font-bold rounded transition cursor-pointer ${
+                                            isExclusive
+                                              ? 'bg-rose-600 text-white shadow-sm'
+                                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                                          }`}
+                                        >
+                                          Excluded
+                                        </button>
+                                      </span>
+                                    </div>
                                   </td>
                                 </tr>
                                 {totals.totalTax > 0 && (
@@ -5214,10 +5365,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       type="button"
                       onClick={() => setTermsForm({
                         ...termsForm,
-                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '15%', '')
+                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '15%', '', 'INCLUSIVE')
                       })}
                       className={`px-2 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
-                        termsForm.vatTaxTerms?.toLowerCase().includes('inclusive')
+                        !termsForm.vatTaxTerms?.toLowerCase().includes('exclusive')
                           ? 'bg-emerald-600 text-white shadow-sm'
                           : 'text-slate-400 hover:text-slate-200'
                       }`}
@@ -5228,7 +5379,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       type="button"
                       onClick={() => setTermsForm({
                         ...termsForm,
-                        vatTaxTerms: 'Quoted prices are EXCLUSIVE of VAT & TAX (Applicable VAT & TAX / AIT will be added extra).'
+                        vatTaxTerms: updateVatTaxString(termsForm.vatTaxTerms || '', '15%', '', 'EXCLUSIVE')
                       })}
                       className={`px-2 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                         termsForm.vatTaxTerms?.toLowerCase().includes('exclusive')
