@@ -2304,16 +2304,6 @@ export function BillInvoiceView({
                   <div style={{ marginBottom: '12px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
-                        {/* Multi-page continuation banner: repeats on every page automatically */}
-                        <tr className="print-continuation-banner" style={{ borderBottom: '1px solid #000', backgroundColor: '#f8fafc' }}>
-                          <th colSpan={challanShowPrices ? 8 : 6} style={{ padding: '4px 8px', textAlign: 'left', fontWeight: 'normal', fontSize: '10.5px', color: '#1e293b' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span><strong>GLOBO TECH</strong> &bull; Delivery Challan: <strong>DC/{activeBill.billNo.replace('GT/', '')}</strong></span>
-                              <span>Consignee: <strong>{activeBill.billToName}</strong></span>
-                              <span>Date: <strong>{activeBill.date}</strong></span>
-                            </div>
-                          </th>
-                        </tr>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
                           <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
                           <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', width: challanShowPrices ? '130px' : '180px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
@@ -2547,16 +2537,6 @@ export function BillInvoiceView({
                   <div style={{ marginBottom: '12px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
-                        {/* Multi-page continuation banner: repeats on every page automatically */}
-                        <tr className="print-continuation-banner" style={{ borderBottom: '1px solid #000', backgroundColor: '#f8fafc' }}>
-                          <th colSpan={7} style={{ padding: '4px 8px', textAlign: 'left', fontWeight: 'normal', fontSize: '10.5px', color: '#1e293b' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span><strong>GLOBO TECH</strong> &bull; Bill Invoice: <strong>{activeBill.billNo}</strong></span>
-                              <span>Client: <strong>{activeBill.billToName}</strong></span>
-                              <span>Date: <strong>{activeBill.date}</strong></span>
-                            </div>
-                          </th>
-                        </tr>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
                           <th style={{ borderRight: '1px solid #000', padding: '7px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
                           <th style={{ borderRight: '1px solid #000', padding: '7px 8px', textAlign: 'left', width: '125px', fontWeight: 'bold' }}>Item name</th>
