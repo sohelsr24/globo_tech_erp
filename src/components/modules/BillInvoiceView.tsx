@@ -2240,11 +2240,11 @@ export function BillInvoiceView({
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '160px' : '220px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SL</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: challanShowPrices ? '130px' : '180px', fontWeight: 'bold' }}>Item Name &amp; Part No</th>
                           <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description &amp; Serial Numbers (S/N)</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '50px', textAlign: 'center', fontWeight: 'bold' }}>Delivered Qty</th>
                           {challanShowPrices && (
                             <>
                               <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
@@ -2473,13 +2473,13 @@ export function BillInvoiceView({
                     <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', fontSize: '12px', color: '#000' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid #000', backgroundColor: '#fcfcfc' }}>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '38px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '165px', fontWeight: 'bold' }}>Item name</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Discription</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '55px', textAlign: 'center', fontWeight: 'bold' }}>Unite</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '45px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
-                          <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '95px', textAlign: 'right', fontWeight: 'bold' }}>Unite Price</th>
-                          <th style={{ padding: '8px 6px', width: '105px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '34px', textAlign: 'center', fontWeight: 'bold' }}>SN</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', width: '125px', fontWeight: 'bold' }}>Item name</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 8px', textAlign: 'left', fontWeight: 'bold' }}>Description</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '48px', textAlign: 'center', fontWeight: 'bold' }}>Unit</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 4px', width: '44px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
+                          <th style={{ borderRight: '1px solid #000', padding: '8px 6px', width: '90px', textAlign: 'right', fontWeight: 'bold' }}>Unit Price</th>
+                          <th style={{ padding: '8px 6px', width: '98px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
                         </tr>
                       </thead>
                       <tbody>
