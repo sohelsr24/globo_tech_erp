@@ -3235,7 +3235,33 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 {/* Warranty Support */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                    <div className="flex items-center gap-2">
+                      <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                      <div className="flex items-center gap-1 bg-slate-950 border border-slate-700/80 rounded px-1 py-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setNewQuote(prev => ({ ...prev, warrantyTerms: '1 Year Service Warranty (Without Parts)' }))}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                            newQuote.warrantyTerms === '1 Year Service Warranty (Without Parts)'
+                              ? 'bg-blue-600 text-white font-bold'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                          }`}
+                        >
+                          1Y Service (No Parts)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNewQuote(prev => ({ ...prev, warrantyTerms: '2 Years Service Warranty (Without Parts)' }))}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                            newQuote.warrantyTerms === '2 Years Service Warranty (Without Parts)'
+                              ? 'bg-blue-600 text-white font-bold'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                          }`}
+                        >
+                          2Y Service (No Parts)
+                        </button>
+                      </div>
+                    </div>
                     <select
                       onChange={(e) => {
                         if (e.target.value) {
@@ -3245,13 +3271,15 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
                       <option value="">Standard presets...</option>
+                      <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
+                      <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                       <option value="No Warranty">No Warranty</option>
                       <option value="No Warranty Applicable">No Warranty Applicable</option>
                       <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
                       <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
-                      <option value="3 Months Service Warranty">3 Months Service Warranty</option>
-                      <option value="6 Months Service Warranty">6 Months Service Warranty</option>
-                      <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
+                      <option value="3 Months Service Warranty (Without Parts)">3 Months Service Warranty (Without Parts)</option>
+                      <option value="6 Months Service Warranty (Without Parts)">6 Months Service Warranty (Without Parts)</option>
+                      <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty (With Parts)</option>
                       <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
                       <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
                       <option value="24 Months Comprehensive Hardware Replacement & On-site Support">24 Months On-site Support</option>
@@ -3263,7 +3291,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     value={newQuote.warrantyTerms || ''}
                     onChange={(e) => setNewQuote({ ...newQuote, warrantyTerms: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
-                    placeholder="e.g. 2 Years Comprehensive Hardware Replacement"
+                    placeholder="e.g. 1 Year Service Warranty (Without Parts)"
                   />
                 </div>
 
@@ -5119,19 +5147,47 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             {/* Warranty Support */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                <div className="flex items-center gap-2">
+                  <label className="text-slate-300 font-semibold">Warranty Support *</label>
+                  <div className="flex items-center gap-1 bg-slate-950 border border-slate-700/80 rounded px-1 py-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setTermsForm(prev => ({ ...prev, warrantyTerms: '1 Year Service Warranty (Without Parts)' }))}
+                      className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                        termsForm.warrantyTerms === '1 Year Service Warranty (Without Parts)'
+                          ? 'bg-blue-600 text-white font-bold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      1Y Service (No Parts)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTermsForm(prev => ({ ...prev, warrantyTerms: '2 Years Service Warranty (Without Parts)' }))}
+                      className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                        termsForm.warrantyTerms === '2 Years Service Warranty (Without Parts)'
+                          ? 'bg-blue-600 text-white font-bold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      2Y Service (No Parts)
+                    </button>
+                  </div>
+                </div>
                 <select
                   onChange={(e) => e.target.value && setTermsForm({ ...termsForm, warrantyTerms: e.target.value })}
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
+                  <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
+                  <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                   <option value="No Warranty">No Warranty</option>
                   <option value="No Warranty Applicable">No Warranty Applicable</option>
                   <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
                   <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
-                  <option value="3 Months Service Warranty">3 Months Service Warranty</option>
-                  <option value="6 Months Service Warranty">6 Months Service Warranty</option>
-                  <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty</option>
+                  <option value="3 Months Service Warranty (Without Parts)">3 Months Service Warranty (Without Parts)</option>
+                  <option value="6 Months Service Warranty (Without Parts)">6 Months Service Warranty (Without Parts)</option>
+                  <option value="1 Year Full Service & Support Warranty">1 Year Service Warranty (With Parts)</option>
                   <option value="2 Years Comprehensive Hardware Replacement">2 Years Hardware Replacement</option>
                   <option value="3 Years Manufacturer Hardware Warranty">3 Years Manufacturer Warranty</option>
                   <option value="24 Months Comprehensive Hardware Replacement & On-site Support">24 Months On-site Support</option>
