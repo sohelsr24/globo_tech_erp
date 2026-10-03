@@ -58,14 +58,20 @@ export function syncProductNameSkuAcrossAllModules(
           let updatedProjectName = q.projectName;
           if (oldNameClean && q.projectName) {
             const projClean = q.projectName.trim().toLowerCase();
-            if (projClean === oldNameClean.toLowerCase()) {
+            if (projClean === newNameClean.toLowerCase()) {
+              // Already updated to new name, do not alter
+            } else if (projClean === oldNameClean.toLowerCase()) {
               updatedProjectName = newNameClean;
               qModified = true;
-            } else if (projClean.includes(oldNameClean.toLowerCase())) {
+            } else if (projClean.includes(oldNameClean.toLowerCase()) && !projClean.includes(newNameClean.toLowerCase())) {
               const escaped = oldNameClean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
               updatedProjectName = q.projectName.replace(new RegExp(escaped, 'gi'), newNameClean);
               qModified = true;
             }
+          }
+          if (updatedProjectName && /Coat\s+Pin(\s+Box)+/i.test(updatedProjectName)) {
+            updatedProjectName = updatedProjectName.replace(/Coat\s+Pin(\s+Box)+/gi, 'Coat Pin Box');
+            qModified = true;
           }
 
           if (qModified) {
@@ -214,10 +220,21 @@ export function runCrossModuleSelfHealing(): void {
       if (Array.isArray(quotes)) {
         let modified = false;
         const healedQuotes = quotes.map((q: any) => {
+          let qChanged = false;
+          let updatedProj = q.projectName;
+          if (updatedProj && /Coat\s+Pin(\s+Box)+/i.test(updatedProj)) {
+            const clean = updatedProj.replace(/Coat\s+Pin(\s+Box)+/gi, 'Coat Pin Box');
+            if (clean !== updatedProj) {
+              updatedProj = clean;
+              qChanged = true;
+            }
+          }
+
           const isQuoteNoWarranty = /no\s*warranty|without\s*warranty/i.test(q.warrantyTerms || '');
+          let updatedItems = q.items;
           if (isQuoteNoWarranty && Array.isArray(q.items)) {
             let itemChanged = false;
-            const updatedItems = q.items.map((it: any) => {
+            updatedItems = q.items.map((it: any) => {
               if (it.warranty === '24 Months' || !it.warranty || it.warranty === 'N/A') {
                 itemChanged = true;
                 return { ...it, warranty: 'No Warranty' };
@@ -225,9 +242,13 @@ export function runCrossModuleSelfHealing(): void {
               return it;
             });
             if (itemChanged) {
-              modified = true;
-              return { ...q, items: updatedItems };
+              qChanged = true;
             }
+          }
+
+          if (qChanged) {
+            modified = true;
+            return { ...q, projectName: updatedProj, items: updatedItems };
           }
           return q;
         });

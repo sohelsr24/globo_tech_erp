@@ -4242,8 +4242,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <div style={{ fontWeight: 700, color: '#64748b', textTransform: 'uppercase', fontSize: '9.5px', letterSpacing: '0.3px', marginBottom: '3px' }}>
                             PROJECT & DELIVERY LOCATION:
                           </div>
-                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '12.5px', lineHeight: 1.25 }}>
-                            {selectedQuotation.projectName}
+                          <div className="font-extrabold text-[#0f172a] text-[12.5px] leading-tight">
+                            {(selectedQuotation.projectName || '').replace(/Coat\s+Pin(\s+Box)+/gi, 'Coat Pin Box')}
                           </div>
                           <div style={{ color: '#334155', fontSize: '10px', marginTop: '3px' }}>
                             Delivery Location: {selectedQuotation.projectLocation}
@@ -4273,14 +4273,15 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       const lineTotal = item.quantity * unitPriceWithTax;
                       const isQuoteNoWarranty = /no\s*warranty|without\s*warranty|no\s*guarantee/i.test(selectedQuotation.warrantyTerms || '');
 
+                      // If quotation has No Warranty, or item has No Warranty, do not print warranty in item description
                       const effectiveItemWarranty = (() => {
                         if (isQuoteNoWarranty) {
-                          return 'No Warranty';
+                          return '';
                         }
-                        if (item.warranty && item.warranty.trim() && !/no\s*warranty/i.test(item.warranty)) {
+                        if (item.warranty && !/no\s*warranty|without\s*warranty|none|n\/a/i.test(item.warranty.trim())) {
                           return item.warranty.trim();
                         }
-                        return selectedQuotation.warrantyTerms?.trim() || item.warranty || '';
+                        return '';
                       })();
 
                       const description = item.description && item.description.trim()
