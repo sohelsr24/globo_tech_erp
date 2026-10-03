@@ -928,6 +928,10 @@ img, video {
   max-width: 42rem;
 }
 
+.max-w-3xl {
+  max-width: 48rem;
+}
+
 .max-w-4xl {
   max-width: 56rem;
 }
@@ -1910,6 +1914,10 @@ img, video {
   background-color: #17255466;
 }
 
+.bg-blue-950\/50 {
+  background-color: #17255480;
+}
+
 .bg-blue-950\/60 {
   background-color: #17255499;
 }
@@ -2106,6 +2114,10 @@ img, video {
 
 .bg-rose-950\/30 {
   background-color: #4c05194d;
+}
+
+.bg-rose-950\/40 {
+  background-color: #4c051966;
 }
 
 .bg-rose-950\/50 {
@@ -3629,6 +3641,14 @@ button, a, input, select, textarea {
 .hover\:border-blue-500:hover {
   --tw-border-opacity: 1;
   border-color: rgb(59 130 246 / var(--tw-border-opacity, 1));
+}
+
+.hover\:border-blue-500\/50:hover {
+  border-color: #3b82f680;
+}
+
+.hover\:border-blue-500\/60:hover {
+  border-color: #3b82f699;
 }
 
 .hover\:border-cyan-600:hover {

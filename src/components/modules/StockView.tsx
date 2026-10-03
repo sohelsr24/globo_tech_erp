@@ -18,7 +18,11 @@ import {
   MinusCircle,
   TrendingDown,
   LayoutGrid,
-  List
+  List,
+  Edit2,
+  Trash2,
+  AlertTriangle,
+  Check
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -123,6 +127,26 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
   >('SALES_DELIVERY');
   const [decreaseRefDoc, setDecreaseRefDoc] = useState('');
   const [decreaseNotes, setDecreaseNotes] = useState('');
+
+  // Edit Stock Item State
+  const [isEditStockModalOpen, setIsEditStockModalOpen] = useState(false);
+  const [editingStockItem, setEditingStockItem] = useState<WarehouseStockItem | null>(null);
+  const [editWarehouseName, setEditWarehouseName] = useState('Main Warehouse (Tejgaon)');
+  const [editProductName, setEditProductName] = useState('');
+  const [editSku, setEditSku] = useState('');
+  const [editAvailable, setEditAvailable] = useState<number>(0);
+  const [editReserved, setEditReserved] = useState<number>(0);
+  const [editDamaged, setEditDamaged] = useState<number>(0);
+  const [editUnitLandedCost, setEditUnitLandedCost] = useState<number>(0);
+  const [editAuditReason, setEditAuditReason] = useState('');
+  const [editSyncProductCatalog, setEditSyncProductCatalog] = useState(true);
+
+  // Dedicated Product Name & SKU Quick Edit Modal State
+  const [isNameSkuModalOpen, setIsNameSkuModalOpen] = useState(false);
+  const [nameSkuEditingItem, setNameSkuEditingItem] = useState<WarehouseStockItem | null>(null);
+  const [nameSkuNewName, setNameSkuNewName] = useState('');
+  const [nameSkuNewSku, setNameSkuNewSku] = useState('');
+  const [nameSkuUpdateAllWarehouses, setNameSkuUpdateAllWarehouses] = useState(true);
 
   // Success Toast state
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -609,6 +633,355 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     );
   };
 
+  // 5. EDIT WAREHOUSE STOCK ITEM (স্টক আইটেম এডিট / সংশোধন)
+  const handleOpenEditStockModal = (item: WarehouseStockItem) => {
+    setEditingStockItem(item);
+    setEditWarehouseName(item.warehouseName);
+    setEditProductName(item.productName);
+    setEditSku(item.sku);
+    setEditAvailable(item.available);
+    setEditReserved(item.reserved || 0);
+    setEditDamaged(item.damaged || 0);
+    setEditUnitLandedCost(item.unitLandedCost || 0);
+    setEditAuditReason('');
+    setEditSyncProductCatalog(true);
+    setIsEditStockModalOpen(true);
+  };
+
+  const handleSaveStockEdit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!editingStockItem) return;
+
+    const trimmedName = editProductName.trim();
+    const trimmedSku = editSku.trim().toUpperCase();
+
+    if (!trimmedName || !trimmedSku) {
+      alert('Product Name and SKU Code are required.');
+      return;
+    }
+
+    const newAvailable = Math.max(0, Math.floor(Number(editAvailable) || 0));
+    const newReserved = Math.max(0, Math.floor(Number(editReserved) || 0));
+    const newDamaged = Math.max(0, Math.floor(Number(editDamaged) || 0));
+    const newLandedCost = Math.max(0, Number(editUnitLandedCost) || 0);
+
+    const oldAvailable = editingStockItem.available;
+    const oldWarehouse = editingStockItem.warehouseName;
+    const oldSku = editingStockItem.sku;
+    const oldName = editingStockItem.productName;
+    const oldCost = editingStockItem.unitLandedCost;
+
+    const deltaQty = newAvailable - oldAvailable;
+    const hasQtyChanged = deltaQty !== 0;
+    const hasWhChanged = editWarehouseName !== oldWarehouse;
+    const hasCostChanged = newLandedCost !== oldCost;
+    const hasSkuOrNameChanged = trimmedSku !== oldSku || trimmedName !== oldName;
+
+    // 1. Update warehouse stock
+    const updatedStock = warehouseStock.map((s) => {
+      if (s.id === editingStockItem.id) {
+        return {
+          ...s,
+          warehouseName: editWarehouseName,
+          productName: trimmedName,
+          sku: trimmedSku,
+          available: newAvailable,
+          reserved: newReserved,
+          damaged: newDamaged,
+          unitLandedCost: newLandedCost
+        };
+      }
+      return s;
+    });
+
+    setWarehouseStock(updatedStock);
+    saveStoredWarehouseStock(updatedStock);
+
+    // 2. Synchronize with Product Catalog if enabled
+    let updatedProducts = [...products];
+    if (editSyncProductCatalog) {
+      const matchingProductIndex = products.findIndex(
+        (p) => p.sku === oldSku || p.sku === trimmedSku
+      );
+
+      const totalStockForProd = updatedStock
+        .filter((s) => s.sku === trimmedSku)
+        .reduce((sum, s) => sum + s.available, 0);
+
+      if (matchingProductIndex >= 0) {
+        updatedProducts = products.map((p, idx) => {
+          if (idx === matchingProductIndex) {
+            return {
+              ...p,
+              name: trimmedName,
+              sku: trimmedSku,
+              stock: totalStockForProd,
+              currentLandedCost: newLandedCost > 0 ? newLandedCost : p.currentLandedCost
+            };
+          }
+          return p;
+        });
+      } else {
+        const newCatalogProd: ProductItem = {
+          id: `PRD-${Date.now().toString().slice(-5)}`,
+          sku: trimmedSku,
+          barcode: `880${Math.floor(100000000 + Math.random() * 900000000)}`,
+          name: trimmedName,
+          category: 'CCTV & Surveillance',
+          brand: 'Globo Tech',
+          unit: 'pcs',
+          stock: totalStockForProd,
+          minStock: 10,
+          purchasePriceCNY: 0,
+          currentLandedCost: newLandedCost,
+          retailPrice: Math.round(newLandedCost * 1.5),
+          wholesalePrice: Math.round(newLandedCost * 1.35),
+          projectPrice: Math.round(newLandedCost * 1.25),
+          dealerPrice: Math.round(newLandedCost * 1.2),
+          isSerialTracked: false
+        };
+        updatedProducts = [newCatalogProd, ...products];
+      }
+      setProducts(updatedProducts);
+      saveStoredProducts(updatedProducts);
+    }
+
+    // 3. Create Audit Ledger Record if relevant data changed
+    let updatedLedger = [...ledger];
+    if (hasQtyChanged || hasWhChanged || hasCostChanged || hasSkuOrNameChanged) {
+      const nowTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+      const auditRef = `AUDIT-EDIT-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      let auditNote = editAuditReason.trim();
+      if (!auditNote) {
+        const changes: string[] = [];
+        if (hasQtyChanged) changes.push(`Stock: ${oldAvailable} → ${newAvailable} pcs (${deltaQty > 0 ? '+' : ''}${deltaQty})`);
+        if (hasWhChanged) changes.push(`Warehouse: ${oldWarehouse} → ${editWarehouseName}`);
+        if (hasCostChanged) changes.push(`Cost: ৳${oldCost} → ৳${newLandedCost}`);
+        if (trimmedName !== oldName) changes.push(`Name: "${oldName}" → "${trimmedName}"`);
+        if (trimmedSku !== oldSku) changes.push(`SKU: ${oldSku} → ${trimmedSku}`);
+        auditNote = `Stock Record Edit: ${changes.join(', ')}`;
+      }
+
+      const auditRecord: StockLedgerRecord = {
+        id: `led-${Date.now()}`,
+        timestamp: nowTime,
+        productName: trimmedName,
+        warehouseName: editWarehouseName,
+        movementType: 'AUDIT_CORRECTION',
+        quantityDelta: deltaQty,
+        balanceAfter: newAvailable,
+        unitLandedCost: newLandedCost,
+        referenceId: auditRef,
+        reasonNotes: auditNote
+      };
+
+      updatedLedger = [auditRecord, ...ledger];
+      setLedger(updatedLedger);
+      saveStoredStockLedger(updatedLedger);
+    }
+
+    // 4. Trigger global dispatch events
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
+      window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
+      window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+    }
+
+    setIsEditStockModalOpen(false);
+    setEditingStockItem(null);
+    showToast(`✓ Stock item "${trimmedName}" updated successfully!`);
+  };
+
+  const handleDeleteStockItem = (item: WarehouseStockItem) => {
+    if (
+      !confirm(
+        `Are you sure you want to remove "${item.productName}" (${item.sku}) from ${item.warehouseName}?\n\nThis stock record will be deleted from the warehouse.`
+      )
+    ) {
+      return;
+    }
+
+    const updatedStock = warehouseStock.filter((s) => s.id !== item.id);
+    setWarehouseStock(updatedStock);
+    saveStoredWarehouseStock(updatedStock);
+
+    // If available stock > 0, log write-off in ledger
+    let updatedLedger = [...ledger];
+    if (item.available > 0) {
+      const deleteLedgerEntry: StockLedgerRecord = {
+        id: `led-${Date.now()}`,
+        timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+        productName: item.productName,
+        warehouseName: item.warehouseName,
+        movementType: 'DAMAGED_WRITE_OFF',
+        quantityDelta: -item.available,
+        balanceAfter: 0,
+        unitLandedCost: item.unitLandedCost,
+        referenceId: `DEL-${Math.floor(1000 + Math.random() * 9000)}`,
+        reasonNotes: `Item removed from ${item.warehouseName} by administrator.`
+      };
+      updatedLedger = [deleteLedgerEntry, ...ledger];
+      setLedger(updatedLedger);
+      saveStoredStockLedger(updatedLedger);
+    }
+
+    // Recalculate catalog stock
+    const matchingProd = products.find((p) => p.sku === item.sku);
+    let updatedProducts = [...products];
+    if (matchingProd) {
+      const remainingTotal = updatedStock
+        .filter((s) => s.sku === item.sku)
+        .reduce((sum, s) => sum + s.available, 0);
+
+      updatedProducts = products.map((p) =>
+        p.id === matchingProd.id ? { ...p, stock: remainingTotal } : p
+      );
+      setProducts(updatedProducts);
+      saveStoredProducts(updatedProducts);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
+      window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
+      window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+    }
+
+    setIsEditStockModalOpen(false);
+    setEditingStockItem(null);
+    showToast(`✓ Stock record "${item.productName}" removed from ${item.warehouseName}.`);
+  };
+
+  // 6. QUICK EDIT PRODUCT NAME & SKU ONLY (নাম ও SKU পরিবর্তন)
+  const handleOpenNameSkuModal = (item: WarehouseStockItem) => {
+    setNameSkuEditingItem(item);
+    setNameSkuNewName(item.productName);
+    setNameSkuNewSku(item.sku);
+    setNameSkuUpdateAllWarehouses(true);
+    setIsNameSkuModalOpen(true);
+  };
+
+  const handleSaveNameSku = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!nameSkuEditingItem) return;
+
+    const trimmedName = nameSkuNewName.trim();
+    const trimmedSku = nameSkuNewSku.trim().toUpperCase();
+
+    if (!trimmedName) {
+      alert('Product Name cannot be empty (পণ্যের নাম খালি রাখা যাবে না)।');
+      return;
+    }
+    if (!trimmedSku) {
+      alert('SKU Code cannot be empty (SKU কোড খালি রাখা যাবে না)।');
+      return;
+    }
+
+    const oldName = nameSkuEditingItem.productName;
+    const oldSku = nameSkuEditingItem.sku;
+
+    if (trimmedName === oldName && trimmedSku === oldSku) {
+      setIsNameSkuModalOpen(false);
+      setNameSkuEditingItem(null);
+      return;
+    }
+
+    // 1. Update warehouse stock
+    const updatedStock = warehouseStock.map((s) => {
+      if (nameSkuUpdateAllWarehouses) {
+        if (s.sku === oldSku || s.id === nameSkuEditingItem.id) {
+          return {
+            ...s,
+            productName: trimmedName,
+            sku: trimmedSku
+          };
+        }
+      } else {
+        if (s.id === nameSkuEditingItem.id) {
+          return {
+            ...s,
+            productName: trimmedName,
+            sku: trimmedSku
+          };
+        }
+      }
+      return s;
+    });
+
+    setWarehouseStock(updatedStock);
+    saveStoredWarehouseStock(updatedStock);
+
+    // 2. Synchronize with Product Catalog (products)
+    const matchingProdIndex = products.findIndex((p) => p.sku === oldSku);
+    let updatedProducts = [...products];
+
+    if (matchingProdIndex >= 0) {
+      updatedProducts = products.map((p, idx) =>
+        idx === matchingProdIndex
+          ? {
+              ...p,
+              name: trimmedName,
+              sku: trimmedSku
+            }
+          : p
+      );
+      setProducts(updatedProducts);
+      saveStoredProducts(updatedProducts);
+    } else {
+      const newProd: ProductItem = {
+        id: `PRD-${Date.now().toString().slice(-5)}`,
+        sku: trimmedSku,
+        barcode: `880${Math.floor(100000000 + Math.random() * 900000000)}`,
+        name: trimmedName,
+        category: 'CCTV & Surveillance',
+        brand: 'Globo Tech',
+        unit: 'pcs',
+        stock: nameSkuEditingItem.available,
+        minStock: 10,
+        purchasePriceCNY: 0,
+        currentLandedCost: nameSkuEditingItem.unitLandedCost,
+        retailPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.5),
+        wholesalePrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.35),
+        projectPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.25),
+        dealerPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.2),
+        isSerialTracked: false
+      };
+      updatedProducts = [newProd, ...products];
+      setProducts(updatedProducts);
+      saveStoredProducts(updatedProducts);
+    }
+
+    // 3. Create Audit Ledger Record
+    const nowTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const auditRecord: StockLedgerRecord = {
+      id: `led-${Date.now()}`,
+      timestamp: nowTime,
+      productName: trimmedName,
+      warehouseName: nameSkuEditingItem.warehouseName,
+      movementType: 'AUDIT_CORRECTION',
+      quantityDelta: 0,
+      balanceAfter: nameSkuEditingItem.available,
+      unitLandedCost: nameSkuEditingItem.unitLandedCost,
+      referenceId: `REN-${Math.floor(1000 + Math.random() * 9000)}`,
+      reasonNotes: `Renamed item: "${oldName}" [${oldSku}] → "${trimmedName}" [${trimmedSku}]`
+    };
+
+    const updatedLedger = [auditRecord, ...ledger];
+    setLedger(updatedLedger);
+    saveStoredStockLedger(updatedLedger);
+
+    // 4. Dispatch events
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
+      window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
+      window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+    }
+
+    setIsNameSkuModalOpen(false);
+    setNameSkuEditingItem(null);
+    showToast(`✓ Product Name & SKU updated: "${trimmedName}" (${trimmedSku})`);
+  };
+
   const selectedDecreaseStock = warehouseStock.find((s) => s.id === decreaseStockItemId);
 
   // Filtered Stock Items
@@ -885,12 +1258,25 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                           </div>
                         </div>
 
-                        {/* Product Name & SKU */}
-                        <h3 className="font-bold text-slate-100 text-sm leading-snug line-clamp-2">
-                          {st.productName}
-                        </h3>
-                        <div className="font-mono text-xs text-blue-400 mt-1 font-semibold">
-                          {st.sku}
+                        {/* Product Name & SKU with Quick Edit Button */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-slate-100 text-sm leading-snug line-clamp-2">
+                              {st.productName}
+                            </h3>
+                            <div className="font-mono text-xs text-blue-400 mt-1 font-semibold">
+                              {st.sku}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenNameSkuModal(st)}
+                            className="flex-shrink-0 px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[11px] font-semibold flex items-center gap-1 transition active:scale-95"
+                            title="Edit Product Name & SKU"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
                         </div>
                       </div>
 
@@ -919,7 +1305,15 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                       </div>
 
                       {/* Quick action buttons with 42px touch targets */}
-                      <div className="flex items-center gap-2 pt-1 border-t border-slate-800/80">
+                      <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80">
+                        <button
+                          onClick={() => handleOpenEditStockModal(st)}
+                          className="min-h-[40px] py-1.5 px-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-semibold transition active:scale-95 border border-blue-500/30 flex items-center justify-center gap-1"
+                          title="Edit Stock Item (নাম, SKU, পরিমাণ, গুদাম বা রেট পরিবর্তন)"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Edit</span>
+                        </button>
                         <button
                           onClick={() => {
                             const found = products.find((p) => p.sku === st.sku);
@@ -930,14 +1324,16 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                             setGrnWarehouse(st.warehouseName);
                             setIsGrnModalOpen(true);
                           }}
-                          className="flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 border border-slate-700 flex items-center justify-center gap-1.5"
+                          className="min-h-[40px] py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 border border-slate-700 flex items-center justify-center gap-1"
+                          title="Receive / Add more stock"
                         >
                           <Plus className="w-3.5 h-3.5 text-emerald-400" />
-                          <span>Add Stock</span>
+                          <span>Add</span>
                         </button>
                         <button
                           onClick={() => handleOpenDecreaseModal(st)}
-                          className="flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition active:scale-95 border border-rose-500/30 flex items-center justify-center gap-1.5"
+                          className="min-h-[40px] py-1.5 px-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition active:scale-95 border border-rose-500/30 flex items-center justify-center gap-1"
+                          title="Deduct or decrease stock"
                         >
                           <MinusCircle className="w-3.5 h-3.5 text-rose-400" />
                           <span>Deduct</span>
@@ -1005,8 +1401,27 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                             </span>
                           </td>
                           <td className="py-3 px-4 font-sans max-w-xs">
-                            <div className="font-semibold text-slate-100">{st.productName}</div>
-                            <div className="text-[10px] font-mono text-slate-400">{st.sku}</div>
+                            <div className="flex items-start justify-between gap-2 group">
+                              <div className="flex-1 min-w-0 pr-1">
+                                <div className="font-semibold text-slate-100 leading-tight">
+                                  {st.productName}
+                                </div>
+                                <div className="text-[10px] font-mono text-slate-400 mt-1 flex items-center gap-1.5">
+                                  <span className="bg-slate-800/90 text-blue-400 font-semibold px-1.5 py-0.5 rounded border border-slate-700/60">
+                                    {st.sku}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenNameSkuModal(st)}
+                                className="flex-shrink-0 px-2 py-1 rounded-md bg-blue-600/15 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 border border-blue-500/30 hover:border-blue-500/60 text-[11px] font-semibold inline-flex items-center gap-1 transition active:scale-95 shadow-sm"
+                                title="Edit Product Name & SKU Code (নাম ও SKU পরিবর্তন করুন)"
+                              >
+                                <Edit2 className="w-3 h-3 text-blue-400" />
+                                <span>Edit</span>
+                              </button>
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-center font-bold text-sm">
                             <span className={isLow ? 'text-amber-400' : 'text-emerald-400'}>
@@ -1036,6 +1451,14 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                           </td>
                           <td className="py-3 px-4 text-center">
                             <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleOpenEditStockModal(st)}
+                                className="px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-[11px] font-semibold transition active:scale-95 border border-blue-500/30 hover:border-blue-500/50 inline-flex items-center gap-1"
+                                title="Edit Stock Item (নাম, SKU, পরিমাণ, গুদাম বা রেট পরিবর্তন)"
+                              >
+                                <Edit2 className="w-3 h-3 text-blue-400" />
+                                <span>Edit</span>
+                              </button>
                               <button
                                 onClick={() => {
                                   const found = products.find((p) => p.sku === st.sku);
@@ -2053,6 +2476,370 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
               >
                 <MinusCircle className="w-3.5 h-3.5" />
                 <span>Confirm Stock Deduction (স্টক কমান)</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL 5: EDIT WAREHOUSE STOCK ITEM (স্টক আইটেম এডিট / সংশোধন)
+          ======================================================== */}
+      {isEditStockModalOpen && editingStockItem && (
+        <Modal
+          isOpen={isEditStockModalOpen}
+          onClose={() => {
+            setIsEditStockModalOpen(false);
+            setEditingStockItem(null);
+          }}
+          title={`Edit Stock Record: ${editingStockItem.productName}`}
+          maxWidth="2xl"
+        >
+          <form onSubmit={handleSaveStockEdit} className="space-y-4 text-xs">
+            {/* Context Header Badge */}
+            <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Warehouse className="w-4 h-4 text-blue-400" />
+                <span className="font-semibold text-slate-200">{editingStockItem.warehouseName}</span>
+              </div>
+              <div className="font-mono text-xs text-blue-400 bg-blue-950/50 px-2.5 py-0.5 rounded border border-blue-800/60 font-semibold">
+                SKU: {editingStockItem.sku}
+              </div>
+            </div>
+
+            {/* Section 1: Product Identification */}
+            <div className="space-y-3">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1">
+                1. Product Identification & Warehouse Location
+              </h4>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">
+                  Product Name (পণ্যের নাম) <span className="text-rose-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={editProductName}
+                  onChange={(e) => setEditProductName(e.target.value)}
+                  placeholder="Enter product title..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    SKU Code (এসকেইউ কোড) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editSku}
+                    onChange={(e) => setEditSku(e.target.value.toUpperCase())}
+                    placeholder="e.g. BOOKPMT, COATPIN"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono text-xs uppercase focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Assigned Warehouse (গুদাম অবস্থান) <span className="text-rose-400">*</span>
+                  </label>
+                  <select
+                    value={editWarehouseName}
+                    onChange={(e) => setEditWarehouseName(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
+                  >
+                    {WAREHOUSE_OPTIONS.map((wh) => (
+                      <option key={wh} value={wh}>
+                        {wh}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Stock Quantities & Inventory Adjustment */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  2. Stock Inventory Balances (মজুদ পরিমাণ)
+                </h4>
+                <span className="text-[11px] text-slate-400">Current in store: <strong className="text-slate-200">{editingStockItem.available} pcs</strong></span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Available Stock (ব্যবহারযোগ্য মজুদ) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editAvailable}
+                    onChange={(e) => setEditAvailable(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-emerald-400 font-bold text-sm focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Reserved Stock (অর্ডারে সংরক্ষিত)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editReserved}
+                    onChange={(e) => setEditReserved(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 font-semibold text-xs focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Damaged Stock (ত্রুটিপূর্ণ / নষ্ট)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editDamaged}
+                    onChange={(e) => setEditDamaged(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-rose-400 font-semibold text-xs focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic Delta Notification */}
+              {editAvailable !== editingStockItem.available && (
+                <div className={`p-2.5 rounded-lg border text-xs flex items-center justify-between ${
+                  editAvailable > editingStockItem.available
+                    ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
+                    : 'bg-rose-950/40 border-rose-800 text-rose-300'
+                }`}>
+                  <span className="flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>
+                      Stock Count Change: <strong>{editingStockItem.available} pcs</strong> → <strong>{editAvailable} pcs</strong>
+                    </span>
+                  </span>
+                  <span className="font-bold">
+                    Delta: {editAvailable - editingStockItem.available > 0 ? `+${editAvailable - editingStockItem.available}` : editAvailable - editingStockItem.available} pcs
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Section 3: Landed Cost & Valuation */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1">
+                3. Cost & Valuation (ক্রয়মূল্য ও মূল্যায়ন)
+              </h4>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-300 font-semibold mb-1">
+                    Unit Landed Cost (একক খরচ - ৳ BDT) <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editUnitLandedCost}
+                    onChange={(e) => setEditUnitLandedCost(Math.max(0, Number(e.target.value)))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-blue-400 font-bold text-sm focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 font-semibold mb-1">
+                    Total Inventory Valuation (মোট মূল্য)
+                  </label>
+                  <div className="w-full bg-slate-950 border border-slate-800/80 rounded-lg p-2.5 text-slate-100 font-bold text-sm flex items-center justify-between">
+                    <span className="text-xs text-slate-400">{editAvailable} pcs × ৳{editUnitLandedCost} =</span>
+                    <span className="text-blue-400 font-bold">{Formatters.currency(editAvailable * editUnitLandedCost)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Audit Reason & Catalog Sync */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1">
+                4. Audit Note & System Synchronization
+              </h4>
+
+              <div>
+                <label className="block text-slate-300 font-semibold mb-1">
+                  Audit Reason / Edit Note (সংশোধনের কারণ বা বিবরণ - ঐচ্ছিক)
+                </label>
+                <input
+                  type="text"
+                  value={editAuditReason}
+                  onChange={(e) => setEditAuditReason(e.target.value)}
+                  placeholder="e.g. Physical inventory audit adjustment, typo correction in name..."
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 text-xs focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editSyncProductCatalog}
+                  onChange={(e) => setEditSyncProductCatalog(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
+                />
+                <div>
+                  <span className="text-slate-200 font-semibold block text-xs">
+                    Sync changes with Master Product Catalog (প্রোডাক্ট ক্যাটালগেও আপডেট করুন)
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Keep product name, SKU, landed cost, and total catalog stock synchronized across the ERP suite.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleDeleteStockItem(editingStockItem)}
+                className="px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 min-h-[42px]"
+                title="Permanently remove this stock record from the warehouse"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                <span>Delete Item (মুছে ফেলুন)</span>
+              </button>
+
+              <div className="flex items-center gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditStockModalOpen(false);
+                    setEditingStockItem(null);
+                  }}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold min-h-[42px] transition active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Save Changes (সংরক্ষণ করুন)</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================
+          MODAL 6: QUICK EDIT PRODUCT NAME & SKU (পণ্যের নাম ও SKU পরিবর্তন)
+          ======================================================== */}
+      {isNameSkuModalOpen && nameSkuEditingItem && (
+        <Modal
+          isOpen={isNameSkuModalOpen}
+          onClose={() => {
+            setIsNameSkuModalOpen(false);
+            setNameSkuEditingItem(null);
+          }}
+          title="Edit Product Name & SKU Code (পণ্যের নাম ও SKU সংশোধন)"
+          maxWidth="lg"
+        >
+          <form onSubmit={handleSaveNameSku} className="space-y-4 text-xs">
+            {/* Current Item Info Box */}
+            <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-medium">Warehouse Store:</span>
+                <span className="text-slate-200 font-semibold flex items-center gap-1">
+                  <Warehouse className="w-3.5 h-3.5 text-blue-400" />
+                  <span>{nameSkuEditingItem.warehouseName}</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-900">
+                <span className="text-slate-400 font-medium">Current Stock Balance:</span>
+                <span className="text-emerald-400 font-bold">{nameSkuEditingItem.available} pcs</span>
+              </div>
+            </div>
+
+            {/* Product Name Input */}
+            <div>
+              <label className="block text-slate-200 font-semibold mb-1">
+                Product Name (পণ্যের নাম) <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={nameSkuNewName}
+                onChange={(e) => setNameSkuNewName(e.target.value)}
+                placeholder="Enter full product name..."
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs font-medium focus:border-blue-500 focus:outline-none"
+                autoFocus
+                required
+              />
+            </div>
+
+            {/* SKU Input */}
+            <div>
+              <label className="block text-slate-200 font-semibold mb-1">
+                SKU Code (ইউনিক এসকেইউ কোড) <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={nameSkuNewSku}
+                onChange={(e) => setNameSkuNewSku(e.target.value.toUpperCase())}
+                placeholder="e.g. BOOKPMT, COATPINTRANSP"
+                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-blue-400 font-mono text-xs font-bold uppercase focus:border-blue-500 focus:outline-none"
+                required
+              />
+              <p className="text-[11px] text-slate-400 mt-1">
+                SKU is the unique product identification code used across quotations, invoices, and stock audit.
+              </p>
+            </div>
+
+            {/* Sync Option Checkbox */}
+            <div className="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={nameSkuUpdateAllWarehouses}
+                  onChange={(e) => setNameSkuUpdateAllWarehouses(e.target.checked)}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700 mt-0.5"
+                />
+                <div>
+                  <span className="text-slate-200 font-semibold block text-xs">
+                    Update across all Warehouses & Master Product Catalog (সকল গুদাম ও মূল ক্যাটালগে আপডেট করুন)
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">
+                    Recommended. Automatically updates this product's name and SKU code in all stores and in the main product catalog.
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsNameSkuModalOpen(false);
+                  setNameSkuEditingItem(null);
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold min-h-[42px] transition active:scale-95"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Save Name & SKU (সংরক্ষণ করুন)</span>
               </button>
             </div>
           </form>

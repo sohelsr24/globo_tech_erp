@@ -7416,14 +7416,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                         left: 0,
                                         right: 0,
                                         bottom: 0,
-                                        opacity: 0.07
+                                        opacity: 0.14
                                     },
                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
                                         src: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$brandAssets$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GLOBO_TECH_LOGO_DATA_URL"],
                                         alt: "Globo Tech Watermark",
                                         style: {
-                                            width: '320px',
-                                            maxWidth: '80%',
+                                            width: '440px',
+                                            maxWidth: '82%',
                                             objectFit: 'contain'
                                         }
                                     }, void 0, false, {
@@ -7703,8 +7703,8 @@ function QuotationView({ onNavigateTab } = {}) {
                                             style: {
                                                 width: '100%',
                                                 borderCollapse: 'collapse',
-                                                backgroundColor: '#f8fafc',
-                                                border: '1px solid #e2e8f0',
+                                                backgroundColor: 'transparent',
+                                                border: '1px solid #cbd5e1',
                                                 borderRadius: '6px',
                                                 marginBottom: '10px',
                                                 fontSize: '10.5px'
@@ -7906,7 +7906,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("thead", {
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                         style: {
-                                                            backgroundColor: '#ffffff'
+                                                            backgroundColor: 'transparent'
                                                         },
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -8029,7 +8029,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         ].filter(Boolean).join('\n') || '--';
                                                         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                             style: {
-                                                                backgroundColor: '#ffffff'
+                                                                backgroundColor: 'transparent'
                                                             },
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8188,7 +8188,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         padding: '8px 12px',
                                                                         border: '1px solid #cbd5e1',
                                                                         borderRadius: '6px',
-                                                                        backgroundColor: '#f8fafc',
+                                                                        backgroundColor: 'transparent',
                                                                         fontSize: '10px',
                                                                         lineHeight: 1.4
                                                                     },

@@ -21,6 +21,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trending$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__TrendingDown$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/trending-down.js [app-client] (ecmascript) <export default as TrendingDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$grid$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutGrid$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/layout-grid.js [app-client] (ecmascript) <export default as LayoutGrid>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__List$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/list.js [app-client] (ecmascript) <export default as List>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/pen.js [app-client] (ecmascript) <export default as Edit2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/trash-2.js [app-client] (ecmascript) <export default as Trash2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/triangle-alert.js [app-client] (ecmascript) <export default as AlertTriangle>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__ = __turbopack_import__("[project]/node_modules/lucide-react/dist/esm/icons/check.js [app-client] (ecmascript) <export default as Check>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/ui/Badge.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/ui/Modal.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/lib/formatters.ts [app-client] (ecmascript)");
@@ -112,6 +116,24 @@ function StockView({ globalSearchQuery } = {}) {
     const [decreaseReason, setDecreaseReason] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('SALES_DELIVERY');
     const [decreaseRefDoc, setDecreaseRefDoc] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [decreaseNotes, setDecreaseNotes] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    // Edit Stock Item State
+    const [isEditStockModalOpen, setIsEditStockModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [editingStockItem, setEditingStockItem] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [editWarehouseName, setEditWarehouseName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('Main Warehouse (Tejgaon)');
+    const [editProductName, setEditProductName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editSku, setEditSku] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editAvailable, setEditAvailable] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [editReserved, setEditReserved] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [editDamaged, setEditDamaged] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [editUnitLandedCost, setEditUnitLandedCost] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(0);
+    const [editAuditReason, setEditAuditReason] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editSyncProductCatalog, setEditSyncProductCatalog] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
+    // Dedicated Product Name & SKU Quick Edit Modal State
+    const [isNameSkuModalOpen, setIsNameSkuModalOpen] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [nameSkuEditingItem, setNameSkuEditingItem] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [nameSkuNewName, setNameSkuNewName] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [nameSkuNewSku, setNameSkuNewSku] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [nameSkuUpdateAllWarehouses, setNameSkuUpdateAllWarehouses] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     // Success Toast state
     const [toastMsg, setToastMsg] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
     const showToast = (msg)=>{
@@ -544,6 +566,346 @@ function StockView({ globalSearchQuery } = {}) {
         }
         showToast(`✓ Successfully decreased -${qtyToDeduct} pcs of "${targetStock.productName}" from ${targetStock.warehouseName}! New balance: ${newAvailable} pcs.`);
     };
+    // 5. EDIT WAREHOUSE STOCK ITEM (স্টক আইটেম এডিট / সংশোধন)
+    const handleOpenEditStockModal = (item)=>{
+        setEditingStockItem(item);
+        setEditWarehouseName(item.warehouseName);
+        setEditProductName(item.productName);
+        setEditSku(item.sku);
+        setEditAvailable(item.available);
+        setEditReserved(item.reserved || 0);
+        setEditDamaged(item.damaged || 0);
+        setEditUnitLandedCost(item.unitLandedCost || 0);
+        setEditAuditReason('');
+        setEditSyncProductCatalog(true);
+        setIsEditStockModalOpen(true);
+    };
+    const handleSaveStockEdit = (e)=>{
+        if (e) e.preventDefault();
+        if (!editingStockItem) return;
+        const trimmedName = editProductName.trim();
+        const trimmedSku = editSku.trim().toUpperCase();
+        if (!trimmedName || !trimmedSku) {
+            alert('Product Name and SKU Code are required.');
+            return;
+        }
+        const newAvailable = Math.max(0, Math.floor(Number(editAvailable) || 0));
+        const newReserved = Math.max(0, Math.floor(Number(editReserved) || 0));
+        const newDamaged = Math.max(0, Math.floor(Number(editDamaged) || 0));
+        const newLandedCost = Math.max(0, Number(editUnitLandedCost) || 0);
+        const oldAvailable = editingStockItem.available;
+        const oldWarehouse = editingStockItem.warehouseName;
+        const oldSku = editingStockItem.sku;
+        const oldName = editingStockItem.productName;
+        const oldCost = editingStockItem.unitLandedCost;
+        const deltaQty = newAvailable - oldAvailable;
+        const hasQtyChanged = deltaQty !== 0;
+        const hasWhChanged = editWarehouseName !== oldWarehouse;
+        const hasCostChanged = newLandedCost !== oldCost;
+        const hasSkuOrNameChanged = trimmedSku !== oldSku || trimmedName !== oldName;
+        // 1. Update warehouse stock
+        const updatedStock = warehouseStock.map((s)=>{
+            if (s.id === editingStockItem.id) {
+                return {
+                    ...s,
+                    warehouseName: editWarehouseName,
+                    productName: trimmedName,
+                    sku: trimmedSku,
+                    available: newAvailable,
+                    reserved: newReserved,
+                    damaged: newDamaged,
+                    unitLandedCost: newLandedCost
+                };
+            }
+            return s;
+        });
+        setWarehouseStock(updatedStock);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredWarehouseStock"])(updatedStock);
+        // 2. Synchronize with Product Catalog if enabled
+        let updatedProducts = [
+            ...products
+        ];
+        if (editSyncProductCatalog) {
+            const matchingProductIndex = products.findIndex((p)=>p.sku === oldSku || p.sku === trimmedSku);
+            const totalStockForProd = updatedStock.filter((s)=>s.sku === trimmedSku).reduce((sum, s)=>sum + s.available, 0);
+            if (matchingProductIndex >= 0) {
+                updatedProducts = products.map((p, idx)=>{
+                    if (idx === matchingProductIndex) {
+                        return {
+                            ...p,
+                            name: trimmedName,
+                            sku: trimmedSku,
+                            stock: totalStockForProd,
+                            currentLandedCost: newLandedCost > 0 ? newLandedCost : p.currentLandedCost
+                        };
+                    }
+                    return p;
+                });
+            } else {
+                const newCatalogProd = {
+                    id: `PRD-${Date.now().toString().slice(-5)}`,
+                    sku: trimmedSku,
+                    barcode: `880${Math.floor(100000000 + Math.random() * 900000000)}`,
+                    name: trimmedName,
+                    category: 'CCTV & Surveillance',
+                    brand: 'Globo Tech',
+                    unit: 'pcs',
+                    stock: totalStockForProd,
+                    minStock: 10,
+                    purchasePriceCNY: 0,
+                    currentLandedCost: newLandedCost,
+                    retailPrice: Math.round(newLandedCost * 1.5),
+                    wholesalePrice: Math.round(newLandedCost * 1.35),
+                    projectPrice: Math.round(newLandedCost * 1.25),
+                    dealerPrice: Math.round(newLandedCost * 1.2),
+                    isSerialTracked: false
+                };
+                updatedProducts = [
+                    newCatalogProd,
+                    ...products
+                ];
+            }
+            setProducts(updatedProducts);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredProducts"])(updatedProducts);
+        }
+        // 3. Create Audit Ledger Record if relevant data changed
+        let updatedLedger = [
+            ...ledger
+        ];
+        if (hasQtyChanged || hasWhChanged || hasCostChanged || hasSkuOrNameChanged) {
+            const nowTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            const auditRef = `AUDIT-EDIT-${Math.floor(1000 + Math.random() * 9000)}`;
+            let auditNote = editAuditReason.trim();
+            if (!auditNote) {
+                const changes = [];
+                if (hasQtyChanged) changes.push(`Stock: ${oldAvailable} → ${newAvailable} pcs (${deltaQty > 0 ? '+' : ''}${deltaQty})`);
+                if (hasWhChanged) changes.push(`Warehouse: ${oldWarehouse} → ${editWarehouseName}`);
+                if (hasCostChanged) changes.push(`Cost: ৳${oldCost} → ৳${newLandedCost}`);
+                if (trimmedName !== oldName) changes.push(`Name: "${oldName}" → "${trimmedName}"`);
+                if (trimmedSku !== oldSku) changes.push(`SKU: ${oldSku} → ${trimmedSku}`);
+                auditNote = `Stock Record Edit: ${changes.join(', ')}`;
+            }
+            const auditRecord = {
+                id: `led-${Date.now()}`,
+                timestamp: nowTime,
+                productName: trimmedName,
+                warehouseName: editWarehouseName,
+                movementType: 'AUDIT_CORRECTION',
+                quantityDelta: deltaQty,
+                balanceAfter: newAvailable,
+                unitLandedCost: newLandedCost,
+                referenceId: auditRef,
+                reasonNotes: auditNote
+            };
+            updatedLedger = [
+                auditRecord,
+                ...ledger
+            ];
+            setLedger(updatedLedger);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredStockLedger"])(updatedLedger);
+        }
+        // 4. Trigger global dispatch events
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('globotech_stock_updated', {
+                detail: updatedStock
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_products_updated', {
+                detail: updatedProducts
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_ledger_updated', {
+                detail: updatedLedger
+            }));
+        }
+        setIsEditStockModalOpen(false);
+        setEditingStockItem(null);
+        showToast(`✓ Stock item "${trimmedName}" updated successfully!`);
+    };
+    const handleDeleteStockItem = (item)=>{
+        if (!confirm(`Are you sure you want to remove "${item.productName}" (${item.sku}) from ${item.warehouseName}?\n\nThis stock record will be deleted from the warehouse.`)) {
+            return;
+        }
+        const updatedStock = warehouseStock.filter((s)=>s.id !== item.id);
+        setWarehouseStock(updatedStock);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredWarehouseStock"])(updatedStock);
+        // If available stock > 0, log write-off in ledger
+        let updatedLedger = [
+            ...ledger
+        ];
+        if (item.available > 0) {
+            const deleteLedgerEntry = {
+                id: `led-${Date.now()}`,
+                timestamp: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                productName: item.productName,
+                warehouseName: item.warehouseName,
+                movementType: 'DAMAGED_WRITE_OFF',
+                quantityDelta: -item.available,
+                balanceAfter: 0,
+                unitLandedCost: item.unitLandedCost,
+                referenceId: `DEL-${Math.floor(1000 + Math.random() * 9000)}`,
+                reasonNotes: `Item removed from ${item.warehouseName} by administrator.`
+            };
+            updatedLedger = [
+                deleteLedgerEntry,
+                ...ledger
+            ];
+            setLedger(updatedLedger);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredStockLedger"])(updatedLedger);
+        }
+        // Recalculate catalog stock
+        const matchingProd = products.find((p)=>p.sku === item.sku);
+        let updatedProducts = [
+            ...products
+        ];
+        if (matchingProd) {
+            const remainingTotal = updatedStock.filter((s)=>s.sku === item.sku).reduce((sum, s)=>sum + s.available, 0);
+            updatedProducts = products.map((p)=>p.id === matchingProd.id ? {
+                    ...p,
+                    stock: remainingTotal
+                } : p);
+            setProducts(updatedProducts);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredProducts"])(updatedProducts);
+        }
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('globotech_stock_updated', {
+                detail: updatedStock
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_products_updated', {
+                detail: updatedProducts
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_ledger_updated', {
+                detail: updatedLedger
+            }));
+        }
+        setIsEditStockModalOpen(false);
+        setEditingStockItem(null);
+        showToast(`✓ Stock record "${item.productName}" removed from ${item.warehouseName}.`);
+    };
+    // 6. QUICK EDIT PRODUCT NAME & SKU ONLY (নাম ও SKU পরিবর্তন)
+    const handleOpenNameSkuModal = (item)=>{
+        setNameSkuEditingItem(item);
+        setNameSkuNewName(item.productName);
+        setNameSkuNewSku(item.sku);
+        setNameSkuUpdateAllWarehouses(true);
+        setIsNameSkuModalOpen(true);
+    };
+    const handleSaveNameSku = (e)=>{
+        if (e) e.preventDefault();
+        if (!nameSkuEditingItem) return;
+        const trimmedName = nameSkuNewName.trim();
+        const trimmedSku = nameSkuNewSku.trim().toUpperCase();
+        if (!trimmedName) {
+            alert('Product Name cannot be empty (পণ্যের নাম খালি রাখা যাবে না)।');
+            return;
+        }
+        if (!trimmedSku) {
+            alert('SKU Code cannot be empty (SKU কোড খালি রাখা যাবে না)।');
+            return;
+        }
+        const oldName = nameSkuEditingItem.productName;
+        const oldSku = nameSkuEditingItem.sku;
+        if (trimmedName === oldName && trimmedSku === oldSku) {
+            setIsNameSkuModalOpen(false);
+            setNameSkuEditingItem(null);
+            return;
+        }
+        // 1. Update warehouse stock
+        const updatedStock = warehouseStock.map((s)=>{
+            if (nameSkuUpdateAllWarehouses) {
+                if (s.sku === oldSku || s.id === nameSkuEditingItem.id) {
+                    return {
+                        ...s,
+                        productName: trimmedName,
+                        sku: trimmedSku
+                    };
+                }
+            } else {
+                if (s.id === nameSkuEditingItem.id) {
+                    return {
+                        ...s,
+                        productName: trimmedName,
+                        sku: trimmedSku
+                    };
+                }
+            }
+            return s;
+        });
+        setWarehouseStock(updatedStock);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredWarehouseStock"])(updatedStock);
+        // 2. Synchronize with Product Catalog (products)
+        const matchingProdIndex = products.findIndex((p)=>p.sku === oldSku);
+        let updatedProducts = [
+            ...products
+        ];
+        if (matchingProdIndex >= 0) {
+            updatedProducts = products.map((p, idx)=>idx === matchingProdIndex ? {
+                    ...p,
+                    name: trimmedName,
+                    sku: trimmedSku
+                } : p);
+            setProducts(updatedProducts);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredProducts"])(updatedProducts);
+        } else {
+            const newProd = {
+                id: `PRD-${Date.now().toString().slice(-5)}`,
+                sku: trimmedSku,
+                barcode: `880${Math.floor(100000000 + Math.random() * 900000000)}`,
+                name: trimmedName,
+                category: 'CCTV & Surveillance',
+                brand: 'Globo Tech',
+                unit: 'pcs',
+                stock: nameSkuEditingItem.available,
+                minStock: 10,
+                purchasePriceCNY: 0,
+                currentLandedCost: nameSkuEditingItem.unitLandedCost,
+                retailPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.5),
+                wholesalePrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.35),
+                projectPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.25),
+                dealerPrice: Math.round(nameSkuEditingItem.unitLandedCost * 1.2),
+                isSerialTracked: false
+            };
+            updatedProducts = [
+                newProd,
+                ...products
+            ];
+            setProducts(updatedProducts);
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredProducts"])(updatedProducts);
+        }
+        // 3. Create Audit Ledger Record
+        const nowTime = new Date().toISOString().slice(0, 16).replace('T', ' ');
+        const auditRecord = {
+            id: `led-${Date.now()}`,
+            timestamp: nowTime,
+            productName: trimmedName,
+            warehouseName: nameSkuEditingItem.warehouseName,
+            movementType: 'AUDIT_CORRECTION',
+            quantityDelta: 0,
+            balanceAfter: nameSkuEditingItem.available,
+            unitLandedCost: nameSkuEditingItem.unitLandedCost,
+            referenceId: `REN-${Math.floor(1000 + Math.random() * 9000)}`,
+            reasonNotes: `Renamed item: "${oldName}" [${oldSku}] → "${trimmedName}" [${trimmedSku}]`
+        };
+        const updatedLedger = [
+            auditRecord,
+            ...ledger
+        ];
+        setLedger(updatedLedger);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveStoredStockLedger"])(updatedLedger);
+        // 4. Dispatch events
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('globotech_stock_updated', {
+                detail: updatedStock
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_products_updated', {
+                detail: updatedProducts
+            }));
+            window.dispatchEvent(new CustomEvent('globotech_ledger_updated', {
+                detail: updatedLedger
+            }));
+        }
+        setIsNameSkuModalOpen(false);
+        setNameSkuEditingItem(null);
+        showToast(`✓ Product Name & SKU updated: "${trimmedName}" (${trimmedSku})`);
+    };
     const selectedDecreaseStock = warehouseStock.find((s)=>s.id === decreaseStockItemId);
     // Filtered Stock Items
     const filteredStock = warehouseStock.filter((st)=>{
@@ -580,20 +942,20 @@ function StockView({ globalSearchQuery } = {}) {
                         className: "w-4 h-4"
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 659,
+                        lineNumber: 1032,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: toastMsg
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 660,
+                        lineNumber: 1033,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 658,
+                lineNumber: 1031,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -610,7 +972,7 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 676,
+                                        lineNumber: 1049,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -621,13 +983,13 @@ function StockView({ globalSearchQuery } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 677,
+                                        lineNumber: 1050,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 668,
+                                lineNumber: 1041,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -638,7 +1000,7 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 688,
+                                        lineNumber: 1061,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -649,19 +1011,19 @@ function StockView({ globalSearchQuery } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 689,
+                                        lineNumber: 1062,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 680,
+                                lineNumber: 1053,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 667,
+                        lineNumber: 1040,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -674,7 +1036,7 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 696,
+                                        lineNumber: 1069,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -685,13 +1047,13 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 697,
+                                        lineNumber: 1070,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 695,
+                                lineNumber: 1068,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -704,7 +1066,7 @@ function StockView({ globalSearchQuery } = {}) {
                                         children: "All Warehouses"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 711,
+                                        lineNumber: 1084,
                                         columnNumber: 13
                                     }, this),
                                     WAREHOUSE_OPTIONS.map((wh)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -712,19 +1074,19 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: wh
                                         }, wh, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 713,
+                                            lineNumber: 1086,
                                             columnNumber: 15
                                         }, this))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 706,
+                                lineNumber: 1079,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 694,
+                        lineNumber: 1067,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -743,20 +1105,20 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 734,
+                                                lineNumber: 1107,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Cards"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 735,
+                                                lineNumber: 1108,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 724,
+                                        lineNumber: 1097,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -769,26 +1131,26 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 747,
+                                                lineNumber: 1120,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Table"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 748,
+                                                lineNumber: 1121,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 737,
+                                        lineNumber: 1110,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 723,
+                                lineNumber: 1096,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -802,7 +1164,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 758,
+                                                lineNumber: 1131,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -810,13 +1172,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Add Product"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 759,
+                                                lineNumber: 1132,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 754,
+                                        lineNumber: 1127,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -833,7 +1195,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 772,
+                                                lineNumber: 1145,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -841,13 +1203,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Receive Goods"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 773,
+                                                lineNumber: 1146,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 762,
+                                        lineNumber: 1135,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -864,7 +1226,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5 text-blue-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 786,
+                                                lineNumber: 1159,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -872,13 +1234,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Transfer"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 787,
+                                                lineNumber: 1160,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 776,
+                                        lineNumber: 1149,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -902,7 +1264,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 807,
+                                                lineNumber: 1180,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -910,31 +1272,31 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Deduct Stock"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 808,
+                                                lineNumber: 1181,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 790,
+                                        lineNumber: 1163,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 753,
+                                lineNumber: 1126,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 721,
+                        lineNumber: 1094,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 665,
+                lineNumber: 1038,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -948,7 +1310,7 @@ function StockView({ globalSearchQuery } = {}) {
                                 children: "Total Stock Items"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 817,
+                                lineNumber: 1190,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -959,13 +1321,13 @@ function StockView({ globalSearchQuery } = {}) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 818,
+                                lineNumber: 1191,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 816,
+                        lineNumber: 1189,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -976,7 +1338,7 @@ function StockView({ globalSearchQuery } = {}) {
                                 children: "Total Available Units"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 823,
+                                lineNumber: 1196,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -987,13 +1349,13 @@ function StockView({ globalSearchQuery } = {}) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 824,
+                                lineNumber: 1197,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 822,
+                        lineNumber: 1195,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1004,7 +1366,7 @@ function StockView({ globalSearchQuery } = {}) {
                                 children: "Total Inventory Valuation"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 829,
+                                lineNumber: 1202,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1012,13 +1374,13 @@ function StockView({ globalSearchQuery } = {}) {
                                 children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(totalValuation)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 830,
+                                lineNumber: 1203,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 828,
+                        lineNumber: 1201,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1029,7 +1391,7 @@ function StockView({ globalSearchQuery } = {}) {
                                 children: "Ledger Audit Trail"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 835,
+                                lineNumber: 1208,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1040,19 +1402,19 @@ function StockView({ globalSearchQuery } = {}) {
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 836,
+                                lineNumber: 1209,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 834,
+                        lineNumber: 1207,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 815,
+                lineNumber: 1188,
                 columnNumber: 7
             }, this),
             activeTab === 'inventory' ? /* Inventory by Warehouse */ stockViewMode === 'cards' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1064,7 +1426,7 @@ function StockView({ globalSearchQuery } = {}) {
                             className: "w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 848,
+                            lineNumber: 1221,
                             columnNumber: 17
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1072,7 +1434,7 @@ function StockView({ globalSearchQuery } = {}) {
                             children: "No stock records found"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 849,
+                            lineNumber: 1222,
                             columnNumber: 17
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1083,26 +1445,26 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 854,
+                                    lineNumber: 1227,
                                     columnNumber: 19
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Add New Product"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 855,
+                                    lineNumber: 1228,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 850,
+                            lineNumber: 1223,
                             columnNumber: 17
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 847,
+                    lineNumber: 1220,
                     columnNumber: 15
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5",
@@ -1125,7 +1487,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5 text-blue-400 flex-shrink-0"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 874,
+                                                            lineNumber: 1247,
                                                             columnNumber: 29
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1133,13 +1495,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: st.warehouseName
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 875,
+                                                            lineNumber: 1248,
                                                             columnNumber: 29
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 873,
+                                                    lineNumber: 1246,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1148,54 +1510,98 @@ function StockView({ globalSearchQuery } = {}) {
                                                         children: "Out of Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 879,
+                                                        lineNumber: 1252,
                                                         columnNumber: 31
                                                     }, this) : isLow ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "warning",
                                                         children: "Low Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 881,
+                                                        lineNumber: 1254,
                                                         columnNumber: 31
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "success",
                                                         children: "Normal"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 883,
+                                                        lineNumber: 1256,
                                                         columnNumber: 31
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 877,
+                                                    lineNumber: 1250,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 872,
-                                            columnNumber: 25
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
-                                            className: "font-bold text-slate-100 text-sm leading-snug line-clamp-2",
-                                            children: st.productName
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 889,
+                                            lineNumber: 1245,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "font-mono text-xs text-blue-400 mt-1 font-semibold",
-                                            children: st.sku
-                                        }, void 0, false, {
+                                            className: "flex items-start justify-between gap-2",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "flex-1 min-w-0",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
+                                                            className: "font-bold text-slate-100 text-sm leading-snug line-clamp-2",
+                                                            children: st.productName
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 1264,
+                                                            columnNumber: 29
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                            className: "font-mono text-xs text-blue-400 mt-1 font-semibold",
+                                                            children: st.sku
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 1267,
+                                                            columnNumber: 29
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 1263,
+                                                    columnNumber: 27
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                    type: "button",
+                                                    onClick: ()=>handleOpenNameSkuModal(st),
+                                                    className: "flex-shrink-0 px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[11px] font-semibold flex items-center gap-1 transition active:scale-95",
+                                                    title: "Edit Product Name & SKU",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__["Edit2"], {
+                                                            className: "w-3 h-3"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 1277,
+                                                            columnNumber: 29
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            children: "Edit"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 1278,
+                                                            columnNumber: 29
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 1271,
+                                                    columnNumber: 27
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 892,
+                                            lineNumber: 1262,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 870,
+                                    lineNumber: 1243,
                                     columnNumber: 23
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1208,7 +1614,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 900,
+                                                    lineNumber: 1286,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1219,7 +1625,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 901,
+                                                    lineNumber: 1287,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1231,13 +1637,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 904,
+                                                    lineNumber: 1290,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 899,
+                                            lineNumber: 1285,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1247,7 +1653,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Landed Cost"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 908,
+                                                    lineNumber: 1294,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1255,7 +1661,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(st.unitLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 909,
+                                                    lineNumber: 1295,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1263,13 +1669,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Per unit"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 912,
+                                                    lineNumber: 1298,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 907,
+                                            lineNumber: 1293,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1280,7 +1686,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Batch Valuation:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 916,
+                                                    lineNumber: 1302,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1288,24 +1694,49 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(valuation)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 917,
+                                                    lineNumber: 1303,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 915,
+                                            lineNumber: 1301,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 898,
+                                    lineNumber: 1284,
                                     columnNumber: 23
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    className: "flex items-center gap-2 pt-1 border-t border-slate-800/80",
+                                    className: "grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80",
                                     children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            onClick: ()=>handleOpenEditStockModal(st),
+                                            className: "min-h-[40px] py-1.5 px-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-xs font-semibold transition active:scale-95 border border-blue-500/30 flex items-center justify-center gap-1",
+                                            title: "Edit Stock Item (নাম, SKU, পরিমাণ, গুদাম বা রেট পরিবর্তন)",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__["Edit2"], {
+                                                    className: "w-3.5 h-3.5 text-blue-400"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 1314,
+                                                    columnNumber: 27
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    children: "Edit"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 1315,
+                                                    columnNumber: 27
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 1309,
+                                            columnNumber: 25
+                                        }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: ()=>{
                                                 const found = products.find((p)=>p.sku === st.sku);
@@ -1316,73 +1747,75 @@ function StockView({ globalSearchQuery } = {}) {
                                                 setGrnWarehouse(st.warehouseName);
                                                 setIsGrnModalOpen(true);
                                             },
-                                            className: "flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 border border-slate-700 flex items-center justify-center gap-1.5",
+                                            className: "min-h-[40px] py-1.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition active:scale-95 border border-slate-700 flex items-center justify-center gap-1",
+                                            title: "Receive / Add more stock",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                                     className: "w-3.5 h-3.5 text-emerald-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 935,
+                                                    lineNumber: 1330,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    children: "Add Stock"
+                                                    children: "Add"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 936,
+                                                    lineNumber: 1331,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 923,
+                                            lineNumber: 1317,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                             onClick: ()=>handleOpenDecreaseModal(st),
-                                            className: "flex-1 min-h-[42px] py-2 px-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition active:scale-95 border border-rose-500/30 flex items-center justify-center gap-1.5",
+                                            className: "min-h-[40px] py-1.5 px-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold transition active:scale-95 border border-rose-500/30 flex items-center justify-center gap-1",
+                                            title: "Deduct or decrease stock",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$minus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__MinusCircle$3e$__["MinusCircle"], {
                                                     className: "w-3.5 h-3.5 text-rose-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 942,
+                                                    lineNumber: 1338,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Deduct"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 943,
+                                                    lineNumber: 1339,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 938,
+                                            lineNumber: 1333,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 922,
+                                    lineNumber: 1308,
                                     columnNumber: 23
                                 }, this)
                             ]
                         }, st.id, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 866,
+                            lineNumber: 1239,
                             columnNumber: 21
                         }, this);
                     })
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 859,
+                    lineNumber: 1232,
                     columnNumber: 15
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 845,
+                lineNumber: 1218,
                 columnNumber: 11
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm",
@@ -1397,20 +1830,20 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 956,
+                                        lineNumber: 1352,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: "Warehouse Stock Inventory"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 957,
+                                        lineNumber: 1353,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 955,
+                                lineNumber: 1351,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1426,19 +1859,19 @@ function StockView({ globalSearchQuery } = {}) {
                                         children: "👉 Swipe table"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 960,
+                                        lineNumber: 1356,
                                         columnNumber: 90
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 959,
+                                lineNumber: 1355,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 954,
+                        lineNumber: 1350,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1455,7 +1888,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Warehouse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 968,
+                                                lineNumber: 1364,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1463,7 +1896,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Product & SKU"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 969,
+                                                lineNumber: 1365,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1471,7 +1904,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Available Stock"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 970,
+                                                lineNumber: 1366,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1479,7 +1912,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Reserved"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 971,
+                                                lineNumber: 1367,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1487,7 +1920,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Damaged"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 972,
+                                                lineNumber: 1368,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1495,7 +1928,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Landed Cost"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 973,
+                                                lineNumber: 1369,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1503,7 +1936,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Valuation (Cost)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 974,
+                                                lineNumber: 1370,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1511,7 +1944,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Status"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 975,
+                                                lineNumber: 1371,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1519,18 +1952,18 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Quick Action"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 976,
+                                                lineNumber: 1372,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 967,
+                                        lineNumber: 1363,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 966,
+                                    lineNumber: 1362,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -1548,7 +1981,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Add New Product"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 984,
+                                                    lineNumber: 1380,
                                                     columnNumber: 25
                                                 }, this),
                                                 ' ',
@@ -1556,12 +1989,12 @@ function StockView({ globalSearchQuery } = {}) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 982,
+                                            lineNumber: 1378,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 981,
+                                        lineNumber: 1377,
                                         columnNumber: 21
                                     }, this) : filteredStock.map((st)=>{
                                         const valuation = st.available * st.unitLandedCost;
@@ -1579,50 +2012,99 @@ function StockView({ globalSearchQuery } = {}) {
                                                                 className: "w-3.5 h-3.5 text-blue-400 flex-shrink-0"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                lineNumber: 1003,
+                                                                lineNumber: 1399,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: st.warehouseName
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                lineNumber: 1004,
+                                                                lineNumber: 1400,
                                                                 columnNumber: 31
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1002,
+                                                        lineNumber: 1398,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1001,
+                                                    lineNumber: 1397,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                     className: "py-3 px-4 font-sans max-w-xs",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "font-semibold text-slate-100",
-                                                            children: st.productName
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1008,
-                                                            columnNumber: 29
-                                                        }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                            className: "text-[10px] font-mono text-slate-400",
-                                                            children: st.sku
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1009,
-                                                            columnNumber: 29
-                                                        }, this)
-                                                    ]
-                                                }, void 0, true, {
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex items-start justify-between gap-2 group",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                className: "flex-1 min-w-0 pr-1",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "font-semibold text-slate-100 leading-tight",
+                                                                        children: st.productName
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1406,
+                                                                        columnNumber: 33
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        className: "text-[10px] font-mono text-slate-400 mt-1 flex items-center gap-1.5",
+                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                            className: "bg-slate-800/90 text-blue-400 font-semibold px-1.5 py-0.5 rounded border border-slate-700/60",
+                                                                            children: st.sku
+                                                                        }, void 0, false, {
+                                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                            lineNumber: 1410,
+                                                                            columnNumber: 35
+                                                                        }, this)
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1409,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                lineNumber: 1405,
+                                                                columnNumber: 31
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                type: "button",
+                                                                onClick: ()=>handleOpenNameSkuModal(st),
+                                                                className: "flex-shrink-0 px-2 py-1 rounded-md bg-blue-600/15 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 border border-blue-500/30 hover:border-blue-500/60 text-[11px] font-semibold inline-flex items-center gap-1 transition active:scale-95 shadow-sm",
+                                                                title: "Edit Product Name & SKU Code (নাম ও SKU পরিবর্তন করুন)",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__["Edit2"], {
+                                                                        className: "w-3 h-3 text-blue-400"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1421,
+                                                                        columnNumber: 33
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        children: "Edit"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1422,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                lineNumber: 1415,
+                                                                columnNumber: 31
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                        lineNumber: 1404,
+                                                        columnNumber: 29
+                                                    }, this)
+                                                }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1007,
+                                                    lineNumber: 1403,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1635,12 +2117,12 @@ function StockView({ globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1012,
+                                                        lineNumber: 1427,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1011,
+                                                    lineNumber: 1426,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1651,7 +2133,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1016,
+                                                    lineNumber: 1431,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1662,7 +2144,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1019,
+                                                    lineNumber: 1434,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1670,7 +2152,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(st.unitLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1022,
+                                                    lineNumber: 1437,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1678,7 +2160,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(valuation)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1025,
+                                                    lineNumber: 1440,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1688,26 +2170,26 @@ function StockView({ globalSearchQuery } = {}) {
                                                         children: "Out of Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1030,
+                                                        lineNumber: 1445,
                                                         columnNumber: 31
                                                     }, this) : isLow ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "warning",
                                                         children: "Low Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1032,
+                                                        lineNumber: 1447,
                                                         columnNumber: 31
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "success",
                                                         children: "Normal"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1034,
+                                                        lineNumber: 1449,
                                                         columnNumber: 31
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1028,
+                                                    lineNumber: 1443,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1715,6 +2197,31 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex items-center justify-center gap-1.5",
                                                         children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                onClick: ()=>handleOpenEditStockModal(st),
+                                                                className: "px-2.5 py-1 rounded bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 text-[11px] font-semibold transition active:scale-95 border border-blue-500/30 hover:border-blue-500/50 inline-flex items-center gap-1",
+                                                                title: "Edit Stock Item (নাম, SKU, পরিমাণ, গুদাম বা রেট পরিবর্তন)",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__["Edit2"], {
+                                                                        className: "w-3 h-3 text-blue-400"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1459,
+                                                                        columnNumber: 33
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        children: "Edit"
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                        lineNumber: 1460,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                                                lineNumber: 1454,
+                                                                columnNumber: 31
+                                                            }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                 onClick: ()=>{
                                                                     const found = products.find((p)=>p.sku === st.sku);
@@ -1732,20 +2239,20 @@ function StockView({ globalSearchQuery } = {}) {
                                                                         className: "w-3 h-3 text-emerald-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                        lineNumber: 1052,
+                                                                        lineNumber: 1475,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Add Stock"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                        lineNumber: 1053,
+                                                                        lineNumber: 1476,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                lineNumber: 1039,
+                                                                lineNumber: 1462,
                                                                 columnNumber: 31
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1757,60 +2264,60 @@ function StockView({ globalSearchQuery } = {}) {
                                                                         className: "w-3 h-3 text-rose-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                        lineNumber: 1060,
+                                                                        lineNumber: 1483,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         children: "Decrease"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                        lineNumber: 1061,
+                                                                        lineNumber: 1484,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                lineNumber: 1055,
+                                                                lineNumber: 1478,
                                                                 columnNumber: 31
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1038,
+                                                        lineNumber: 1453,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1037,
+                                                    lineNumber: 1452,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, st.id, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1000,
+                                            lineNumber: 1396,
                                             columnNumber: 25
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 979,
+                                    lineNumber: 1375,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 965,
+                            lineNumber: 1361,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 964,
+                        lineNumber: 1360,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 953,
+                lineNumber: 1349,
                 columnNumber: 11
             }, this) : /* Immutable Stock Movement Ledger */ stockViewMode === 'cards' ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "space-y-3",
@@ -1821,7 +2328,7 @@ function StockView({ globalSearchQuery } = {}) {
                             className: "w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1080,
+                            lineNumber: 1503,
                             columnNumber: 17
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1829,13 +2336,13 @@ function StockView({ globalSearchQuery } = {}) {
                             children: "No stock movement records found"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1081,
+                            lineNumber: 1504,
                             columnNumber: 17
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1079,
+                    lineNumber: 1502,
                     columnNumber: 15
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5",
@@ -1852,7 +2359,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: entry.timestamp
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1093,
+                                            lineNumber: 1516,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1860,13 +2367,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: entry.movementType
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1096,
+                                            lineNumber: 1519,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1092,
+                                    lineNumber: 1515,
                                     columnNumber: 23
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1876,7 +2383,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: entry.productName
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1116,
+                                            lineNumber: 1539,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1886,26 +2393,26 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-3 h-3 text-slate-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1118,
+                                                    lineNumber: 1541,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: entry.warehouseName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1119,
+                                                    lineNumber: 1542,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1117,
+                                            lineNumber: 1540,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1115,
+                                    lineNumber: 1538,
                                     columnNumber: 23
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1918,7 +2425,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Quantity Delta"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1125,
+                                                    lineNumber: 1548,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1929,13 +2436,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1126,
+                                                    lineNumber: 1549,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1124,
+                                            lineNumber: 1547,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1945,7 +2452,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Balance After"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1132,
+                                                    lineNumber: 1555,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1956,13 +2463,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1133,
+                                                    lineNumber: 1556,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1131,
+                                            lineNumber: 1554,
                                             columnNumber: 25
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1973,7 +2480,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Ref Doc:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1139,
+                                                    lineNumber: 1562,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1981,19 +2488,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.referenceId
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1140,
+                                                    lineNumber: 1563,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1138,
+                                            lineNumber: 1561,
                                             columnNumber: 25
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1123,
+                                    lineNumber: 1546,
                                     columnNumber: 23
                                 }, this),
                                 entry.reasonNotes && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2001,24 +2508,24 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: entry.reasonNotes
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1145,
+                                    lineNumber: 1568,
                                     columnNumber: 25
                                 }, this)
                             ]
                         }, entry.id, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1088,
+                            lineNumber: 1511,
                             columnNumber: 21
                         }, this);
                     })
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1084,
+                    lineNumber: 1507,
                     columnNumber: 15
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1077,
+                lineNumber: 1500,
                 columnNumber: 11
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm",
@@ -2033,20 +2540,20 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4 text-sky-400"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1159,
+                                        lineNumber: 1582,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: "Immutable Stock Ledger"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1160,
+                                        lineNumber: 1583,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 1158,
+                                lineNumber: 1581,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2056,20 +2563,20 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1163,
+                                        lineNumber: 1586,
                                         columnNumber: 17
                                     }, this),
                                     "Audit Active"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 1162,
+                                lineNumber: 1585,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 1157,
+                        lineNumber: 1580,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2086,7 +2593,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Timestamp"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1172,
+                                                lineNumber: 1595,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2094,7 +2601,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Movement Type"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1173,
+                                                lineNumber: 1596,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2102,7 +2609,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Product"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1174,
+                                                lineNumber: 1597,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2110,7 +2617,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Warehouse"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1175,
+                                                lineNumber: 1598,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2118,7 +2625,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Quantity Delta"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1176,
+                                                lineNumber: 1599,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2126,7 +2633,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Balance After"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1177,
+                                                lineNumber: 1600,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2134,7 +2641,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Landed Cost"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1178,
+                                                lineNumber: 1601,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2142,7 +2649,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Reference Document"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1179,
+                                                lineNumber: 1602,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2150,18 +2657,18 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Reason / Notes"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1180,
+                                                lineNumber: 1603,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1171,
+                                        lineNumber: 1594,
                                         columnNumber: 19
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1170,
+                                    lineNumber: 1593,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2173,12 +2680,12 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "No ledger transactions found matching filter."
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1186,
+                                            lineNumber: 1609,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1185,
+                                        lineNumber: 1608,
                                         columnNumber: 21
                                     }, this) : filteredLedger.map((entry)=>{
                                         const isPositive = entry.quantityDelta > 0;
@@ -2190,7 +2697,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.timestamp
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1195,
+                                                    lineNumber: 1618,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2200,12 +2707,12 @@ function StockView({ globalSearchQuery } = {}) {
                                                         children: entry.movementType
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1199,
+                                                        lineNumber: 1622,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1198,
+                                                    lineNumber: 1621,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2213,7 +2720,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.productName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1217,
+                                                    lineNumber: 1640,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2221,7 +2728,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.warehouseName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1220,
+                                                    lineNumber: 1643,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2232,7 +2739,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1221,
+                                                    lineNumber: 1644,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2243,7 +2750,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1228,
+                                                    lineNumber: 1651,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2251,7 +2758,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(entry.unitLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1231,
+                                                    lineNumber: 1654,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2259,7 +2766,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.referenceId
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1234,
+                                                    lineNumber: 1657,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2267,36 +2774,36 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: entry.reasonNotes || '—'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1235,
+                                                    lineNumber: 1658,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, entry.id, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1194,
+                                            lineNumber: 1617,
                                             columnNumber: 25
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1183,
+                                    lineNumber: 1606,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1169,
+                            lineNumber: 1592,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/StockView.tsx",
-                        lineNumber: 1168,
+                        lineNumber: 1591,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1156,
+                lineNumber: 1579,
                 columnNumber: 11
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -2311,7 +2818,7 @@ function StockView({ globalSearchQuery } = {}) {
                             children: "Cancel"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1256,
+                            lineNumber: 1679,
                             columnNumber: 13
                         }, void 0),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2322,20 +2829,20 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-3.5 h-3.5"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1266,
+                                    lineNumber: 1689,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Save & Add Product"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1267,
+                                    lineNumber: 1690,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1262,
+                            lineNumber: 1685,
                             columnNumber: 13
                         }, void 0)
                     ]
@@ -2356,20 +2863,20 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-4 h-4 text-blue-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1277,
+                                                    lineNumber: 1700,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Auto-fill from Existing Registered Product (Optional)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1278,
+                                                    lineNumber: 1701,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1276,
+                                            lineNumber: 1699,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2377,13 +2884,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Select to clone details"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1280,
+                                            lineNumber: 1703,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1275,
+                                    lineNumber: 1698,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2417,7 +2924,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "-- Select a product to auto-fill or enter details below --"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1307,
+                                            lineNumber: 1730,
                                             columnNumber: 15
                                         }, this),
                                         products.map((p)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2431,19 +2938,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                 ]
                                             }, p.id, true, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1311,
+                                                lineNumber: 1734,
                                                 columnNumber: 17
                                             }, this))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1282,
+                                    lineNumber: 1705,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1274,
+                            lineNumber: 1697,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2454,7 +2961,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "1. Product Identification"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1320,
+                                    lineNumber: 1743,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2468,13 +2975,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1326,
+                                                    lineNumber: 1749,
                                                     columnNumber: 30
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1325,
+                                            lineNumber: 1748,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2488,13 +2995,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1328,
+                                            lineNumber: 1751,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1324,
+                                    lineNumber: 1747,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2511,13 +3018,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "*"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1340,
+                                                            lineNumber: 1763,
                                                             columnNumber: 28
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1339,
+                                                    lineNumber: 1762,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2531,13 +3038,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-slate-200 font-mono text-xs uppercase focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1342,
+                                                    lineNumber: 1765,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1338,
+                                            lineNumber: 1761,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2547,7 +3054,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Brand / Manufacturer"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1352,
+                                                    lineNumber: 1775,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2561,19 +3068,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1353,
+                                                    lineNumber: 1776,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1351,
+                                            lineNumber: 1774,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1337,
+                                    lineNumber: 1760,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2589,7 +3096,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "Category"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1366,
+                                                            lineNumber: 1789,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2604,26 +3111,26 @@ function StockView({ globalSearchQuery } = {}) {
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                    lineNumber: 1375,
+                                                                    lineNumber: 1798,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: isAddingCustomCategory ? 'Choose Existing' : '+ Add New Category'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                    lineNumber: 1376,
+                                                                    lineNumber: 1799,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1367,
+                                                            lineNumber: 1790,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1365,
+                                                    lineNumber: 1788,
                                                     columnNumber: 17
                                                 }, this),
                                                 isAddingCustomCategory ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2644,7 +3151,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             className: "flex-1 bg-slate-800 border border-blue-500 rounded-lg p-2 text-slate-100 text-xs focus:outline-none"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1382,
+                                                            lineNumber: 1805,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2656,20 +3163,20 @@ function StockView({ globalSearchQuery } = {}) {
                                                                     className: "w-3.5 h-3.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                    lineNumber: 1401,
+                                                                    lineNumber: 1824,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: "Add"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                    lineNumber: 1402,
+                                                                    lineNumber: 1825,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1396,
+                                                            lineNumber: 1819,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2679,13 +3186,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "✕"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1404,
+                                                            lineNumber: 1827,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1381,
+                                                    lineNumber: 1804,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                                     value: newProductForm.category,
@@ -2707,7 +3214,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                                 children: c
                                                             }, c, false, {
                                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                                lineNumber: 1426,
+                                                                lineNumber: 1849,
                                                                 columnNumber: 23
                                                             }, this)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2716,19 +3223,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "➕ + Add New Category..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1430,
+                                                            lineNumber: 1853,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1413,
+                                                    lineNumber: 1836,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1364,
+                                            lineNumber: 1787,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2738,7 +3245,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Unit of Measure"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1438,
+                                                    lineNumber: 1861,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2754,7 +3261,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "pcs (Pieces)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1444,
+                                                            lineNumber: 1867,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2762,7 +3269,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "unit (Units)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1445,
+                                                            lineNumber: 1868,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2770,7 +3277,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "box (Boxes)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1446,
+                                                            lineNumber: 1869,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2778,7 +3285,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "set (Sets)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1447,
+                                                            lineNumber: 1870,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2786,7 +3293,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "meter (Meters)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1448,
+                                                            lineNumber: 1871,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2794,31 +3301,31 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "roll (Rolls/Coils)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1449,
+                                                            lineNumber: 1872,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1439,
+                                                    lineNumber: 1862,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1437,
+                                            lineNumber: 1860,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1363,
+                                    lineNumber: 1786,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1319,
+                            lineNumber: 1742,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2829,7 +3336,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "2. Warehouse Location & Initial Stock"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1457,
+                                    lineNumber: 1880,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2843,13 +3350,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1463,
+                                                    lineNumber: 1886,
                                                     columnNumber: 34
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1462,
+                                            lineNumber: 1885,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -2864,18 +3371,18 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: wh
                                                 }, wh, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1471,
+                                                    lineNumber: 1894,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1465,
+                                            lineNumber: 1888,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1461,
+                                    lineNumber: 1884,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2892,7 +3399,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1480,
+                                                    lineNumber: 1903,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2906,13 +3413,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold text-xs focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1483,
+                                                    lineNumber: 1906,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1479,
+                                            lineNumber: 1902,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2922,7 +3429,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Min Reorder Level"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1495,
+                                                    lineNumber: 1918,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2936,13 +3443,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1496,
+                                                    lineNumber: 1919,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1494,
+                                            lineNumber: 1917,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2956,13 +3463,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                             children: "*"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1509,
+                                                            lineNumber: 1932,
                                                             columnNumber: 42
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1508,
+                                                    lineNumber: 1931,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2976,25 +3483,25 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-blue-400 font-bold text-xs focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1511,
+                                                    lineNumber: 1934,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1507,
+                                            lineNumber: 1930,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1478,
+                                    lineNumber: 1901,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1456,
+                            lineNumber: 1879,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3005,7 +3512,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "3. Multi-Tier Selling Prices (BDT)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1526,
+                                    lineNumber: 1949,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3018,7 +3525,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Retail (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1532,
+                                                    lineNumber: 1955,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3031,13 +3538,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs font-semibold focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1533,
+                                                    lineNumber: 1956,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1531,
+                                            lineNumber: 1954,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3047,7 +3554,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Wholesale (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1543,
+                                                    lineNumber: 1966,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3060,13 +3567,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-cyan-400 text-xs font-semibold focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1544,
+                                                    lineNumber: 1967,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1542,
+                                            lineNumber: 1965,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3076,7 +3583,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Project (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1554,
+                                                    lineNumber: 1977,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3089,13 +3596,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-purple-400 text-xs font-semibold focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1555,
+                                                    lineNumber: 1978,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1553,
+                                            lineNumber: 1976,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3105,7 +3612,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Dealer (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1565,
+                                                    lineNumber: 1988,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3118,25 +3625,25 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-300 text-xs font-semibold focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1566,
+                                                    lineNumber: 1989,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1564,
+                                            lineNumber: 1987,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1530,
+                                    lineNumber: 1953,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1525,
+                            lineNumber: 1948,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3154,7 +3661,7 @@ function StockView({ globalSearchQuery } = {}) {
                                         className: "w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1581,
+                                        lineNumber: 2004,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3164,7 +3671,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Enable Serial Number & Warranty Tracking"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1588,
+                                                lineNumber: 2011,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3172,35 +3679,35 @@ function StockView({ globalSearchQuery } = {}) {
                                                 children: "Allows scanning barcoded serial numbers during GRN, sales delivery, and RMA warranty claims."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1589,
+                                                lineNumber: 2012,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                        lineNumber: 1587,
+                                        lineNumber: 2010,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                lineNumber: 1580,
+                                lineNumber: 2003,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1579,
+                            lineNumber: 2002,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1272,
+                    lineNumber: 1695,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1250,
+                lineNumber: 1673,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -3215,7 +3722,7 @@ function StockView({ globalSearchQuery } = {}) {
                             children: "Cancel"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1605,
+                            lineNumber: 2028,
                             columnNumber: 13
                         }, void 0),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3226,20 +3733,20 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-3.5 h-3.5"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1615,
+                                    lineNumber: 2038,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Confirm Goods Receiving"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1616,
+                                    lineNumber: 2039,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1611,
+                            lineNumber: 2034,
                             columnNumber: 13
                         }, void 0)
                     ]
@@ -3254,7 +3761,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Target Receiving Warehouse"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1624,
+                                    lineNumber: 2047,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3266,18 +3773,18 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: wh
                                         }, wh, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1631,
+                                            lineNumber: 2054,
                                             columnNumber: 17
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1625,
+                                    lineNumber: 2048,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1623,
+                            lineNumber: 2046,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3290,7 +3797,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Select Product to Receive *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1641,
+                                            lineNumber: 2064,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3305,26 +3812,26 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-3 h-3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1650,
+                                                    lineNumber: 2073,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Product not listed? Add New"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1651,
+                                                    lineNumber: 2074,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1642,
+                                            lineNumber: 2065,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1640,
+                                    lineNumber: 2063,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3348,19 +3855,19 @@ function StockView({ globalSearchQuery } = {}) {
                                             ]
                                         }, p.id, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1666,
+                                            lineNumber: 2089,
                                             columnNumber: 19
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1655,
+                                    lineNumber: 2078,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1639,
+                            lineNumber: 2062,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3373,7 +3880,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Received Quantity (pcs) *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1676,
+                                            lineNumber: 2099,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3384,13 +3891,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-slate-100 text-sm font-bold focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1677,
+                                            lineNumber: 2100,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1675,
+                                    lineNumber: 2098,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3400,7 +3907,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Unit Landed Cost (BDT) *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1687,
+                                            lineNumber: 2110,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3411,19 +3918,19 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 sm:p-2 text-blue-400 text-sm font-bold focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1688,
+                                            lineNumber: 2111,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1686,
+                                    lineNumber: 2109,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1674,
+                            lineNumber: 2097,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3436,7 +3943,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Reference PO / Import Document"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1700,
+                                            lineNumber: 2123,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3447,13 +3954,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1701,
+                                            lineNumber: 2124,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1699,
+                                    lineNumber: 2122,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3463,7 +3970,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Inspection Notes / Batch"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1711,
+                                            lineNumber: 2134,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3474,19 +3981,19 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1712,
+                                            lineNumber: 2135,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1710,
+                                    lineNumber: 2133,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1698,
+                            lineNumber: 2121,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3497,25 +4004,25 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Stock Ledger Rule:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1723,
+                                    lineNumber: 2146,
                                     columnNumber: 15
                                 }, this),
                                 " Only physically inspected and verified quantities enter active warehouse stock. A formal GRN document and immutable ledger record will be generated automatically."
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1722,
+                            lineNumber: 2145,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1621,
+                    lineNumber: 2044,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1599,
+                lineNumber: 2022,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -3530,7 +4037,7 @@ function StockView({ globalSearchQuery } = {}) {
                             children: "Cancel"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1735,
+                            lineNumber: 2158,
                             columnNumber: 13
                         }, void 0),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3541,20 +4048,20 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-3.5 h-3.5"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1745,
+                                    lineNumber: 2168,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Authorize Transfer"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1746,
+                                    lineNumber: 2169,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1741,
+                            lineNumber: 2164,
                             columnNumber: 13
                         }, void 0)
                     ]
@@ -3572,7 +4079,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "From Warehouse (Origin)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1754,
+                                            lineNumber: 2177,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3593,18 +4100,18 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: wh
                                                 }, wh, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1770,
+                                                    lineNumber: 2193,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1755,
+                                            lineNumber: 2178,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1753,
+                                    lineNumber: 2176,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3614,7 +4121,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "To Warehouse (Destination)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1778,
+                                            lineNumber: 2201,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3626,24 +4133,24 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: wh
                                                 }, wh, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1785,
+                                                    lineNumber: 2208,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1779,
+                                            lineNumber: 2202,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1777,
+                                    lineNumber: 2200,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1752,
+                            lineNumber: 2175,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3653,7 +4160,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Select Product to Transfer *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1794,
+                                    lineNumber: 2217,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3672,18 +4179,18 @@ function StockView({ globalSearchQuery } = {}) {
                                             ]
                                         }, s.id, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1803,
+                                            lineNumber: 2226,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1795,
+                                    lineNumber: 2218,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1793,
+                            lineNumber: 2216,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3696,7 +4203,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Transfer Quantity (pcs) *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1812,
+                                            lineNumber: 2235,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3707,13 +4214,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold text-xs"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1813,
+                                            lineNumber: 2236,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1811,
+                                    lineNumber: 2234,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3723,7 +4230,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Challan / Transit Reference"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1823,
+                                            lineNumber: 2246,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3734,30 +4241,30 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1824,
+                                            lineNumber: 2247,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1822,
+                                    lineNumber: 2245,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1810,
+                            lineNumber: 2233,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1751,
+                    lineNumber: 2174,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1729,
+                lineNumber: 2152,
                 columnNumber: 7
             }, this),
             isDecreaseModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -3776,7 +4283,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Source Warehouse / Store (গুদাম নির্বাচন) *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1849,
+                                    lineNumber: 2272,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3797,18 +4304,18 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: wh
                                         }, wh, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1867,
+                                            lineNumber: 2290,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1852,
+                                    lineNumber: 2275,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1848,
+                            lineNumber: 2271,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3818,7 +4325,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Product & Available Balance (পণ্য নির্বাচন) *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1876,
+                                    lineNumber: 2299,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3838,7 +4345,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "-- Choose Product to Decrease Stock --"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1891,
+                                            lineNumber: 2314,
                                             columnNumber: 17
                                         }, this),
                                         warehouseStock.filter((s)=>s.warehouseName === decreaseWarehouse).map((st)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3855,19 +4362,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                 ]
                                             }, st.id, true, {
                                                 fileName: "[project]/src/components/modules/StockView.tsx",
-                                                lineNumber: 1895,
+                                                lineNumber: 2318,
                                                 columnNumber: 21
                                             }, this))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1879,
+                                    lineNumber: 2302,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1875,
+                            lineNumber: 2298,
                             columnNumber: 13
                         }, this),
                         selectedDecreaseStock && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3881,7 +4388,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Selected Item:"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1906,
+                                            lineNumber: 2329,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3889,13 +4396,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: selectedDecreaseStock.productName
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1907,
+                                            lineNumber: 2330,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1905,
+                                    lineNumber: 2328,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3909,7 +4416,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Current Available"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1911,
+                                                    lineNumber: 2334,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3920,13 +4427,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1912,
+                                                    lineNumber: 2335,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1910,
+                                            lineNumber: 2333,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3937,7 +4444,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Unit Landed Cost"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1915,
+                                                    lineNumber: 2338,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3945,13 +4452,13 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(selectedDecreaseStock.unitLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1916,
+                                                    lineNumber: 2339,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1914,
+                                            lineNumber: 2337,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3962,7 +4469,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: "Total Valuation"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1919,
+                                                    lineNumber: 2342,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3970,25 +4477,25 @@ function StockView({ globalSearchQuery } = {}) {
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(selectedDecreaseStock.available * selectedDecreaseStock.unitLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1920,
+                                                    lineNumber: 2343,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1918,
+                                            lineNumber: 2341,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1909,
+                                    lineNumber: 2332,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1904,
+                            lineNumber: 2327,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4001,7 +4508,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "Decrease Quantity (কমানোর পরিমাণ) *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1931,
+                                            lineNumber: 2354,
                                             columnNumber: 17
                                         }, this),
                                         selectedDecreaseStock && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4023,7 +4530,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                         ]
                                                     }, preset, true, {
                                                         fileName: "[project]/src/components/modules/StockView.tsx",
-                                                        lineNumber: 1937,
+                                                        lineNumber: 2360,
                                                         columnNumber: 23
                                                     }, this)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4037,19 +4544,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1947,
+                                                    lineNumber: 2370,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1935,
+                                            lineNumber: 2358,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1930,
+                                    lineNumber: 2353,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -4063,7 +4570,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     required: true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1957,
+                                    lineNumber: 2380,
                                     columnNumber: 15
                                 }, this),
                                 selectedDecreaseStock && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4076,7 +4583,7 @@ function StockView({ globalSearchQuery } = {}) {
                                                     className: "w-3.5 h-3.5 text-rose-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1972,
+                                                    lineNumber: 2395,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4091,19 +4598,19 @@ function StockView({ globalSearchQuery } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                                            lineNumber: 1973,
+                                                            lineNumber: 2396,
                                                             columnNumber: 38
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1973,
+                                                    lineNumber: 2396,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1971,
+                                            lineNumber: 2394,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4118,25 +4625,25 @@ function StockView({ globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                                    lineNumber: 1976,
+                                                    lineNumber: 2399,
                                                     columnNumber: 34
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1975,
+                                            lineNumber: 2398,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1970,
+                                    lineNumber: 2393,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1929,
+                            lineNumber: 2352,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4146,7 +4653,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Reason for Stock Deduction (কমানোর কারণ / খাত) *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1984,
+                                    lineNumber: 2407,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -4159,7 +4666,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "📦 Sales / Customer Delivery (কাস্টমার ডেলিভারি / বিক্রয়)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1992,
+                                            lineNumber: 2415,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4167,7 +4674,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "⚠️ Damaged / Broken (Move to Damaged Stock - নষ্ট মাল রেকর্ড)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1993,
+                                            lineNumber: 2416,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4175,7 +4682,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "🗑️ Damaged / Scrap (Total Write-Off - সম্পূর্ণ স্ক্র্যাপ/নষ্ট মাল বাতিল)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1994,
+                                            lineNumber: 2417,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4183,7 +4690,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "🎁 Sample / Demo / Testing (স্যাম্পল বা টেস্টে প্রদান)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1995,
+                                            lineNumber: 2418,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4191,7 +4698,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "🏗️ Project Site Consumption (সাইট প্রজেক্টে ব্যবহার)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1996,
+                                            lineNumber: 2419,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4199,7 +4706,7 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "⚖️ Physical Inventory Audit Correction (স্টক গণনা সংশোধন)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1997,
+                                            lineNumber: 2420,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4207,13 +4714,13 @@ function StockView({ globalSearchQuery } = {}) {
                                             children: "↩️ Return to Supplier / Vendor (সাপ্লায়ারকে ফেরত প্রদান)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 1998,
+                                            lineNumber: 2421,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 1987,
+                                    lineNumber: 2410,
                                     columnNumber: 15
                                 }, this),
                                 decreaseReason === 'DAMAGED_RECORD' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4227,7 +4734,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2001,
+                                    lineNumber: 2424,
                                     columnNumber: 17
                                 }, this),
                                 decreaseReason === 'DAMAGED_WRITE_OFF' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4239,13 +4746,13 @@ function StockView({ globalSearchQuery } = {}) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2006,
+                                    lineNumber: 2429,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 1983,
+                            lineNumber: 2406,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4255,7 +4762,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Reference Document / Challan No. (রেফারেন্স বা চালান নং)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2014,
+                                    lineNumber: 2437,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -4266,13 +4773,13 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2017,
+                                    lineNumber: 2440,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 2013,
+                            lineNumber: 2436,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4282,7 +4789,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Notes & Justification (মন্তব্য ও বিবরণ)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2028,
+                                    lineNumber: 2451,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -4293,13 +4800,13 @@ function StockView({ globalSearchQuery } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2031,
+                                    lineNumber: 2454,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 2027,
+                            lineNumber: 2450,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4312,7 +4819,7 @@ function StockView({ globalSearchQuery } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2042,
+                                    lineNumber: 2465,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4324,47 +4831,1034 @@ function StockView({ globalSearchQuery } = {}) {
                                             className: "w-3.5 h-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 2054,
+                                            lineNumber: 2477,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             children: "Confirm Stock Deduction (স্টক কমান)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/StockView.tsx",
-                                            lineNumber: 2055,
+                                            lineNumber: 2478,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/StockView.tsx",
-                                    lineNumber: 2049,
+                                    lineNumber: 2472,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/StockView.tsx",
-                            lineNumber: 2041,
+                            lineNumber: 2464,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/StockView.tsx",
-                    lineNumber: 1846,
+                    lineNumber: 2269,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/StockView.tsx",
-                lineNumber: 1840,
+                lineNumber: 2263,
+                columnNumber: 9
+            }, this),
+            isEditStockModalOpen && editingStockItem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
+                isOpen: isEditStockModalOpen,
+                onClose: ()=>{
+                    setIsEditStockModalOpen(false);
+                    setEditingStockItem(null);
+                },
+                title: `Edit Stock Record: ${editingStockItem.productName}`,
+                maxWidth: "2xl",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+                    onSubmit: handleSaveStockEdit,
+                    className: "space-y-4 text-xs",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "p-3 bg-slate-950/80 border border-slate-800 rounded-xl flex flex-wrap items-center justify-between gap-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$warehouse$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Warehouse$3e$__["Warehouse"], {
+                                            className: "w-4 h-4 text-blue-400"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2502,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-semibold text-slate-200",
+                                            children: editingStockItem.warehouseName
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2503,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2501,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "font-mono text-xs text-blue-400 bg-blue-950/50 px-2.5 py-0.5 rounded border border-blue-800/60 font-semibold",
+                                    children: [
+                                        "SKU: ",
+                                        editingStockItem.sku
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2505,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2500,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "space-y-3",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
+                                    className: "text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1",
+                                    children: "1. Product Identification & Warehouse Location"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2512,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                            className: "block text-slate-300 font-semibold mb-1",
+                                            children: [
+                                                "Product Name (পণ্যের নাম) ",
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "text-rose-400",
+                                                    children: "*"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2518,
+                                                    columnNumber: 45
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2517,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                            type: "text",
+                                            value: editProductName,
+                                            onChange: (e)=>setEditProductName(e.target.value),
+                                            placeholder: "Enter product title...",
+                                            className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none",
+                                            required: true
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2520,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2516,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: [
+                                                        "SKU Code (এসকেইউ কোড) ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-rose-400",
+                                                            children: "*"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2533,
+                                                            columnNumber: 43
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2532,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "text",
+                                                    value: editSku,
+                                                    onChange: (e)=>setEditSku(e.target.value.toUpperCase()),
+                                                    placeholder: "e.g. BOOKPMT, COATPIN",
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 font-mono text-xs uppercase focus:border-blue-500 focus:outline-none",
+                                                    required: true
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2535,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2531,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: [
+                                                        "Assigned Warehouse (গুদাম অবস্থান) ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-rose-400",
+                                                            children: "*"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2547,
+                                                            columnNumber: 56
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2546,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
+                                                    value: editWarehouseName,
+                                                    onChange: (e)=>setEditWarehouseName(e.target.value),
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none",
+                                                    children: WAREHOUSE_OPTIONS.map((wh)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
+                                                            value: wh,
+                                                            children: wh
+                                                        }, wh, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2555,
+                                                            columnNumber: 23
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2549,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2545,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2530,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2511,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "space-y-3 pt-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between border-b border-slate-800 pb-1",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
+                                            className: "text-[11px] font-bold uppercase tracking-wider text-slate-400",
+                                            children: "2. Stock Inventory Balances (মজুদ পরিমাণ)"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2567,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-[11px] text-slate-400",
+                                            children: [
+                                                "Current in store: ",
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
+                                                    className: "text-slate-200",
+                                                    children: [
+                                                        editingStockItem.available,
+                                                        " pcs"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2570,
+                                                    columnNumber: 80
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2570,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2566,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "grid grid-cols-1 sm:grid-cols-3 gap-3",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: [
+                                                        "Available Stock (ব্যবহারযোগ্য মজুদ) ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-rose-400",
+                                                            children: "*"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2576,
+                                                            columnNumber: 57
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2575,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "number",
+                                                    min: "0",
+                                                    value: editAvailable,
+                                                    onChange: (e)=>setEditAvailable(Math.max(0, Number(e.target.value))),
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-emerald-400 font-bold text-sm focus:border-blue-500 focus:outline-none",
+                                                    required: true
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2578,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2574,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: "Reserved Stock (অর্ডারে সংরক্ষিত)"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2589,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "number",
+                                                    min: "0",
+                                                    value: editReserved,
+                                                    onChange: (e)=>setEditReserved(Math.max(0, Number(e.target.value))),
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 font-semibold text-xs focus:border-blue-500 focus:outline-none"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2592,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2588,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: "Damaged Stock (ত্রুটিপূর্ণ / নষ্ট)"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2602,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "number",
+                                                    min: "0",
+                                                    value: editDamaged,
+                                                    onChange: (e)=>setEditDamaged(Math.max(0, Number(e.target.value))),
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-rose-400 font-semibold text-xs focus:border-blue-500 focus:outline-none"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2605,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2601,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2573,
+                                    columnNumber: 15
+                                }, this),
+                                editAvailable !== editingStockItem.available && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: `p-2.5 rounded-lg border text-xs flex items-center justify-between ${editAvailable > editingStockItem.available ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' : 'bg-rose-950/40 border-rose-800 text-rose-300'}`,
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "flex items-center gap-1.5",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$triangle$2d$alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlertTriangle$3e$__["AlertTriangle"], {
+                                                    className: "w-3.5 h-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2623,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    children: [
+                                                        "Stock Count Change: ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
+                                                            children: [
+                                                                editingStockItem.available,
+                                                                " pcs"
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2625,
+                                                            columnNumber: 43
+                                                        }, this),
+                                                        " → ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
+                                                            children: [
+                                                                editAvailable,
+                                                                " pcs"
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2625,
+                                                            columnNumber: 95
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2624,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2622,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "font-bold",
+                                            children: [
+                                                "Delta: ",
+                                                editAvailable - editingStockItem.available > 0 ? `+${editAvailable - editingStockItem.available}` : editAvailable - editingStockItem.available,
+                                                " pcs"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2628,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2617,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2565,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "space-y-3 pt-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
+                                    className: "text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1",
+                                    children: "3. Cost & Valuation (ক্রয়মূল্য ও মূল্যায়ন)"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2637,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "grid grid-cols-1 sm:grid-cols-2 gap-3",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-300 font-semibold mb-1",
+                                                    children: [
+                                                        "Unit Landed Cost (একক খরচ - ৳ BDT) ",
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-rose-400",
+                                                            children: "*"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2644,
+                                                            columnNumber: 56
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2643,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                                    type: "number",
+                                                    min: "0",
+                                                    step: "0.01",
+                                                    value: editUnitLandedCost,
+                                                    onChange: (e)=>setEditUnitLandedCost(Math.max(0, Number(e.target.value))),
+                                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-blue-400 font-bold text-sm focus:border-blue-500 focus:outline-none",
+                                                    required: true
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2646,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2642,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                                    className: "block text-slate-400 font-semibold mb-1",
+                                                    children: "Total Inventory Valuation (মোট মূল্য)"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2658,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "w-full bg-slate-950 border border-slate-800/80 rounded-lg p-2.5 text-slate-100 font-bold text-sm flex items-center justify-between",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-xs text-slate-400",
+                                                            children: [
+                                                                editAvailable,
+                                                                " pcs × ৳",
+                                                                editUnitLandedCost,
+                                                                " ="
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2662,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: "text-blue-400 font-bold",
+                                                            children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(editAvailable * editUnitLandedCost)
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                                            lineNumber: 2663,
+                                                            columnNumber: 21
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2661,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2657,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2641,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2636,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "space-y-3 pt-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h4", {
+                                    className: "text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-1",
+                                    children: "4. Audit Note & System Synchronization"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2671,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                            className: "block text-slate-300 font-semibold mb-1",
+                                            children: "Audit Reason / Edit Note (সংশোধনের কারণ বা বিবরণ - ঐচ্ছিক)"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2676,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                            type: "text",
+                                            value: editAuditReason,
+                                            onChange: (e)=>setEditAuditReason(e.target.value),
+                                            placeholder: "e.g. Physical inventory audit adjustment, typo correction in name...",
+                                            className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-200 text-xs focus:border-blue-500 focus:outline-none"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2679,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2675,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "flex items-center gap-2 p-2.5 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                            type: "checkbox",
+                                            checked: editSyncProductCatalog,
+                                            onChange: (e)=>setEditSyncProductCatalog(e.target.checked),
+                                            className: "w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2689,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "text-slate-200 font-semibold block text-xs",
+                                                    children: "Sync changes with Master Product Catalog (প্রোডাক্ট ক্যাটালগেও আপডেট করুন)"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2696,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    className: "text-[10px] text-slate-400",
+                                                    children: "Keep product name, SKU, landed cost, and total catalog stock synchronized across the ERP suite."
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2699,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2695,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2688,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2670,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    type: "button",
+                                    onClick: ()=>handleDeleteStockItem(editingStockItem),
+                                    className: "px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 min-h-[42px]",
+                                    title: "Permanently remove this stock record from the warehouse",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"], {
+                                            className: "w-3.5 h-3.5 text-rose-400"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2714,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            children: "Delete Item (মুছে ফেলুন)"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2715,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2708,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center gap-2 justify-end",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            type: "button",
+                                            onClick: ()=>{
+                                                setIsEditStockModalOpen(false);
+                                                setEditingStockItem(null);
+                                            },
+                                            className: "w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold min-h-[42px] transition active:scale-95",
+                                            children: "Cancel"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2719,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            type: "submit",
+                                            className: "w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95 flex items-center justify-center gap-1.5",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pen$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Edit2$3e$__["Edit2"], {
+                                                    className: "w-3.5 h-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2733,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    children: "Save Changes (সংরক্ষণ করুন)"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2734,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2729,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2718,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2707,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/components/modules/StockView.tsx",
+                    lineNumber: 2498,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/components/modules/StockView.tsx",
+                lineNumber: 2489,
+                columnNumber: 9
+            }, this),
+            isNameSkuModalOpen && nameSkuEditingItem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
+                isOpen: isNameSkuModalOpen,
+                onClose: ()=>{
+                    setIsNameSkuModalOpen(false);
+                    setNameSkuEditingItem(null);
+                },
+                title: "Edit Product Name & SKU Code (পণ্যের নাম ও SKU সংশোধন)",
+                maxWidth: "lg",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("form", {
+                    onSubmit: handleSaveNameSku,
+                    className: "space-y-4 text-xs",
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between text-xs",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-slate-400 font-medium",
+                                            children: "Warehouse Store:"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2759,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-slate-200 font-semibold flex items-center gap-1",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$warehouse$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Warehouse$3e$__["Warehouse"], {
+                                                    className: "w-3.5 h-3.5 text-blue-400"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2761,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                    children: nameSkuEditingItem.warehouseName
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                                    lineNumber: 2762,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2760,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2758,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: "flex items-center justify-between text-xs pt-1 border-t border-slate-900",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-slate-400 font-medium",
+                                            children: "Current Stock Balance:"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2766,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-emerald-400 font-bold",
+                                            children: [
+                                                nameSkuEditingItem.available,
+                                                " pcs"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2767,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2765,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2757,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "block text-slate-200 font-semibold mb-1",
+                                    children: [
+                                        "Product Name (পণ্যের নাম) ",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-rose-400",
+                                            children: "*"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2774,
+                                            columnNumber: 43
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2773,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                    type: "text",
+                                    value: nameSkuNewName,
+                                    onChange: (e)=>setNameSkuNewName(e.target.value),
+                                    placeholder: "Enter full product name...",
+                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs font-medium focus:border-blue-500 focus:outline-none",
+                                    autoFocus: true,
+                                    required: true
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2776,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2772,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    className: "block text-slate-200 font-semibold mb-1",
+                                    children: [
+                                        "SKU Code (ইউনিক এসকেইউ কোড) ",
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            className: "text-rose-400",
+                                            children: "*"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2790,
+                                            columnNumber: 45
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2789,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                    type: "text",
+                                    value: nameSkuNewSku,
+                                    onChange: (e)=>setNameSkuNewSku(e.target.value.toUpperCase()),
+                                    placeholder: "e.g. BOOKPMT, COATPINTRANSP",
+                                    className: "w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-blue-400 font-mono text-xs font-bold uppercase focus:border-blue-500 focus:outline-none",
+                                    required: true
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2792,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    className: "text-[11px] text-slate-400 mt-1",
+                                    children: "SKU is the unique product identification code used across quotations, invoices, and stock audit."
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2800,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2788,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "p-3 bg-slate-950 border border-slate-800 rounded-xl",
+                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                className: "flex items-start gap-2.5 cursor-pointer",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
+                                        type: "checkbox",
+                                        checked: nameSkuUpdateAllWarehouses,
+                                        onChange: (e)=>setNameSkuUpdateAllWarehouses(e.target.checked),
+                                        className: "w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700 mt-0.5"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                        lineNumber: 2808,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-slate-200 font-semibold block text-xs",
+                                                children: "Update across all Warehouses & Master Product Catalog (সকল গুদাম ও মূল ক্যাটালগে আপডেট করুন)"
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                                lineNumber: 2815,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                className: "text-[10px] text-slate-400 block mt-0.5",
+                                                children: "Recommended. Automatically updates this product's name and SKU code in all stores and in the main product catalog."
+                                            }, void 0, false, {
+                                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                                lineNumber: 2818,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/src/components/modules/StockView.tsx",
+                                        lineNumber: 2814,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/modules/StockView.tsx",
+                                lineNumber: 2807,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2806,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                            className: "pt-3 border-t border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2",
+                            children: [
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    type: "button",
+                                    onClick: ()=>{
+                                        setIsNameSkuModalOpen(false);
+                                        setNameSkuEditingItem(null);
+                                    },
+                                    className: "w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold min-h-[42px] transition active:scale-95",
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2827,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                    type: "submit",
+                                    className: "w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/30 min-h-[42px] transition active:scale-95 flex items-center justify-center gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Check$3e$__["Check"], {
+                                            className: "w-3.5 h-3.5"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2841,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                            children: "Save Name & SKU (সংরক্ষণ করুন)"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/components/modules/StockView.tsx",
+                                            lineNumber: 2842,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "[project]/src/components/modules/StockView.tsx",
+                                    lineNumber: 2837,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "[project]/src/components/modules/StockView.tsx",
+                            lineNumber: 2826,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "[project]/src/components/modules/StockView.tsx",
+                    lineNumber: 2755,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/components/modules/StockView.tsx",
+                lineNumber: 2746,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/modules/StockView.tsx",
-        lineNumber: 655,
+        lineNumber: 1028,
         columnNumber: 5
     }, this);
 }
-_s(StockView, "hFmK6HlMCJvKIPuALZ9vl5EVGZo=");
+_s(StockView, "aK5NdWcYNKKrdNIrpa6x9qTMGTU=");
 _c = StockView;
 var _c;
 __turbopack_refresh__.register(_c, "StockView");
