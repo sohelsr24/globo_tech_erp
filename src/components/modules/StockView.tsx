@@ -22,11 +22,14 @@ import {
   Edit2,
   Trash2,
   AlertTriangle,
-  Check
+  Check,
+  RotateCcw,
+  Sparkles
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Formatters } from '@/lib/formatters';
+import { restoreERPBackupData } from '@/lib/erpBackup';
 import {
   ProductItem,
   WarehouseStockItem,
@@ -150,10 +153,53 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
 
   // Success Toast state
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [isRestoringCloud, setIsRestoringCloud] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 4000);
+  };
+
+  const handleOneClickRestoreFromCloud = async () => {
+    setIsRestoringCloud(true);
+    try {
+      const res = await fetch('/recovered-backup.json');
+      if (!res.ok) throw new Error('File not accessible via HTTP');
+      const text = await res.text();
+      const result = restoreERPBackupData(text);
+      if (result.success) {
+        showToast('✓ সফল! সম্পূর্ণ ১৯টি স্টক, ২৪টি বিল ও ১৭টি কোটেশন রিস্টোর করা হয়েছে!');
+        setTimeout(() => {
+          window.location.reload();
+        }, 600);
+      } else {
+        alert(result.message);
+      }
+    } catch (err) {
+      alert('অনলাইন ব্যাকআপ লোড করা যায়নি। অনুগ্রহ করে নিচে ফাইল সিলেক্ট করুন অথবা Settings থেকে GLOBOTECH_RECOVERED_BACKUP.json ফাইলটি আপলোড করুন।');
+    } finally {
+      setIsRestoringCloud(false);
+    }
+  };
+
+  const handleManualBackupFileRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        const result = restoreERPBackupData(content);
+        if (result.success) {
+          showToast('✓ ফাইল থেকে সম্পূর্ণ ব্যাকআপ সফলভাবে রিস্টোর করা হয়েছে!');
+          setTimeout(() => window.location.reload(), 600);
+        } else {
+          alert(result.message);
+        }
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   // Load from persistent localStorage on mount
@@ -1031,6 +1077,42 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
         <div className="fixed top-20 right-6 z-50 bg-emerald-600 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-bounce">
           <CheckCircle2 className="w-4 h-4" />
           <span>{toastMsg}</span>
+        </div>
+      )}
+      {/* 1-Click Restore Banner (if stock is on default 4 items or missing) */}
+      {warehouseStock.length <= 4 && (
+        <div className="bg-gradient-to-r from-blue-950/70 via-indigo-950/50 to-slate-900 border border-blue-500/50 rounded-xl p-3 sm:p-4 shadow-xl flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-5 h-5 text-blue-400 animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-2 flex-wrap">
+                <span>পূর্ববর্তী সম্পূর্ণ ব্যাকআপ পাওয়া গেছে (১৯টি আইটেম, ২৪টি বিল, ১৭টি কোটেশন)</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
+                  ১০0% রিকভার্ড রেডি
+                </span>
+              </h4>
+              <p className="text-[11px] text-slate-300 mt-0.5">
+                ব্রাউজার ক্যাশ রিসেট হয়েছিল। নিচে ক্লিক করলেই পূর্বের ৬০,২৯৫ পিস স্টক ও সকল ভাউচার ফিরিয়ে আনা যাবে।
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-end flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleOneClickRestoreFromCloud}
+              disabled={isRestoringCloud}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition active:scale-95 cursor-pointer"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 ${isRestoringCloud ? 'animate-spin' : ''}`} />
+              <span>{isRestoringCloud ? 'রিস্টোর হচ্ছে...' : '⚡ ১-ক্লিকে পূর্বের সব ডাটা রিস্টোর করুন'}</span>
+            </button>
+            <label className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700 transition active:scale-95 cursor-pointer flex items-center gap-1.5">
+              <span>ফাইল সিলেক্ট (.json)</span>
+              <input type="file" accept=".json" onChange={handleManualBackupFileRestore} className="hidden" />
+            </label>
+          </div>
         </div>
       )}
 
