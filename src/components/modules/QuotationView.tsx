@@ -1007,19 +1007,31 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   const handleSaveTerms = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedQuotation) return;
+
+    const isNoWarr = /no\s*warranty|without\s*warranty/i.test(termsForm.warrantyTerms);
+    const updatedItems = (selectedQuotation.items || []).map((it) => {
+      if (isNoWarr) {
+        return { ...it, warranty: 'No Warranty' };
+      }
+      if (!it.warranty || it.warranty === '24 Months' || it.warranty === 'No Warranty' || it.warranty === 'N/A') {
+        return { ...it, warranty: termsForm.warrantyTerms };
+      }
+      return it;
+    });
+
     const updatedQuote: Quotation = {
       ...selectedQuotation,
       paymentTerms: termsForm.paymentTerms,
       deliveryTerms: termsForm.deliveryTerms,
       warrantyTerms: termsForm.warrantyTerms,
       vatTaxTerms: termsForm.vatTaxTerms,
-      notes: termsForm.notes
+      notes: termsForm.notes,
+      items: updatedItems
     };
 
     setSelectedQuotation(updatedQuote);
-    setQuotations((currentList) =>
-      currentList.map((q) => (q.id === updatedQuote.id ? updatedQuote : q))
-    );
+    const updatedList = quotations.map((q) => (q.id === updatedQuote.id ? updatedQuote : q));
+    setQuotations(updatedList);
 
     if (editingQuotationId === updatedQuote.id) {
       setNewQuote((prev) => ({
@@ -1028,8 +1040,18 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         deliveryTerms: termsForm.deliveryTerms,
         warrantyTerms: termsForm.warrantyTerms,
         vatTaxTerms: termsForm.vatTaxTerms,
-        notes: termsForm.notes
+        notes: termsForm.notes,
+        items: updatedItems
       }));
+    }
+
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
+        window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedList }));
+      }
+    } catch (err) {
+      console.error('Error saving updated quotation terms:', err);
     }
 
     setIsEditTermsModalOpen(false);
@@ -1488,7 +1510,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     unitCost: 0,
     leadTime: 'Immediate',
     source: 'EXISTING_STOCK',
-    warranty: '24 Months',
+    warranty: 'No Warranty',
     remarks: ''
   });
 
@@ -1611,7 +1633,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       unit: found.unit,
       unitPrice: suggestedPrice,
       unitCost: found.actualLandedCost,
-      warranty: found.warranty,
+      warranty: /no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms || '') ? 'No Warranty' : (found.warranty || newQuote.warrantyTerms || 'No Warranty'),
       leadTime: 'Immediate'
     });
   };
@@ -1622,6 +1644,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       alert('Please enter a valid item name and quantity');
       return;
     }
+
+    const isQuoteNoWarranty = /no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms || '');
+    const resolvedItemWarranty = isQuoteNoWarranty
+      ? 'No Warranty'
+      : (itemForm.warranty || newQuote.warrantyTerms || 'No Warranty');
 
     const newItem: QuotationItem = {
       id: `item-${Date.now()}`,
@@ -1644,7 +1671,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       unitCost: Number(itemForm.unitCost) || 0,
       leadTime: itemForm.leadTime || 'Immediate',
       source: itemForm.source,
-      warranty: itemForm.warranty || 'N/A',
+      warranty: resolvedItemWarranty,
       remarks: itemForm.remarks
     };
 
@@ -1685,7 +1712,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       unitCost: 0,
       leadTime: 'Immediate',
       source: 'EXISTING_STOCK',
-      warranty: '24 Months',
+      warranty: isQuoteNoWarranty ? 'No Warranty' : (newQuote.warrantyTerms || 'No Warranty'),
       remarks: ''
     });
   };
@@ -1793,6 +1820,44 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         );
       }
       return { ...prev, items: updatedItems };
+    });
+  };
+
+  // Update Item Warranty directly
+  const handleUpdateItemWarranty = (itemId: string, newWarranty: string) => {
+    setNewQuote((prev) => {
+      const updatedItems = (prev.items || []).map((item) =>
+        item.id === itemId ? { ...item, warranty: newWarranty } : item
+      );
+      if (editingQuotationId) {
+        setQuotations((currentList) =>
+          currentList.map((q) =>
+            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+          )
+        );
+      }
+      return { ...prev, items: updatedItems };
+    });
+  };
+
+  // Sync quotation warranty terms across all items when user updates warranty terms
+  const handleUpdateQuotationWarrantyTerms = (newWarranty: string) => {
+    const isNoWarr = /no\s*warranty|without\s*warranty/i.test(newWarranty);
+    setNewQuote((prev) => {
+      const updatedItems = (prev.items || []).map((it) => {
+        if (isNoWarr) {
+          return { ...it, warranty: 'No Warranty' };
+        }
+        if (!it.warranty || it.warranty === '24 Months' || it.warranty === 'No Warranty' || it.warranty === 'N/A') {
+          return { ...it, warranty: newWarranty };
+        }
+        return it;
+      });
+      return {
+        ...prev,
+        warrantyTerms: newWarranty,
+        items: updatedItems
+      };
     });
   };
 
@@ -2972,6 +3037,30 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               <span className="text-[10px] text-amber-400 font-semibold">Lead Time: {item.leadTime}</span>
                             )}
                             {item.remarks && <p className="text-[10px] text-slate-400 italic mt-0.5">{item.remarks}</p>}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <span className="text-[10px] text-slate-400 font-medium">Warranty:</span>
+                              <select
+                                value={item.warranty || 'No Warranty'}
+                                onChange={(e) => handleUpdateItemWarranty(item.id, e.target.value)}
+                                className="bg-slate-950 border border-slate-700 text-[10px] text-blue-300 font-semibold rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none focus:border-blue-500"
+                                title="Change line item warranty"
+                              >
+                                <option value="No Warranty">No Warranty</option>
+                                <option value="1 Year Service Warranty (Without Parts)">1 Year Service (No Parts)</option>
+                                <option value="2 Years Service Warranty (Without Parts)">2 Years Service (No Parts)</option>
+                                <option value="1 Month Replacement Warranty">1 Month Replacement</option>
+                                <option value="3 Months Service Warranty (Without Parts)">3 Months Service</option>
+                                <option value="6 Months Service Warranty (Without Parts)">6 Months Service</option>
+                                <option value="12 Months">12 Months</option>
+                                <option value="24 Months">24 Months</option>
+                                <option value="36 Months">36 Months</option>
+                                <option value="Lifetime">Lifetime</option>
+                                {item.warranty &&
+                                  !['No Warranty', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(item.warranty) && (
+                                    <option value={item.warranty}>{item.warranty}</option>
+                                  )}
+                              </select>
+                            </div>
                           </td>
                           <td className="px-3 py-2.5">
                             {item.type === 'IN_STOCK' ? (
@@ -3335,42 +3424,54 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       <div className="flex items-center gap-1 bg-slate-950 border border-slate-700/80 rounded px-1 py-0.5">
                         <button
                           type="button"
-                          onClick={() => setNewQuote(prev => ({ ...prev, warrantyTerms: '1 Year Service Warranty (Without Parts)' }))}
+                          onClick={() => handleUpdateQuotationWarrantyTerms('No Warranty')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                            /no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms || '')
+                              ? 'bg-rose-600 text-white font-bold'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                          }`}
+                        >
+                          No Warranty
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuotationWarrantyTerms('1 Year Service Warranty (Without Parts)')}
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
                             newQuote.warrantyTerms === '1 Year Service Warranty (Without Parts)'
                               ? 'bg-blue-600 text-white font-bold'
                               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                           }`}
                         >
-                          1Y Service (No Parts)
+                          1Y Service
                         </button>
                         <button
                           type="button"
-                          onClick={() => setNewQuote(prev => ({ ...prev, warrantyTerms: '2 Years Service Warranty (Without Parts)' }))}
+                          onClick={() => handleUpdateQuotationWarrantyTerms('2 Years Service Warranty (Without Parts)')}
                           className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
                             newQuote.warrantyTerms === '2 Years Service Warranty (Without Parts)'
                               ? 'bg-blue-600 text-white font-bold'
                               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                           }`}
                         >
-                          2Y Service (No Parts)
+                          2Y Service
                         </button>
                       </div>
                     </div>
                     <select
+                      value={newQuote.warrantyTerms || ''}
                       onChange={(e) => {
                         if (e.target.value) {
-                          setNewQuote({ ...newQuote, warrantyTerms: e.target.value });
+                          handleUpdateQuotationWarrantyTerms(e.target.value);
                         }
                       }}
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
                       <option value="">Standard presets...</option>
-                      <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
-                      <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                       <option value="No Warranty">No Warranty</option>
                       <option value="No Warranty Applicable">No Warranty Applicable</option>
                       <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                      <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
+                      <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                       <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
                       <option value="3 Months Service Warranty (Without Parts)">3 Months Service Warranty (Without Parts)</option>
                       <option value="6 Months Service Warranty (Without Parts)">6 Months Service Warranty (Without Parts)</option>
@@ -3384,9 +3485,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <textarea
                     rows={2}
                     value={newQuote.warrantyTerms || ''}
-                    onChange={(e) => setNewQuote({ ...newQuote, warrantyTerms: e.target.value })}
+                    onChange={(e) => handleUpdateQuotationWarrantyTerms(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
-                    placeholder="e.g. 1 Year Service Warranty (Without Parts)"
+                    placeholder="e.g. No Warranty or 1 Year Service Warranty (Without Parts)"
                   />
                 </div>
 
@@ -4170,11 +4271,23 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     {selectedQuotation.items.map((item, idx) => {
                       const unitPriceWithTax = item.unitPrice * (1 + (item.vatPercent || 0) / 100 + (item.taxPercent || 0) / 100);
                       const lineTotal = item.quantity * unitPriceWithTax;
+                      const isQuoteNoWarranty = /no\s*warranty|without\s*warranty|no\s*guarantee/i.test(selectedQuotation.warrantyTerms || '');
+
+                      const effectiveItemWarranty = (() => {
+                        if (isQuoteNoWarranty) {
+                          return 'No Warranty';
+                        }
+                        if (item.warranty && item.warranty.trim() && !/no\s*warranty/i.test(item.warranty)) {
+                          return item.warranty.trim();
+                        }
+                        return selectedQuotation.warrantyTerms?.trim() || item.warranty || '';
+                      })();
+
                       const description = item.description && item.description.trim()
                         ? item.description
                         : [
                             item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : ''),
-                            item.warranty ? `Warranty: ${item.warranty}` : '',
+                            effectiveItemWarranty ? `Warranty: ${effectiveItemWarranty}` : '',
                             item.leadTime && item.leadTime !== 'Immediate' ? `Delivery: ${item.leadTime}` : '',
                             item.remarks || ''
                           ].filter(Boolean).join('\n') || '--';
@@ -4620,6 +4733,68 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:outline-none focus:border-blue-500 resize-none"
               />
+            </div>
+
+            {/* Warranty Support */}
+            <div className="pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-slate-400 font-semibold text-xs">Warranty Support (Line Item)</label>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setItemForm({ ...itemForm, warranty: 'No Warranty' })}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
+                      /no\s*warranty|without\s*warranty/i.test(itemForm.warranty || '')
+                        ? 'bg-rose-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    No Warranty
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setItemForm({ ...itemForm, warranty: '1 Year Service Warranty (Without Parts)' })}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
+                      itemForm.warranty === '1 Year Service Warranty (Without Parts)'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    1Y Service
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setItemForm({ ...itemForm, warranty: '24 Months' })}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
+                      itemForm.warranty === '24 Months'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    24M
+                  </button>
+                </div>
+              </div>
+              <select
+                value={itemForm.warranty || 'No Warranty'}
+                onChange={(e) => setItemForm({ ...itemForm, warranty: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-100 font-semibold text-xs focus:border-blue-500 focus:outline-none cursor-pointer"
+              >
+                <option value="No Warranty">No Warranty</option>
+                <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
+                <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
+                <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
+                <option value="3 Months Service Warranty (Without Parts)">3 Months Service Warranty (Without Parts)</option>
+                <option value="6 Months Service Warranty (Without Parts)">6 Months Service Warranty (Without Parts)</option>
+                <option value="12 Months">12 Months</option>
+                <option value="24 Months">24 Months</option>
+                <option value="36 Months">36 Months</option>
+                <option value="Lifetime">Lifetime</option>
+                {itemForm.warranty &&
+                  !['No Warranty', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(itemForm.warranty) && (
+                    <option value={itemForm.warranty}>{itemForm.warranty}</option>
+                  )}
+              </select>
             </div>
 
             {/* Common Item Parameters (Qty, Unit, Quoted Price, VAT, TAX) */}
@@ -5311,6 +5486,17 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <div className="flex items-center gap-1 bg-slate-950 border border-slate-700/80 rounded px-1 py-0.5">
                     <button
                       type="button"
+                      onClick={() => setTermsForm(prev => ({ ...prev, warrantyTerms: 'No Warranty' }))}
+                      className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                        /no\s*warranty|without\s*warranty/i.test(termsForm.warrantyTerms || '')
+                          ? 'bg-rose-600 text-white font-bold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      No Warranty
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setTermsForm(prev => ({ ...prev, warrantyTerms: '1 Year Service Warranty (Without Parts)' }))}
                       className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
                         termsForm.warrantyTerms === '1 Year Service Warranty (Without Parts)'
@@ -5318,7 +5504,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                       }`}
                     >
-                      1Y Service (No Parts)
+                      1Y Service
                     </button>
                     <button
                       type="button"
@@ -5329,20 +5515,21 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                       }`}
                     >
-                      2Y Service (No Parts)
+                      2Y Service
                     </button>
                   </div>
                 </div>
                 <select
+                  value={termsForm.warrantyTerms || ''}
                   onChange={(e) => e.target.value && setTermsForm({ ...termsForm, warrantyTerms: e.target.value })}
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
-                  <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
-                  <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                   <option value="No Warranty">No Warranty</option>
                   <option value="No Warranty Applicable">No Warranty Applicable</option>
                   <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                  <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
+                  <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                   <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
                   <option value="3 Months Service Warranty (Without Parts)">3 Months Service Warranty (Without Parts)</option>
                   <option value="6 Months Service Warranty (Without Parts)">6 Months Service Warranty (Without Parts)</option>

@@ -205,6 +205,39 @@ export function runCrossModuleSelfHealing(): void {
         coatPinItem.sku || 'COATPINBOX'
       );
     }
+
+    // Reconcile Quotation Warranty Discrepancies:
+    // If a quotation has "No Warranty" in terms, ensure its items reflect "No Warranty" rather than stale 24 Months
+    const quotesStr = localStorage.getItem('globotech_erp_quotations');
+    if (quotesStr) {
+      const quotes = JSON.parse(quotesStr);
+      if (Array.isArray(quotes)) {
+        let modified = false;
+        const healedQuotes = quotes.map((q: any) => {
+          const isQuoteNoWarranty = /no\s*warranty|without\s*warranty/i.test(q.warrantyTerms || '');
+          if (isQuoteNoWarranty && Array.isArray(q.items)) {
+            let itemChanged = false;
+            const updatedItems = q.items.map((it: any) => {
+              if (it.warranty === '24 Months' || !it.warranty || it.warranty === 'N/A') {
+                itemChanged = true;
+                return { ...it, warranty: 'No Warranty' };
+              }
+              return it;
+            });
+            if (itemChanged) {
+              modified = true;
+              return { ...q, items: updatedItems };
+            }
+          }
+          return q;
+        });
+
+        if (modified) {
+          localStorage.setItem('globotech_erp_quotations', JSON.stringify(healedQuotes));
+          window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: healedQuotes }));
+        }
+      }
+    }
   } catch (e) {
     console.warn('Self healing sync notice:', e);
   }
