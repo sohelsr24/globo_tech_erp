@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { Formatters } from '@/lib/formatters';
 import { restoreERPBackupData } from '@/lib/erpBackup';
+import { syncProductNameSkuAcrossAllModules } from '@/lib/crossModuleSync';
 import {
   ProductItem,
   WarehouseStockItem,
@@ -832,6 +833,11 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
       window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
       window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
       window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+
+      // Cascade product name and SKU changes across Quotations, Bills, and Ledger
+      if (trimmedName !== oldName || trimmedSku !== oldSku) {
+        syncProductNameSkuAcrossAllModules(oldName, oldSku, trimmedName, trimmedSku);
+      }
     }
 
     setIsEditStockModalOpen(false);
@@ -1021,6 +1027,9 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
       window.dispatchEvent(new CustomEvent('globotech_stock_updated', { detail: updatedStock }));
       window.dispatchEvent(new CustomEvent('globotech_products_updated', { detail: updatedProducts }));
       window.dispatchEvent(new CustomEvent('globotech_ledger_updated', { detail: updatedLedger }));
+
+      // Cascade product name and SKU changes across Quotations, Bills, and Ledger
+      syncProductNameSkuAcrossAllModules(oldName, oldSku, trimmedName, trimmedSku);
     }
 
     setIsNameSkuModalOpen(false);

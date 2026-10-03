@@ -26,6 +26,7 @@ import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB, restoreERPBackupData } from '@/lib/erpBackup';
 import { MASTER_DATABASE_PAYLOAD } from '@/lib/masterDatabasePayload';
+import { runCrossModuleSelfHealing } from '@/lib/crossModuleSync';
 
 const VALID_TABS = [
   'dashboard',
@@ -106,6 +107,9 @@ export default function AppHome() {
     } catch (e) {
       console.warn('Auto restore notice:', e);
     }
+
+    // Run cross-module self-healing to sync product names/SKUs with Quotations and Bills
+    runCrossModuleSelfHealing();
 
     // Verify storage integrity and dual-layer mirror across reboots
     verifyAndRestoreStorageIntegrity().catch((err) => {

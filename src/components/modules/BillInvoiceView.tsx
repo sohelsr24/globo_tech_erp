@@ -627,9 +627,24 @@ export function BillInvoiceView({
     };
     window.addEventListener('globotech_quotations_updated', handleQuotesUpdated);
 
+    const handleBillsUpdated = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setBills(e.detail);
+      } else if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('globotech_erp_bill_invoices');
+        if (saved) {
+          try {
+            setBills(JSON.parse(saved));
+          } catch (err) {}
+        }
+      }
+    };
+    window.addEventListener('globotech_bills_updated', handleBillsUpdated);
+
     return () => {
       window.removeEventListener('globotech_backup_restored', handleBackupRestored);
       window.removeEventListener('globotech_quotations_updated', handleQuotesUpdated);
+      window.removeEventListener('globotech_bills_updated', handleBillsUpdated);
     };
   }, []);
 

@@ -1,6 +1,4 @@
 // Master Production Default Database
-// Automatically populated from complete ERP snapshot
-
 export const MASTER_INITIAL_PRODUCTS = [
   {
     "id": "PRD-ICEGOLD-01",
@@ -40,9 +38,9 @@ export const MASTER_INITIAL_PRODUCTS = [
   },
   {
     "id": "PRD-29441",
-    "sku": "COATPINTRANSP",
+    "sku": "COATPINBOX",
     "barcode": "880210121182",
-    "name": "Coat Pin",
+    "name": "Coat Pin Box",
     "category": "Gift Items",
     "brand": "no",
     "unit": "pcs",
@@ -435,7 +433,6 @@ export const MASTER_INITIAL_PRODUCTS = [
     "isSerialTracked": true
   }
 ];
-
 export const MASTER_INITIAL_WAREHOUSE_STOCK = [
   {
     "id": "st-icegold-01",
@@ -460,8 +457,8 @@ export const MASTER_INITIAL_WAREHOUSE_STOCK = [
   {
     "id": "st-29451",
     "warehouseName": "Project Store (Site Depot)",
-    "productName": "Coat Pin",
-    "sku": "COATPINTRANSP",
+    "productName": "Coat Pin Box",
+    "sku": "COATPINBOX",
     "available": 200,
     "reserved": 0,
     "damaged": 0,
@@ -638,7 +635,6 @@ export const MASTER_INITIAL_WAREHOUSE_STOCK = [
     "unitLandedCost": 9200
   }
 ];
-
 export const MASTER_INITIAL_STOCK_LEDGER = [
   {
     "id": "led-icegold-01",
@@ -941,7 +937,6 @@ export const MASTER_INITIAL_STOCK_LEDGER = [
     "reasonNotes": "Opening initial audited balance"
   }
 ];
-
 export const MASTER_INITIAL_CATEGORIES = [
   "CCTV & Surveillance",
   "Networking",
