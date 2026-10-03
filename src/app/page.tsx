@@ -24,7 +24,8 @@ import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
-import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB } from '@/lib/erpBackup';
+import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB, restoreERPBackupData } from '@/lib/erpBackup';
+import { MASTER_DATABASE_PAYLOAD } from '@/lib/masterDatabasePayload';
 
 const VALID_TABS = [
   'dashboard',
@@ -91,6 +92,19 @@ export default function AppHome() {
     // Request persistent storage so browser never evicts ERP data
     if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
       navigator.storage.persist().catch(() => {});
+    }
+
+    // Automatic Master Database Recovery:
+    // If browser localStorage has <= 4 stock items or is missing data,
+    // immediately populate with the complete master database across all modules!
+    try {
+      const currentStockStr = localStorage.getItem('globotech_erp_warehouse_stock');
+      const currentStock = currentStockStr ? JSON.parse(currentStockStr) : [];
+      if (!Array.isArray(currentStock) || currentStock.length <= 4) {
+        restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD));
+      }
+    } catch (e) {
+      console.warn('Auto restore notice:', e);
     }
 
     // Verify storage integrity and dual-layer mirror across reboots
