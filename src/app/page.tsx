@@ -27,6 +27,7 @@ import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB, restoreERPBackupData } from '@/lib/erpBackup';
 import { MASTER_DATABASE_PAYLOAD } from '@/lib/masterDatabasePayload';
 import { runCrossModuleSelfHealing } from '@/lib/crossModuleSync';
+import { startAutoBackupDaemon } from '@/lib/autoBackupDaemon';
 
 const VALID_TABS = [
   'dashboard',
@@ -116,19 +117,11 @@ export default function AppHome() {
       console.warn('Storage integrity check notice:', err);
     });
 
-    // Auto-mirror to IndexedDB whenever any data changes
-    const handleGlobalSync = () => {
-      mirrorToIndexedDB().catch(() => {});
-    };
-    window.addEventListener('storage', handleGlobalSync);
-    window.addEventListener('globotech_products_updated', handleGlobalSync);
-    window.addEventListener('globotech_stock_updated', handleGlobalSync);
-    window.addEventListener('globotech_categories_updated', handleGlobalSync);
+    // Start continuous autonomous auto-backup daemon across all modules
+    const stopDaemon = startAutoBackupDaemon();
+
     return () => {
-      window.removeEventListener('storage', handleGlobalSync);
-      window.removeEventListener('globotech_products_updated', handleGlobalSync);
-      window.removeEventListener('globotech_stock_updated', handleGlobalSync);
-      window.removeEventListener('globotech_categories_updated', handleGlobalSync);
+      stopDaemon();
     };
   }, []);
 

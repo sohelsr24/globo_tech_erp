@@ -68,7 +68,23 @@ export function Header({
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'PRODUCTS' | 'WAREHOUSE' | 'BILLS' | 'QUOTATIONS'>('ALL');
   const [backedUpSuccess, setBackedUpSuccess] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [autoBackupJustSaved, setAutoBackupJustSaved] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Listen for background auto-backup completed events
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const handleBackupDone = () => {
+      setAutoBackupJustSaved(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setAutoBackupJustSaved(false), 2200);
+    };
+    window.addEventListener('globotech_auto_backup_completed', handleBackupDone);
+    return () => {
+      window.removeEventListener('globotech_auto_backup_completed', handleBackupDone);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const handleQuickBackup = () => {
     try {
@@ -539,13 +555,22 @@ export function Header({
             {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
           </button>
 
-          {/* Local Storage Live Status Indicator */}
+          {/* Continuous Auto-Backup Live Status Indicator */}
           <div 
-            className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-[11px] font-medium flex-shrink-0"
-            title="All records are saved to your local disk and persistent database. Safe across computer restarts."
+            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl border text-[11px] font-medium transition-all duration-300 flex-shrink-0 ${
+              autoBackupJustSaved
+                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 scale-105 shadow-sm shadow-emerald-500/20'
+                : 'bg-emerald-950/60 border-emerald-800/60 text-emerald-400'
+            }`}
+            title="অটো-ব্যাকআপ সক্রিয়: প্রতিটি আপডেট বা এডিট সাথে সাথে লোকাল ডিস্ক ও পারসিস্টেন্ট ডেটাবেজে অটো ব্যাকআপ হয়ে যায়।"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="hidden sm:inline">Saved to Disk</span>
+            <span className={`w-1.5 h-1.5 rounded-full ${autoBackupJustSaved ? 'bg-emerald-300 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
+            <span className="hidden sm:inline font-semibold">
+              {autoBackupJustSaved ? 'অটো-ব্যাকআপ হয়েছে!' : 'অটো-ব্যাকআপ সক্রিয়'}
+            </span>
+            <span className="sm:hidden font-semibold">
+              {autoBackupJustSaved ? 'সংরক্ষিত' : 'অটো'}
+            </span>
           </div>
 
           {/* Mobile / PC Sync Button */}

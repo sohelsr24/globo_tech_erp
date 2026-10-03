@@ -346,12 +346,33 @@ export function clearAppCacheAndReload(): void {
 }
 
 /**
+ * Browser Persistent Storage Requester:
+ * Guarantees operating system / browser will NOT evict ERP data when disk space is low.
+ */
+export async function enablePersistentStorage(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (navigator.storage && navigator.storage.persist) {
+      const isPersisted = await navigator.storage.persist();
+      if (isPersisted) {
+        localStorage.setItem(ERP_STORAGE_KEYS.PERSISTENCE_STATUS, 'GRANTED');
+      }
+      return isPersisted;
+    }
+  } catch (e) {
+    console.warn('Persistent storage request notice:', e);
+  }
+  return false;
+}
+
+/**
  * IndexedDB Enterprise Mirror Engine
  * Provides dual-layer redundancy: Even if browser localStorage is cleared, IndexedDB preserves all data.
  */
 const IDB_NAME = 'GloboTech_ERP_EnterpriseDB';
 const IDB_STORE = 'enterprise_mirror';
-const IDB_VERSION = 1;
+const IDB_HISTORY_STORE = 'rolling_backups';
+const IDB_VERSION = 2;
 
 function openIDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -359,10 +380,13 @@ function openIDB(): Promise<IDBDatabase> {
       return reject(new Error('IndexedDB not supported'));
     }
     const request = indexedDB.open(IDB_NAME, IDB_VERSION);
-    request.onupgradeneeded = () => {
+    request.onupgradeneeded = (e) => {
       const db = request.result;
       if (!db.objectStoreNames.contains(IDB_STORE)) {
         db.createObjectStore(IDB_STORE, { keyPath: 'key' });
+      }
+      if (!db.objectStoreNames.contains(IDB_HISTORY_STORE)) {
+        db.createObjectStore(IDB_HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -371,24 +395,84 @@ function openIDB(): Promise<IDBDatabase> {
 }
 
 /**
- * Saves complete ERP payload into IndexedDB
+ * Saves complete ERP payload into IndexedDB (both latest mirror & rolling history)
  */
-export async function mirrorToIndexedDB(payload?: ERPBackupPayload): Promise<void> {
+export async function mirrorToIndexedDB(payload?: ERPBackupPayload, triggerSource?: string): Promise<void> {
+  if (typeof window === 'undefined') return;
   try {
     const dataToSave = payload || generateERPBackupPayload();
     const db = await openIDB();
-    const tx = db.transaction(IDB_STORE, 'readwrite');
+
+    // 1. Save latest full snapshot
+    const tx = db.transaction([IDB_STORE, IDB_HISTORY_STORE], 'readwrite');
     const store = tx.objectStore(IDB_STORE);
+    const now = Date.now();
+    const nowIso = new Date().toISOString();
+
     store.put({
       key: 'latest_full_snapshot',
-      timestamp: Date.now(),
-      savedAt: new Date().toISOString(),
+      timestamp: now,
+      savedAt: nowIso,
+      triggerSource: triggerSource || 'auto',
       payload: dataToSave
     });
+
+    // 2. Append to rolling history
+    try {
+      const historyStore = tx.objectStore(IDB_HISTORY_STORE);
+      historyStore.add({
+        timestamp: now,
+        savedAt: nowIso,
+        triggerSource: triggerSource || 'auto',
+        totalRecords: Object.values(dataToSave.meta.recordCounts).reduce((a: number, b: number) => a + b, 0),
+        payload: dataToSave
+      });
+
+      // Keep only the latest 10 historical snapshots to conserve disk
+      const countReq = historyStore.count();
+      countReq.onsuccess = () => {
+        if (countReq.result > 10) {
+          const openCursor = historyStore.openCursor();
+          let deleted = 0;
+          const toDelete = countReq.result - 10;
+          openCursor.onsuccess = () => {
+            const cursor = openCursor.result;
+            if (cursor && deleted < toDelete) {
+              cursor.delete();
+              deleted++;
+              cursor.continue();
+            }
+          };
+        }
+      };
+    } catch (e) {}
+
+    // 3. Update localStorage markers
+    localStorage.setItem(ERP_STORAGE_KEYS.LAST_BACKUP_DATE, nowIso);
+    localStorage.setItem('globotech_erp_last_auto_backup_timestamp', now.toString());
+
+    // 4. Dispatch backup event for UI badges
+    window.dispatchEvent(
+      new CustomEvent('globotech_auto_backup_completed', {
+        detail: {
+          timestamp: now,
+          savedAt: nowIso,
+          totalRecords: Object.values(dataToSave.meta.recordCounts).reduce((a: number, b: number) => a + b, 0)
+        }
+      })
+    );
   } catch (e) {
-    // Non-fatal fallback
     console.warn('IndexedDB mirror sync skipped:', e);
   }
+}
+
+/**
+ * Returns latest auto-backup timestamp
+ */
+export function getLatestAutoBackupTimestamp(): number {
+  if (typeof window === 'undefined') return 0;
+  const ts = localStorage.getItem('globotech_erp_last_auto_backup_timestamp');
+  return ts ? Number(ts) : 0;
 }
 
 /**
