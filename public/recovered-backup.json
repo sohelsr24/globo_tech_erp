@@ -3,16 +3,16 @@
     "app": "Globo Tech Enterprise ERP",
     "company": "Globo Tech Bangladesh",
     "version": "1.0.0",
-    "exportedAt": "2026-10-03T18:43:41.543Z",
-    "timestamp": 1791053021543,
+    "exportedAt": "2026-10-03T19:08:03.477Z",
+    "timestamp": 1791054483478,
     "recordCounts": {
       "quotations": 17,
       "bills": 24,
       "customers": 5,
       "projects": 3,
-      "products": 23,
-      "warehouseStock": 19,
-      "stockLedger": 24,
+      "products": 24,
+      "warehouseStock": 20,
+      "stockLedger": 25,
       "categories": 11,
       "sales": 2,
       "imports": 2,
@@ -3343,6 +3343,24 @@
     ],
     "products": [
       {
+        "id": "PRD-ICEGOLD-01",
+        "sku": "ICE60KHAM",
+        "barcode": "880192837499",
+        "name": "Icegold A4 Size Kham",
+        "category": "Print Items",
+        "brand": "Icegold",
+        "unit": "pcs",
+        "stock": 500,
+        "minStock": 50,
+        "purchasePriceCNY": 0,
+        "currentLandedCost": 45,
+        "retailPrice": 85,
+        "wholesalePrice": 75,
+        "projectPrice": 70,
+        "dealerPrice": 65,
+        "isSerialTracked": false
+      },
+      {
         "id": "PRD-03594",
         "sku": "BOOKPMT",
         "barcode": "880273706970",
@@ -3759,6 +3777,16 @@
     ],
     "warehouseStock": [
       {
+        "id": "st-icegold-01",
+        "warehouseName": "Project Store (Site Depot)",
+        "productName": "Icegold A4 Size Kham",
+        "sku": "ICE60KHAM",
+        "available": 500,
+        "reserved": 0,
+        "damaged": 0,
+        "unitLandedCost": 45
+      },
+      {
         "id": "st-03604",
         "warehouseName": "Project Store (Site Depot)",
         "productName": "A Tale of A  Dark Period  Book",
@@ -3950,6 +3978,18 @@
       }
     ],
     "stockLedger": [
+      {
+        "id": "led-icegold-01",
+        "timestamp": "2026-10-03 14:00",
+        "productName": "Icegold A4 Size Kham",
+        "warehouseName": "Project Store (Site Depot)",
+        "movementType": "OPENING_STOCK",
+        "quantityDelta": 500,
+        "balanceAfter": 500,
+        "unitLandedCost": 45,
+        "referenceId": "INIT-ICEGOLD",
+        "reasonNotes": "Opening stock for Icegold A4 Size Kham"
+      },
       {
         "id": "led-1791015803618",
         "timestamp": "2026-10-03 08:23",

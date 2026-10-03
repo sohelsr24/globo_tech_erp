@@ -419,8 +419,8 @@ export async function verifyAndRestoreStorageIntegrity(): Promise<{ recovered: b
           }
           const snapshotRecords = Object.values(snapshotPayload.meta.recordCounts).reduce((a, b) => a + b, 0);
 
-          // If localStorage has 0 records but IndexedDB has a snapshot, restore!
-          if (totalLocalRecords === 0 && snapshotRecords > 0) {
+          // If localStorage has less than 15 records (or 0) but IndexedDB has snapshot, restore!
+          if (totalLocalRecords < 15 && snapshotRecords > 15) {
             restoreERPBackupData(JSON.stringify(snapshotPayload));
             return resolve({
               recovered: true,
@@ -428,6 +428,25 @@ export async function verifyAndRestoreStorageIntegrity(): Promise<{ recovered: b
             });
           }
         }
+
+        // If local records are fewer than 15, auto-fetch full recovered database from web root
+        if (totalLocalRecords < 15) {
+          fetch('/recovered-backup.json')
+            .then((res) => {
+              if (res.ok) return res.text();
+              throw new Error('Not found');
+            })
+            .then((jsonStr) => {
+              restoreERPBackupData(jsonStr);
+              resolve({ recovered: true, message: 'স্বয়ংক্রিয়ভাবে সম্পূর্ণ ব্যাকআপ লোড করা হয়েছে!' });
+            })
+            .catch(() => {
+              mirrorToIndexedDB(currentPayload);
+              resolve({ recovered: false, message: 'Storage verified.' });
+            });
+          return;
+        }
+
         // Save current snapshot to ensure IndexedDB is always up to date
         mirrorToIndexedDB(currentPayload);
         resolve({ recovered: false, message: 'Storage verified and fully intact.' });
