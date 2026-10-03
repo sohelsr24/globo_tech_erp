@@ -4041,12 +4041,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               {/* Watermark in background matching company pad */}
               <div
                 className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
-                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.07 }}
+                style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.14 }}
               >
                 <img
                   src={GLOBO_TECH_LOGO_DATA_URL}
                   alt="Globo Tech Watermark"
-                  style={{ width: '320px', maxWidth: '80%', objectFit: 'contain' }}
+                  style={{ width: '440px', maxWidth: '82%', objectFit: 'contain' }}
                 />
               </div>
 
@@ -4117,7 +4117,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </table>
 
                 {/* 3. Client & Project Details Table: Guaranteed 2 equal columns on mobile print */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', marginBottom: '10px', fontSize: '10.5px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'transparent', border: '1px solid #cbd5e1', borderRadius: '6px', marginBottom: '10px', fontSize: '10.5px' }}>
                   <tbody>
                     <tr>
                       {/* Quotation Prepared For */}
@@ -4156,7 +4156,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 {/* 4. Customer Facing Item Table */}
                 <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000000', fontSize: '10px', color: '#000000', marginBottom: '8px' }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#ffffff' }}>
+                    <tr style={{ backgroundColor: 'transparent' }}>
                       <th style={{ border: '1px solid #000', padding: '5px 4px', textAlign: 'center', fontWeight: 'bold', width: '32px' }}>Sl</th>
                       <th style={{ border: '1px solid #000', padding: '5px 6px', textAlign: 'center', fontWeight: 'bold', width: '150px' }}>Product Name</th>
                       <th style={{ border: '1px solid #000', padding: '5px 8px', textAlign: 'center', fontWeight: 'bold' }}>Product Description</th>
@@ -4180,7 +4180,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           ].filter(Boolean).join('\n') || '--';
 
                       return (
-                        <tr key={item.id} style={{ backgroundColor: '#ffffff' }}>
+                        <tr key={item.id} style={{ backgroundColor: 'transparent' }}>
                           <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', fontSize: '10.5px' }}>
                             {idx + 1}
                           </td>
@@ -4219,7 +4219,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         <tr>
                           {/* Left: Amount in Words */}
                           <td style={{ width: '54%', verticalAlign: 'bottom', paddingRight: '12px' }}>
-                            <div style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: '#f8fafc', fontSize: '10px', lineHeight: 1.4 }}>
+                            <div style={{ padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '6px', backgroundColor: 'transparent', fontSize: '10px', lineHeight: 1.4 }}>
                               <div style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '0.5px', marginBottom: '3px' }}>
                                 AMOUNT IN WORDS:
                               </div>

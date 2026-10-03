@@ -42,10 +42,12 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$M
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/lib/formatters.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$QuotationView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/modules/QuotationView.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$CustomersView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/components/modules/CustomersView.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/lib/erpBackup.ts [app-client] (ecmascript)");
 "__TURBOPACK__ecmascript__hoisting__location__";
 ;
 var _s = __turbopack_refresh__.signature();
 'use client';
+;
 ;
 ;
 ;
@@ -593,7 +595,10 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                 id: `bi-${it.id || idx}-${Date.now()}`,
                 itemNo: idx + 1,
                 sku: it.sku || '',
-                partNo: it.partNo || it.model || it.sku || '',
+                partNo: (()=>{
+                    const raw = it.partNo || it.model || '';
+                    return raw && raw.trim().toLowerCase() !== (it.name || '').trim().toLowerCase() ? raw : '';
+                })(),
                 serialNumbers: it.serialNumbers || it.serialNo || '',
                 name: it.name || '',
                 description: it.description || it.model || it.brand || '',
@@ -619,9 +624,10 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
         const deliverContactName = targetQuote.customerName || '';
         const deliverContactPhone = targetQuote.customerPhone || '';
         const deliveryLocation = targetQuote.projectLocation || targetQuote.deliveryTerms || targetQuote.customerAddress || '';
-        // Terms & Conditions
+        // Terms & Conditions (automatically reflect quotation VAT mode)
+        const isQuoteExclusive = (targetQuote.vatTaxTerms || '').toLowerCase().includes('exclusive');
         const terms = [
-            '1. VAT&TAX : Included',
+            isQuoteExclusive ? '1. VAT&TAX : Excluded' : '1. VAT&TAX : Included',
             targetQuote.paymentTerms ? `2. Payment: ${targetQuote.paymentTerms}` : '2. Payment: Within Deadline'
         ];
         setFormData((prev)=>{
@@ -641,7 +647,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                 deliverToPhone: stateToUse.deliverToPhone || deliverContactPhone || '',
                 items: mappedItems,
                 subTotal: totals.subTotal,
-                vatTaxIncluded: true,
+                vatTaxIncluded: !isQuoteExclusive,
                 vatTaxAmount: 0,
                 grandTotal: totals.grandTotal,
                 amountInWords: totals.amountInWords,
@@ -997,6 +1003,47 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
         setIsSerialsModalOpen(false);
         showToast(`Updated Serial Numbers & Part Nos for Challan DC/${updatedBill.billNo.replace('GT/', '')}`);
     };
+    // 1-Click Interactive VAT/TAX Mode Toggle (Included vs Excluded)
+    const handleToggleBillVatMode = (mode)=>{
+        if (!activeBill) return;
+        const isIncluded = mode === 'INCLUDED';
+        // Update terms and conditions: replace or update the VAT&TAX line
+        const currentTerms = Array.isArray(activeBill.termsAndConditions) ? [
+            ...activeBill.termsAndConditions
+        ] : [];
+        let foundVatLine = false;
+        const updatedTerms = currentTerms.map((term)=>{
+            if (/vat\s*&?\s*tax/i.test(term)) {
+                foundVatLine = true;
+                return isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded';
+            }
+            return term;
+        });
+        if (!foundVatLine) {
+            updatedTerms.unshift(isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded');
+        }
+        const updatedBill = {
+            ...activeBill,
+            vatTaxIncluded: isIncluded,
+            termsAndConditions: updatedTerms
+        };
+        setActiveBill(updatedBill);
+        const updatedBills = bills.map((b)=>b.id === updatedBill.id ? updatedBill : b);
+        setBills(updatedBills);
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+                window.dispatchEvent(new Event('storage'));
+                window.dispatchEvent(new CustomEvent('globotech_bills_updated', {
+                    detail: updatedBills
+                }));
+                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
+            } catch (err) {
+                console.error('Failed to save bill VAT mode to localStorage:', err);
+            }
+        }
+        showToast(`✓ VAT & TAX set to ${isIncluded ? 'Included' : 'Excluded'}`);
+    };
     // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
     const handlePrintBill = ()=>{
         const printElement = document.getElementById('printable-bill-invoice');
@@ -1026,7 +1073,6 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                 return;
             }
             const billHtml = printElement.innerHTML;
-            const topPaddingMm = usePreprintedPadMode ? padTopMarginMm : 20;
             const docTitle = previewDocType === 'CHALLAN' ? `Delivery Challan - DC-${activeBill?.billNo ? activeBill.billNo.replace('GT/', '') : 'GT'}` : `Bill Invoice - ${activeBill?.billNo || 'GT'}`;
             frameDoc.open();
             frameDoc.write(`
@@ -1038,7 +1084,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
             <style>
               @page {
                 size: A4 portrait;
-                margin: 0;
+                margin: 8mm 10mm 8mm 10mm;
               }
               *, *::before, *::after {
                 box-sizing: border-box;
@@ -1046,28 +1092,45 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                 print-color-adjust: exact !important;
               }
               html, body {
-                margin: 0;
-                padding: 0;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
                 background-color: #ffffff !important;
                 color: #000000 !important;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                 -webkit-font-smoothing: antialiased;
               }
               .print-sheet {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0 auto;
-                padding-top: ${topPaddingMm}mm;
-                padding-left: 20mm;
-                padding-right: 20mm;
-                padding-bottom: 15mm;
-                box-sizing: border-box;
+                width: 100% !important;
+                max-width: 190mm !important;
+                min-height: auto !important;
+                margin: 0 auto !important;
+                padding-top: ${usePreprintedPadMode ? `${Math.max(0, padTopMarginMm - 8)}mm` : '2mm'} !important;
+                padding-left: 2mm !important;
+                padding-right: 2mm !important;
+                padding-bottom: 4mm !important;
+                box-sizing: border-box !important;
                 background: #ffffff;
                 color: #000000;
               }
               table {
-                width: 100%;
-                border-collapse: collapse;
+                width: 100% !important;
+                border-collapse: collapse !important;
+              }
+              thead {
+                display: table-header-group !important;
+              }
+              tfoot {
+                display: table-footer-group !important;
+              }
+              tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .no-print,
+              .print\\:hidden,
+              button {
+                display: none !important;
               }
             </style>
           </head>
@@ -1169,7 +1232,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                 className: "w-4 h-4 text-white"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1342,
+                                lineNumber: 1407,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1177,13 +1240,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                 children: toastMsg
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1343,
+                                lineNumber: 1408,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1341,
+                        lineNumber: 1406,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1198,12 +1261,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-6 h-6"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1351,
+                                            lineNumber: 1416,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1350,
+                                        lineNumber: 1415,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1217,7 +1280,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Bill Invoices & Delivery Challans"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1355,
+                                                        lineNumber: 1420,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1225,7 +1288,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Pad Ready"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1356,
+                                                        lineNumber: 1421,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1233,13 +1296,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Delivery Challan Ready"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1359,
+                                                        lineNumber: 1424,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1354,
+                                                lineNumber: 1419,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1247,19 +1310,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Generate & print client supply bills and official delivery challans (চালান) on pre-printed company pad or plain paper"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1363,
+                                                lineNumber: 1428,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1353,
+                                        lineNumber: 1418,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1349,
+                                lineNumber: 1414,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1272,7 +1335,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1374,
+                                            lineNumber: 1439,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1280,24 +1343,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Create Bill Invoice"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1375,
+                                            lineNumber: 1440,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 1370,
+                                    lineNumber: 1435,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1369,
+                                lineNumber: 1434,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1348,
+                        lineNumber: 1413,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1314,20 +1377,20 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Total Billed Invoices"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1384,
+                                                lineNumber: 1449,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$receipt$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Receipt$3e$__["Receipt"], {
                                                 className: "w-4 h-4 text-emerald-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1385,
+                                                lineNumber: 1450,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1383,
+                                        lineNumber: 1448,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1335,7 +1398,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: stats.totalCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1387,
+                                        lineNumber: 1452,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1343,13 +1406,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Records in system"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1388,
+                                        lineNumber: 1453,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1382,
+                                lineNumber: 1447,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1363,20 +1426,20 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Total Billed Volume"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1393,
+                                                lineNumber: 1458,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
                                                 className: "w-4 h-4 text-sky-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1394,
+                                                lineNumber: 1459,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1392,
+                                        lineNumber: 1457,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1384,7 +1447,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(stats.totalBilled)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1396,
+                                        lineNumber: 1461,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1392,13 +1455,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Commercial value"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1397,
+                                        lineNumber: 1462,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1391,
+                                lineNumber: 1456,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1412,20 +1475,20 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Issued / Pending"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1402,
+                                                lineNumber: 1467,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock$3e$__["Clock"], {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1403,
+                                                lineNumber: 1468,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1401,
+                                        lineNumber: 1466,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1433,7 +1496,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: stats.pendingCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1405,
+                                        lineNumber: 1470,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1441,13 +1504,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Awaiting collection"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1406,
+                                        lineNumber: 1471,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1400,
+                                lineNumber: 1465,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1461,20 +1524,20 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Settled / Paid"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1411,
+                                                lineNumber: 1476,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__["CheckCircle2"], {
                                                 className: "w-4 h-4 text-emerald-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1412,
+                                                lineNumber: 1477,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1410,
+                                        lineNumber: 1475,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1482,7 +1545,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: stats.paidCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1414,
+                                        lineNumber: 1479,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1490,19 +1553,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Fully collected"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1415,
+                                        lineNumber: 1480,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1409,
+                                lineNumber: 1474,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1381,
+                        lineNumber: 1446,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1515,7 +1578,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         className: "w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1422,
+                                        lineNumber: 1487,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1526,7 +1589,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         className: "jsx-6310dafa82202c51" + " " + "w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1423,
+                                        lineNumber: 1488,
                                         columnNumber: 15
                                     }, this),
                                     searchQuery && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1538,18 +1601,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-3.5 h-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1437,
+                                            lineNumber: 1502,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1431,
+                                        lineNumber: 1496,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1421,
+                                lineNumber: 1486,
                                 columnNumber: 13
                             }, this),
                             searchQuery.trim() && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1564,14 +1627,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: filteredBills.length
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1445,
+                                                lineNumber: 1510,
                                                 columnNumber: 25
                                             }, this),
                                             " matching bills"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1444,
+                                        lineNumber: 1509,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1581,13 +1644,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Reset"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1447,
+                                        lineNumber: 1512,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1443,
+                                lineNumber: 1508,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1597,7 +1660,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         className: "w-3.5 h-3.5 text-slate-400 flex-shrink-0"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1458,
+                                        lineNumber: 1523,
                                         columnNumber: 15
                                     }, this),
                                     [
@@ -1613,7 +1676,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: st === 'ALL' ? 'All Bills' : st
                                         }, st, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1460,
+                                            lineNumber: 1525,
                                             columnNumber: 17
                                         }, this)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1621,7 +1684,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "|"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1473,
+                                        lineNumber: 1538,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1634,7 +1697,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5 text-emerald-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1486,
+                                                lineNumber: 1551,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1646,25 +1709,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1487,
+                                                lineNumber: 1552,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1476,
+                                        lineNumber: 1541,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1457,
+                                lineNumber: 1522,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1420,
+                        lineNumber: 1485,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1679,7 +1742,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1498,
+                                            lineNumber: 1563,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1687,7 +1750,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "No bill invoices found"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1499,
+                                            lineNumber: 1564,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1695,13 +1758,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Click “Create Bill Invoice” above to generate your first company pad bill from quotation."
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1500,
+                                            lineNumber: 1565,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 1497,
+                                    lineNumber: 1562,
                                     columnNumber: 17
                                 }, this) : filteredBills.map((bill)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "jsx-6310dafa82202c51" + " " + "p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-md",
@@ -1720,7 +1783,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.billNo
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1513,
+                                                                        lineNumber: 1578,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1742,7 +1805,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                         children: "ISSUED"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                        lineNumber: 1532,
+                                                                                        lineNumber: 1597,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1751,7 +1814,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                         children: "PAID"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                        lineNumber: 1533,
+                                                                                        lineNumber: 1598,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1760,7 +1823,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                         children: "PARTIAL"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                        lineNumber: 1534,
+                                                                                        lineNumber: 1599,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1769,7 +1832,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                         children: "DRAFT"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                        lineNumber: 1535,
+                                                                                        lineNumber: 1600,
                                                                                         columnNumber: 31
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1778,39 +1841,39 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                         children: "CANCELLED"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                        lineNumber: 1536,
+                                                                                        lineNumber: 1601,
                                                                                         columnNumber: 31
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1517,
+                                                                                lineNumber: 1582,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                 className: "jsx-6310dafa82202c51" + " " + `w-1.5 h-1.5 rounded-full absolute left-2 pointer-events-none ${BILL_STATUS_THEME[bill.status]?.dot || 'bg-slate-400'}`
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1538,
+                                                                                lineNumber: 1603,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                                 className: "w-2.5 h-2.5 absolute right-1.5 pointer-events-none opacity-60"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1543,
+                                                                                lineNumber: 1608,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1516,
+                                                                        lineNumber: 1581,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1512,
+                                                                lineNumber: 1577,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1818,13 +1881,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: bill.date
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1546,
+                                                                lineNumber: 1611,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1511,
+                                                        lineNumber: 1576,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1835,7 +1898,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Grand Total"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1550,
+                                                                lineNumber: 1615,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1843,19 +1906,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(bill.grandTotal)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1551,
+                                                                lineNumber: 1616,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1549,
+                                                        lineNumber: 1614,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1510,
+                                                lineNumber: 1575,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1869,7 +1932,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Client (Bill To)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1559,
+                                                                lineNumber: 1624,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1877,7 +1940,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: bill.billToName
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1560,
+                                                                lineNumber: 1625,
                                                                 columnNumber: 25
                                                             }, this),
                                                             bill.billToAddress && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1885,13 +1948,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: bill.billToAddress
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1562,
+                                                                lineNumber: 1627,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1558,
+                                                        lineNumber: 1623,
                                                         columnNumber: 23
                                                     }, this),
                                                     (bill.deliverToName || bill.deliverToPhone || bill.deliverToAddress) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1902,7 +1965,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Delivered To"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1568,
+                                                                lineNumber: 1633,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1910,7 +1973,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: bill.deliverToAddress || '—'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1569,
+                                                                lineNumber: 1634,
                                                                 columnNumber: 27
                                                             }, this),
                                                             (bill.deliverToName || bill.deliverToPhone) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1921,7 +1984,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.deliverToName
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1572,
+                                                                        lineNumber: 1637,
                                                                         columnNumber: 54
                                                                     }, this),
                                                                     bill.deliverToName && bill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1929,7 +1992,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "•"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1573,
+                                                                        lineNumber: 1638,
                                                                         columnNumber: 77
                                                                     }, this),
                                                                     bill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("a", {
@@ -1938,19 +2001,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.deliverToPhone
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1575,
+                                                                        lineNumber: 1640,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1571,
+                                                                lineNumber: 1636,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1567,
+                                                        lineNumber: 1632,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1964,7 +2027,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "PO Number"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1589,
+                                                                        lineNumber: 1654,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     bill.poNumber ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1972,14 +2035,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.poNumber
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1591,
+                                                                        lineNumber: 1656,
                                                                         columnNumber: 29
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "jsx-6310dafa82202c51" + " " + "text-slate-500 italic text-[11px]",
                                                                         children: "None"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1595,
+                                                                        lineNumber: 1660,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     bill.quotationRef && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1990,13 +2053,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1598,
+                                                                        lineNumber: 1663,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1588,
+                                                                lineNumber: 1653,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2010,7 +2073,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             className: "w-3 h-3 text-emerald-400"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1611,
+                                                                            lineNumber: 1676,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2018,13 +2081,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: bill.poAttachment.name
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1612,
+                                                                            lineNumber: 1677,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1606,
+                                                                    lineNumber: 1671,
                                                                     columnNumber: 29
                                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                                     type: "button",
@@ -2035,7 +2098,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             className: "w-3 h-3"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1620,
+                                                                            lineNumber: 1685,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2043,30 +2106,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: "+ Attach PO"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1621,
+                                                                            lineNumber: 1686,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1615,
+                                                                    lineNumber: 1680,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1604,
+                                                                lineNumber: 1669,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1587,
+                                                        lineNumber: 1652,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1557,
+                                                lineNumber: 1622,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2080,7 +2143,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1633,
+                                                                lineNumber: 1698,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2088,13 +2151,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Bill (বিল)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1634,
+                                                                lineNumber: 1699,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1629,
+                                                        lineNumber: 1694,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2106,7 +2169,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1641,
+                                                                lineNumber: 1706,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2114,13 +2177,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "চালান"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1642,
+                                                                lineNumber: 1707,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1636,
+                                                        lineNumber: 1701,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2131,12 +2194,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1649,
+                                                            lineNumber: 1714,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1644,
+                                                        lineNumber: 1709,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2147,29 +2210,29 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1656,
+                                                            lineNumber: 1721,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1651,
+                                                        lineNumber: 1716,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1628,
+                                                lineNumber: 1693,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, bill.id, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1506,
+                                        lineNumber: 1571,
                                         columnNumber: 19
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1495,
+                                lineNumber: 1560,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2189,7 +2252,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Bill NO"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1670,
+                                                            lineNumber: 1735,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2197,7 +2260,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Date"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1671,
+                                                            lineNumber: 1736,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2205,7 +2268,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Client (Bill To)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1672,
+                                                            lineNumber: 1737,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2213,7 +2276,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "PO / Quote Ref"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1673,
+                                                            lineNumber: 1738,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2221,7 +2284,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Delivered To"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1674,
+                                                            lineNumber: 1739,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2229,7 +2292,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Items"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1675,
+                                                            lineNumber: 1740,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2237,7 +2300,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Grand Total"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1676,
+                                                            lineNumber: 1741,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2251,18 +2314,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "(▾ Quick Change)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1680,
+                                                                        lineNumber: 1745,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1678,
+                                                                lineNumber: 1743,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1677,
+                                                            lineNumber: 1742,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2270,18 +2333,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Actions"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1683,
+                                                            lineNumber: 1748,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 1669,
+                                                    lineNumber: 1734,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1668,
+                                                lineNumber: 1733,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2296,7 +2359,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 className: "w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1692,
+                                                                lineNumber: 1757,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2304,7 +2367,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "No bill invoices found"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1693,
+                                                                lineNumber: 1758,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2312,18 +2375,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Click “Create Bill Invoice” above to generate your first company pad bill from quotation."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1694,
+                                                                lineNumber: 1759,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1691,
+                                                        lineNumber: 1756,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 1690,
+                                                    lineNumber: 1755,
                                                     columnNumber: 23
                                                 }, this) : filteredBills.map((bill)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                         className: "jsx-6310dafa82202c51" + " " + "hover:bg-slate-800/40 transition group",
@@ -2338,7 +2401,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: bill.billNo
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1704,
+                                                                            lineNumber: 1769,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         searchQuery && (bill.billNo.toLowerCase().includes(searchQuery.toLowerCase()) || bill.billNo.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().includes(searchQuery.replace(/[^a-zA-Z0-9]/g, '').toLowerCase())) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2346,18 +2409,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: "Match"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1708,
+                                                                            lineNumber: 1773,
                                                                             columnNumber: 35
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1703,
+                                                                    lineNumber: 1768,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1702,
+                                                                lineNumber: 1767,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2365,7 +2428,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: bill.date
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1714,
+                                                                lineNumber: 1779,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2377,7 +2440,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.billToName
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1718,
+                                                                        lineNumber: 1783,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     bill.billToAddress && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2386,13 +2449,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.billToAddress
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1720,
+                                                                        lineNumber: 1785,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1717,
+                                                                lineNumber: 1782,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2405,19 +2468,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: bill.poNumber
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1726,
+                                                                            lineNumber: 1791,
                                                                             columnNumber: 33
                                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             className: "jsx-6310dafa82202c51" + " " + "text-slate-600 italic text-[11px]",
                                                                             children: "No PO"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1730,
+                                                                            lineNumber: 1795,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1724,
+                                                                        lineNumber: 1789,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     bill.quotationRef && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2431,12 +2494,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1735,
+                                                                            lineNumber: 1800,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1734,
+                                                                        lineNumber: 1799,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     bill.poAttachment ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2454,7 +2517,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     className: "w-2.5 h-2.5 text-emerald-400 group-hover/btn:rotate-12 transition-transform"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1751,
+                                                                                    lineNumber: 1816,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2462,18 +2525,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: bill.poAttachment.name
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1752,
+                                                                                    lineNumber: 1817,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1742,
+                                                                            lineNumber: 1807,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1741,
+                                                                        lineNumber: 1806,
                                                                         columnNumber: 31
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         className: "jsx-6310dafa82202c51" + " " + "mt-1",
@@ -2490,7 +2553,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     className: "w-2.5 h-2.5"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1766,
+                                                                                    lineNumber: 1831,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2498,24 +2561,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "+ Attach PO"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1767,
+                                                                                    lineNumber: 1832,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1757,
+                                                                            lineNumber: 1822,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1756,
+                                                                        lineNumber: 1821,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1723,
+                                                                lineNumber: 1788,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2527,7 +2590,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: bill.deliverToAddress || '—'
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1773,
+                                                                        lineNumber: 1838,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     (bill.deliverToName || bill.deliverToPhone) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2539,7 +2602,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 children: bill.deliverToName
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1778,
+                                                                                lineNumber: 1843,
                                                                                 columnNumber: 56
                                                                             }, this),
                                                                             bill.deliverToName && bill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2547,7 +2610,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 children: "•"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1779,
+                                                                                lineNumber: 1844,
                                                                                 columnNumber: 79
                                                                             }, this),
                                                                             bill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2555,19 +2618,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 children: bill.deliverToPhone
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1781,
+                                                                                lineNumber: 1846,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 1777,
+                                                                        lineNumber: 1842,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1772,
+                                                                lineNumber: 1837,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2579,7 +2642,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1788,
+                                                                lineNumber: 1853,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2587,7 +2650,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(bill.grandTotal)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1791,
+                                                                lineNumber: 1856,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2611,7 +2674,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "ISSUED"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1811,
+                                                                                    lineNumber: 1876,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2620,7 +2683,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "PAID"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1812,
+                                                                                    lineNumber: 1877,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2629,7 +2692,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "PARTIAL"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1813,
+                                                                                    lineNumber: 1878,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2638,7 +2701,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "DRAFT"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1814,
+                                                                                    lineNumber: 1879,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2647,38 +2710,38 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "CANCELLED"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1815,
+                                                                                    lineNumber: 1880,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1796,
+                                                                            lineNumber: 1861,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             className: "jsx-6310dafa82202c51" + " " + `w-1.5 h-1.5 rounded-full absolute left-2.5 pointer-events-none ${BILL_STATUS_THEME[bill.status]?.dot || 'bg-slate-400'}`
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1817,
+                                                                            lineNumber: 1882,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                             className: "w-3 h-3 absolute right-2 pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1822,
+                                                                            lineNumber: 1887,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1795,
+                                                                    lineNumber: 1860,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1794,
+                                                                lineNumber: 1859,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2695,12 +2758,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "w-3.5 h-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1838,
+                                                                                lineNumber: 1903,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1828,
+                                                                            lineNumber: 1893,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2712,7 +2775,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     className: "w-3.5 h-3.5"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1846,
+                                                                                    lineNumber: 1911,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2720,13 +2783,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "Bill"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1847,
+                                                                                    lineNumber: 1912,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1841,
+                                                                            lineNumber: 1906,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2738,7 +2801,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     className: "w-3.5 h-3.5"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1854,
+                                                                                    lineNumber: 1919,
                                                                                     columnNumber: 33
                                                                                 }, this),
                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2746,13 +2809,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "Challan"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 1855,
+                                                                                    lineNumber: 1920,
                                                                                     columnNumber: 33
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1849,
+                                                                            lineNumber: 1914,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2763,12 +2826,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "w-3.5 h-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1862,
+                                                                                lineNumber: 1927,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1857,
+                                                                            lineNumber: 1922,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2779,12 +2842,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "w-3.5 h-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1869,
+                                                                                lineNumber: 1934,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1864,
+                                                                            lineNumber: 1929,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2795,56 +2858,56 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "w-3.5 h-3.5"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 1876,
+                                                                                lineNumber: 1941,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 1871,
+                                                                            lineNumber: 1936,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1826,
+                                                                    lineNumber: 1891,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1825,
+                                                                lineNumber: 1890,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, bill.id, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1701,
+                                                        lineNumber: 1766,
                                                         columnNumber: 25
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1688,
+                                                lineNumber: 1753,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1667,
+                                        lineNumber: 1732,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 1666,
+                                    lineNumber: 1731,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1665,
+                                lineNumber: 1730,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1493,
+                        lineNumber: 1558,
                         columnNumber: 11
                     }, this)
                 ]
@@ -2867,7 +2930,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1904,
+                                                lineNumber: 1969,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2875,20 +2938,20 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Back to Bills"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1905,
+                                                lineNumber: 1970,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1899,
+                                        lineNumber: 1964,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: "jsx-6310dafa82202c51" + " " + "h-5 w-px bg-slate-800 hidden sm:block"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1908,
+                                        lineNumber: 1973,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2903,7 +2966,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1921,
+                                                        lineNumber: 1986,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2911,13 +2974,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Bill Invoice (বিল)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1922,
+                                                        lineNumber: 1987,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1912,
+                                                lineNumber: 1977,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2929,7 +2992,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1933,
+                                                        lineNumber: 1998,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2937,19 +3000,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Delivery Challan (চালান)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1934,
+                                                        lineNumber: 1999,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1924,
+                                                lineNumber: 1989,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1911,
+                                        lineNumber: 1976,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2966,7 +3029,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 1940,
+                                                    lineNumber: 2005,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2978,7 +3041,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 1944,
+                                                    lineNumber: 2009,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2998,7 +3061,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "ISSUED"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1959,
+                                                                    lineNumber: 2024,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3007,7 +3070,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "PAID"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1960,
+                                                                    lineNumber: 2025,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3016,7 +3079,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "PARTIAL"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1961,
+                                                                    lineNumber: 2026,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3025,7 +3088,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "DRAFT"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1962,
+                                                                    lineNumber: 2027,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3034,50 +3097,50 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "CANCELLED"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 1963,
+                                                                    lineNumber: 2028,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1946,
+                                                            lineNumber: 2011,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "jsx-6310dafa82202c51" + " " + `w-1.5 h-1.5 rounded-full absolute left-2 pointer-events-none ${BILL_STATUS_THEME[activeBill.status]?.dot || 'bg-slate-400'}`
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1965,
+                                                            lineNumber: 2030,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                             className: "w-2.5 h-2.5 absolute right-1.5 pointer-events-none opacity-60"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 1970,
+                                                            lineNumber: 2035,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 1945,
+                                                    lineNumber: 2010,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 1939,
+                                            lineNumber: 2004,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 1938,
+                                        lineNumber: 2003,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1898,
+                                lineNumber: 1963,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3095,7 +3158,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "w-3.5 h-3.5 text-amber-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1986,
+                                                        lineNumber: 2051,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3103,13 +3166,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Serials & Part Nos"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1987,
+                                                        lineNumber: 2052,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1980,
+                                                lineNumber: 2045,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3120,7 +3183,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Dispatch:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1990,
+                                                        lineNumber: 2055,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3134,7 +3197,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Office Staff / By Hand"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1996,
+                                                                lineNumber: 2061,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3143,7 +3206,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Company Delivery Van"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1997,
+                                                                lineNumber: 2062,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3152,7 +3215,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Dedicated Transport"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1998,
+                                                                lineNumber: 2063,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3161,7 +3224,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Sundarban Courier"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 1999,
+                                                                lineNumber: 2064,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3170,7 +3233,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "SA Paribahan"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2000,
+                                                                lineNumber: 2065,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3179,7 +3242,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Steadfast Courier"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2001,
+                                                                lineNumber: 2066,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3188,19 +3251,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Customer Self-Pickup"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2002,
+                                                                lineNumber: 2067,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 1991,
+                                                        lineNumber: 2056,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 1989,
+                                                lineNumber: 2054,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3211,7 +3274,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "jsx-6310dafa82202c51" + " " + "px-2.5 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs placeholder-slate-600 w-36"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2005,
+                                                lineNumber: 2070,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -3224,7 +3287,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "jsx-6310dafa82202c51" + " " + "rounded border-slate-700 bg-slate-950 text-blue-600 focus:ring-blue-500"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2013,
+                                                        lineNumber: 2078,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3232,13 +3295,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Show Prices"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2019,
+                                                        lineNumber: 2084,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2012,
+                                                lineNumber: 2077,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -3253,7 +3316,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Pre-Printed Pad (No Header)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2026,
+                                                lineNumber: 2091,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3263,13 +3326,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Plain White Paper"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2037,
+                                                lineNumber: 2102,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2025,
+                                        lineNumber: 2090,
                                         columnNumber: 15
                                     }, this),
                                     usePreprintedPadMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3280,7 +3343,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Pad Spacing:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2053,
+                                                lineNumber: 2118,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3294,7 +3357,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "35 mm (Compact Pad)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2059,
+                                                        lineNumber: 2124,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3303,7 +3366,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "45 mm (Standard Pad)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2060,
+                                                        lineNumber: 2125,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3312,7 +3375,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "55 mm (Tall Header Pad)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2061,
+                                                        lineNumber: 2126,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3321,19 +3384,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "65 mm (Large Pad)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2062,
+                                                        lineNumber: 2127,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2054,
+                                                lineNumber: 2119,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2052,
+                                        lineNumber: 2117,
                                         columnNumber: 17
                                     }, this),
                                     activeBill.poAttachment ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3346,7 +3409,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2075,
+                                                lineNumber: 2140,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3354,13 +3417,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "PO Doc"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2076,
+                                                lineNumber: 2141,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2069,
+                                        lineNumber: 2134,
                                         columnNumber: 17
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                         type: "button",
@@ -3372,7 +3435,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2085,
+                                                lineNumber: 2150,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3380,13 +3443,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Attach PO"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2086,
+                                                lineNumber: 2151,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2079,
+                                        lineNumber: 2144,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3398,7 +3461,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2096,
+                                                lineNumber: 2161,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3406,13 +3469,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Edit"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2097,
+                                                lineNumber: 2162,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2091,
+                                        lineNumber: 2156,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3424,7 +3487,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2110,
+                                                lineNumber: 2175,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3432,25 +3495,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: previewDocType === 'CHALLAN' ? 'Print Delivery Challan (A4)' : 'Print Bill to Pad (A4)'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2111,
+                                                lineNumber: 2176,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2101,
+                                        lineNumber: 2166,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 1976,
+                                lineNumber: 2041,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 1897,
+                        lineNumber: 1962,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3460,7 +3523,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                 className: "w-4 h-4 flex-shrink-0 mt-0.5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 2122,
+                                lineNumber: 2187,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3471,7 +3534,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: previewDocType === 'CHALLAN' ? 'Official Delivery Challan (চালান) Notice:' : 'Company Pad Printing Notice:'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2124,
+                                        lineNumber: 2189,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3479,19 +3542,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: previewDocType === 'CHALLAN' ? 'Delivery Challan serves as official goods handover & gate pass proof with customer receiving seal & sign. Use "Pre-Printed Pad" mode to print on official letterhead pad, or "Plain White Paper" mode for full digital header.' : 'This document is designed for your printed company pad (No digital logo, no watermark, and no footer). When clicking "Print to Pad (A4)", select A4 paper and Margins: Default / None.'
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2127,
+                                        lineNumber: 2192,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 2123,
+                                lineNumber: 2188,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 2117,
+                        lineNumber: 2182,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3500,14 +3563,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                             id: "printable-bill-invoice",
                             style: {
                                 width: '210mm',
-                                minHeight: '297mm',
+                                minHeight: 'auto',
                                 boxSizing: 'border-box',
                                 backgroundColor: '#ffffff',
                                 color: '#000000',
-                                paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '20mm',
-                                paddingLeft: '20mm',
-                                paddingRight: '20mm',
-                                paddingBottom: '15mm',
+                                paddingTop: usePreprintedPadMode ? `${padTopMarginMm}mm` : '10mm',
+                                paddingLeft: '14mm',
+                                paddingRight: '14mm',
+                                paddingBottom: '10mm',
                                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif'
                             },
                             className: "jsx-6310dafa82202c51" + " " + "shadow-2xl rounded-sm text-black select-text relative print:shadow-none print:w-full print:m-0 print:p-0",
@@ -3516,8 +3579,8 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     !usePreprintedPadMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             borderBottom: '2px solid #000',
-                                            paddingBottom: '12px',
-                                            marginBottom: '20px'
+                                            paddingBottom: '8px',
+                                            marginBottom: '14px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3533,7 +3596,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                                             style: {
-                                                                fontSize: '24px',
+                                                                fontSize: '22px',
                                                                 fontWeight: '900',
                                                                 margin: '0 0 2px 0',
                                                                 letterSpacing: '-0.5px'
@@ -3542,7 +3605,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "GLOBO TECH"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2163,
+                                                            lineNumber: 2228,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3556,26 +3619,26 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Enterprise Supply & Engineering Solutions"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2166,
+                                                            lineNumber: 2231,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                             style: {
                                                                 fontSize: '10px',
                                                                 color: '#555',
-                                                                margin: '3px 0 0 0'
+                                                                margin: '2px 0 0 0'
                                                             },
                                                             className: "jsx-6310dafa82202c51",
                                                             children: "Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2169,
+                                                            lineNumber: 2234,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2162,
+                                                    lineNumber: 2227,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3597,14 +3660,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "BIN:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2174,
+                                                                    lineNumber: 2239,
                                                                     columnNumber: 54
                                                                 }, this),
                                                                 " 004728009-0202"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2174,
+                                                            lineNumber: 2239,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3618,31 +3681,31 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "TIN:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2175,
+                                                                    lineNumber: 2240,
                                                                     columnNumber: 62
                                                                 }, this),
                                                                 " 169493772750"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2175,
+                                                            lineNumber: 2240,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2173,
+                                                    lineNumber: 2238,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2161,
+                                            lineNumber: 2226,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2160,
+                                        lineNumber: 2225,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3650,7 +3713,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'flex-start',
-                                            marginBottom: '22px'
+                                            marginBottom: '14px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
@@ -3662,7 +3725,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     style: {
                                                         border: '2.5px solid #000',
-                                                        padding: '7px 22px',
+                                                        padding: '6px 20px',
                                                         display: 'inline-block',
                                                         backgroundColor: '#fff'
                                                     },
@@ -3670,7 +3733,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             style: {
-                                                                fontSize: '22px',
+                                                                fontSize: '20px',
                                                                 fontWeight: '900',
                                                                 letterSpacing: '0.8px',
                                                                 color: '#000',
@@ -3681,7 +3744,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "DELIVERY CHALLAN"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2186,
+                                                            lineNumber: 2251,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3697,25 +3760,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "ডেলিভারি চালান"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2189,
+                                                            lineNumber: 2254,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2185,
+                                                    lineNumber: 2250,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2184,
+                                                lineNumber: 2249,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 style: {
                                                     textAlign: 'right',
                                                     fontSize: '12px',
-                                                    lineHeight: '1.45',
+                                                    lineHeight: '1.4',
                                                     fontWeight: '500',
                                                     color: '#000'
                                                 },
@@ -3729,7 +3792,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Challan NO:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2197,
+                                                                lineNumber: 2262,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " DC/",
@@ -3737,7 +3800,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2197,
+                                                        lineNumber: 2262,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3748,7 +3811,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Challan Date:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2198,
+                                                                lineNumber: 2263,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -3756,7 +3819,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2198,
+                                                        lineNumber: 2263,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3767,7 +3830,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Bill/Inv Ref:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2199,
+                                                                lineNumber: 2264,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -3775,7 +3838,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2199,
+                                                        lineNumber: 2264,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3786,7 +3849,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Customer PO:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2200,
+                                                                lineNumber: 2265,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -3794,7 +3857,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2200,
+                                                        lineNumber: 2265,
                                                         columnNumber: 23
                                                     }, this),
                                                     activeBill.quotationRef && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3805,7 +3868,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Quote Ref:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2201,
+                                                                lineNumber: 2266,
                                                                 columnNumber: 56
                                                             }, this),
                                                             " ",
@@ -3813,7 +3876,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2201,
+                                                        lineNumber: 2266,
                                                         columnNumber: 51
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3824,7 +3887,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Dispatch Mode:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2202,
+                                                                lineNumber: 2267,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -3832,7 +3895,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2202,
+                                                        lineNumber: 2267,
                                                         columnNumber: 23
                                                     }, this),
                                                     challanTransportNo && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3843,7 +3906,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Vehicle/Memo:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2203,
+                                                                lineNumber: 2268,
                                                                 columnNumber: 51
                                                             }, this),
                                                             " ",
@@ -3851,26 +3914,26 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2203,
+                                                        lineNumber: 2268,
                                                         columnNumber: 46
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2196,
+                                                lineNumber: 2261,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2182,
+                                        lineNumber: 2247,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            marginBottom: '22px',
+                                            marginBottom: '14px',
                                             fontSize: '12px',
                                             color: '#000'
                                         },
@@ -3888,7 +3951,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '13px',
                                                             borderBottom: '1.5px solid #000',
                                                             paddingBottom: '3px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '130px'
                                                         },
@@ -3896,12 +3959,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Consignee (Bill To)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2211,
+                                                        lineNumber: 2276,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.45'
+                                                            lineHeight: '1.4'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
@@ -3913,7 +3976,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Name:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2215,
+                                                                        lineNumber: 2280,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -3921,7 +3984,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2215,
+                                                                lineNumber: 2280,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3935,7 +3998,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Address:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2216,
+                                                                        lineNumber: 2281,
                                                                         columnNumber: 59
                                                                     }, this),
                                                                     " ",
@@ -3943,7 +4006,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2216,
+                                                                lineNumber: 2281,
                                                                 columnNumber: 25
                                                             }, this),
                                                             activeBill.binNumber && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3957,7 +4020,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "BIN:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2217,
+                                                                        lineNumber: 2282,
                                                                         columnNumber: 84
                                                                     }, this),
                                                                     " ",
@@ -3965,19 +4028,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2217,
+                                                                lineNumber: 2282,
                                                                 columnNumber: 50
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2214,
+                                                        lineNumber: 2279,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2210,
+                                                lineNumber: 2275,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3992,7 +4055,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '13px',
                                                             borderBottom: '1.5px solid #000',
                                                             paddingBottom: '3px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '130px'
                                                         },
@@ -4000,12 +4063,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Delivery Destination"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2223,
+                                                        lineNumber: 2288,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.45'
+                                                            lineHeight: '1.4'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
@@ -4017,7 +4080,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Address:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2227,
+                                                                        lineNumber: 2292,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -4025,7 +4088,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2227,
+                                                                lineNumber: 2292,
                                                                 columnNumber: 25
                                                             }, this),
                                                             activeBill.deliverToName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4039,7 +4102,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Contact Person:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2229,
+                                                                        lineNumber: 2294,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " ",
@@ -4047,7 +4110,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2229,
+                                                                lineNumber: 2294,
                                                                 columnNumber: 27
                                                             }, this),
                                                             activeBill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4061,7 +4124,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Phone No:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2232,
+                                                                        lineNumber: 2297,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " ",
@@ -4069,30 +4132,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2232,
+                                                                lineNumber: 2297,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2226,
+                                                        lineNumber: 2291,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2222,
+                                                lineNumber: 2287,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2208,
+                                        lineNumber: 2273,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
-                                            marginBottom: '16px'
+                                            marginBottom: '12px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -4117,8 +4180,8 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '38px',
+                                                                    padding: '7px 4px',
+                                                                    width: '34px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -4126,28 +4189,28 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "SL"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2243,
+                                                                lineNumber: 2308,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 8px',
+                                                                    padding: '7px 8px',
                                                                     textAlign: 'left',
-                                                                    width: challanShowPrices ? '160px' : '220px',
+                                                                    width: challanShowPrices ? '130px' : '180px',
                                                                     fontWeight: 'bold'
                                                                 },
                                                                 className: "jsx-6310dafa82202c51",
                                                                 children: "Item Name & Part No"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2244,
+                                                                lineNumber: 2309,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 8px',
+                                                                    padding: '7px 8px',
                                                                     textAlign: 'left',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -4155,14 +4218,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Description & Serial Numbers (S/N)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2245,
+                                                                lineNumber: 2310,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '55px',
+                                                                    padding: '7px 4px',
+                                                                    width: '48px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -4170,14 +4233,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Unit"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2246,
+                                                                lineNumber: 2311,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '55px',
+                                                                    padding: '7px 4px',
+                                                                    width: '50px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -4185,7 +4248,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Delivered Qty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2247,
+                                                                lineNumber: 2312,
                                                                 columnNumber: 27
                                                             }, this),
                                                             challanShowPrices && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -4193,7 +4256,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                         style: {
                                                                             borderRight: '1px solid #000',
-                                                                            padding: '8px 6px',
+                                                                            padding: '7px 6px',
                                                                             width: '90px',
                                                                             textAlign: 'right',
                                                                             fontWeight: 'bold'
@@ -4202,13 +4265,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Unit Price"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2250,
+                                                                        lineNumber: 2315,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                         style: {
                                                                             borderRight: '1px solid #000',
-                                                                            padding: '8px 6px',
+                                                                            padding: '7px 6px',
                                                                             width: '95px',
                                                                             textAlign: 'right',
                                                                             fontWeight: 'bold'
@@ -4217,14 +4280,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Amount"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2251,
+                                                                        lineNumber: 2316,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
-                                                                    padding: '8px 6px',
+                                                                    padding: '7px 6px',
                                                                     width: challanShowPrices ? '100px' : '130px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
@@ -4233,18 +4296,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Remarks / Condition"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2254,
+                                                                lineNumber: 2319,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2242,
+                                                        lineNumber: 2307,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2241,
+                                                    lineNumber: 2306,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -4252,14 +4315,16 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: activeBill.items.map((item, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                             style: {
                                                                 borderBottom: '1px solid #000',
-                                                                verticalAlign: 'top'
+                                                                verticalAlign: 'top',
+                                                                pageBreakInside: 'avoid',
+                                                                breakInside: 'avoid'
                                                             },
                                                             className: "jsx-6310dafa82202c51",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center',
                                                                         fontWeight: '500'
                                                                     },
@@ -4267,32 +4332,32 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: idx + 1
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2260,
+                                                                    lineNumber: 2325,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 8px'
+                                                                        padding: '6.5px 8px'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: [
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             style: {
                                                                                 fontWeight: 'bold',
-                                                                                fontSize: '13px'
+                                                                                fontSize: '12.5px'
                                                                             },
                                                                             className: "jsx-6310dafa82202c51",
                                                                             children: item.name
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2264,
+                                                                            lineNumber: 2329,
                                                                             columnNumber: 31
                                                                         }, this),
-                                                                        item.partNo ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        item.partNo && item.partNo.trim().toLowerCase() !== item.name.trim().toLowerCase() ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             style: {
-                                                                                marginTop: '4px',
-                                                                                fontSize: '11px',
+                                                                                marginTop: '3px',
+                                                                                fontSize: '10.5px',
                                                                                 color: '#111'
                                                                             },
                                                                             className: "jsx-6310dafa82202c51",
@@ -4306,7 +4371,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "P/N:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 2267,
+                                                                                    lineNumber: 2332,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 ' ',
@@ -4323,26 +4388,26 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: item.partNo
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 2268,
+                                                                                    lineNumber: 2333,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2266,
+                                                                            lineNumber: 2331,
                                                                             columnNumber: 33
                                                                         }, this) : null
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2263,
+                                                                    lineNumber: 2328,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 8px',
-                                                                        lineHeight: '1.45'
+                                                                        padding: '6.5px 8px',
+                                                                        lineHeight: '1.4'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: [
@@ -4351,17 +4416,17 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: item.description || item.name
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2275,
+                                                                            lineNumber: 2340,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         item.serialNumbers ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                             style: {
-                                                                                marginTop: '6px',
-                                                                                padding: '4px 8px',
+                                                                                marginTop: '4px',
+                                                                                padding: '3px 6px',
                                                                                 backgroundColor: '#f8fafc',
                                                                                 border: '1px dashed #64748b',
                                                                                 borderRadius: '4px',
-                                                                                fontSize: '11.5px',
+                                                                                fontSize: '11px',
                                                                                 color: '#0f172a'
                                                                             },
                                                                             className: "jsx-6310dafa82202c51",
@@ -4374,7 +4439,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "S/N (Serial No):"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 2278,
+                                                                                    lineNumber: 2343,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 ' ',
@@ -4389,47 +4454,47 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: item.serialNumbers
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 2279,
+                                                                                    lineNumber: 2344,
                                                                                     columnNumber: 35
                                                                                 }, this)
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2277,
+                                                                            lineNumber: 2342,
                                                                             columnNumber: 33
                                                                         }, this) : null
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2274,
+                                                                    lineNumber: 2339,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: item.unit
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2285,
+                                                                    lineNumber: 2350,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center',
                                                                         fontWeight: 'bold',
-                                                                        fontSize: '13px'
+                                                                        fontSize: '12.5px'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: item.quantity
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2288,
+                                                                    lineNumber: 2353,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 challanShowPrices && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -4437,7 +4502,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                             style: {
                                                                                 borderRight: '1px solid #000',
-                                                                                padding: '10px 6px',
+                                                                                padding: '6.5px 6px',
                                                                                 textAlign: 'right',
                                                                                 fontWeight: '500'
                                                                             },
@@ -4448,13 +4513,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             })
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2293,
+                                                                            lineNumber: 2358,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                             style: {
                                                                                 borderRight: '1px solid #000',
-                                                                                padding: '10px 6px',
+                                                                                padding: '6.5px 6px',
                                                                                 textAlign: 'right',
                                                                                 fontWeight: 'bold'
                                                                             },
@@ -4465,14 +4530,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             })
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2299,
+                                                                            lineNumber: 2364,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
-                                                                        padding: '10px 6px',
+                                                                        padding: '6.5px 6px',
                                                                         textAlign: 'center',
                                                                         fontSize: '11px',
                                                                         color: '#444'
@@ -4481,18 +4546,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "Intact & Sound"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2307,
+                                                                    lineNumber: 2372,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, item.id, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2259,
+                                                            lineNumber: 2324,
                                                             columnNumber: 27
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2257,
+                                                    lineNumber: 2322,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tfoot", {
@@ -4500,14 +4565,16 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                         style: {
                                                             backgroundColor: '#fcfcfc',
-                                                            borderTop: '2px solid #000'
+                                                            borderTop: '2px solid #000',
+                                                            pageBreakInside: 'avoid',
+                                                            breakInside: 'avoid'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 colSpan: challanShowPrices ? 4 : 4,
                                                                 style: {
-                                                                    padding: '8px 10px',
+                                                                    padding: '7px 10px',
                                                                     fontWeight: 'bold',
                                                                     textAlign: 'right',
                                                                     borderRight: '1px solid #000'
@@ -4516,12 +4583,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Total Delivered Quantity:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2315,
+                                                                lineNumber: 2380,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 style: {
-                                                                    padding: '8px 4px',
+                                                                    padding: '7px 4px',
                                                                     fontWeight: 'bold',
                                                                     textAlign: 'center',
                                                                     borderRight: '1px solid #000',
@@ -4531,7 +4598,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: activeBill.items.reduce((sum, it)=>sum + (Number(it.quantity) || 0), 0)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2318,
+                                                                lineNumber: 2383,
                                                                 columnNumber: 27
                                                             }, this),
                                                             challanShowPrices && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -4539,7 +4606,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                         style: {
                                                                             borderRight: '1px solid #000',
-                                                                            padding: '8px 6px',
+                                                                            padding: '7px 6px',
                                                                             textAlign: 'right',
                                                                             fontWeight: 'bold'
                                                                         },
@@ -4547,13 +4614,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Grand Total:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2323,
+                                                                        lineNumber: 2388,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                         style: {
                                                                             borderRight: '1px solid #000',
-                                                                            padding: '8px 6px',
+                                                                            padding: '7px 6px',
                                                                             textAlign: 'right',
                                                                             fontWeight: 'bold'
                                                                         },
@@ -4564,14 +4631,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         })
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2326,
+                                                                        lineNumber: 2391,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                 style: {
-                                                                    padding: '8px 6px',
+                                                                    padding: '7px 6px',
                                                                     textAlign: 'center',
                                                                     fontSize: '11px',
                                                                     fontWeight: '600'
@@ -4584,53 +4651,55 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2331,
+                                                                lineNumber: 2396,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2314,
+                                                        lineNumber: 2379,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2313,
+                                                    lineNumber: 2378,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2240,
+                                            lineNumber: 2305,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2239,
+                                        lineNumber: 2304,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             border: '1px solid #000',
-                                            padding: '10px 14px',
-                                            marginBottom: '35px',
+                                            padding: '8px 12px',
+                                            marginBottom: '16px',
                                             fontSize: '11px',
-                                            lineHeight: '1.5',
-                                            color: '#000'
+                                            lineHeight: '1.45',
+                                            color: '#000',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 style: {
                                                     fontWeight: 'bold',
-                                                    fontSize: '12px',
-                                                    marginBottom: '3px'
+                                                    fontSize: '11.5px',
+                                                    marginBottom: '2px'
                                                 },
                                                 className: "jsx-6310dafa82202c51",
                                                 children: "Delivery & Handover Declaration / চালানের শর্তাবলী:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2341,
+                                                lineNumber: 2406,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4638,7 +4707,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "1. Received the above-mentioned goods and supplies in sound condition, correct quantity, and intact packaging."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2344,
+                                                lineNumber: 2409,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4646,7 +4715,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "2. Warranty claims are subject to physical inspection and verification of intact serial numbers and warranty stickers."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2345,
+                                                lineNumber: 2410,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4654,13 +4723,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "3. Any discrepancy must be reported within 24 hours of delivery handover."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2346,
+                                                lineNumber: 2411,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2340,
+                                        lineNumber: 2405,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4668,11 +4737,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             display: 'grid',
                                             gridTemplateColumns: 'repeat(4, 1fr)',
                                             gap: '15px',
-                                            marginTop: '70px',
+                                            marginTop: '30px',
                                             fontSize: '11px',
                                             fontWeight: 'bold',
                                             color: '#000',
-                                            textAlign: 'center'
+                                            textAlign: 'center',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
@@ -4682,13 +4753,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             borderTop: '1.5px solid #000',
-                                                            paddingTop: '6px'
+                                                            paddingTop: '5px'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: "Prepared By"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2352,
+                                                        lineNumber: 2417,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4702,13 +4773,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: activeBill.preparedBy || 'Engr. Sohel Rana'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2355,
+                                                        lineNumber: 2420,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2351,
+                                                lineNumber: 2416,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4717,13 +4788,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             borderTop: '1.5px solid #000',
-                                                            paddingTop: '6px'
+                                                            paddingTop: '5px'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: "Store Checked By"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2361,
+                                                        lineNumber: 2426,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4737,13 +4808,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Warehouse In-Charge"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2364,
+                                                        lineNumber: 2429,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2360,
+                                                lineNumber: 2425,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4752,13 +4823,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             borderTop: '1.5px solid #000',
-                                                            paddingTop: '6px'
+                                                            paddingTop: '5px'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: "Delivered By"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2370,
+                                                        lineNumber: 2435,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4772,13 +4843,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Driver / Carrier Sign"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2373,
+                                                        lineNumber: 2438,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2369,
+                                                lineNumber: 2434,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4787,13 +4858,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             borderTop: '2px solid #000',
-                                                            paddingTop: '6px'
+                                                            paddingTop: '5px'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: "Received By"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2379,
+                                                        lineNumber: 2444,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4807,35 +4878,37 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Customer Seal & Signature"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2382,
+                                                        lineNumber: 2447,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2378,
+                                                lineNumber: 2443,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2350,
+                                        lineNumber: 2415,
                                         columnNumber: 19
                                     }, this),
                                     !usePreprintedPadMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             borderTop: '1px solid #ddd',
-                                            paddingTop: '10px',
-                                            marginTop: '30px',
+                                            paddingTop: '8px',
+                                            marginTop: '16px',
                                             textAlign: 'center',
                                             fontSize: '10px',
-                                            color: '#777'
+                                            color: '#777',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: "Official Delivery Challan • Globo Tech • Motijheel, Dhaka"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2390,
+                                        lineNumber: 2455,
                                         columnNumber: 21
                                     }, this)
                                 ]
@@ -4844,8 +4917,8 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     !usePreprintedPadMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             borderBottom: '2px solid #000',
-                                            paddingBottom: '12px',
-                                            marginBottom: '20px'
+                                            paddingBottom: '8px',
+                                            marginBottom: '14px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4861,7 +4934,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: [
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                                             style: {
-                                                                fontSize: '24px',
+                                                                fontSize: '22px',
                                                                 fontWeight: '900',
                                                                 margin: '0 0 2px 0',
                                                                 letterSpacing: '-0.5px'
@@ -4870,7 +4943,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "GLOBO TECH"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2402,
+                                                            lineNumber: 2467,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4884,26 +4957,26 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Enterprise Supply & Engineering Solutions"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2405,
+                                                            lineNumber: 2470,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                                             style: {
                                                                 fontSize: '10px',
                                                                 color: '#555',
-                                                                margin: '3px 0 0 0'
+                                                                margin: '2px 0 0 0'
                                                             },
                                                             className: "jsx-6310dafa82202c51",
                                                             children: "Dhaka, Bangladesh | Phone: +880 1711-223344 | Email: info@globotechbd.com"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2408,
+                                                            lineNumber: 2473,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2401,
+                                                    lineNumber: 2466,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4925,14 +4998,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "BIN:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2413,
+                                                                    lineNumber: 2478,
                                                                     columnNumber: 54
                                                                 }, this),
                                                                 " 004728009-0202"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2413,
+                                                            lineNumber: 2478,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4946,31 +5019,31 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "TIN:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2414,
+                                                                    lineNumber: 2479,
                                                                     columnNumber: 62
                                                                 }, this),
                                                                 " 169493772750"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2414,
+                                                            lineNumber: 2479,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2412,
+                                                    lineNumber: 2477,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2400,
+                                            lineNumber: 2465,
                                             columnNumber: 23
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2399,
+                                        lineNumber: 2464,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4978,7 +5051,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'flex-start',
-                                            marginBottom: '24px'
+                                            marginBottom: '14px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
@@ -4990,14 +5063,14 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     style: {
                                                         border: '2.5px solid #000',
-                                                        padding: '8px 28px',
+                                                        padding: '6px 20px',
                                                         display: 'inline-block',
                                                         backgroundColor: '#fff'
                                                     },
                                                     className: "jsx-6310dafa82202c51",
                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         style: {
-                                                            fontSize: '24px',
+                                                            fontSize: '20px',
                                                             fontWeight: '900',
                                                             letterSpacing: '0.8px',
                                                             color: '#000',
@@ -5008,24 +5081,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Bill Invoice"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2425,
+                                                        lineNumber: 2490,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2424,
+                                                    lineNumber: 2489,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2423,
+                                                lineNumber: 2488,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 style: {
                                                     textAlign: 'right',
                                                     fontSize: '12px',
-                                                    lineHeight: '1.45',
+                                                    lineHeight: '1.4',
                                                     fontWeight: '500',
                                                     color: '#000'
                                                 },
@@ -5039,7 +5112,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Date:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2433,
+                                                                lineNumber: 2498,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -5047,7 +5120,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2433,
+                                                        lineNumber: 2498,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5058,7 +5131,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Bill NO:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2434,
+                                                                lineNumber: 2499,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -5066,7 +5139,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2434,
+                                                        lineNumber: 2499,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5077,7 +5150,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "PO :"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2435,
+                                                                lineNumber: 2500,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -5085,7 +5158,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2435,
+                                                        lineNumber: 2500,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5096,7 +5169,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "BIN:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2436,
+                                                                lineNumber: 2501,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -5104,7 +5177,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2436,
+                                                        lineNumber: 2501,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5115,7 +5188,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "TIN:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2437,
+                                                                lineNumber: 2502,
                                                                 columnNumber: 28
                                                             }, this),
                                                             " ",
@@ -5123,26 +5196,26 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2437,
+                                                        lineNumber: 2502,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2432,
+                                                lineNumber: 2497,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2421,
+                                        lineNumber: 2486,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            marginBottom: '24px',
+                                            marginBottom: '14px',
                                             fontSize: '12px',
                                             color: '#000'
                                         },
@@ -5160,7 +5233,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '13px',
                                                             borderBottom: '1.5px solid #000',
                                                             paddingBottom: '3px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '120px'
                                                         },
@@ -5168,12 +5241,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Bill To"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2445,
+                                                        lineNumber: 2510,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.45'
+                                                            lineHeight: '1.4'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
@@ -5185,7 +5258,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Name:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2449,
+                                                                        lineNumber: 2514,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -5193,7 +5266,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2449,
+                                                                lineNumber: 2514,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5207,7 +5280,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Address:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2450,
+                                                                        lineNumber: 2515,
                                                                         columnNumber: 59
                                                                     }, this),
                                                                     " ",
@@ -5215,19 +5288,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2450,
+                                                                lineNumber: 2515,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2448,
+                                                        lineNumber: 2513,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2444,
+                                                lineNumber: 2509,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5242,7 +5315,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '13px',
                                                             borderBottom: '1.5px solid #000',
                                                             paddingBottom: '3px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '120px'
                                                         },
@@ -5250,12 +5323,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Deliver To"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2456,
+                                                        lineNumber: 2521,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.45'
+                                                            lineHeight: '1.4'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
@@ -5267,7 +5340,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Address:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2460,
+                                                                        lineNumber: 2525,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -5275,7 +5348,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2460,
+                                                                lineNumber: 2525,
                                                                 columnNumber: 25
                                                             }, this),
                                                             activeBill.deliverToName && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5289,7 +5362,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Name:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2462,
+                                                                        lineNumber: 2527,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " ",
@@ -5297,7 +5370,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2462,
+                                                                lineNumber: 2527,
                                                                 columnNumber: 27
                                                             }, this),
                                                             activeBill.deliverToPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5311,7 +5384,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Phone No:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2465,
+                                                                        lineNumber: 2530,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " ",
@@ -5319,30 +5392,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2465,
+                                                                lineNumber: 2530,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2459,
+                                                        lineNumber: 2524,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2455,
+                                                lineNumber: 2520,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2442,
+                                        lineNumber: 2507,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
-                                            marginBottom: '16px'
+                                            marginBottom: '12px'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -5367,8 +5440,8 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '38px',
+                                                                    padding: '7px 4px',
+                                                                    width: '34px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -5376,58 +5449,58 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "SN"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2476,
+                                                                lineNumber: 2541,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 8px',
+                                                                    padding: '7px 8px',
                                                                     textAlign: 'left',
-                                                                    width: '165px',
+                                                                    width: '125px',
                                                                     fontWeight: 'bold'
                                                                 },
                                                                 className: "jsx-6310dafa82202c51",
                                                                 children: "Item name"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2477,
+                                                                lineNumber: 2542,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 8px',
+                                                                    padding: '7px 8px',
                                                                     textAlign: 'left',
                                                                     fontWeight: 'bold'
                                                                 },
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: "Discription"
+                                                                children: "Description"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2478,
+                                                                lineNumber: 2543,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '55px',
+                                                                    padding: '7px 4px',
+                                                                    width: '48px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: "Unite"
+                                                                children: "Unit"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2479,
+                                                                lineNumber: 2544,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 4px',
-                                                                    width: '45px',
+                                                                    padding: '7px 4px',
+                                                                    width: '44px',
                                                                     textAlign: 'center',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -5435,28 +5508,28 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Qty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2480,
+                                                                lineNumber: 2545,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
                                                                     borderRight: '1px solid #000',
-                                                                    padding: '8px 6px',
-                                                                    width: '95px',
+                                                                    padding: '7px 6px',
+                                                                    width: '90px',
                                                                     textAlign: 'right',
                                                                     fontWeight: 'bold'
                                                                 },
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: "Unite Price"
+                                                                children: "Unit Price"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2481,
+                                                                lineNumber: 2546,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                                 style: {
-                                                                    padding: '8px 6px',
-                                                                    width: '105px',
+                                                                    padding: '7px 6px',
+                                                                    width: '98px',
                                                                     textAlign: 'right',
                                                                     fontWeight: 'bold'
                                                                 },
@@ -5464,18 +5537,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Amount"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2482,
+                                                                lineNumber: 2547,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2475,
+                                                        lineNumber: 2540,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2474,
+                                                    lineNumber: 2539,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -5483,14 +5556,16 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: activeBill.items.map((item, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
                                                             style: {
                                                                 borderBottom: '1px solid #000',
-                                                                verticalAlign: 'top'
+                                                                verticalAlign: 'top',
+                                                                pageBreakInside: 'avoid',
+                                                                breakInside: 'avoid'
                                                             },
                                                             className: "jsx-6310dafa82202c51",
                                                             children: [
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center',
                                                                         fontWeight: '500'
                                                                     },
@@ -5498,55 +5573,36 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: idx + 1
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2488,
+                                                                    lineNumber: 2553,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 8px'
+                                                                        padding: '6.5px 8px'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
-                                                                    children: [
-                                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            style: {
-                                                                                fontWeight: 'bold'
-                                                                            },
-                                                                            className: "jsx-6310dafa82202c51",
-                                                                            children: item.name
-                                                                        }, void 0, false, {
-                                                                            fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2492,
-                                                                            columnNumber: 31
-                                                                        }, this),
-                                                                        item.partNo ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                                            style: {
-                                                                                fontSize: '10px',
-                                                                                color: '#555',
-                                                                                marginTop: '2px',
-                                                                                fontWeight: '500'
-                                                                            },
-                                                                            className: "jsx-6310dafa82202c51",
-                                                                            children: [
-                                                                                "P/N: ",
-                                                                                item.partNo
-                                                                            ]
-                                                                        }, void 0, true, {
-                                                                            fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2494,
-                                                                            columnNumber: 33
-                                                                        }, this) : null
-                                                                    ]
-                                                                }, void 0, true, {
+                                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                        style: {
+                                                                            fontWeight: 'bold'
+                                                                        },
+                                                                        className: "jsx-6310dafa82202c51",
+                                                                        children: item.name
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                        lineNumber: 2557,
+                                                                        columnNumber: 31
+                                                                    }, this)
+                                                                }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2491,
+                                                                    lineNumber: 2556,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 8px',
-                                                                        lineHeight: '1.4'
+                                                                        padding: '6.5px 8px',
+                                                                        lineHeight: '1.35'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: [
@@ -5555,7 +5611,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: item.description || item.name
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2500,
+                                                                            lineNumber: 2560,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         item.serialNumbers ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5574,7 +5630,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                     children: "S/N:"
                                                                                 }, void 0, false, {
                                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                    lineNumber: 2503,
+                                                                                    lineNumber: 2563,
                                                                                     columnNumber: 35
                                                                                 }, this),
                                                                                 " ",
@@ -5582,32 +5638,32 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 2502,
+                                                                            lineNumber: 2562,
                                                                             columnNumber: 33
                                                                         }, this) : null
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2499,
+                                                                    lineNumber: 2559,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center'
                                                                     },
                                                                     className: "jsx-6310dafa82202c51",
                                                                     children: item.unit
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2507,
+                                                                    lineNumber: 2567,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 4px',
+                                                                        padding: '6.5px 4px',
                                                                         textAlign: 'center',
                                                                         fontWeight: 'bold'
                                                                     },
@@ -5615,13 +5671,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: item.quantity
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2510,
+                                                                    lineNumber: 2570,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
                                                                         borderRight: '1px solid #000',
-                                                                        padding: '10px 6px',
+                                                                        padding: '6.5px 6px',
                                                                         textAlign: 'right',
                                                                         fontWeight: '500'
                                                                     },
@@ -5632,12 +5688,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2513,
+                                                                    lineNumber: 2573,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
                                                                     style: {
-                                                                        padding: '10px 6px',
+                                                                        padding: '6.5px 6px',
                                                                         textAlign: 'right',
                                                                         fontWeight: 'bold'
                                                                     },
@@ -5648,29 +5704,29 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2519,
+                                                                    lineNumber: 2579,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, item.id, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2487,
+                                                            lineNumber: 2552,
                                                             columnNumber: 27
                                                         }, this))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2485,
+                                                    lineNumber: 2550,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2473,
+                                            lineNumber: 2538,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2472,
+                                        lineNumber: 2537,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5678,9 +5734,11 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'stretch',
-                                            marginBottom: '24px',
+                                            marginBottom: '14px',
                                             fontSize: '12px',
-                                            color: '#000'
+                                            color: '#000',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
@@ -5688,7 +5746,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 style: {
                                                     width: '58%',
                                                     border: '1px solid #000',
-                                                    padding: '10px 14px',
+                                                    padding: '8px 12px',
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     justifyContent: 'center'
@@ -5705,7 +5763,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Amount In Word"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2535,
+                                                        lineNumber: 2595,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5723,13 +5781,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         })
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2538,
+                                                        lineNumber: 2598,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2534,
+                                                lineNumber: 2594,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5754,7 +5812,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Sub Total"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2546,
+                                                                lineNumber: 2606,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5765,54 +5823,100 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 })
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2547,
+                                                                lineNumber: 2607,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2545,
+                                                        lineNumber: 2605,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
+                                                            alignItems: 'center',
                                                             padding: '4px 0',
                                                             borderBottom: '1px solid #000'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
                                                         children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                style: {
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '6px'
+                                                                },
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: "VAT & TAX Included"
-                                                            }, void 0, false, {
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "jsx-6310dafa82202c51",
+                                                                        children: activeBill.vatTaxIncluded ? 'VAT & TAX Included' : 'VAT & TAX Excluded'
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                        lineNumber: 2617,
+                                                                        columnNumber: 27
+                                                                    }, this),
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "jsx-6310dafa82202c51" + " " + "no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 ml-1 shadow-sm text-[10px]",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                                type: "button",
+                                                                                onClick: ()=>handleToggleBillVatMode('INCLUDED'),
+                                                                                title: "Set VAT & TAX as Included in price",
+                                                                                className: "jsx-6310dafa82202c51" + " " + `px-1.5 py-0.5 font-bold rounded transition cursor-pointer ${activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`,
+                                                                                children: "Included"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                                lineNumber: 2620,
+                                                                                columnNumber: 29
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                                type: "button",
+                                                                                onClick: ()=>handleToggleBillVatMode('EXCLUDED'),
+                                                                                title: "Set VAT & TAX as Excluded (Applicable Extra)",
+                                                                                className: "jsx-6310dafa82202c51" + " " + `px-1.5 py-0.5 font-bold rounded transition cursor-pointer ${!activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'}`,
+                                                                                children: "Excluded"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                                lineNumber: 2632,
+                                                                                columnNumber: 29
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                        lineNumber: 2619,
+                                                                        columnNumber: 27
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2556,
+                                                                lineNumber: 2616,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: activeBill.vatTaxIncluded ? '0.00' : Number(activeBill.vatTaxAmount || 0).toLocaleString('en-US', {
+                                                                children: activeBill.vatTaxIncluded ? '0.00' : activeBill.vatTaxAmount && activeBill.vatTaxAmount > 0 ? Number(activeBill.vatTaxAmount).toLocaleString('en-US', {
                                                                     minimumFractionDigits: 2,
                                                                     maximumFractionDigits: 2
-                                                                })
+                                                                }) : '0.00'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2557,
+                                                                lineNumber: 2646,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2555,
+                                                        lineNumber: 2615,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
-                                                            padding: '6px 0',
+                                                            padding: '5px 0',
                                                             fontSize: '13px',
                                                             fontWeight: 'bold',
                                                             borderBottom: '3px double #000'
@@ -5824,7 +5928,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: "Grand Total"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2568,
+                                                                lineNumber: 2659,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5835,34 +5939,36 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 })
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2569,
+                                                                lineNumber: 2660,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2567,
+                                                        lineNumber: 2658,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2544,
+                                                lineNumber: 2604,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2532,
+                                        lineNumber: 2592,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            marginBottom: '45px',
-                                            fontSize: '12px',
-                                            color: '#000'
+                                            marginBottom: '18px',
+                                            fontSize: '11.5px',
+                                            color: '#000',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
@@ -5878,7 +5984,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '12px',
                                                             borderBottom: '1px solid #000',
                                                             paddingBottom: '2px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '140px'
                                                         },
@@ -5886,32 +5992,80 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Terms & Conditions"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2583,
+                                                        lineNumber: 2674,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.6',
+                                                            lineHeight: '1.5',
                                                             fontWeight: '500'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
-                                                        children: activeBill.termsAndConditions.map((term, tIdx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        children: activeBill.termsAndConditions.map((term, tIdx)=>{
+                                                            const isVatLine = /vat\s*&?\s*tax/i.test(term);
+                                                            return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                                style: {
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '6px'
+                                                                },
                                                                 className: "jsx-6310dafa82202c51",
-                                                                children: term
-                                                            }, tIdx, false, {
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "jsx-6310dafa82202c51",
+                                                                        children: term
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                        lineNumber: 2682,
+                                                                        columnNumber: 31
+                                                                    }, this),
+                                                                    isVatLine && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                        className: "jsx-6310dafa82202c51" + " " + "no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-sm text-[9px]",
+                                                                        children: [
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                                type: "button",
+                                                                                onClick: ()=>handleToggleBillVatMode('INCLUDED'),
+                                                                                title: "Set VAT & TAX as Included",
+                                                                                className: "jsx-6310dafa82202c51" + " " + `px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`,
+                                                                                children: "Included"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                                lineNumber: 2685,
+                                                                                columnNumber: 35
+                                                                            }, this),
+                                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                                type: "button",
+                                                                                onClick: ()=>handleToggleBillVatMode('EXCLUDED'),
+                                                                                title: "Set VAT & TAX as Excluded",
+                                                                                className: "jsx-6310dafa82202c51" + " " + `px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${!activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'}`,
+                                                                                children: "Excluded"
+                                                                            }, void 0, false, {
+                                                                                fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                                lineNumber: 2695,
+                                                                                columnNumber: 35
+                                                                            }, this)
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                                        lineNumber: 2684,
+                                                                        columnNumber: 33
+                                                                    }, this)
+                                                                ]
+                                                            }, tIdx, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2588,
-                                                                columnNumber: 27
-                                                            }, this))
+                                                                lineNumber: 2681,
+                                                                columnNumber: 29
+                                                            }, this);
+                                                        })
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2586,
+                                                        lineNumber: 2677,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2582,
+                                                lineNumber: 2673,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5926,7 +6080,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             fontSize: '12px',
                                                             borderBottom: '1px solid #000',
                                                             paddingBottom: '2px',
-                                                            marginBottom: '6px',
+                                                            marginBottom: '5px',
                                                             display: 'inline-block',
                                                             minWidth: '140px'
                                                         },
@@ -5934,12 +6088,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Payment Details"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2595,
+                                                        lineNumber: 2715,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         style: {
-                                                            lineHeight: '1.5',
+                                                            lineHeight: '1.45',
                                                             fontWeight: '500'
                                                         },
                                                         className: "jsx-6310dafa82202c51",
@@ -5952,7 +6106,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Account No :"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2599,
+                                                                        lineNumber: 2719,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -5960,7 +6114,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2599,
+                                                                lineNumber: 2719,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5971,7 +6125,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Account Title:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2600,
+                                                                        lineNumber: 2720,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -5979,7 +6133,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2600,
+                                                                lineNumber: 2720,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5990,7 +6144,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Bank Name :"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2601,
+                                                                        lineNumber: 2721,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -5998,7 +6152,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2601,
+                                                                lineNumber: 2721,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6009,7 +6163,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         children: "Branch Name:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 2602,
+                                                                        lineNumber: 2722,
                                                                         columnNumber: 30
                                                                     }, this),
                                                                     " ",
@@ -6017,122 +6171,126 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2602,
+                                                                lineNumber: 2722,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2598,
+                                                        lineNumber: 2718,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2594,
+                                                lineNumber: 2714,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2580,
+                                        lineNumber: 2671,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             display: 'flex',
                                             justifyContent: 'space-between',
-                                            marginTop: '140px',
+                                            marginTop: '36px',
                                             fontSize: '12px',
                                             fontWeight: 'bold',
-                                            color: '#000'
+                                            color: '#000',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: [
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 style: {
                                                     textAlign: 'center',
-                                                    minWidth: '200px'
+                                                    minWidth: '180px'
                                                 },
                                                 className: "jsx-6310dafa82202c51",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     style: {
-                                                        borderTop: '2px solid #000',
+                                                        borderTop: '1.5px solid #000',
                                                         paddingTop: '5px'
                                                     },
                                                     className: "jsx-6310dafa82202c51",
                                                     children: "Received By"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2610,
+                                                    lineNumber: 2730,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2609,
+                                                lineNumber: 2729,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 style: {
                                                     textAlign: 'center',
-                                                    minWidth: '200px'
+                                                    minWidth: '180px'
                                                 },
                                                 className: "jsx-6310dafa82202c51",
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     style: {
-                                                        borderTop: '2px solid #000',
+                                                        borderTop: '1.5px solid #000',
                                                         paddingTop: '5px'
                                                     },
                                                     className: "jsx-6310dafa82202c51",
                                                     children: "Prepared By"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2616,
+                                                    lineNumber: 2736,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2615,
+                                                lineNumber: 2735,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2608,
+                                        lineNumber: 2728,
                                         columnNumber: 19
                                     }, this),
                                     !usePreprintedPadMode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         style: {
                                             borderTop: '1px solid #ddd',
-                                            paddingTop: '10px',
-                                            marginTop: '30px',
+                                            paddingTop: '8px',
+                                            marginTop: '16px',
                                             textAlign: 'center',
                                             fontSize: '10px',
-                                            color: '#777'
+                                            color: '#777',
+                                            pageBreakInside: 'avoid',
+                                            breakInside: 'avoid'
                                         },
                                         className: "jsx-6310dafa82202c51",
                                         children: "This is an electronically generated bill invoice. For questions, contact info@globotechbd.com."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2624,
+                                        lineNumber: 2744,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, void 0, true)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2137,
+                            lineNumber: 2202,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                        lineNumber: 2136,
+                        lineNumber: 2201,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                lineNumber: 1895,
+                lineNumber: 1960,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -6157,7 +6315,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-4 h-4 text-emerald-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2649,
+                                                    lineNumber: 2769,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6165,13 +6323,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "⚡ Dynamic Quotation Import (One-Click Auto Fill)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2650,
+                                                    lineNumber: 2770,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2648,
+                                            lineNumber: 2768,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6179,13 +6337,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Select an approved quotation to instantly pull client, delivery, items & prices"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2652,
+                                            lineNumber: 2772,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2647,
+                                    lineNumber: 2767,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6210,7 +6368,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "-- Choose Quotation to Load Data --"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2670,
+                                                        lineNumber: 2790,
                                                         columnNumber: 19
                                                     }, this),
                                                     quotations.map((q)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6228,18 +6386,18 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             ]
                                                         }, q.id, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2672,
+                                                            lineNumber: 2792,
                                                             columnNumber: 21
                                                         }, this))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2659,
+                                                lineNumber: 2779,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2658,
+                                            lineNumber: 2778,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6259,7 +6417,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2693,
+                                                        lineNumber: 2813,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6267,30 +6425,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         children: "Import Data"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2694,
+                                                        lineNumber: 2814,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2682,
+                                                lineNumber: 2802,
                                                 columnNumber: 17
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2681,
+                                            lineNumber: 2801,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2657,
+                                    lineNumber: 2777,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2646,
+                            lineNumber: 2766,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6307,7 +6465,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Bill NO *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2704,
+                                                    lineNumber: 2824,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6318,7 +6476,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Auto"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2706,
+                                                            lineNumber: 2826,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6335,19 +6493,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Reset"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2709,
+                                                            lineNumber: 2829,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2705,
+                                                    lineNumber: 2825,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2703,
+                                            lineNumber: 2823,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6362,13 +6520,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-emerald-500/40 rounded-lg font-mono font-bold text-emerald-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2722,
+                                            lineNumber: 2842,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2702,
+                                    lineNumber: 2822,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6379,7 +6537,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Date *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2732,
+                                            lineNumber: 2852,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6394,13 +6552,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 text-xs transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2733,
+                                            lineNumber: 2853,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2731,
+                                    lineNumber: 2851,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6414,7 +6572,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "PO Number"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2744,
+                                                    lineNumber: 2864,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6422,13 +6580,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Manual Type"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2745,
+                                                    lineNumber: 2865,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2743,
+                                            lineNumber: 2863,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6442,13 +6600,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-xs transition"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2749,
+                                            lineNumber: 2869,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2742,
+                                    lineNumber: 2862,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6459,7 +6617,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Status"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2758,
+                                            lineNumber: 2878,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -6476,7 +6634,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "DRAFT"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2764,
+                                                    lineNumber: 2884,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6485,7 +6643,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "ISSUED"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2765,
+                                                    lineNumber: 2885,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6494,7 +6652,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "PAID"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2766,
+                                                    lineNumber: 2886,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6503,7 +6661,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "PARTIAL"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2767,
+                                                    lineNumber: 2887,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6512,25 +6670,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "CANCELLED"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2768,
+                                                    lineNumber: 2888,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2759,
+                                            lineNumber: 2879,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2757,
+                                    lineNumber: 2877,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2701,
+                            lineNumber: 2821,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6546,7 +6704,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-3.5 h-3.5 text-emerald-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2777,
+                                                    lineNumber: 2897,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6554,13 +6712,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Customer Purchase Order (PO) Attachment"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2778,
+                                                    lineNumber: 2898,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2776,
+                                            lineNumber: 2896,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6568,13 +6726,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Upload PDF, JPG, PNG scan / document (Max 6MB)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2780,
+                                            lineNumber: 2900,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2775,
+                                    lineNumber: 2895,
                                     columnNumber: 13
                                 }, this),
                                 formData.poAttachment ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6589,12 +6747,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                         className: "w-5 h-5 text-emerald-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 2787,
+                                                        lineNumber: 2907,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2786,
+                                                    lineNumber: 2906,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6605,7 +6763,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: formData.poAttachment.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2790,
+                                                            lineNumber: 2910,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6617,19 +6775,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2793,
+                                                            lineNumber: 2913,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2789,
+                                                    lineNumber: 2909,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2785,
+                                            lineNumber: 2905,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6654,7 +6812,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5 text-emerald-400"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2815,
+                                                            lineNumber: 2935,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6662,13 +6820,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Preview"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2816,
+                                                            lineNumber: 2936,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2800,
+                                                    lineNumber: 2920,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6684,7 +6842,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5 text-sky-400"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2827,
+                                                            lineNumber: 2947,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6692,13 +6850,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Download"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2828,
+                                                            lineNumber: 2948,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2818,
+                                                    lineNumber: 2938,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6713,7 +6871,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "w-3.5 h-3.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2835,
+                                                            lineNumber: 2955,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6721,25 +6879,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Remove"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2836,
+                                                            lineNumber: 2956,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2830,
+                                                    lineNumber: 2950,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2799,
+                                            lineNumber: 2919,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2784,
+                                    lineNumber: 2904,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "jsx-6310dafa82202c51",
@@ -6750,7 +6908,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-6 h-6 text-slate-500 group-hover:text-emerald-400 transition mb-1.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2843,
+                                                lineNumber: 2963,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6758,7 +6916,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Click to attach Customer PO (PDF, JPG, PNG)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2844,
+                                                lineNumber: 2964,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6766,7 +6924,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Link the official client PO document directly with this bill for instant retrieval"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2847,
+                                                lineNumber: 2967,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6776,24 +6934,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "jsx-6310dafa82202c51" + " " + "hidden"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 2850,
+                                                lineNumber: 2970,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 2842,
+                                        lineNumber: 2962,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2841,
+                                    lineNumber: 2961,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2774,
+                            lineNumber: 2894,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6807,7 +6965,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Customer / Company BIN"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2864,
+                                            lineNumber: 2984,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6821,13 +6979,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg font-mono focus:outline-none focus:border-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2865,
+                                            lineNumber: 2985,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2863,
+                                    lineNumber: 2983,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6838,7 +6996,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Customer / Company TIN"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2874,
+                                            lineNumber: 2994,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6852,13 +7010,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg font-mono focus:outline-none focus:border-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2875,
+                                            lineNumber: 2995,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2873,
+                                    lineNumber: 2993,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6869,7 +7027,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Quotation Reference"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2884,
+                                            lineNumber: 3004,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -6883,19 +7041,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg font-mono text-sky-400 focus:outline-none focus:border-emerald-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2885,
+                                            lineNumber: 3005,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2883,
+                                    lineNumber: 3003,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2862,
+                            lineNumber: 2982,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6912,7 +7070,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Bill To (Client)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2900,
+                                                    lineNumber: 3020,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6920,13 +7078,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Purchaser"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2901,
+                                                    lineNumber: 3021,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2899,
+                                            lineNumber: 3019,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6940,7 +7098,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Select from Customer Directory"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2905,
+                                                            lineNumber: 3025,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6948,13 +7106,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Auto-fill details"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2906,
+                                                            lineNumber: 3026,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2904,
+                                                    lineNumber: 3024,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -6983,7 +7141,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "-- Choose Existing Customer / Client --"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2928,
+                                                            lineNumber: 3048,
                                                             columnNumber: 19
                                                         }, this),
                                                         customers.map((c)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6997,19 +7155,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 ]
                                                             }, c.id, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 2930,
+                                                                lineNumber: 3050,
                                                                 columnNumber: 21
                                                             }, this))
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2908,
+                                                    lineNumber: 3028,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2903,
+                                            lineNumber: 3023,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7020,7 +7178,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Company / Client Name *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2937,
+                                                    lineNumber: 3057,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7035,13 +7193,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 font-semibold"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2938,
+                                                    lineNumber: 3058,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2936,
+                                            lineNumber: 3056,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7052,7 +7210,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Client Address *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2948,
+                                                    lineNumber: 3068,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -7066,19 +7224,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 resize-none"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2949,
+                                                    lineNumber: 3069,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2947,
+                                            lineNumber: 3067,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2898,
+                                    lineNumber: 3018,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7092,7 +7250,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Deliver To"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2962,
+                                                    lineNumber: 3082,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7100,13 +7258,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Delivery Point / Hub"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2963,
+                                                    lineNumber: 3083,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2961,
+                                            lineNumber: 3081,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7117,7 +7275,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Delivery Address"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2966,
+                                                    lineNumber: 3086,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7131,13 +7289,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2967,
+                                                    lineNumber: 3087,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2965,
+                                            lineNumber: 3085,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7151,7 +7309,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Contact Name"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2977,
+                                                            lineNumber: 3097,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7165,13 +7323,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg focus:outline-none focus:border-emerald-500 text-xs transition"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2978,
+                                                            lineNumber: 3098,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2976,
+                                                    lineNumber: 3096,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7185,7 +7343,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "Contact Phone"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2988,
+                                                                    lineNumber: 3108,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7193,13 +7351,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "Manual Type"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 2989,
+                                                                    lineNumber: 3109,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2987,
+                                                            lineNumber: 3107,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7213,31 +7371,31 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-xs transition"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 2993,
+                                                            lineNumber: 3113,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 2986,
+                                                    lineNumber: 3106,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 2975,
+                                            lineNumber: 3095,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 2960,
+                                    lineNumber: 3080,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 2896,
+                            lineNumber: 3016,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7254,7 +7412,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Bill Items"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3009,
+                                                    lineNumber: 3129,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7262,13 +7420,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Enter item name, specification, unit, quantity and unit price"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3010,
+                                                    lineNumber: 3130,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3008,
+                                            lineNumber: 3128,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7280,7 +7438,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-4 h-4"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3017,
+                                                    lineNumber: 3137,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7288,19 +7446,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "+ Add Item"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3018,
+                                                    lineNumber: 3138,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3012,
+                                            lineNumber: 3132,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3007,
+                                    lineNumber: 3127,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7318,7 +7476,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "SN"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3026,
+                                                            lineNumber: 3146,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7326,7 +7484,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Item Name & Part No *"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3027,
+                                                            lineNumber: 3147,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7334,7 +7492,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Description & Serial Numbers (S/N)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3028,
+                                                            lineNumber: 3148,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7342,7 +7500,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Unit"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3029,
+                                                            lineNumber: 3149,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7350,7 +7508,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Quantity *"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3030,
+                                                            lineNumber: 3150,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7358,7 +7516,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Unit Price (৳) *"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3031,
+                                                            lineNumber: 3151,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7366,25 +7524,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Amount (৳)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3032,
+                                                            lineNumber: 3152,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
                                                             className: "jsx-6310dafa82202c51" + " " + "py-3 px-2 w-12 text-center"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3033,
+                                                            lineNumber: 3153,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3025,
+                                                    lineNumber: 3145,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3024,
+                                                lineNumber: 3144,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -7397,7 +7555,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: index + 1
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3039,
+                                                                lineNumber: 3159,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7412,7 +7570,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-medium text-xs mb-1.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 3043,
+                                                                        lineNumber: 3163,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7423,7 +7581,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 children: "P/N"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 3052,
+                                                                                lineNumber: 3172,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7434,19 +7592,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "jsx-6310dafa82202c51" + " " + "w-full bg-transparent text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none font-mono"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 3055,
+                                                                                lineNumber: 3175,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 3051,
+                                                                        lineNumber: 3171,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3042,
+                                                                lineNumber: 3162,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7460,7 +7618,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs mb-1.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 3065,
+                                                                        lineNumber: 3185,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7471,7 +7629,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 children: "S/N"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 3073,
+                                                                                lineNumber: 3193,
                                                                                 columnNumber: 27
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7482,19 +7640,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                                 className: "jsx-6310dafa82202c51" + " " + "w-full bg-transparent font-mono text-[11px] text-amber-300 placeholder-slate-500 focus:outline-none"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                                lineNumber: 3076,
+                                                                                lineNumber: 3196,
                                                                                 columnNumber: 27
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 3072,
+                                                                        lineNumber: 3192,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3064,
+                                                                lineNumber: 3184,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7507,12 +7665,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 text-center font-medium text-xs"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3086,
+                                                                    lineNumber: 3206,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3085,
+                                                                lineNumber: 3205,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7528,12 +7686,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-center font-mono font-bold text-sm"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3095,
+                                                                    lineNumber: 3215,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3094,
+                                                                lineNumber: 3214,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7549,12 +7707,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     className: "jsx-6310dafa82202c51" + " " + "w-full px-2.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-emerald-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-right font-mono font-bold text-sm"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3107,
+                                                                    lineNumber: 3227,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3106,
+                                                                lineNumber: 3226,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7562,7 +7720,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(item.amount)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3118,
+                                                                lineNumber: 3238,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7576,45 +7734,45 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                         className: "w-4 h-4"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                        lineNumber: 3129,
+                                                                        lineNumber: 3249,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3123,
+                                                                    lineNumber: 3243,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                lineNumber: 3121,
+                                                                lineNumber: 3241,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, item.id, true, {
                                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                        lineNumber: 3038,
+                                                        lineNumber: 3158,
                                                         columnNumber: 21
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3036,
+                                                lineNumber: 3156,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3023,
+                                        lineNumber: 3143,
                                         columnNumber: 15
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3022,
+                                    lineNumber: 3142,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3006,
+                            lineNumber: 3126,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7628,7 +7786,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Amount In Word"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3143,
+                                            lineNumber: 3263,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7636,13 +7794,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: formData.amountInWords || 'Zero Taka Only.'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3144,
+                                            lineNumber: 3264,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3142,
+                                    lineNumber: 3262,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7656,7 +7814,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Sub Total:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3151,
+                                                    lineNumber: 3271,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7664,67 +7822,101 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(formData.subTotal || 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3152,
+                                                    lineNumber: 3272,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3150,
+                                            lineNumber: 3270,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "jsx-6310dafa82202c51" + " " + "flex justify-between items-center text-slate-400",
+                                            className: "jsx-6310dafa82202c51" + " " + "flex justify-between items-center text-slate-300 py-1 border-b border-slate-800/60 pb-2",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "jsx-6310dafa82202c51" + " " + "flex items-center gap-1.5",
+                                                    className: "jsx-6310dafa82202c51" + " " + "text-xs font-semibold",
+                                                    children: "VAT & TAX Policy:"
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
+                                                    lineNumber: 3276,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "jsx-6310dafa82202c51" + " " + "inline-flex items-center rounded-lg bg-slate-950 p-1 border border-slate-800 gap-1",
                                                     children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
-                                                            type: "checkbox",
-                                                            id: "vatTaxInc",
-                                                            checked: formData.vatTaxIncluded ?? true,
-                                                            onChange: (e)=>{
-                                                                const inc = e.target.checked;
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                            type: "button",
+                                                            onClick: ()=>{
+                                                                const inc = true;
                                                                 const totals = recalculateFormTotals(formData.items || [], inc, formData.vatTaxAmount || 0);
+                                                                const currentTerms = Array.isArray(formData.termsAndConditions) ? [
+                                                                    ...formData.termsAndConditions
+                                                                ] : [];
+                                                                let found = false;
+                                                                const updatedTerms = currentTerms.map((t)=>{
+                                                                    if (/vat\s*&?\s*tax/i.test(t)) {
+                                                                        found = true;
+                                                                        return '1. VAT&TAX : Included';
+                                                                    }
+                                                                    return t;
+                                                                });
+                                                                if (!found) updatedTerms.unshift('1. VAT&TAX : Included');
                                                                 setFormData({
                                                                     ...formData,
                                                                     vatTaxIncluded: inc,
+                                                                    termsAndConditions: updatedTerms,
                                                                     ...totals
                                                                 });
                                                             },
-                                                            className: "jsx-6310dafa82202c51" + " " + "rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0"
+                                                            className: "jsx-6310dafa82202c51" + " " + `px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${formData.vatTaxIncluded ?? true ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`,
+                                                            children: "Included"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3157,
+                                                            lineNumber: 3278,
                                                             columnNumber: 19
                                                         }, this),
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                                            htmlFor: "vatTaxInc",
-                                                            className: "jsx-6310dafa82202c51" + " " + "cursor-pointer text-xs",
-                                                            children: "VAT & TAX Included in Total"
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                            type: "button",
+                                                            onClick: ()=>{
+                                                                const inc = false;
+                                                                const totals = recalculateFormTotals(formData.items || [], inc, formData.vatTaxAmount || 0);
+                                                                const currentTerms = Array.isArray(formData.termsAndConditions) ? [
+                                                                    ...formData.termsAndConditions
+                                                                ] : [];
+                                                                let found = false;
+                                                                const updatedTerms = currentTerms.map((t)=>{
+                                                                    if (/vat\s*&?\s*tax/i.test(t)) {
+                                                                        found = true;
+                                                                        return '1. VAT&TAX : Excluded';
+                                                                    }
+                                                                    return t;
+                                                                });
+                                                                if (!found) updatedTerms.unshift('1. VAT&TAX : Excluded');
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    vatTaxIncluded: inc,
+                                                                    termsAndConditions: updatedTerms,
+                                                                    ...totals
+                                                                });
+                                                            },
+                                                            className: "jsx-6310dafa82202c51" + " " + `px-3 py-1 text-xs font-bold rounded-md transition cursor-pointer ${!(formData.vatTaxIncluded ?? true) ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`,
+                                                            children: "Excluded"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3168,
+                                                            lineNumber: 3303,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3156,
-                                                    columnNumber: 17
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "jsx-6310dafa82202c51" + " " + "font-mono text-emerald-400",
-                                                    children: formData.vatTaxIncluded ? 'Included' : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(formData.vatTaxAmount || 0)
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3172,
+                                                    lineNumber: 3277,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3155,
+                                            lineNumber: 3275,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7735,7 +7927,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Grand Total:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3178,
+                                                    lineNumber: 3332,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7743,25 +7935,25 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(formData.grandTotal || 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3179,
+                                                    lineNumber: 3333,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3177,
+                                            lineNumber: 3331,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3149,
+                                    lineNumber: 3269,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3141,
+                            lineNumber: 3261,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7775,7 +7967,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Terms & Conditions"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3187,
+                                            lineNumber: 3341,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -7789,13 +7981,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 font-mono text-[11px]"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3188,
+                                            lineNumber: 3342,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3186,
+                                    lineNumber: 3340,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7806,7 +7998,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Payment Details (Company Bank)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3203,
+                                            lineNumber: 3357,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7820,7 +8012,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Bank Name"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3206,
+                                                            lineNumber: 3360,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7834,13 +8026,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-slate-200"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3207,
+                                                            lineNumber: 3361,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3205,
+                                                    lineNumber: 3359,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7851,7 +8043,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Account No"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3216,
+                                                            lineNumber: 3370,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7865,13 +8057,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-slate-200 font-mono"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3217,
+                                                            lineNumber: 3371,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3215,
+                                                    lineNumber: 3369,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7882,7 +8074,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Account Title"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3226,
+                                                            lineNumber: 3380,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7896,13 +8088,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-slate-200"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3227,
+                                                            lineNumber: 3381,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3225,
+                                                    lineNumber: 3379,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7913,7 +8105,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Branch Name"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3236,
+                                                            lineNumber: 3390,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -7927,31 +8119,31 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded text-slate-200"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3237,
+                                                            lineNumber: 3391,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3235,
+                                                    lineNumber: 3389,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3204,
+                                            lineNumber: 3358,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3202,
+                                    lineNumber: 3356,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3185,
+                            lineNumber: 3339,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7964,7 +8156,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3251,
+                                    lineNumber: 3405,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7973,24 +8165,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: editingBillId ? 'Update & Preview' : 'Save & Preview'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3258,
+                                    lineNumber: 3412,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3250,
+                            lineNumber: 3404,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                    lineNumber: 2644,
+                    lineNumber: 2764,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                lineNumber: 2638,
+                lineNumber: 2758,
                 columnNumber: 7
             }, this),
             isPOViewerOpen && selectedPOBill?.poAttachment && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -8015,7 +8207,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: selectedPOBill.poAttachment.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3283,
+                                                    lineNumber: 3437,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8026,13 +8218,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3284,
+                                                    lineNumber: 3438,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3282,
+                                            lineNumber: 3436,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8044,7 +8236,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: selectedPOBill.billToName
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3289,
+                                                    lineNumber: 3443,
                                                     columnNumber: 27
                                                 }, this),
                                                 " • PO No: ",
@@ -8053,7 +8245,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: selectedPOBill.poNumber || 'None'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3289,
+                                                    lineNumber: 3443,
                                                     columnNumber: 113
                                                 }, this),
                                                 " • Attached on ",
@@ -8061,13 +8253,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3288,
+                                            lineNumber: 3442,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3281,
+                                    lineNumber: 3435,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8083,7 +8275,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3301,
+                                                    lineNumber: 3455,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8091,13 +8283,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Download"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3302,
+                                                    lineNumber: 3456,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3295,
+                                            lineNumber: 3449,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8115,7 +8307,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-3.5 h-3.5 text-sky-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3318,
+                                                    lineNumber: 3472,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8123,13 +8315,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Full Screen"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3319,
+                                                    lineNumber: 3473,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3305,
+                                            lineNumber: 3459,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -8139,7 +8331,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "w-3.5 h-3.5 text-amber-400"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3323,
+                                                    lineNumber: 3477,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8147,7 +8339,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Replace"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3324,
+                                                    lineNumber: 3478,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8181,13 +8373,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     className: "jsx-6310dafa82202c51" + " " + "hidden"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3325,
+                                                    lineNumber: 3479,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3322,
+                                            lineNumber: 3476,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8199,24 +8391,24 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3356,
+                                                lineNumber: 3510,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3350,
+                                            lineNumber: 3504,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3294,
+                                    lineNumber: 3448,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3280,
+                            lineNumber: 3434,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8230,7 +8422,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         className: "jsx-6310dafa82202c51" + " " + "w-full h-[60vh] rounded-lg border border-slate-800 bg-white"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3365,
+                                        lineNumber: 3519,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8241,7 +8433,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "If the PDF preview is blocked by your browser:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3371,
+                                                lineNumber: 3525,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8251,19 +8443,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Download PDF"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3372,
+                                                lineNumber: 3526,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3370,
+                                        lineNumber: 3524,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 3364,
+                                lineNumber: 3518,
                                 columnNumber: 17
                             }, this) : selectedPOBill.poAttachment.type.startsWith('image/') || selectedPOBill.poAttachment.dataUrl.startsWith('data:image/') ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "jsx-6310dafa82202c51" + " " + "max-h-[65vh] overflow-auto p-2",
@@ -8273,12 +8465,12 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     className: "jsx-6310dafa82202c51" + " " + "max-h-[60vh] max-w-full rounded-lg shadow-xl object-contain border border-slate-800"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3383,
+                                    lineNumber: 3537,
                                     columnNumber: 19
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 3382,
+                                lineNumber: 3536,
                                 columnNumber: 17
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "jsx-6310dafa82202c51" + " " + "p-8 text-center space-y-3",
@@ -8287,7 +8479,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         className: "w-16 h-16 text-slate-500 mx-auto"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3391,
+                                        lineNumber: 3545,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8295,7 +8487,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: selectedPOBill.poAttachment.name
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3392,
+                                        lineNumber: 3546,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8303,7 +8495,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "This file can be downloaded to your computer and opened with your native app."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3393,
+                                        lineNumber: 3547,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8313,29 +8505,29 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Download PO File"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3396,
+                                        lineNumber: 3550,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                lineNumber: 3390,
+                                lineNumber: 3544,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3362,
+                            lineNumber: 3516,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                    lineNumber: 3278,
+                    lineNumber: 3432,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                lineNumber: 3272,
+                lineNumber: 3426,
                 columnNumber: 9
             }, this),
             isQuickAttachOpen && quickAttachBill && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -8362,7 +8554,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Client:"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3427,
+                                            lineNumber: 3581,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8370,13 +8562,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: quickAttachBill.billToName
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3428,
+                                            lineNumber: 3582,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3426,
+                                    lineNumber: 3580,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8387,7 +8579,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "PO Number:"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3431,
+                                            lineNumber: 3585,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8395,19 +8587,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: quickAttachBill.poNumber || 'Not specified'
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3432,
+                                            lineNumber: 3586,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3430,
+                                    lineNumber: 3584,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3425,
+                            lineNumber: 3579,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8418,7 +8610,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: "Select Customer PO File (PDF, JPG, PNG)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3437,
+                                    lineNumber: 3591,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -8428,7 +8620,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-8 h-8 text-slate-500 group-hover:text-emerald-400 transition mb-2"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3441,
+                                            lineNumber: 3595,
                                             columnNumber: 17
                                         }, this),
                                         quickAttachFile ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8439,7 +8631,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: quickAttachFile.name
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3444,
+                                                    lineNumber: 3598,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8450,13 +8642,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3445,
+                                                    lineNumber: 3599,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3443,
+                                            lineNumber: 3597,
                                             columnNumber: 19
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "jsx-6310dafa82202c51" + " " + "text-center",
@@ -8466,7 +8658,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "Click to choose file or drag & drop here"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3451,
+                                                    lineNumber: 3605,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8474,13 +8666,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                     children: "PDF documents or scan images up to 6MB"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3454,
+                                                    lineNumber: 3608,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3450,
+                                            lineNumber: 3604,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8490,19 +8682,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "jsx-6310dafa82202c51" + " " + "hidden"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3459,
+                                            lineNumber: 3613,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3440,
+                                    lineNumber: 3594,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3436,
+                            lineNumber: 3590,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8519,7 +8711,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3469,
+                                    lineNumber: 3623,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8531,7 +8723,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                         children: "Attaching..."
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                        lineNumber: 3486,
+                                        lineNumber: 3640,
                                         columnNumber: 19
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                         children: [
@@ -8539,7 +8731,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3489,
+                                                lineNumber: 3643,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8547,31 +8739,31 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                 children: "Attach to Bill"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                lineNumber: 3490,
+                                                lineNumber: 3644,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3480,
+                                    lineNumber: 3634,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3468,
+                            lineNumber: 3622,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                    lineNumber: 3424,
+                    lineNumber: 3578,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                lineNumber: 3414,
+                lineNumber: 3568,
                 columnNumber: 9
             }, this),
             isSerialsModalOpen && activeBill && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -8593,7 +8785,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-4 h-4 text-amber-400"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3512,
+                                            lineNumber: 3666,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8605,13 +8797,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3513,
+                                            lineNumber: 3667,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3511,
+                                    lineNumber: 3665,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8619,13 +8811,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: "Add product Part Numbers (P/N / Model) and Serial Numbers (S/N) for goods handover, store gate pass, and warranty tracking. You can enter multiple serial numbers separated by commas."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3515,
+                                    lineNumber: 3669,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3510,
+                            lineNumber: 3664,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8644,7 +8836,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: idx + 1
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3528,
+                                                            lineNumber: 3682,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8652,13 +8844,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: item.name || `Item #${idx + 1}`
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3531,
+                                                            lineNumber: 3685,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3527,
+                                                    lineNumber: 3681,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8669,7 +8861,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             children: "Delivered Qty:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3534,
+                                                            lineNumber: 3688,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8681,19 +8873,19 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3535,
+                                                            lineNumber: 3689,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3533,
+                                                    lineNumber: 3687,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3526,
+                                            lineNumber: 3680,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8710,7 +8902,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "P/N:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3544,
+                                                                    lineNumber: 3698,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8718,13 +8910,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: "Part Number / Model"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3545,
+                                                                    lineNumber: 3699,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3543,
+                                                            lineNumber: 3697,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8735,13 +8927,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono text-xs"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3547,
+                                                            lineNumber: 3701,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3542,
+                                                    lineNumber: 3696,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8758,7 +8950,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: "S/N:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 3559,
+                                                                            lineNumber: 3713,
                                                                             columnNumber: 27
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8766,13 +8958,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                             children: "Serial Numbers"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                            lineNumber: 3560,
+                                                                            lineNumber: 3714,
                                                                             columnNumber: 27
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3558,
+                                                                    lineNumber: 3712,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8780,13 +8972,13 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                                     children: item.quantity > 1 ? `Expected ${item.quantity} serials` : '1 serial'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                                    lineNumber: 3562,
+                                                                    lineNumber: 3716,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3557,
+                                                            lineNumber: 3711,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -8797,30 +8989,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                                             className: "jsx-6310dafa82202c51" + " " + "w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-500 font-mono text-xs"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                            lineNumber: 3566,
+                                                            lineNumber: 3720,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                                    lineNumber: 3556,
+                                                    lineNumber: 3710,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3541,
+                                            lineNumber: 3695,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, item.id || idx, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3522,
+                                    lineNumber: 3676,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3520,
+                            lineNumber: 3674,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8833,7 +9025,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3580,
+                                    lineNumber: 3734,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8844,7 +9036,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3591,
+                                            lineNumber: 3745,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8852,30 +9044,30 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
                                             children: "Save & Update Challan"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                            lineNumber: 3592,
+                                            lineNumber: 3746,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                                    lineNumber: 3587,
+                                    lineNumber: 3741,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                            lineNumber: 3579,
+                            lineNumber: 3733,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                    lineNumber: 3509,
+                    lineNumber: 3663,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-                lineNumber: 3503,
+                lineNumber: 3657,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
@@ -8885,7 +9077,7 @@ function BillInvoiceView({ initialSelectedQuoteId, globalSearchQuery } = {}) {
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/modules/BillInvoiceView.tsx",
-        lineNumber: 1333,
+        lineNumber: 1398,
         columnNumber: 5
     }, this);
 }

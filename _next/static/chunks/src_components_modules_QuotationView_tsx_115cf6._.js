@@ -1086,11 +1086,19 @@ function QuotationView({ onNavigateTab } = {}) {
         setProductList((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredProducts"])());
         const handleStockUpdate = ()=>setWarehouseStockList((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredWarehouseStock"])());
         const handleProductsUpdate = ()=>setProductList((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredProducts"])());
+        const handleStorageChange = ()=>{
+            setWarehouseStockList((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredWarehouseStock"])());
+            setProductList((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredProducts"])());
+        };
         window.addEventListener('globotech_stock_updated', handleStockUpdate);
         window.addEventListener('globotech_products_updated', handleProductsUpdate);
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('globotech_backup_restored', handleStorageChange);
         return ()=>{
             window.removeEventListener('globotech_stock_updated', handleStockUpdate);
             window.removeEventListener('globotech_products_updated', handleProductsUpdate);
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('globotech_backup_restored', handleStorageChange);
         };
     }, []);
     // Merge live warehouse stock with registered products and fallback catalog
@@ -1914,7 +1922,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Draft"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2156,
+                    lineNumber: 2164,
                     columnNumber: 16
                 }, this);
             case 'PENDING_APPROVAL':
@@ -1923,7 +1931,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Pending Approval"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2158,
+                    lineNumber: 2166,
                     columnNumber: 16
                 }, this);
             case 'APPROVED':
@@ -1932,7 +1940,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Approved"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2160,
+                    lineNumber: 2168,
                     columnNumber: 16
                 }, this);
             case 'SENT':
@@ -1941,7 +1949,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Sent to Client"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2162,
+                    lineNumber: 2170,
                     columnNumber: 16
                 }, this);
             case 'NEGOTIATION':
@@ -1950,7 +1958,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "In Negotiation"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2164,
+                    lineNumber: 2172,
                     columnNumber: 16
                 }, this);
             case 'ACCEPTED':
@@ -1959,7 +1967,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Accepted (Reserved)"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2166,
+                    lineNumber: 2174,
                     columnNumber: 16
                 }, this);
             case 'REJECTED':
@@ -1968,7 +1976,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Rejected"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2168,
+                    lineNumber: 2176,
                     columnNumber: 16
                 }, this);
             case 'EXPIRED':
@@ -1977,7 +1985,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Expired"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2170,
+                    lineNumber: 2178,
                     columnNumber: 16
                 }, this);
             case 'CONVERTED':
@@ -1986,7 +1994,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: "Converted to Order"
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2172,
+                    lineNumber: 2180,
                     columnNumber: 16
                 }, this);
             default:
@@ -1995,7 +2003,7 @@ function QuotationView({ onNavigateTab } = {}) {
                     children: status
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 2174,
+                    lineNumber: 2182,
                     columnNumber: 16
                 }, this);
         }
@@ -2015,14 +2023,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                         className: "w-5 h-5 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2187,
+                                        lineNumber: 2195,
                                         columnNumber: 15
                                     }, this),
                                     "Enterprise Quotation & Tender System"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2186,
+                                lineNumber: 2194,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2030,13 +2038,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "Unified Product, Service, Custom Project, and Freight tender management with dynamic free-stock validation"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2190,
+                                lineNumber: 2198,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2185,
+                        lineNumber: 2193,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2051,7 +2059,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "← Back to Quotation List"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2197,
+                                lineNumber: 2205,
                                 columnNumber: 15
                             }, this),
                             activeViewMode === 'LIST' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2066,7 +2074,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2215,
+                                                lineNumber: 2223,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2074,7 +2082,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Clean Demo Quotes"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2216,
+                                                lineNumber: 2224,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2082,13 +2090,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Clean Demo"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2217,
+                                                lineNumber: 2225,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2210,
+                                        lineNumber: 2218,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2135,38 +2143,38 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2259,
+                                                lineNumber: 2267,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "+ New Quotation"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2260,
+                                                lineNumber: 2268,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2219,
+                                        lineNumber: 2227,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2209,
+                                lineNumber: 2217,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2195,
+                        lineNumber: 2203,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 2184,
+                lineNumber: 2192,
                 columnNumber: 9
             }, this),
             activeViewMode === 'LIST' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2183,7 +2191,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Total Quotations"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2275,
+                                        lineNumber: 2283,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2191,7 +2199,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: totalCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2276,
+                                        lineNumber: 2284,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2199,13 +2207,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "All Lifetime Quotes"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2277,
+                                        lineNumber: 2285,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2274,
+                                lineNumber: 2282,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2216,7 +2224,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Total Value"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2280,
+                                        lineNumber: 2288,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2224,7 +2232,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCompactBDT"])(totalValue)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2281,
+                                        lineNumber: 2289,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2232,13 +2240,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totalValue)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2282,
+                                        lineNumber: 2290,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2279,
+                                lineNumber: 2287,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2249,7 +2257,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Accepted Value"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2285,
+                                        lineNumber: 2293,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2257,7 +2265,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatCompactBDT"])(acceptedValue)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2286,
+                                        lineNumber: 2294,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2268,13 +2276,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2287,
+                                        lineNumber: 2295,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2284,
+                                lineNumber: 2292,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2285,7 +2293,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "In Pipeline"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2290,
+                                        lineNumber: 2298,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2293,7 +2301,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: sentCount + pendingCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2291,
+                                        lineNumber: 2299,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2301,13 +2309,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Active client reviews"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2292,
+                                        lineNumber: 2300,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2289,
+                                lineNumber: 2297,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2318,7 +2326,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Drafts & Revisions"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2295,
+                                        lineNumber: 2303,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2326,7 +2334,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: draftCount
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2296,
+                                        lineNumber: 2304,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2334,19 +2342,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Unsubmitted quotes"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2297,
+                                        lineNumber: 2305,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2294,
+                                lineNumber: 2302,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2273,
+                        lineNumber: 2281,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2359,7 +2367,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         className: "w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2304,
+                                        lineNumber: 2312,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2370,13 +2378,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         className: "w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-4 py-2 sm:py-1.5 text-sm sm:text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2305,
+                                        lineNumber: 2313,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2303,
+                                lineNumber: 2311,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2399,7 +2407,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: st.replace(/_/g, ' ')
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2343,
+                                                lineNumber: 2351,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2407,25 +2415,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: count
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2344,
+                                                lineNumber: 2352,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, st, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2334,
+                                        lineNumber: 2342,
                                         columnNumber: 19
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2314,
+                                lineNumber: 2322,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2302,
+                        lineNumber: 2310,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2437,7 +2445,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 2361,
+                                    lineNumber: 2369,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2445,13 +2453,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "No matching quotations found"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 2362,
+                                    lineNumber: 2370,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 2360,
+                            lineNumber: 2368,
                             columnNumber: 15
                         }, this) : filteredQuotations.map((q)=>{
                             const totals = calculateQuotationTotals(q);
@@ -2469,7 +2477,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: q.quotationNumber
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2374,
+                                                        lineNumber: 2382,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2480,13 +2488,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2377,
+                                                        lineNumber: 2385,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2373,
+                                                lineNumber: 2381,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2494,13 +2502,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDate"])(q.date)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2379,
+                                                lineNumber: 2387,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2372,
+                                        lineNumber: 2380,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2510,7 +2518,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: q.customerCompany
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2383,
+                                                lineNumber: 2391,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2518,7 +2526,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: q.projectName
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2384,
+                                                lineNumber: 2392,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2526,13 +2534,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: q.items.map((i)=>i.name).join(', ')
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2385,
+                                                lineNumber: 2393,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2382,
+                                        lineNumber: 2390,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2545,7 +2553,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Grand Total"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2392,
+                                                        lineNumber: 2400,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2553,13 +2561,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2393,
+                                                        lineNumber: 2401,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2391,
+                                                lineNumber: 2399,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2570,7 +2578,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2396,
+                                                        lineNumber: 2404,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2586,7 +2594,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Draft"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2403,
+                                                                        lineNumber: 2411,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2594,7 +2602,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Sent"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2404,
+                                                                        lineNumber: 2412,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2602,7 +2610,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Pending"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2405,
+                                                                        lineNumber: 2413,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2610,7 +2618,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Approved"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2406,
+                                                                        lineNumber: 2414,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2618,7 +2626,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Accepted"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2407,
+                                                                        lineNumber: 2415,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2626,7 +2634,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Converted"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2408,
+                                                                        lineNumber: 2416,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2634,38 +2642,38 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "● Rejected"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2409,
+                                                                        lineNumber: 2417,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2398,
+                                                                lineNumber: 2406,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                 className: "w-3 h-3 absolute right-1 pointer-events-none text-slate-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2411,
+                                                                lineNumber: 2419,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2397,
+                                                        lineNumber: 2405,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2395,
+                                                lineNumber: 2403,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2390,
+                                        lineNumber: 2398,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2676,7 +2684,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Stock State:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2418,
+                                                lineNumber: 2426,
                                                 columnNumber: 23
                                             }, this),
                                             q.stockReserved ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2686,27 +2694,27 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3 h-3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2421,
+                                                        lineNumber: 2429,
                                                         columnNumber: 27
                                                     }, this),
                                                     " Reserved"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2420,
+                                                lineNumber: 2428,
                                                 columnNumber: 25
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 className: "text-[11px] text-slate-500",
                                                 children: "Unreserved"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2424,
+                                                lineNumber: 2432,
                                                 columnNumber: 25
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2417,
+                                        lineNumber: 2425,
                                         columnNumber: 21
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2721,7 +2729,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Inspect"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2430,
+                                                lineNumber: 2438,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2733,20 +2741,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3 h-3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2444,
+                                                        lineNumber: 2452,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Edit"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2445,
+                                                        lineNumber: 2453,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2439,
+                                                lineNumber: 2447,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2764,20 +2772,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3 h-3"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2458,
+                                                        lineNumber: 2466,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Bill"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2459,
+                                                        lineNumber: 2467,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2447,
+                                                lineNumber: 2455,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2792,20 +2800,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3 h-3 text-slate-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2469,
+                                                        lineNumber: 2477,
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "PDF"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2470,
+                                                        lineNumber: 2478,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2461,
+                                                lineNumber: 2469,
                                                 columnNumber: 23
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2816,30 +2824,30 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2477,
+                                                    lineNumber: 2485,
                                                     columnNumber: 25
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2472,
+                                                lineNumber: 2480,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2429,
+                                        lineNumber: 2437,
                                         columnNumber: 21
                                     }, this)
                                 ]
                             }, q.id, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2368,
+                                lineNumber: 2376,
                                 columnNumber: 19
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2358,
+                        lineNumber: 2366,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2858,7 +2866,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Quote # & Date"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2492,
+                                                    lineNumber: 2500,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2866,7 +2874,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Customer & Project"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2493,
+                                                    lineNumber: 2501,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2874,7 +2882,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Type"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2494,
+                                                    lineNumber: 2502,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2882,7 +2890,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Items"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2495,
+                                                    lineNumber: 2503,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2890,7 +2898,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Grand Total (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2496,
+                                                    lineNumber: 2504,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2898,7 +2906,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Status"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2497,
+                                                    lineNumber: 2505,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2906,7 +2914,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Stock State"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2498,
+                                                    lineNumber: 2506,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -2914,18 +2922,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Actions"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2499,
+                                                    lineNumber: 2507,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 2491,
+                                            lineNumber: 2499,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2490,
+                                        lineNumber: 2498,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2937,12 +2945,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "No matching quotations found."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2505,
+                                                lineNumber: 2513,
                                                 columnNumber: 23
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 2504,
+                                            lineNumber: 2512,
                                             columnNumber: 21
                                         }, this) : filteredQuotations.map((q)=>{
                                             const totals = calculateQuotationTotals(q);
@@ -2964,13 +2972,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2518,
+                                                                        lineNumber: 2526,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2516,
+                                                                lineNumber: 2524,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2978,13 +2986,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDate"])(q.date)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2520,
+                                                                lineNumber: 2528,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2515,
+                                                        lineNumber: 2523,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -2995,7 +3003,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: q.customerCompany
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2523,
+                                                                lineNumber: 2531,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3003,13 +3011,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: q.projectName
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2524,
+                                                                lineNumber: 2532,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2522,
+                                                        lineNumber: 2530,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3019,12 +3027,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: q.type.replace(/_/g, ' + ')
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2527,
+                                                            lineNumber: 2535,
                                                             columnNumber: 29
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2526,
+                                                        lineNumber: 2534,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3037,13 +3045,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: q.items.map((i)=>i.name).join(', ')
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2533,
+                                                                lineNumber: 2541,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2531,
+                                                        lineNumber: 2539,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3051,7 +3059,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2537,
+                                                        lineNumber: 2545,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3071,7 +3079,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Draft"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2564,
+                                                                            lineNumber: 2572,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3080,7 +3088,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Sent to Client"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2565,
+                                                                            lineNumber: 2573,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3089,7 +3097,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Pending Approval"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2566,
+                                                                            lineNumber: 2574,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3098,7 +3106,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Approved"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2567,
+                                                                            lineNumber: 2575,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3107,7 +3115,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Accepted (Won)"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2568,
+                                                                            lineNumber: 2576,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3116,7 +3124,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Converted to Order"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2569,
+                                                                            lineNumber: 2577,
                                                                             columnNumber: 33
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3125,31 +3133,31 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "● Rejected"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 2570,
+                                                                            lineNumber: 2578,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2542,
+                                                                    lineNumber: 2550,
                                                                     columnNumber: 31
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                                                                     className: "w-3 h-3 absolute right-1.5 pointer-events-none text-slate-400 group-hover:text-slate-200"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2572,
+                                                                    lineNumber: 2580,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2541,
+                                                            lineNumber: 2549,
                                                             columnNumber: 29
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2540,
+                                                        lineNumber: 2548,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3161,26 +3169,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2578,
+                                                                    lineNumber: 2586,
                                                                     columnNumber: 33
                                                                 }, this),
                                                                 " Reserved"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2577,
+                                                            lineNumber: 2585,
                                                             columnNumber: 31
                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             className: "text-[11px] text-slate-500",
                                                             children: "Unreserved"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2581,
+                                                            lineNumber: 2589,
                                                             columnNumber: 31
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2575,
+                                                        lineNumber: 2583,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -3195,7 +3203,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Inspect"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2585,
+                                                                lineNumber: 2593,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3207,14 +3215,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3.5 h-3.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2599,
+                                                                        lineNumber: 2607,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     "Edit"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2594,
+                                                                lineNumber: 2602,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3232,14 +3240,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3.5 h-3.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2613,
+                                                                        lineNumber: 2621,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     "Bill"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2602,
+                                                                lineNumber: 2610,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3254,14 +3262,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3.5 h-3.5 inline mr-1 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2624,
+                                                                        lineNumber: 2632,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     "PDF"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2616,
+                                                                lineNumber: 2624,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3273,54 +3281,54 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3.5 h-3.5"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2632,
+                                                                        lineNumber: 2640,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     "Delete"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2627,
+                                                                lineNumber: 2635,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2584,
+                                                        lineNumber: 2592,
                                                         columnNumber: 27
                                                     }, this)
                                                 ]
                                             }, q.id, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2514,
+                                                lineNumber: 2522,
                                                 columnNumber: 25
                                             }, this);
                                         })
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2502,
+                                        lineNumber: 2510,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2489,
+                                lineNumber: 2497,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 2488,
+                            lineNumber: 2496,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2487,
+                        lineNumber: 2495,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 2272,
+                lineNumber: 2280,
                 columnNumber: 9
             }, this),
             activeViewMode === 'CREATE' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3341,14 +3349,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-4 h-4 text-blue-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2657,
+                                                        lineNumber: 2665,
                                                         columnNumber: 19
                                                     }, this),
                                                     editingQuotationId ? `Edit Quotation: ${newQuote.quotationNumber}` : 'Quotation Specification & Header'
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2656,
+                                                lineNumber: 2664,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -3356,13 +3364,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: editingQuotationId ? 'Modify items, pricing, terms, and specifications for this quotation' : 'Assign customer, project parameters, terms of warranty, and quotation scope'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2660,
+                                                lineNumber: 2668,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2655,
+                                        lineNumber: 2663,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3373,7 +3381,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: newQuote.quotationNumber
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2667,
+                                                lineNumber: 2675,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3384,19 +3392,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2670,
+                                                lineNumber: 2678,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2666,
+                                        lineNumber: 2674,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2654,
+                                lineNumber: 2662,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3412,7 +3420,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Customer / Organization *"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2677,
+                                                        lineNumber: 2685,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3428,14 +3436,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3 h-3 text-slate-400"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2685,
+                                                                        lineNumber: 2693,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     " Manage"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2679,
+                                                                lineNumber: 2687,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3447,26 +3455,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         className: "w-3 h-3"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2692,
+                                                                        lineNumber: 2700,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     " New Customer"
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2687,
+                                                                lineNumber: 2695,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2678,
+                                                        lineNumber: 2686,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2676,
+                                                lineNumber: 2684,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3529,7 +3537,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: customers.length > 0 ? '-- Select Customer / Organization --' : '-- No Customers Available --'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2745,
+                                                                lineNumber: 2753,
                                                                 columnNumber: 21
                                                             }, this),
                                                             customers.map((c)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3542,7 +3550,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, c.id, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2749,
+                                                                    lineNumber: 2757,
                                                                     columnNumber: 23
                                                                 }, this)),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3551,7 +3559,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "+ Add New Customer..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2753,
+                                                                lineNumber: 2761,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3560,13 +3568,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "⚙ Manage / Remove Customers..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2756,
+                                                                lineNumber: 2764,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2697,
+                                                        lineNumber: 2705,
                                                         columnNumber: 19
                                                     }, this),
                                                     newQuote.customerId && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -3582,18 +3590,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             className: "w-4 h-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2771,
+                                                            lineNumber: 2779,
                                                             columnNumber: 23
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2761,
+                                                        lineNumber: 2769,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2696,
+                                                lineNumber: 2704,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3609,13 +3617,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: newQuote.customerCompany
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2777,
+                                                                lineNumber: 2785,
                                                                 columnNumber: 26
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2776,
+                                                        lineNumber: 2784,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3626,19 +3634,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: newQuote.customerType
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2780,
+                                                                lineNumber: 2788,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2779,
+                                                        lineNumber: 2787,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2775,
+                                                lineNumber: 2783,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3653,14 +3661,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: newQuote.customerBin
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2785,
+                                                                    lineNumber: 2793,
                                                                     columnNumber: 52
                                                                 }, this)
                                                             ]
                                                         }, void 0, true) : 'BIN: N/A'
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2784,
+                                                        lineNumber: 2792,
                                                         columnNumber: 19
                                                     }, this),
                                                     newQuote.customerPhone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3668,19 +3676,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: newQuote.customerPhone
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2788,
+                                                        lineNumber: 2796,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2783,
+                                                lineNumber: 2791,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2675,
+                                        lineNumber: 2683,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3690,7 +3698,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Project Name & Site *"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2794,
+                                                lineNumber: 2802,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3704,7 +3712,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-blue-500"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2795,
+                                                lineNumber: 2803,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3718,13 +3726,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-[11px] text-slate-300 mt-1 focus:outline-none focus:border-blue-500"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2802,
+                                                lineNumber: 2810,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2793,
+                                        lineNumber: 2801,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3734,7 +3742,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Scope & Quotation Type"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2812,
+                                                lineNumber: 2820,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3750,7 +3758,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Product + Installation Service"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2818,
+                                                        lineNumber: 2826,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3758,7 +3766,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Product Only (Supply)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2819,
+                                                        lineNumber: 2827,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3766,7 +3774,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Service & Maintenance Only"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2820,
+                                                        lineNumber: 2828,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3774,13 +3782,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Turnkey Custom Project"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2821,
+                                                        lineNumber: 2829,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2813,
+                                                lineNumber: 2821,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3793,7 +3801,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Quote Date:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2826,
+                                                                lineNumber: 2834,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3806,13 +3814,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 className: "w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-300"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2827,
+                                                                lineNumber: 2835,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2825,
+                                                        lineNumber: 2833,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3822,7 +3830,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Valid Until:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2835,
+                                                                lineNumber: 2843,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -3835,25 +3843,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 className: "w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-[11px] text-slate-300"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2836,
+                                                                lineNumber: 2844,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2834,
+                                                        lineNumber: 2842,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2824,
+                                                lineNumber: 2832,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2811,
+                                        lineNumber: 2819,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3863,7 +3871,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Quotation Lifecycle Step"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2847,
+                                                lineNumber: 2855,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -3883,7 +3891,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "1. Draft (Internal Draft)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2860,
+                                                        lineNumber: 2868,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3891,7 +3899,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "2. Sent to Client"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2861,
+                                                        lineNumber: 2869,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3899,7 +3907,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "3. Pending Approval"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2862,
+                                                        lineNumber: 2870,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3907,7 +3915,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "4. Approved"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2863,
+                                                        lineNumber: 2871,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3915,7 +3923,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "5. Accepted (Won / Reserve Stock)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2864,
+                                                        lineNumber: 2872,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3923,7 +3931,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "6. Converted to Order"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2865,
+                                                        lineNumber: 2873,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -3931,13 +3939,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "7. Rejected"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2866,
+                                                        lineNumber: 2874,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2848,
+                                                lineNumber: 2856,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -3948,7 +3956,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Stock State:"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2870,
+                                                        lineNumber: 2878,
                                                         columnNumber: 19
                                                     }, this),
                                                     newQuote.status === 'ACCEPTED' || newQuote.status === 'CONVERTED' || newQuote.stockReserved ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3958,45 +3966,45 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 className: "w-3.5 h-3.5"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2873,
+                                                                lineNumber: 2881,
                                                                 columnNumber: 23
                                                             }, this),
                                                             " Auto-Reserved"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2872,
+                                                        lineNumber: 2880,
                                                         columnNumber: 21
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         className: "text-slate-500",
                                                         children: "Unreserved"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2876,
+                                                        lineNumber: 2884,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2869,
+                                                lineNumber: 2877,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2846,
+                                        lineNumber: 2854,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2674,
+                                lineNumber: 2682,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2653,
+                        lineNumber: 2661,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4014,7 +4022,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-4 h-4 text-purple-400"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2890,
+                                                        lineNumber: 2898,
                                                         columnNumber: 19
                                                     }, this),
                                                     "Dynamic Quotation Items (",
@@ -4023,7 +4031,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2889,
+                                                lineNumber: 2897,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4031,13 +4039,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Combine In-Stock items, Custom/China imports, Installation Services, and Freight charges"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2893,
+                                                lineNumber: 2901,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2888,
+                                        lineNumber: 2896,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4053,31 +4061,31 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2906,
+                                                    lineNumber: 2914,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "+ Add Item"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2907,
+                                                    lineNumber: 2915,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 2899,
+                                            lineNumber: 2907,
                                             columnNumber: 17
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 2898,
+                                        lineNumber: 2906,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2887,
+                                lineNumber: 2895,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4094,7 +4102,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "SL"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2917,
+                                                        lineNumber: 2925,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4102,7 +4110,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Type"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2918,
+                                                        lineNumber: 2926,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4110,7 +4118,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Item Description & Specifications"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2919,
+                                                        lineNumber: 2927,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4118,7 +4126,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Warehouse / Stock Status"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2920,
+                                                        lineNumber: 2928,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4126,7 +4134,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Quoted Qty"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2921,
+                                                        lineNumber: 2929,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4134,7 +4142,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Unit Price"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2922,
+                                                        lineNumber: 2930,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4142,7 +4150,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "VAT % (Mushak 6.3)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2923,
+                                                        lineNumber: 2931,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4150,7 +4158,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "TAX % (AIT)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2924,
+                                                        lineNumber: 2932,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4158,7 +4166,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Line Total"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2925,
+                                                        lineNumber: 2933,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -4166,18 +4174,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Actions"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 2926,
+                                                        lineNumber: 2934,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2916,
+                                                lineNumber: 2924,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 2915,
+                                            lineNumber: 2923,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -4189,12 +4197,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "No items added yet. Click “+ Add Item” above to select In-Stock products, custom items, or services."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2932,
+                                                    lineNumber: 2940,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 2931,
+                                                lineNumber: 2939,
                                                 columnNumber: 21
                                             }, this) : newQuote.items.map((item, idx)=>{
                                                 const total = calculateItemTotal(item);
@@ -4208,7 +4216,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: idx + 1
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2944,
+                                                            lineNumber: 2952,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4218,12 +4226,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: item.type.replace(/_/g, ' ')
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2946,
+                                                                lineNumber: 2954,
                                                                 columnNumber: 29
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2945,
+                                                            lineNumber: 2953,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4234,7 +4242,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2961,
+                                                                    lineNumber: 2969,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 item.sku && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4242,7 +4250,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.sku
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2962,
+                                                                    lineNumber: 2970,
                                                                     columnNumber: 42
                                                                 }, this),
                                                                 item.leadTime && item.leadTime !== 'Immediate' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4253,7 +4261,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2964,
+                                                                    lineNumber: 2972,
                                                                     columnNumber: 31
                                                                 }, this),
                                                                 item.remarks && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -4261,13 +4269,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.remarks
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 2966,
+                                                                    lineNumber: 2974,
                                                                     columnNumber: 46
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2960,
+                                                            lineNumber: 2968,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4279,7 +4287,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: item.warehouse
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2971,
+                                                                        lineNumber: 2979,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4295,7 +4303,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 2973,
+                                                                                lineNumber: 2981,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4307,13 +4315,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 2974,
+                                                                                lineNumber: 2982,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2972,
+                                                                        lineNumber: 2980,
                                                                         columnNumber: 33
                                                                     }, this),
                                                                     isStockExceeded && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4323,32 +4331,32 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 className: "w-3 h-3"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 2978,
+                                                                                lineNumber: 2986,
                                                                                 columnNumber: 37
                                                                             }, this),
                                                                             " Insufficient Stock!"
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2977,
+                                                                        lineNumber: 2985,
                                                                         columnNumber: 35
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2970,
+                                                                lineNumber: 2978,
                                                                 columnNumber: 31
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "text-slate-500 text-[11px]",
                                                                 children: "Non-Inventory Charge"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2983,
+                                                                lineNumber: 2991,
                                                                 columnNumber: 31
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2968,
+                                                            lineNumber: 2976,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4365,7 +4373,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         title: "Edit Quantity"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2988,
+                                                                        lineNumber: 2996,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -4400,7 +4408,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "pcs"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3021,
+                                                                                lineNumber: 3029,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4408,7 +4416,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "nos"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3022,
+                                                                                lineNumber: 3030,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4416,7 +4424,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "job"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3023,
+                                                                                lineNumber: 3031,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4424,7 +4432,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "packet"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3024,
+                                                                                lineNumber: 3032,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4432,7 +4440,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "box"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3025,
+                                                                                lineNumber: 3033,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4440,7 +4448,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "set"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3026,
+                                                                                lineNumber: 3034,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4448,7 +4456,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "meter"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3027,
+                                                                                lineNumber: 3035,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4456,7 +4464,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "roll"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3028,
+                                                                                lineNumber: 3036,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4464,7 +4472,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "lot"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3029,
+                                                                                lineNumber: 3037,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4472,7 +4480,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "unit"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3030,
+                                                                                lineNumber: 3038,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             item.unit && ![
@@ -4491,7 +4499,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: item.unit
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3034,
+                                                                                lineNumber: 3042,
                                                                                 columnNumber: 40
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4499,24 +4507,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "✏️ Custom Unit..."
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3035,
+                                                                                lineNumber: 3043,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 2996,
+                                                                        lineNumber: 3004,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 2987,
+                                                                lineNumber: 2995,
                                                                 columnNumber: 29
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 2986,
+                                                            lineNumber: 2994,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4530,7 +4538,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "৳"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3041,
+                                                                            lineNumber: 3049,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -4542,13 +4550,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             title: "Base Unit Price"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3042,
+                                                                            lineNumber: 3050,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3040,
+                                                                    lineNumber: 3048,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4571,19 +4579,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3054,
+                                                                            lineNumber: 3062,
                                                                             columnNumber: 33
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3051,
+                                                                    lineNumber: 3059,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3039,
+                                                            lineNumber: 3047,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4601,7 +4609,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         title: "Edit VAT % (Mushak 6.3)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3062,
+                                                                        lineNumber: 3070,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -4615,7 +4623,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "15% (Std)"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3077,
+                                                                                lineNumber: 3085,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4623,7 +4631,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "10%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3078,
+                                                                                lineNumber: 3086,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4631,7 +4639,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "7.5%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3079,
+                                                                                lineNumber: 3087,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4639,7 +4647,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "5%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3080,
+                                                                                lineNumber: 3088,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4647,7 +4655,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "25%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3081,
+                                                                                lineNumber: 3089,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4655,7 +4663,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "20%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3082,
+                                                                                lineNumber: 3090,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4663,7 +4671,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "17.5%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3083,
+                                                                                lineNumber: 3091,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4671,7 +4679,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "0%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3084,
+                                                                                lineNumber: 3092,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             ![
@@ -4691,24 +4699,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3086,
+                                                                                lineNumber: 3094,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3071,
+                                                                        lineNumber: 3079,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3061,
+                                                                lineNumber: 3069,
                                                                 columnNumber: 29
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3060,
+                                                            lineNumber: 3068,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4726,7 +4734,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         title: "Edit TAX % (AIT / TDS)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3093,
+                                                                        lineNumber: 3101,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -4740,7 +4748,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "0%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3108,
+                                                                                lineNumber: 3116,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4748,7 +4756,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "5% (Supply)"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3109,
+                                                                                lineNumber: 3117,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4756,7 +4764,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "10% (Service)"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3110,
+                                                                                lineNumber: 3118,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4764,7 +4772,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "2.5%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3111,
+                                                                                lineNumber: 3119,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -4772,7 +4780,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "7%"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3112,
+                                                                                lineNumber: 3120,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             ![
@@ -4789,24 +4797,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3114,
+                                                                                lineNumber: 3122,
                                                                                 columnNumber: 35
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3102,
+                                                                        lineNumber: 3110,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3092,
+                                                                lineNumber: 3100,
                                                                 columnNumber: 29
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3091,
+                                                            lineNumber: 3099,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4814,7 +4822,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(total)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3119,
+                                                            lineNumber: 3127,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -4827,40 +4835,40 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     className: "w-3.5 h-3.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3128,
+                                                                    lineNumber: 3136,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3123,
+                                                                lineNumber: 3131,
                                                                 columnNumber: 29
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3122,
+                                                            lineNumber: 3130,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, item.id, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 2943,
+                                                    lineNumber: 2951,
                                                     columnNumber: 25
                                                 }, this);
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 2929,
+                                            lineNumber: 2937,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 2914,
+                                    lineNumber: 2922,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 2913,
+                                lineNumber: 2921,
                                 columnNumber: 13
                             }, this),
                             newQuote.items && newQuote.items.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4879,14 +4887,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 className: "w-3.5 h-3.5 text-indigo-400"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3146,
+                                                                lineNumber: 3154,
                                                                 columnNumber: 23
                                                             }, this),
                                                             "Internal Cost & Margin Preview (Hidden from Customer PDF)"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3145,
+                                                        lineNumber: 3153,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -4894,13 +4902,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Internal Audit"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3149,
+                                                        lineNumber: 3157,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3144,
+                                                lineNumber: 3152,
                                                 columnNumber: 19
                                             }, this),
                                             (()=>{
@@ -4915,7 +4923,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Total Landed/Est Cost:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3156,
+                                                                    lineNumber: 3164,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4923,13 +4931,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalCost)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3157,
+                                                                    lineNumber: 3165,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3155,
+                                                            lineNumber: 3163,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4939,7 +4947,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Estimated Gross Profit:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3160,
+                                                                    lineNumber: 3168,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4947,13 +4955,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.estimatedProfit)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3161,
+                                                                    lineNumber: 3169,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3159,
+                                                            lineNumber: 3167,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4963,7 +4971,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Profit Margin %:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3164,
+                                                                    lineNumber: 3172,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4974,26 +4982,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3165,
+                                                                    lineNumber: 3173,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3163,
+                                                            lineNumber: 3171,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3154,
+                                                    lineNumber: 3162,
                                                     columnNumber: 23
                                                 }, this);
                                             })()
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3143,
+                                        lineNumber: 3151,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5009,60 +5017,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Product Subtotal:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3179,
-                                                                columnNumber: 27
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "font-mono text-slate-200",
-                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.productSubtotal)
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3180,
-                                                                columnNumber: 27
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3178,
-                                                        columnNumber: 25
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex justify-between",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                children: "Installation & Service Charges:"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3183,
-                                                                columnNumber: 27
-                                                            }, this),
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                className: "font-mono text-slate-200",
-                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.serviceSubtotal)
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3184,
-                                                                columnNumber: 27
-                                                            }, this)
-                                                        ]
-                                                    }, void 0, true, {
-                                                        fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3182,
-                                                        columnNumber: 25
-                                                    }, this),
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                                        className: "flex justify-between",
-                                                        children: [
-                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                                children: "Transportation & Other Charges:"
-                                                            }, void 0, false, {
-                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
                                                                 lineNumber: 3187,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "font-mono text-slate-200",
-                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.otherSubtotal)
+                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.productSubtotal)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
                                                                 lineNumber: 3188,
@@ -5075,13 +5035,61 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex justify-between",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                children: "Installation & Service Charges:"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                                lineNumber: 3191,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "font-mono text-slate-200",
+                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.serviceSubtotal)
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                                lineNumber: 3192,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                        lineNumber: 3190,
+                                                        columnNumber: 25
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex justify-between",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                children: "Transportation & Other Charges:"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                                lineNumber: 3195,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                className: "font-mono text-slate-200",
+                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.otherSubtotal)
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                                lineNumber: 3196,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/modules/QuotationView.tsx",
+                                                        lineNumber: 3194,
+                                                        columnNumber: 25
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                         className: "flex justify-between items-center text-slate-400",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 children: totals.totalVat > 0 ? 'Calculated VAT (Mushak 6.3):' : 'VAT & TAX (Mushak 6.3):'
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3191,
+                                                                lineNumber: 3199,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5094,19 +5102,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "Excluded"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3196,
+                                                                            lineNumber: 3204,
                                                                             columnNumber: 35
                                                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                             className: "text-emerald-400 font-semibold",
                                                                             children: "Included"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3198,
+                                                                            lineNumber: 3206,
                                                                             columnNumber: 35
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3193,
+                                                                        lineNumber: 3201,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5122,7 +5130,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "Included"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3203,
+                                                                                lineNumber: 3211,
                                                                                 columnNumber: 31
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5135,25 +5143,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 children: "Excluded"
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 3217,
+                                                                                lineNumber: 3225,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3202,
+                                                                        lineNumber: 3210,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3192,
+                                                                lineNumber: 3200,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3190,
+                                                        lineNumber: 3198,
                                                         columnNumber: 25
                                                     }, this),
                                                     totals.totalTax > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5163,7 +5171,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Calculated TAX / AIT (TDS):"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3236,
+                                                                lineNumber: 3244,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5171,13 +5179,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalTax)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3237,
+                                                                lineNumber: 3245,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3235,
+                                                        lineNumber: 3243,
                                                         columnNumber: 27
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5187,7 +5195,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Grand Total (BDT):"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3241,
+                                                                lineNumber: 3249,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5195,13 +5203,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3242,
+                                                                lineNumber: 3250,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3240,
+                                                        lineNumber: 3248,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
@@ -5209,19 +5217,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                         })()
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3173,
+                                        lineNumber: 3181,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3141,
+                                lineNumber: 3149,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 2886,
+                        lineNumber: 2894,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5237,14 +5245,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4 text-amber-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3256,
+                                                lineNumber: 3264,
                                                 columnNumber: 19
                                             }, this),
                                             "Commercial Terms & Conditions (কোটেশনের বাণিজ্যিক শর্তাবলী)"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3255,
+                                        lineNumber: 3263,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5252,13 +5260,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Printed directly at the bottom of the customer Quotation A4 sheet"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3259,
+                                        lineNumber: 3267,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3254,
+                                lineNumber: 3262,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5274,7 +5282,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Payment Terms *"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3266,
+                                                        lineNumber: 3274,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5293,7 +5301,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Standard presets..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3275,
+                                                                lineNumber: 3283,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5301,7 +5309,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "50% Adv, 40% Del, 10% Com"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3276,
+                                                                lineNumber: 3284,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5309,7 +5317,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "100% Advance with PO"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3277,
+                                                                lineNumber: 3285,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5317,7 +5325,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "50% Adv, 50% on Delivery"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3278,
+                                                                lineNumber: 3286,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5325,7 +5333,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Net 30 Days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3279,
+                                                                lineNumber: 3287,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5333,7 +5341,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Net 15 Days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3280,
+                                                                lineNumber: 3288,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5341,19 +5349,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Cash on Delivery (COD)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3281,
+                                                                lineNumber: 3289,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3267,
+                                                        lineNumber: 3275,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3265,
+                                                lineNumber: 3273,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -5367,13 +5375,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 placeholder: "e.g. 50% Advance with PO, 40% on Delivery, 10% on Commissioning"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3284,
+                                                lineNumber: 3292,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3264,
+                                        lineNumber: 3272,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5386,7 +5394,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Delivery Terms *"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3296,
+                                                        lineNumber: 3304,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5405,7 +5413,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Standard presets..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3305,
+                                                                lineNumber: 3313,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5413,7 +5421,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Within 7 days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3306,
+                                                                lineNumber: 3314,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5421,7 +5429,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Within 15 days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3307,
+                                                                lineNumber: 3315,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5429,7 +5437,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Within 30 days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3308,
+                                                                lineNumber: 3316,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5437,7 +5445,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Within 3-5 Working Days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3309,
+                                                                lineNumber: 3317,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5445,19 +5453,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Immediate Delivery (Ex-Stock)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3310,
+                                                                lineNumber: 3318,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3297,
+                                                        lineNumber: 3305,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3295,
+                                                lineNumber: 3303,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -5471,13 +5479,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 placeholder: "e.g. Within 15 days from PO date"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3313,
+                                                lineNumber: 3321,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3294,
+                                        lineNumber: 3302,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5493,7 +5501,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Warranty Support *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3326,
+                                                                lineNumber: 3334,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5509,7 +5517,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "1Y Service (No Parts)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3328,
+                                                                        lineNumber: 3336,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5522,19 +5530,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "2Y Service (No Parts)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3339,
+                                                                        lineNumber: 3347,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3327,
+                                                                lineNumber: 3335,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3325,
+                                                        lineNumber: 3333,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5553,7 +5561,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Standard presets..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3360,
+                                                                lineNumber: 3368,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5561,7 +5569,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "1 Year Service Warranty (Without Parts)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3361,
+                                                                lineNumber: 3369,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5569,7 +5577,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "2 Years Service Warranty (Without Parts)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3362,
+                                                                lineNumber: 3370,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5577,7 +5585,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "No Warranty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3363,
+                                                                lineNumber: 3371,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5585,7 +5593,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "No Warranty Applicable"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3364,
+                                                                lineNumber: 3372,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5593,7 +5601,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "No Warranty (As-Is Condition)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3365,
+                                                                lineNumber: 3373,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5601,7 +5609,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "1 Month Replacement Warranty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3366,
+                                                                lineNumber: 3374,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5609,7 +5617,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "3 Months Service Warranty (Without Parts)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3367,
+                                                                lineNumber: 3375,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5617,7 +5625,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "6 Months Service Warranty (Without Parts)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3368,
+                                                                lineNumber: 3376,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5625,7 +5633,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "1 Year Service Warranty (With Parts)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3369,
+                                                                lineNumber: 3377,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5633,7 +5641,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "2 Years Hardware Replacement"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3370,
+                                                                lineNumber: 3378,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5641,7 +5649,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "3 Years Manufacturer Warranty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3371,
+                                                                lineNumber: 3379,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5649,7 +5657,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "24 Months On-site Support"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3372,
+                                                                lineNumber: 3380,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5657,19 +5665,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "As per manufacturer policy"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3373,
+                                                                lineNumber: 3381,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3352,
+                                                        lineNumber: 3360,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3324,
+                                                lineNumber: 3332,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -5683,13 +5691,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 placeholder: "e.g. 1 Year Service Warranty (Without Parts)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3376,
+                                                lineNumber: 3384,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3323,
+                                        lineNumber: 3331,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5705,7 +5713,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "VAT & TAX Terms *"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3389,
+                                                                lineNumber: 3397,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5721,7 +5729,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3391,
+                                                                        lineNumber: 3399,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5734,19 +5742,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3405,
+                                                                        lineNumber: 3413,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3390,
+                                                                lineNumber: 3398,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3388,
+                                                        lineNumber: 3396,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -5765,7 +5773,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Choose preset..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3429,
+                                                                lineNumber: 3437,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -5776,7 +5784,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 15% VAT & TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3431,
+                                                                        lineNumber: 3439,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5784,7 +5792,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 15% VAT & 5% TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3432,
+                                                                        lineNumber: 3440,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5792,7 +5800,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 15% VAT & 10% TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3433,
+                                                                        lineNumber: 3441,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5800,13 +5808,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 15% VAT (AIT by Client)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3434,
+                                                                        lineNumber: 3442,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3430,
+                                                                lineNumber: 3438,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -5817,7 +5825,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 10% VAT & TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3437,
+                                                                        lineNumber: 3445,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5825,7 +5833,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 10% VAT & 5% TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3438,
+                                                                        lineNumber: 3446,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5833,7 +5841,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 10% VAT & 10% TAX"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3439,
+                                                                        lineNumber: 3447,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5841,13 +5849,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: 10% VAT (AIT by Client)"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3440,
+                                                                        lineNumber: 3448,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3436,
+                                                                lineNumber: 3444,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -5858,7 +5866,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Included: All Taxes Included"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3443,
+                                                                        lineNumber: 3451,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5866,7 +5874,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded: 15% VAT & 5% TAX Extra"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3444,
+                                                                        lineNumber: 3452,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5874,7 +5882,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded: 15% VAT Extra"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3445,
+                                                                        lineNumber: 3453,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5882,7 +5890,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded: 10% VAT Extra"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3446,
+                                                                        lineNumber: 3454,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5890,7 +5898,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded: VAT & TAX Added Extra"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3447,
+                                                                        lineNumber: 3455,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -5898,25 +5906,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Exempted: Govt SRO Exemption"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3448,
+                                                                        lineNumber: 3456,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3442,
+                                                                lineNumber: 3450,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3421,
+                                                        lineNumber: 3429,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3387,
+                                                lineNumber: 3395,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5930,7 +5938,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "VAT:"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3456,
+                                                                lineNumber: 3464,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5943,7 +5951,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "10%"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3457,
+                                                                lineNumber: 3465,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5956,13 +5964,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "15%"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3471,
+                                                                lineNumber: 3479,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3455,
+                                                        lineNumber: 3463,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5973,7 +5981,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "TAX (AIT):"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3488,
+                                                                lineNumber: 3496,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -5989,7 +5997,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "5%"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3489,
+                                                                lineNumber: 3497,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6005,19 +6013,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "10%"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3506,
+                                                                lineNumber: 3514,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3487,
+                                                        lineNumber: 3495,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3454,
+                                                lineNumber: 3462,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -6031,13 +6039,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 placeholder: "e.g. INCLUSIVE of 15% VAT and TAX / AIT."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3526,
+                                                lineNumber: 3534,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3386,
+                                        lineNumber: 3394,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6050,7 +6058,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Validity & Special Conditions"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3538,
+                                                        lineNumber: 3546,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -6069,7 +6077,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Standard presets..."
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3547,
+                                                                lineNumber: 3555,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6077,7 +6085,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Valid for 30 calendar days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3548,
+                                                                lineNumber: 3556,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6085,7 +6093,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Valid for 15 calendar days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3549,
+                                                                lineNumber: 3557,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6093,7 +6101,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Valid for 7 calendar days"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3550,
+                                                                lineNumber: 3558,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6101,19 +6109,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Subject to stock (30 days)"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3551,
+                                                                lineNumber: 3559,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3539,
+                                                        lineNumber: 3547,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3537,
+                                                lineNumber: 3545,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -6127,25 +6135,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 placeholder: "e.g. Quotation valid for 30 calendar days from issue date."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3554,
+                                                lineNumber: 3562,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3536,
+                                        lineNumber: 3544,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3262,
+                                lineNumber: 3270,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3253,
+                        lineNumber: 3261,
                         columnNumber: 13
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6164,7 +6172,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "Cancel"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3567,
+                                lineNumber: 3575,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6173,19 +6181,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: editingQuotationId ? 'Save & Update Quotation' : 'Save & Finalize Quotation'
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3580,
+                                lineNumber: 3588,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3566,
+                        lineNumber: 3574,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 2651,
+                lineNumber: 2659,
                 columnNumber: 9
             }, this),
             activeViewMode === 'DETAIL' && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6204,7 +6212,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: selectedQuotation.quotationNumber
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3599,
+                                                lineNumber: 3607,
                                                 columnNumber: 17
                                             }, this),
                                             getStatusBadge(selectedQuotation.status),
@@ -6216,13 +6224,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3601,
+                                                lineNumber: 3609,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3598,
+                                        lineNumber: 3606,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6234,7 +6242,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: selectedQuotation.projectName
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3606,
+                                                lineNumber: 3614,
                                                 columnNumber: 26
                                             }, this),
                                             " • Client: ",
@@ -6242,13 +6250,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3605,
+                                        lineNumber: 3613,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3597,
+                                lineNumber: 3605,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6265,14 +6273,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3619,
+                                                        lineNumber: 3627,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Mark Sent"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3614,
+                                                lineNumber: 3622,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6284,14 +6292,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3627,
+                                                        lineNumber: 3635,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Accept Quote"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3622,
+                                                lineNumber: 3630,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -6307,14 +6315,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3640,
+                                                        lineNumber: 3648,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Mark Accepted"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3635,
+                                                lineNumber: 3643,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6326,14 +6334,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3648,
+                                                        lineNumber: 3656,
                                                         columnNumber: 21
                                                     }, this),
                                                     "Reject"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3643,
+                                                lineNumber: 3651,
                                                 columnNumber: 19
                                             }, this)
                                         ]
@@ -6344,7 +6352,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Review Approval"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3656,
+                                        lineNumber: 3664,
                                         columnNumber: 17
                                     }, this),
                                     (selectedQuotation.status === 'ACCEPTED' || selectedQuotation.status === 'APPROVED' || selectedQuotation.status === 'SENT') && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6355,14 +6363,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3670,
+                                                lineNumber: 3678,
                                                 columnNumber: 19
                                             }, this),
                                             "Convert to Bill →"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3666,
+                                        lineNumber: 3674,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6374,14 +6382,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3680,
+                                                lineNumber: 3688,
                                                 columnNumber: 17
                                             }, this),
                                             "Edit"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3675,
+                                        lineNumber: 3683,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6392,7 +6400,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5 inline mr-1 text-slate-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3688,
+                                                lineNumber: 3696,
                                                 columnNumber: 17
                                             }, this),
                                             "Versions (",
@@ -6401,7 +6409,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3684,
+                                        lineNumber: 3692,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6412,14 +6420,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5 inline mr-1"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3696,
+                                                lineNumber: 3704,
                                                 columnNumber: 17
                                             }, this),
                                             "PDF"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3692,
+                                        lineNumber: 3700,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6431,26 +6439,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3705,
+                                                lineNumber: 3713,
                                                 columnNumber: 17
                                             }, this),
                                             "Delete"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3700,
+                                        lineNumber: 3708,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3610,
+                                lineNumber: 3618,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3596,
+                        lineNumber: 3604,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6466,7 +6474,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4 text-blue-400"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3715,
+                                                lineNumber: 3723,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6474,7 +6482,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Quotation Lifecycle Stepper"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3716,
+                                                lineNumber: 3724,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6486,20 +6494,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: selectedQuotation.status.replace(/_/g, ' ')
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3720,
+                                                        lineNumber: 3728,
                                                         columnNumber: 36
                                                     }, this),
                                                     ")"
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3719,
+                                                lineNumber: 3727,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3714,
+                                        lineNumber: 3722,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6510,7 +6518,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Change Step:"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3725,
+                                                lineNumber: 3733,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -6523,7 +6531,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "1. Draft (Internal Draft)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3731,
+                                                        lineNumber: 3739,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6531,7 +6539,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "2. Sent to Client"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3732,
+                                                        lineNumber: 3740,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6539,7 +6547,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "3. Pending Approval"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3733,
+                                                        lineNumber: 3741,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6547,7 +6555,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "4. Approved"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3734,
+                                                        lineNumber: 3742,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6555,7 +6563,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "5. Accepted (Won / Reserved)"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3735,
+                                                        lineNumber: 3743,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6563,7 +6571,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "6. Converted to Order"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3736,
+                                                        lineNumber: 3744,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -6571,25 +6579,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "7. Rejected"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3737,
+                                                        lineNumber: 3745,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3726,
+                                                lineNumber: 3734,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3724,
+                                        lineNumber: 3732,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3713,
+                                lineNumber: 3721,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6655,20 +6663,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3772,
+                                                        lineNumber: 3780,
                                                         columnNumber: 23
                                                     }, this),
                                                     isCurrent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         className: "w-2 h-2 rounded-full bg-blue-400 animate-pulse"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3776,
+                                                        lineNumber: 3784,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3771,
+                                                lineNumber: 3779,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6676,25 +6684,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: step.desc
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3779,
+                                                lineNumber: 3787,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, step.key, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3759,
+                                        lineNumber: 3767,
                                         columnNumber: 19
                                     }, this);
                                 })
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3743,
+                                lineNumber: 3751,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3712,
+                        lineNumber: 3720,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6705,7 +6713,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "View Auditing Perspective:"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3788,
+                                lineNumber: 3796,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6717,7 +6725,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Customer Presentation View"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3790,
+                                        lineNumber: 3798,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -6726,19 +6734,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: "Internal Costing & Profit View"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3798,
+                                        lineNumber: 3806,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3789,
+                                lineNumber: 3797,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3787,
+                        lineNumber: 3795,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6749,7 +6757,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "Line Items Specification"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3811,
+                                lineNumber: 3819,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6766,7 +6774,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "SL"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3816,
+                                                        lineNumber: 3824,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6774,7 +6782,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Category"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3817,
+                                                        lineNumber: 3825,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6782,7 +6790,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Item & Model"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3818,
+                                                        lineNumber: 3826,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6790,7 +6798,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Quoted Qty"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3819,
+                                                        lineNumber: 3827,
                                                         columnNumber: 21
                                                     }, this),
                                                     showInternalCosting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6798,7 +6806,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Landed Cost"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3820,
+                                                        lineNumber: 3828,
                                                         columnNumber: 45
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6806,7 +6814,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Selling Price"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3821,
+                                                        lineNumber: 3829,
                                                         columnNumber: 21
                                                     }, this),
                                                     showInternalCosting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6814,7 +6822,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Estimated Margin"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3822,
+                                                        lineNumber: 3830,
                                                         columnNumber: 45
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -6822,18 +6830,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: "Line Total"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 3823,
+                                                        lineNumber: 3831,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3815,
+                                                lineNumber: 3823,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 3814,
+                                            lineNumber: 3822,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -6851,7 +6859,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: idx + 1
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3835,
+                                                            lineNumber: 3843,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6861,12 +6869,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: item.type.replace(/_/g, ' ')
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 3837,
+                                                                lineNumber: 3845,
                                                                 columnNumber: 27
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3836,
+                                                            lineNumber: 3844,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6877,7 +6885,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3842,
+                                                                    lineNumber: 3850,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 item.brand && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6885,7 +6893,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.brand
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3843,
+                                                                    lineNumber: 3851,
                                                                     columnNumber: 42
                                                                 }, this),
                                                                 item.leadTime && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6896,13 +6904,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3844,
+                                                                    lineNumber: 3852,
                                                                     columnNumber: 45
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3841,
+                                                            lineNumber: 3849,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6914,7 +6922,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3846,
+                                                            lineNumber: 3854,
                                                             columnNumber: 25
                                                         }, this),
                                                         showInternalCosting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6922,7 +6930,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(item.unitCost)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3850,
+                                                            lineNumber: 3858,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6949,19 +6957,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             ]
                                                                         }, void 0, true, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3859,
+                                                                            lineNumber: 3867,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3856,
+                                                                    lineNumber: 3864,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3854,
+                                                            lineNumber: 3862,
                                                             columnNumber: 25
                                                         }, this),
                                                         showInternalCosting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6972,7 +6980,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3866,
+                                                            lineNumber: 3874,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -6980,30 +6988,30 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(lineTotal)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3870,
+                                                            lineNumber: 3878,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, item.id, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3834,
+                                                    lineNumber: 3842,
                                                     columnNumber: 23
                                                 }, this);
                                             })
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 3826,
+                                            lineNumber: 3834,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 3813,
+                                    lineNumber: 3821,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3812,
+                                lineNumber: 3820,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7022,7 +7030,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Subtotal (Base Value):"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3889,
+                                                            lineNumber: 3897,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7030,13 +7038,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.subtotal)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3890,
+                                                            lineNumber: 3898,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3888,
+                                                    lineNumber: 3896,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7046,7 +7054,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3893,
+                                                            lineNumber: 3901,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7059,19 +7067,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "Excluded"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3898,
+                                                                        lineNumber: 3906,
                                                                         columnNumber: 33
                                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                         className: "text-emerald-400 font-semibold",
                                                                         children: "Included"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 3900,
+                                                                        lineNumber: 3908,
                                                                         columnNumber: 33
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3895,
+                                                                    lineNumber: 3903,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7084,7 +7092,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "Included"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3905,
+                                                                            lineNumber: 3913,
                                                                             columnNumber: 29
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7094,25 +7102,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "Excluded"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 3916,
+                                                                            lineNumber: 3924,
                                                                             columnNumber: 29
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3904,
+                                                                    lineNumber: 3912,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3894,
+                                                            lineNumber: 3902,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3892,
+                                                    lineNumber: 3900,
                                                     columnNumber: 23
                                                 }, this),
                                                 totals.totalTax > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7122,7 +7130,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Total TAX / AIT (TDS):"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3932,
+                                                            lineNumber: 3940,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7130,13 +7138,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalTax)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3933,
+                                                            lineNumber: 3941,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3931,
+                                                    lineNumber: 3939,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7146,7 +7154,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Grand Total:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3937,
+                                                            lineNumber: 3945,
                                                             columnNumber: 25
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7154,13 +7162,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3938,
+                                                            lineNumber: 3946,
                                                             columnNumber: 25
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3936,
+                                                    lineNumber: 3944,
                                                     columnNumber: 23
                                                 }, this),
                                                 showInternalCosting && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7173,7 +7181,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Total Estimated Cost:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3943,
+                                                                    lineNumber: 3951,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7181,13 +7189,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalCost)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3944,
+                                                                    lineNumber: 3952,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3942,
+                                                            lineNumber: 3950,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7197,7 +7205,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Gross Margin:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3947,
+                                                                    lineNumber: 3955,
                                                                     columnNumber: 29
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -7210,19 +7218,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 3948,
+                                                                    lineNumber: 3956,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 3946,
+                                                            lineNumber: 3954,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 3941,
+                                                    lineNumber: 3949,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
@@ -7230,24 +7238,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                     })()
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 3882,
+                                    lineNumber: 3890,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3881,
+                                lineNumber: 3889,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3810,
+                        lineNumber: 3818,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 3594,
+                lineNumber: 3602,
                 columnNumber: 9
             }, this),
             activeViewMode === 'PDF' && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7262,7 +7270,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "← Back"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3967,
+                                lineNumber: 3975,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7277,20 +7285,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3983,
+                                                lineNumber: 3991,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: includeSealAndSignature ? 'Seal & Sign: Included' : 'Seal & Sign: Excluded'
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3984,
+                                                lineNumber: 3992,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3974,
+                                        lineNumber: 3982,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7302,20 +7310,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3991,
+                                                lineNumber: 3999,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Edit Quotation"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 3992,
+                                                lineNumber: 4000,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3986,
+                                        lineNumber: 3994,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7333,20 +7341,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4005,
+                                                lineNumber: 4013,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Create Bill Invoice"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4006,
+                                                lineNumber: 4014,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 3994,
+                                        lineNumber: 4002,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -7357,32 +7365,32 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4012,
+                                                lineNumber: 4020,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Print Customer Quotation (A4)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4013,
+                                                lineNumber: 4021,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4008,
+                                        lineNumber: 4016,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 3973,
+                                lineNumber: 3981,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 3966,
+                        lineNumber: 3974,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7420,12 +7428,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                         }
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4038,
+                                        lineNumber: 4046,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4034,
+                                    lineNumber: 4042,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7452,21 +7460,21 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 src: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$brandAssets$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["GLOBO_TECH_LOGO_DATA_URL"],
                                                                 alt: "Globo Tech Logo",
                                                                 style: {
-                                                                    height: '88px',
+                                                                    height: '74px',
                                                                     width: 'auto',
-                                                                    maxHeight: '92px',
+                                                                    maxHeight: '76px',
                                                                     objectFit: 'contain',
                                                                     display: 'block',
-                                                                    marginTop: '-6px'
+                                                                    marginTop: '0px'
                                                                 }
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4053,
+                                                                lineNumber: 4061,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4052,
+                                                            lineNumber: 4060,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7478,23 +7486,23 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             },
                                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                                                                 style: {
-                                                                    fontSize: '56px',
+                                                                    fontSize: '46px',
                                                                     fontWeight: 900,
                                                                     color: '#008fd5',
                                                                     margin: 0,
-                                                                    marginTop: '-8px',
+                                                                    marginTop: '0px',
                                                                     lineHeight: 1,
                                                                     letterSpacing: '-0.5px'
                                                                 },
                                                                 children: "Globo Tech"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4061,
+                                                                lineNumber: 4069,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4060,
+                                                            lineNumber: 4068,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7511,48 +7519,48 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     color: '#1e293b',
                                                                     lineHeight: 1.4,
                                                                     whiteSpace: 'nowrap',
-                                                                    marginTop: '-4px'
+                                                                    marginTop: '0px'
                                                                 },
                                                                 children: [
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         children: "Rahman Chamber (2nd Floor),"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4068,
+                                                                        lineNumber: 4076,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                                         children: "12/13 Motijheel C/A, Dhaka-1000."
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4069,
+                                                                        lineNumber: 4077,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4067,
+                                                                lineNumber: 4075,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4066,
+                                                            lineNumber: 4074,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4050,
+                                                    lineNumber: 4058,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4049,
+                                                lineNumber: 4057,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4048,
+                                            lineNumber: 4056,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7562,7 +7570,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             }
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4075,
+                                            lineNumber: 4083,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -7582,7 +7590,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             }
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4081,
+                                                            lineNumber: 4089,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7608,12 +7616,12 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "QUOTATION"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4083,
+                                                                lineNumber: 4091,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4082,
+                                                            lineNumber: 4090,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7637,13 +7645,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDate"])(selectedQuotation.date)
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 4102,
+                                                                            lineNumber: 4110,
                                                                             columnNumber: 36
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4102,
+                                                                    lineNumber: 4110,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7660,35 +7668,35 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: selectedQuotation.quotationNumber
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 4104,
+                                                                            lineNumber: 4112,
                                                                             columnNumber: 42
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4103,
+                                                                    lineNumber: 4111,
                                                                     columnNumber: 25
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4101,
+                                                            lineNumber: 4109,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4080,
+                                                    lineNumber: 4088,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4079,
+                                                lineNumber: 4087,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4078,
+                                            lineNumber: 4086,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -7723,7 +7731,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Quotation Prepared For:"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4117,
+                                                                    lineNumber: 4125,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7736,7 +7744,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: selectedQuotation.customerCompany
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4120,
+                                                                    lineNumber: 4128,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7751,7 +7759,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4123,
+                                                                    lineNumber: 4131,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7763,7 +7771,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: selectedQuotation.customerAddress
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4124,
+                                                                    lineNumber: 4132,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7778,7 +7786,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4125,
+                                                                    lineNumber: 4133,
                                                                     columnNumber: 25
                                                                 }, this),
                                                                 selectedQuotation.customerBin && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7793,13 +7801,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4127,
+                                                                    lineNumber: 4135,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4116,
+                                                            lineNumber: 4124,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -7827,7 +7835,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: "PROJECT & DELIVERY LOCATION:"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4133,
+                                                                        lineNumber: 4141,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7840,7 +7848,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         children: selectedQuotation.projectName
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4136,
+                                                                        lineNumber: 4144,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7855,34 +7863,34 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4139,
+                                                                        lineNumber: 4147,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4132,
+                                                                lineNumber: 4140,
                                                                 columnNumber: 25
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4131,
+                                                            lineNumber: 4139,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4114,
+                                                    lineNumber: 4122,
                                                     columnNumber: 21
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4113,
+                                                lineNumber: 4121,
                                                 columnNumber: 19
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4112,
+                                            lineNumber: 4120,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("table", {
@@ -7912,7 +7920,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Sl"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4152,
+                                                                lineNumber: 4160,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7926,7 +7934,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Product Name"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4153,
+                                                                lineNumber: 4161,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7939,7 +7947,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Product Description"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4154,
+                                                                lineNumber: 4162,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7953,7 +7961,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Unite"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4155,
+                                                                lineNumber: 4163,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7967,7 +7975,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Qty"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4156,
+                                                                lineNumber: 4164,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7981,7 +7989,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Unite Price"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4157,
+                                                                lineNumber: 4165,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -7995,18 +8003,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: "Amount"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4158,
+                                                                lineNumber: 4166,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 4151,
+                                                        lineNumber: 4159,
                                                         columnNumber: 21
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4150,
+                                                    lineNumber: 4158,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -8036,7 +8044,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: idx + 1
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4176,
+                                                                    lineNumber: 4184,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8053,7 +8061,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4179,
+                                                                    lineNumber: 4187,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8069,7 +8077,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: description
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4182,
+                                                                    lineNumber: 4190,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8083,7 +8091,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.unit || 'pcs'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4185,
+                                                                    lineNumber: 4193,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8098,7 +8106,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: item.quantity
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4188,
+                                                                    lineNumber: 4196,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8116,7 +8124,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4191,
+                                                                    lineNumber: 4199,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8134,25 +8142,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     })
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4194,
+                                                                    lineNumber: 4202,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, item.id, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4175,
+                                                            lineNumber: 4183,
                                                             columnNumber: 25
                                                         }, this);
                                                     })
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4161,
+                                                    lineNumber: 4169,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4149,
+                                            lineNumber: 4157,
                                             columnNumber: 17
                                         }, this),
                                         (()=>{
@@ -8197,7 +8205,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: "AMOUNT IN WORDS:"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 4215,
+                                                                            lineNumber: 4223,
                                                                             columnNumber: 31
                                                                         }, this),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8211,18 +8219,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                             children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["numberToWordsBDT"])(totals.grandTotal, selectedQuotation.currency || 'BDT')
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                            lineNumber: 4218,
+                                                                            lineNumber: 4226,
                                                                             columnNumber: 31
                                                                         }, this)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4214,
+                                                                    lineNumber: 4222,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4213,
+                                                                lineNumber: 4221,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8252,7 +8260,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4228,
+                                                                                        lineNumber: 4236,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8265,13 +8273,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4229,
+                                                                                        lineNumber: 4237,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4227,
+                                                                                lineNumber: 4235,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -8290,7 +8298,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         ]
                                                                                     }, void 0, true, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4232,
+                                                                                        lineNumber: 4240,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8302,13 +8310,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.subtotal)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4233,
+                                                                                        lineNumber: 4241,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4231,
+                                                                                lineNumber: 4239,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -8324,7 +8332,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: hasVatOrTax ? 'Total VAT (Mushak 6.3):' : 'Total VAT & TAX (Mushak 6.3):'
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4236,
+                                                                                        lineNumber: 4244,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8343,13 +8351,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                             children: [
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                                                     style: {
-                                                                                                        fontWeight: 700,
-                                                                                                        color: isExclusive ? '#e11d48' : '#059669'
+                                                                                                        fontWeight: 600,
+                                                                                                        color: '#334155'
                                                                                                     },
                                                                                                     children: hasVatOrTax ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalVat) : isExclusive ? 'Excluded' : 'Included'
                                                                                                 }, void 0, false, {
                                                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                                    lineNumber: 4239,
+                                                                                                    lineNumber: 4247,
                                                                                                     columnNumber: 39
                                                                                                 }, this),
                                                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8363,7 +8371,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                                             children: "Included"
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                                            lineNumber: 4244,
+                                                                                                            lineNumber: 4252,
                                                                                                             columnNumber: 41
                                                                                                         }, this),
                                                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8374,30 +8382,30 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                                             children: "Excluded"
                                                                                                         }, void 0, false, {
                                                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                                            lineNumber: 4256,
+                                                                                                            lineNumber: 4264,
                                                                                                             columnNumber: 41
                                                                                                         }, this)
                                                                                                     ]
                                                                                                 }, void 0, true, {
                                                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                                    lineNumber: 4243,
+                                                                                                    lineNumber: 4251,
                                                                                                     columnNumber: 39
                                                                                                 }, this)
                                                                                             ]
                                                                                         }, void 0, true, {
                                                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                            lineNumber: 4238,
+                                                                                            lineNumber: 4246,
                                                                                             columnNumber: 37
                                                                                         }, this)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4237,
+                                                                                        lineNumber: 4245,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4235,
+                                                                                lineNumber: 4243,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             totals.totalTax > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -8413,7 +8421,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: "Total TAX / AIT (TDS):"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4274,
+                                                                                        lineNumber: 4282,
                                                                                         columnNumber: 37
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8425,13 +8433,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.totalTax)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4275,
+                                                                                        lineNumber: 4283,
                                                                                         columnNumber: 37
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4273,
+                                                                                lineNumber: 4281,
                                                                                 columnNumber: 35
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tr", {
@@ -8449,7 +8457,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: "Grand Total (BDT):"
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4279,
+                                                                                        lineNumber: 4287,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8462,45 +8470,45 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                         children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(totals.grandTotal)
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                        lineNumber: 4280,
+                                                                                        lineNumber: 4288,
                                                                                         columnNumber: 35
                                                                                     }, this)
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4278,
+                                                                                lineNumber: 4286,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                        lineNumber: 4226,
+                                                                        lineNumber: 4234,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4225,
+                                                                    lineNumber: 4233,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 4224,
+                                                                lineNumber: 4232,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 4211,
+                                                        lineNumber: 4219,
                                                         columnNumber: 25
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4210,
+                                                    lineNumber: 4218,
                                                     columnNumber: 23
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4209,
+                                                lineNumber: 4217,
                                                 columnNumber: 21
                                             }, this);
                                         })(),
@@ -8532,7 +8540,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "TERMS & CONDITIONS:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4294,
+                                                            lineNumber: 4302,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -8544,26 +8552,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4300,
+                                                                    lineNumber: 4308,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: "Edit Terms & Conditions"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4301,
+                                                                    lineNumber: 4309,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4295,
+                                                            lineNumber: 4303,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4293,
+                                                    lineNumber: 4301,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8573,7 +8581,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Payment Terms:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4304,
+                                                            lineNumber: 4312,
                                                             columnNumber: 31
                                                         }, this),
                                                         " ",
@@ -8581,7 +8589,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4304,
+                                                    lineNumber: 4312,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8591,7 +8599,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Delivery Terms:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4305,
+                                                            lineNumber: 4313,
                                                             columnNumber: 31
                                                         }, this),
                                                         " ",
@@ -8599,7 +8607,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4305,
+                                                    lineNumber: 4313,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8609,7 +8617,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Warranty Support:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4306,
+                                                            lineNumber: 4314,
                                                             columnNumber: 31
                                                         }, this),
                                                         " ",
@@ -8617,7 +8625,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4306,
+                                                    lineNumber: 4314,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8627,7 +8635,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "VAT & TAX Terms:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4307,
+                                                            lineNumber: 4315,
                                                             columnNumber: 31
                                                         }, this),
                                                         " ",
@@ -8635,7 +8643,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4307,
+                                                    lineNumber: 4315,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8645,7 +8653,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Validity:"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4308,
+                                                            lineNumber: 4316,
                                                             columnNumber: 31
                                                         }, this),
                                                         " ",
@@ -8653,19 +8661,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4308,
+                                                    lineNumber: 4316,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4292,
+                                            lineNumber: 4300,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4046,
+                                    lineNumber: 4054,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8676,7 +8684,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "print:hidden"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4313,
+                                    lineNumber: 4321,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8737,7 +8745,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 }
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4327,
+                                                                                lineNumber: 4335,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
@@ -8757,14 +8765,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                                 }
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                                lineNumber: 4332,
+                                                                                lineNumber: 4340,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4324,
+                                                                    lineNumber: 4332,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8775,7 +8783,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4340,
+                                                                    lineNumber: 4348,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8788,7 +8796,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Authorized Signature"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4341,
+                                                                    lineNumber: 4349,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8801,18 +8809,18 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Globo Tech"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4342,
+                                                                    lineNumber: 4350,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4323,
+                                                            lineNumber: 4331,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 4322,
+                                                        lineNumber: 4330,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -8836,7 +8844,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4349,
+                                                                    lineNumber: 4357,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8847,7 +8855,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     }
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4350,
+                                                                    lineNumber: 4358,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8860,7 +8868,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: "Customer Acceptance Signature"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4351,
+                                                                    lineNumber: 4359,
                                                                     columnNumber: 27
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8878,39 +8886,39 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                     children: selectedQuotation.customerCompany
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                    lineNumber: 4352,
+                                                                    lineNumber: 4360,
                                                                     columnNumber: 27
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4348,
+                                                            lineNumber: 4356,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 4347,
+                                                        lineNumber: 4355,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4320,
+                                                lineNumber: 4328,
                                                 columnNumber: 21
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4319,
+                                            lineNumber: 4327,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4318,
+                                        lineNumber: 4326,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4316,
+                                    lineNumber: 4324,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8921,7 +8929,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "print:hidden"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4363,
+                                    lineNumber: 4371,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8944,7 +8952,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4367,
+                                            lineNumber: 4375,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -8957,30 +8965,30 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Web: www.globotechbd.com"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4370,
+                                            lineNumber: 4378,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4366,
+                                    lineNumber: 4374,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4020,
+                            lineNumber: 4028,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                        lineNumber: 4019,
+                        lineNumber: 4027,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 3965,
+                lineNumber: 3973,
                 columnNumber: 9
             }, this),
             isAddItemModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -9034,26 +9042,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-4 h-4 mb-1"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4419,
+                                            lineNumber: 4427,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             children: cat.label
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4420,
+                                            lineNumber: 4428,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, cat.type, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4401,
+                                    lineNumber: 4409,
                                     columnNumber: 19
                                 }, this);
                             })
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4391,
+                            lineNumber: 4399,
                             columnNumber: 13
                         }, this),
                         selectedItemCategory === 'IN_STOCK' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9066,7 +9074,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Select From Warehouse Inventory *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4430,
+                                            lineNumber: 4438,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9079,7 +9087,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "-- Choose In-Stock Product --"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4438,
+                                                    lineNumber: 4446,
                                                     columnNumber: 21
                                                 }, this),
                                                 liveCatalog.map((p)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9099,19 +9107,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         ]
                                                     }, `${p.sku}-${p.warehouse}`, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 4440,
+                                                        lineNumber: 4448,
                                                         columnNumber: 23
                                                     }, this))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4433,
+                                            lineNumber: 4441,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4429,
+                                    lineNumber: 4437,
                                     columnNumber: 17
                                 }, this),
                                 itemForm.sku && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9124,7 +9132,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Warehouse:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4450,
+                                                    lineNumber: 4458,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9132,13 +9140,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: itemForm.warehouse
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4451,
+                                                    lineNumber: 4459,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4449,
+                                            lineNumber: 4457,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9148,7 +9156,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Free Stock Available:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4454,
+                                                    lineNumber: 4462,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9163,13 +9171,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4455,
+                                                    lineNumber: 4463,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4453,
+                                            lineNumber: 4461,
                                             columnNumber: 21
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9179,7 +9187,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Landed Cost (Actual):"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4460,
+                                                    lineNumber: 4468,
                                                     columnNumber: 23
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -9187,25 +9195,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatBDT"])(itemForm.unitCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4461,
+                                                    lineNumber: 4469,
                                                     columnNumber: 23
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4459,
+                                            lineNumber: 4467,
                                             columnNumber: 21
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4448,
+                                    lineNumber: 4456,
                                     columnNumber: 19
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4428,
+                            lineNumber: 4436,
                             columnNumber: 15
                         }, this),
                         selectedItemCategory === 'CUSTOM_PROJECT' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9221,7 +9229,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Product Name *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4473,
+                                                    lineNumber: 4481,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9235,13 +9243,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4474,
+                                                    lineNumber: 4482,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4472,
+                                            lineNumber: 4480,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9251,7 +9259,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Brand & Model"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4483,
+                                                    lineNumber: 4491,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9265,19 +9273,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4484,
+                                                    lineNumber: 4492,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4482,
+                                            lineNumber: 4490,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4471,
+                                    lineNumber: 4479,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9290,7 +9298,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Procurement Source"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4496,
+                                                    lineNumber: 4504,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9306,7 +9314,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "China Import"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4502,
+                                                            lineNumber: 4510,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9314,7 +9322,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Local Distributor Purchase"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4503,
+                                                            lineNumber: 4511,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9322,19 +9330,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Project Specific Tender"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4504,
+                                                            lineNumber: 4512,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4497,
+                                                    lineNumber: 4505,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4495,
+                                            lineNumber: 4503,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9344,7 +9352,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Est. Landed Cost (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4508,
+                                                    lineNumber: 4516,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9358,13 +9366,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4509,
+                                                    lineNumber: 4517,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4507,
+                                            lineNumber: 4515,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9374,7 +9382,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Estimated Lead Time"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4518,
+                                                    lineNumber: 4526,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9388,25 +9396,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4519,
+                                                    lineNumber: 4527,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4517,
+                                            lineNumber: 4525,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4494,
+                                    lineNumber: 4502,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4470,
+                            lineNumber: 4478,
                             columnNumber: 15
                         }, this),
                         selectedItemCategory === 'SERVICE' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9419,7 +9427,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Service Name *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4535,
+                                            lineNumber: 4543,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9433,13 +9441,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4536,
+                                            lineNumber: 4544,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4534,
+                                    lineNumber: 4542,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9452,7 +9460,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Service Unit"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4546,
+                                                    lineNumber: 4554,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9468,7 +9476,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "job"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4552,
+                                                            lineNumber: 4560,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9476,7 +9484,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "nos"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4553,
+                                                            lineNumber: 4561,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9484,7 +9492,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "pcs"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4554,
+                                                            lineNumber: 4562,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9492,7 +9500,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "packet"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4555,
+                                                            lineNumber: 4563,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9500,7 +9508,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "box"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4556,
+                                                            lineNumber: 4564,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9508,7 +9516,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Project (Lump Sum)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4557,
+                                                            lineNumber: 4565,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9516,7 +9524,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Points (Per Camera/Node)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4558,
+                                                            lineNumber: 4566,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9524,7 +9532,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Days (Man-day)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4559,
+                                                            lineNumber: 4567,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9532,19 +9540,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Hours"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4560,
+                                                            lineNumber: 4568,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4547,
+                                                    lineNumber: 4555,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4545,
+                                            lineNumber: 4553,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9554,7 +9562,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Est. Labor Cost (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4564,
+                                                    lineNumber: 4572,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9568,25 +9576,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4565,
+                                                    lineNumber: 4573,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4563,
+                                            lineNumber: 4571,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4544,
+                                    lineNumber: 4552,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4533,
+                            lineNumber: 4541,
                             columnNumber: 15
                         }, this),
                         selectedItemCategory === 'OTHER_CHARGE' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9601,7 +9609,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Charge Title *"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4582,
+                                                lineNumber: 4590,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9615,13 +9623,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4583,
+                                                lineNumber: 4591,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4581,
+                                        lineNumber: 4589,
                                         columnNumber: 19
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9631,7 +9639,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: "Unit"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4592,
+                                                lineNumber: 4600,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9645,24 +9653,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4593,
+                                                lineNumber: 4601,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4591,
+                                        lineNumber: 4599,
                                         columnNumber: 19
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 4580,
+                                lineNumber: 4588,
                                 columnNumber: 17
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4579,
+                            lineNumber: 4587,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9673,7 +9681,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Product Description / Scope of Work"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4607,
+                                    lineNumber: 4615,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -9687,13 +9695,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 text-xs focus:outline-none focus:border-blue-500 resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4608,
+                                    lineNumber: 4616,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4606,
+                            lineNumber: 4614,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9706,7 +9714,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Quantity *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4620,
+                                            lineNumber: 4628,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9720,13 +9728,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-100 font-mono font-bold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4621,
+                                            lineNumber: 4629,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4619,
+                                    lineNumber: 4627,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9736,7 +9744,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Unit *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4631,
+                                            lineNumber: 4639,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9777,7 +9785,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "pcs"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4657,
+                                                    lineNumber: 4665,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9785,7 +9793,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "nos"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4658,
+                                                    lineNumber: 4666,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9793,7 +9801,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "job"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4659,
+                                                    lineNumber: 4667,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9801,7 +9809,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "packet"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4660,
+                                                    lineNumber: 4668,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9809,7 +9817,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "box"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4661,
+                                                    lineNumber: 4669,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9817,7 +9825,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "set"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4662,
+                                                    lineNumber: 4670,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9825,7 +9833,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "meter"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4663,
+                                                    lineNumber: 4671,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9833,7 +9841,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "roll"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4664,
+                                                    lineNumber: 4672,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9841,7 +9849,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "lot"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4665,
+                                                    lineNumber: 4673,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9849,7 +9857,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "unit"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4666,
+                                                    lineNumber: 4674,
                                                     columnNumber: 19
                                                 }, this),
                                                 itemForm.unit && ![
@@ -9868,7 +9876,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: itemForm.unit
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4670,
+                                                    lineNumber: 4678,
                                                     columnNumber: 26
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9876,19 +9884,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "✏️ Custom Unit..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4671,
+                                                    lineNumber: 4679,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4632,
+                                            lineNumber: 4640,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4630,
+                                    lineNumber: 4638,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9898,7 +9906,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Quoted Unit Price (BDT) *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4676,
+                                            lineNumber: 4684,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -9912,13 +9920,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-100 font-mono font-bold text-blue-400"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4677,
+                                            lineNumber: 4685,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4675,
+                                    lineNumber: 4683,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9931,7 +9939,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "VAT %"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4688,
+                                                    lineNumber: 4696,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -9939,13 +9947,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Mushak 6.3"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4689,
+                                                    lineNumber: 4697,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4687,
+                                            lineNumber: 4695,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -9964,7 +9972,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     placeholder: "15"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4694,
+                                                    lineNumber: 4702,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -9981,7 +9989,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "15% (Std)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4709,
+                                                            lineNumber: 4717,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9989,7 +9997,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "10%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4710,
+                                                            lineNumber: 4718,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -9997,7 +10005,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "7.5%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4711,
+                                                            lineNumber: 4719,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10005,7 +10013,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "5%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4712,
+                                                            lineNumber: 4720,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10013,7 +10021,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "25%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4713,
+                                                            lineNumber: 4721,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10021,7 +10029,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "20%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4714,
+                                                            lineNumber: 4722,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10029,7 +10037,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "17.5%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4715,
+                                                            lineNumber: 4723,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10037,7 +10045,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "0%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4716,
+                                                            lineNumber: 4724,
                                                             columnNumber: 21
                                                         }, this),
                                                         ![
@@ -10057,25 +10065,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4718,
+                                                            lineNumber: 4726,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4703,
+                                                    lineNumber: 4711,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4693,
+                                            lineNumber: 4701,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4686,
+                                    lineNumber: 4694,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10088,7 +10096,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "TAX %"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4726,
+                                                    lineNumber: 4734,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10096,13 +10104,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "AIT / TDS"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4727,
+                                                    lineNumber: 4735,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4725,
+                                            lineNumber: 4733,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10121,7 +10129,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     placeholder: "0"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4732,
+                                                    lineNumber: 4740,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -10138,7 +10146,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "0% (None)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4747,
+                                                            lineNumber: 4755,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10146,7 +10154,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "5% (Supply/Goods)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4748,
+                                                            lineNumber: 4756,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10154,7 +10162,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "10% (Service/Labor)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4749,
+                                                            lineNumber: 4757,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10162,7 +10170,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "2.5% (TDS)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4750,
+                                                            lineNumber: 4758,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10170,7 +10178,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "7%"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4751,
+                                                            lineNumber: 4759,
                                                             columnNumber: 21
                                                         }, this),
                                                         ![
@@ -10187,31 +10195,31 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 4753,
+                                                            lineNumber: 4761,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4741,
+                                                    lineNumber: 4749,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4731,
+                                            lineNumber: 4739,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4724,
+                                    lineNumber: 4732,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4618,
+                            lineNumber: 4626,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10236,7 +10244,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4765,
+                                                    lineNumber: 4773,
                                                     columnNumber: 19
                                                 }, this),
                                                 ' ',
@@ -10251,13 +10259,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4771,
+                                                    lineNumber: 4779,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4763,
+                                            lineNumber: 4771,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10280,19 +10288,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4777,
+                                                    lineNumber: 4785,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4775,
+                                            lineNumber: 4783,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4762,
+                                    lineNumber: 4770,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10302,7 +10310,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Mushak 6.3 & AIT Breakdown per unit:"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4786,
+                                            lineNumber: 4794,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10332,25 +10340,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4791,
+                                                    lineNumber: 4799,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4787,
+                                            lineNumber: 4795,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4785,
+                                    lineNumber: 4793,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4761,
+                            lineNumber: 4769,
                             columnNumber: 13
                         }, this),
                         selectedItemCategory === 'IN_STOCK' && (itemForm.freeStock || 0) < (itemForm.quantity || 1) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10360,7 +10368,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-4 h-4 flex-shrink-0"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4799,
+                                    lineNumber: 4807,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10369,7 +10377,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Warning:"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4801,
+                                            lineNumber: 4809,
                                             columnNumber: 19
                                         }, this),
                                         " Quoted quantity (",
@@ -10380,13 +10388,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4800,
+                                    lineNumber: 4808,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4798,
+                            lineNumber: 4806,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10399,7 +10407,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4808,
+                                    lineNumber: 4816,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -10409,24 +10417,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Append Item to Quotation"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4815,
+                                    lineNumber: 4823,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4807,
+                            lineNumber: 4815,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 4389,
+                    lineNumber: 4397,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 4383,
+                lineNumber: 4391,
                 columnNumber: 9
             }, this),
             isConvertModalOpen && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -10442,7 +10450,7 @@ function QuotationView({ onNavigateTab } = {}) {
                             children: "Customer accepted quote. Choose downstream workflow to activate:"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4838,
+                            lineNumber: 4846,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10474,7 +10482,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "mt-0.5 text-blue-600"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4856,
+                                            lineNumber: 4864,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10484,7 +10492,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: opt.title
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4864,
+                                                    lineNumber: 4872,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10492,24 +10500,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: opt.desc
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 4865,
+                                                    lineNumber: 4873,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4863,
+                                            lineNumber: 4871,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, opt.id, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4848,
+                                    lineNumber: 4856,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4842,
+                            lineNumber: 4850,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10521,7 +10529,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4872,
+                                    lineNumber: 4880,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -10530,24 +10538,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Execute Conversion"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4878,
+                                    lineNumber: 4886,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4871,
+                            lineNumber: 4879,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 4837,
+                    lineNumber: 4845,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 4831,
+                lineNumber: 4839,
                 columnNumber: 9
             }, this),
             isApprovalModalOpen && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -10566,7 +10574,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Approval Trigger Reason:"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4901,
+                                    lineNumber: 4909,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10574,13 +10582,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: selectedQuotation.approvalReason || 'High quotation value threshold exceeded.'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4902,
+                                    lineNumber: 4910,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4900,
+                            lineNumber: 4908,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10590,7 +10598,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Decision"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4906,
+                                    lineNumber: 4914,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10603,7 +10611,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Approve Quotation"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4908,
+                                            lineNumber: 4916,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -10613,19 +10621,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Reject / Request Revision"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 4919,
+                                            lineNumber: 4927,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4907,
+                                    lineNumber: 4915,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4905,
+                            lineNumber: 4913,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10635,7 +10643,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Approver Comments"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4934,
+                                    lineNumber: 4942,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -10646,13 +10654,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4935,
+                                    lineNumber: 4943,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4933,
+                            lineNumber: 4941,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10664,7 +10672,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4945,
+                                    lineNumber: 4953,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -10673,24 +10681,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Submit Decision"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 4951,
+                                    lineNumber: 4959,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4944,
+                            lineNumber: 4952,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 4899,
+                    lineNumber: 4907,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 4893,
+                lineNumber: 4901,
                 columnNumber: 9
             }, this),
             isVersionModalOpen && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -10715,7 +10723,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4976,
+                                                lineNumber: 4984,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -10723,13 +10731,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["formatDate"])(v.date)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4977,
+                                                lineNumber: 4985,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4975,
+                                        lineNumber: 4983,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10741,13 +10749,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                 children: v.author
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 4979,
+                                                lineNumber: 4987,
                                                 columnNumber: 55
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4979,
+                                        lineNumber: 4987,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10758,7 +10766,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4980,
+                                        lineNumber: 4988,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -10766,13 +10774,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                         children: v.notes
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 4981,
+                                        lineNumber: 4989,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, v.version, true, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 4974,
+                                lineNumber: 4982,
                                 columnNumber: 15
                             }, this)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10783,23 +10791,23 @@ function QuotationView({ onNavigateTab } = {}) {
                                 children: "Close"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                lineNumber: 4986,
+                                lineNumber: 4994,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 4985,
+                            lineNumber: 4993,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 4972,
+                    lineNumber: 4980,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 4966,
+                lineNumber: 4974,
                 columnNumber: 9
             }, this),
             isAddCustomerModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -10821,7 +10829,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Company / Organization *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5010,
+                                            lineNumber: 5018,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -10836,13 +10844,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5011,
+                                            lineNumber: 5019,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5009,
+                                    lineNumber: 5017,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10852,7 +10860,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Contact Person (Attn)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5022,
+                                            lineNumber: 5030,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -10866,19 +10874,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5023,
+                                            lineNumber: 5031,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5021,
+                                    lineNumber: 5029,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5008,
+                            lineNumber: 5016,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10891,7 +10899,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Customer Type"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5035,
+                                            lineNumber: 5043,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -10907,7 +10915,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Corporate"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5041,
+                                                    lineNumber: 5049,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10915,7 +10923,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Wholesale / Dealer"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5042,
+                                                    lineNumber: 5050,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -10923,19 +10931,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Retail / End-User"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5043,
+                                                    lineNumber: 5051,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5036,
+                                            lineNumber: 5044,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5034,
+                                    lineNumber: 5042,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10945,7 +10953,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Phone Number"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5048,
+                                            lineNumber: 5056,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -10959,19 +10967,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5049,
+                                            lineNumber: 5057,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5047,
+                                    lineNumber: 5055,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5033,
+                            lineNumber: 5041,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -10984,7 +10992,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Email Address"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5061,
+                                            lineNumber: 5069,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -10998,13 +11006,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5062,
+                                            lineNumber: 5070,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5060,
+                                    lineNumber: 5068,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11014,7 +11022,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "BIN / VAT Reg No."
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5072,
+                                            lineNumber: 5080,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -11028,19 +11036,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-mono"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5073,
+                                            lineNumber: 5081,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5071,
+                                    lineNumber: 5079,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5059,
+                            lineNumber: 5067,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11050,7 +11058,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Office / Delivery Address *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5084,
+                                    lineNumber: 5092,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -11065,13 +11073,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5085,
+                                    lineNumber: 5093,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5083,
+                            lineNumber: 5091,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11081,7 +11089,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Payment Terms"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5096,
+                                    lineNumber: 5104,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -11095,13 +11103,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5097,
+                                    lineNumber: 5105,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5095,
+                            lineNumber: 5103,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11114,7 +11122,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5107,
+                                    lineNumber: 5115,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11125,31 +11133,31 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-4 h-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5118,
+                                            lineNumber: 5126,
                                             columnNumber: 17
                                         }, this),
                                         " Save & Select Customer"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5114,
+                                    lineNumber: 5122,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5106,
+                            lineNumber: 5114,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 5007,
+                    lineNumber: 5015,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 5001,
+                lineNumber: 5009,
                 columnNumber: 9
             }, this),
             isManageCustomersModalOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -11168,7 +11176,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Remove duplicate or unwanted customers, or add new ones. Changes sync across all modules in real-time."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5137,
+                                    lineNumber: 5145,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11183,20 +11191,20 @@ function QuotationView({ onNavigateTab } = {}) {
                                             className: "w-3.5 h-3.5"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5148,
+                                            lineNumber: 5156,
                                             columnNumber: 17
                                         }, this),
                                         " + New Customer"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5140,
+                                    lineNumber: 5148,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5136,
+                            lineNumber: 5144,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11206,7 +11214,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-4 h-4 absolute left-3 top-2.5 text-slate-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5153,
+                                    lineNumber: 5161,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -11217,13 +11225,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg pl-9 pr-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5154,
+                                    lineNumber: 5162,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5152,
+                            lineNumber: 5160,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11247,7 +11255,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: c.company || c.name
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 5179,
+                                                                lineNumber: 5187,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11255,13 +11263,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 children: c.type
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 5182,
+                                                                lineNumber: 5190,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 5178,
+                                                        lineNumber: 5186,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11274,7 +11282,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 5187,
+                                                                lineNumber: 5195,
                                                                 columnNumber: 60
                                                             }, this),
                                                             c.phone && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11284,7 +11292,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 5188,
+                                                                lineNumber: 5196,
                                                                 columnNumber: 37
                                                             }, this),
                                                             c.binNumber && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -11295,13 +11303,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                                lineNumber: 5189,
+                                                                lineNumber: 5197,
                                                                 columnNumber: 41
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 5186,
+                                                        lineNumber: 5194,
                                                         columnNumber: 23
                                                     }, this),
                                                     c.address && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11309,13 +11317,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         children: c.address
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 5192,
+                                                        lineNumber: 5200,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 5177,
+                                                lineNumber: 5185,
                                                 columnNumber: 21
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11328,26 +11336,26 @@ function QuotationView({ onNavigateTab } = {}) {
                                                         className: "w-3.5 h-3.5"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 5204,
+                                                        lineNumber: 5212,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         children: "Remove"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                        lineNumber: 5205,
+                                                        lineNumber: 5213,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                lineNumber: 5198,
+                                                lineNumber: 5206,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, c.id, true, {
                                         fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                        lineNumber: 5176,
+                                        lineNumber: 5184,
                                         columnNumber: 19
                                     }, this)),
                                 customers.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11355,13 +11363,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: 'No customers found. Click "+ New Customer" above to create one.'
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5210,
+                                    lineNumber: 5218,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5163,
+                            lineNumber: 5171,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11376,14 +11384,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: customers.length
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5218,
+                                            lineNumber: 5226,
                                             columnNumber: 24
                                         }, this),
                                         " registered customer(s)"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5217,
+                                    lineNumber: 5225,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11393,24 +11401,24 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Close"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5220,
+                                    lineNumber: 5228,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5216,
+                            lineNumber: 5224,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 5135,
+                    lineNumber: 5143,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 5129,
+                lineNumber: 5137,
                 columnNumber: 9
             }, this),
             isEditTermsModalOpen && selectedQuotation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -11431,14 +11439,14 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: selectedQuotation.quotationNumber
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5244,
+                                    lineNumber: 5252,
                                     columnNumber: 75
                                 }, this),
                                 ":"
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5243,
+                            lineNumber: 5251,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11451,7 +11459,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Payment Terms *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5250,
+                                            lineNumber: 5258,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11466,7 +11474,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Choose preset..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5255,
+                                                    lineNumber: 5263,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11474,7 +11482,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "50% Adv, 40% Del, 10% Com"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5256,
+                                                    lineNumber: 5264,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11482,7 +11490,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "100% Advance with PO"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5257,
+                                                    lineNumber: 5265,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11490,7 +11498,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "50% Adv, 50% on Delivery"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5258,
+                                                    lineNumber: 5266,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11498,7 +11506,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Net 30 Days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5259,
+                                                    lineNumber: 5267,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11506,7 +11514,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Net 15 Days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5260,
+                                                    lineNumber: 5268,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11514,19 +11522,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Cash on Delivery (COD)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5261,
+                                                    lineNumber: 5269,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5251,
+                                            lineNumber: 5259,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5249,
+                                    lineNumber: 5257,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -11540,13 +11548,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5264,
+                                    lineNumber: 5272,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5248,
+                            lineNumber: 5256,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11559,7 +11567,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Delivery Terms *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5276,
+                                            lineNumber: 5284,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11574,7 +11582,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Choose preset..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5281,
+                                                    lineNumber: 5289,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11582,7 +11590,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Within 7 days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5282,
+                                                    lineNumber: 5290,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11590,7 +11598,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Within 15 days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5283,
+                                                    lineNumber: 5291,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11598,7 +11606,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Within 30 days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5284,
+                                                    lineNumber: 5292,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11606,7 +11614,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Within 3-5 Working Days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5285,
+                                                    lineNumber: 5293,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11614,19 +11622,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Immediate Delivery"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5286,
+                                                    lineNumber: 5294,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5277,
+                                            lineNumber: 5285,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5275,
+                                    lineNumber: 5283,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -11640,13 +11648,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5289,
+                                    lineNumber: 5297,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5274,
+                            lineNumber: 5282,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11662,7 +11670,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Warranty Support *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5302,
+                                                    lineNumber: 5310,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11678,7 +11686,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "1Y Service (No Parts)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5304,
+                                                            lineNumber: 5312,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11691,19 +11699,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "2Y Service (No Parts)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5315,
+                                                            lineNumber: 5323,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5303,
+                                                    lineNumber: 5311,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5301,
+                                            lineNumber: 5309,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11718,7 +11726,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Choose preset..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5332,
+                                                    lineNumber: 5340,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11726,7 +11734,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "1 Year Service Warranty (Without Parts)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5333,
+                                                    lineNumber: 5341,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11734,7 +11742,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "2 Years Service Warranty (Without Parts)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5334,
+                                                    lineNumber: 5342,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11742,7 +11750,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "No Warranty"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5335,
+                                                    lineNumber: 5343,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11750,7 +11758,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "No Warranty Applicable"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5336,
+                                                    lineNumber: 5344,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11758,7 +11766,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "No Warranty (As-Is Condition)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5337,
+                                                    lineNumber: 5345,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11766,7 +11774,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "1 Month Replacement Warranty"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5338,
+                                                    lineNumber: 5346,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11774,7 +11782,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "3 Months Service Warranty (Without Parts)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5339,
+                                                    lineNumber: 5347,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11782,7 +11790,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "6 Months Service Warranty (Without Parts)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5340,
+                                                    lineNumber: 5348,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11790,7 +11798,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "1 Year Service Warranty (With Parts)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5341,
+                                                    lineNumber: 5349,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11798,7 +11806,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "2 Years Hardware Replacement"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5342,
+                                                    lineNumber: 5350,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11806,7 +11814,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "3 Years Manufacturer Warranty"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5343,
+                                                    lineNumber: 5351,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11814,7 +11822,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "24 Months On-site Support"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5344,
+                                                    lineNumber: 5352,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11822,19 +11830,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "As per manufacturer policy"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5345,
+                                                    lineNumber: 5353,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5328,
+                                            lineNumber: 5336,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5300,
+                                    lineNumber: 5308,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -11848,13 +11856,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     className: "w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-blue-500 font-medium resize-none"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5348,
+                                    lineNumber: 5356,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5299,
+                            lineNumber: 5307,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11870,7 +11878,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "VAT & TAX Terms *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5361,
+                                                    lineNumber: 5369,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -11886,7 +11894,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5364,
+                                                            lineNumber: 5372,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -11899,19 +11907,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Excluded"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5378,
+                                                            lineNumber: 5386,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5363,
+                                                    lineNumber: 5371,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5360,
+                                            lineNumber: 5368,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -11926,7 +11934,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Choose preset..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5399,
+                                                    lineNumber: 5407,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -11937,7 +11945,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 15% VAT & TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5401,
+                                                            lineNumber: 5409,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11945,7 +11953,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 15% VAT & 5% TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5402,
+                                                            lineNumber: 5410,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11953,7 +11961,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 15% VAT & 10% TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5403,
+                                                            lineNumber: 5411,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11961,13 +11969,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 15% VAT (AIT by Client)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5404,
+                                                            lineNumber: 5412,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5400,
+                                                    lineNumber: 5408,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -11978,7 +11986,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 10% VAT & TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5407,
+                                                            lineNumber: 5415,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11986,7 +11994,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 10% VAT & 5% TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5408,
+                                                            lineNumber: 5416,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -11994,7 +12002,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 10% VAT & 10% TAX"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5409,
+                                                            lineNumber: 5417,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12002,13 +12010,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: 10% VAT (AIT by Client)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5410,
+                                                            lineNumber: 5418,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5406,
+                                                    lineNumber: 5414,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("optgroup", {
@@ -12019,7 +12027,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Included: All Taxes Included"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5413,
+                                                            lineNumber: 5421,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12027,7 +12035,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Excluded: 15% VAT & 5% TAX Extra"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5414,
+                                                            lineNumber: 5422,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12035,7 +12043,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Excluded: 15% VAT Extra"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5415,
+                                                            lineNumber: 5423,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12043,7 +12051,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Excluded: 10% VAT Extra"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5416,
+                                                            lineNumber: 5424,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12051,7 +12059,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Excluded: VAT & TAX Added Extra"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5417,
+                                                            lineNumber: 5425,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12059,25 +12067,25 @@ function QuotationView({ onNavigateTab } = {}) {
                                                             children: "Exempted: Govt SRO Exemption"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                            lineNumber: 5418,
+                                                            lineNumber: 5426,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5412,
+                                                    lineNumber: 5420,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5395,
+                                            lineNumber: 5403,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5359,
+                                    lineNumber: 5367,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -12091,7 +12099,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "VAT:"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5426,
+                                                    lineNumber: 5434,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -12104,7 +12112,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "10%"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5427,
+                                                    lineNumber: 5435,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -12117,13 +12125,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "15%"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5441,
+                                                    lineNumber: 5449,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5425,
+                                            lineNumber: 5433,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -12134,7 +12142,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "TAX (AIT):"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5458,
+                                                    lineNumber: 5466,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -12150,7 +12158,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "5%"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5459,
+                                                    lineNumber: 5467,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -12166,19 +12174,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "10%"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5476,
+                                                    lineNumber: 5484,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5457,
+                                            lineNumber: 5465,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5424,
+                                    lineNumber: 5432,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -12193,13 +12201,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     placeholder: "e.g. INCLUSIVE of 15% VAT and TAX / AIT."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5496,
+                                    lineNumber: 5504,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5358,
+                            lineNumber: 5366,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -12212,7 +12220,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                             children: "Validity & Additional Conditions"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5509,
+                                            lineNumber: 5517,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -12227,7 +12235,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Choose preset..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5514,
+                                                    lineNumber: 5522,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12235,7 +12243,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Valid for 30 calendar days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5515,
+                                                    lineNumber: 5523,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12243,7 +12251,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Valid for 15 calendar days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5516,
+                                                    lineNumber: 5524,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12251,7 +12259,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Valid for 7 calendar days"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5517,
+                                                    lineNumber: 5525,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -12259,19 +12267,19 @@ function QuotationView({ onNavigateTab } = {}) {
                                                     children: "Subject to stock (30 days)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                                    lineNumber: 5518,
+                                                    lineNumber: 5526,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                            lineNumber: 5510,
+                                            lineNumber: 5518,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5508,
+                                    lineNumber: 5516,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -12285,13 +12293,13 @@ function QuotationView({ onNavigateTab } = {}) {
                                     placeholder: "e.g. Quotation valid for 30 calendar days from issue date."
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5521,
+                                    lineNumber: 5529,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5507,
+                            lineNumber: 5515,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -12304,7 +12312,7 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Cancel"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5531,
+                                    lineNumber: 5539,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -12313,30 +12321,30 @@ function QuotationView({ onNavigateTab } = {}) {
                                     children: "Update Terms & Conditions"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                                    lineNumber: 5538,
+                                    lineNumber: 5546,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/QuotationView.tsx",
-                            lineNumber: 5530,
+                            lineNumber: 5538,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/QuotationView.tsx",
-                    lineNumber: 5242,
+                    lineNumber: 5250,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/QuotationView.tsx",
-                lineNumber: 5236,
+                lineNumber: 5244,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/modules/QuotationView.tsx",
-        lineNumber: 2179,
+        lineNumber: 2187,
         columnNumber: 5
     }, this);
 }

@@ -432,6 +432,8 @@ __turbopack_esm__({
     "saveStoredStockLedger": ()=>saveStoredStockLedger,
     "saveStoredWarehouseStock": ()=>saveStoredWarehouseStock
 });
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_import__("[project]/src/lib/erpBackup.ts [app-client] (ecmascript)");
+"__TURBOPACK__ecmascript__hoisting__location__";
 const INITIAL_PRODUCTS = [
     {
         id: 'PRD-001',
@@ -711,6 +713,7 @@ function getStoredCategories() {
     }
     return INITIAL_CATEGORIES;
 }
+;
 function saveStoredCategories(categories) {
     if (typeof window === 'undefined') return;
     try {
@@ -718,6 +721,8 @@ function saveStoredCategories(categories) {
         window.dispatchEvent(new CustomEvent('globotech_categories_updated', {
             detail: categories
         }));
+        window.dispatchEvent(new Event('storage'));
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
     } catch (e) {
         console.error('Error saving categories to storage:', e);
     }
@@ -739,6 +744,8 @@ function saveStoredProducts(products) {
         window.dispatchEvent(new CustomEvent('globotech_products_updated', {
             detail: products
         }));
+        window.dispatchEvent(new Event('storage'));
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
     } catch (e) {
         console.error('Error saving products to storage:', e);
     }
@@ -760,6 +767,8 @@ function saveStoredWarehouseStock(stock) {
         window.dispatchEvent(new CustomEvent('globotech_stock_updated', {
             detail: stock
         }));
+        window.dispatchEvent(new Event('storage'));
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
     } catch (e) {
         console.error('Error saving warehouse stock to storage:', e);
     }
@@ -781,6 +790,8 @@ function saveStoredStockLedger(ledger) {
         window.dispatchEvent(new CustomEvent('globotech_ledger_updated', {
             detail: ledger
         }));
+        window.dispatchEvent(new Event('storage'));
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
     } catch (e) {
         console.error('Error saving stock ledger to storage:', e);
     }

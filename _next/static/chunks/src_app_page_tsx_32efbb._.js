@@ -114,10 +114,28 @@ function AppHome() {
             if (!delList.includes('GT/26108')) delList.push('GT/26108');
             localStorage.setItem('globotech_erp_deleted_bill_ids', JSON.stringify(delList));
         } catch (e) {}
+        // Request persistent storage so browser never evicts ERP data
+        if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().catch(()=>{});
+        }
         // Verify storage integrity and dual-layer mirror across reboots
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["verifyAndRestoreStorageIntegrity"])().catch((err)=>{
             console.warn('Storage integrity check notice:', err);
         });
+        // Auto-mirror to IndexedDB whenever any data changes
+        const handleGlobalSync = ()=>{
+            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$erpBackup$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["mirrorToIndexedDB"])().catch(()=>{});
+        };
+        window.addEventListener('storage', handleGlobalSync);
+        window.addEventListener('globotech_products_updated', handleGlobalSync);
+        window.addEventListener('globotech_stock_updated', handleGlobalSync);
+        window.addEventListener('globotech_categories_updated', handleGlobalSync);
+        return ()=>{
+            window.removeEventListener('storage', handleGlobalSync);
+            window.removeEventListener('globotech_products_updated', handleGlobalSync);
+            window.removeEventListener('globotech_stock_updated', handleGlobalSync);
+            window.removeEventListener('globotech_categories_updated', handleGlobalSync);
+        };
     }, []);
     // Synchronize active tab with URL query parameter (?tab=...) on mount & browser back/forward
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])(()=>{
@@ -313,12 +331,12 @@ function AppHome() {
                         className: "w-full h-full object-contain"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 278,
+                        lineNumber: 298,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.tsx",
-                    lineNumber: 277,
+                    lineNumber: 297,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -327,12 +345,12 @@ function AppHome() {
                         className: "w-full h-full bg-sky-500 rounded-full animate-indeterminate"
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 285,
+                        lineNumber: 305,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.tsx",
-                    lineNumber: 284,
+                    lineNumber: 304,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -340,13 +358,13 @@ function AppHome() {
                     children: "Loading Globo Tech ERP..."
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.tsx",
-                    lineNumber: 287,
+                    lineNumber: 307,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/page.tsx",
-            lineNumber: 276,
+            lineNumber: 296,
             columnNumber: 7
         }, this);
     }
@@ -356,7 +374,7 @@ function AppHome() {
             onLoginSuccess: handleLoginSuccess
         }, void 0, false, {
             fileName: "[project]/src/app/page.tsx",
-            lineNumber: 296,
+            lineNumber: 316,
             columnNumber: 12
         }, this);
     }
@@ -376,12 +394,12 @@ function AppHome() {
                     onClose: ()=>setIsMobileMenuOpen(false)
                 }, void 0, false, {
                     fileName: "[project]/src/app/page.tsx",
-                    lineNumber: 304,
+                    lineNumber: 324,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 303,
+                lineNumber: 323,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -405,12 +423,12 @@ function AppHome() {
                             onNavigateTab: (t)=>setCurrentTab(t)
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.tsx",
-                            lineNumber: 319,
+                            lineNumber: 339,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 318,
+                        lineNumber: 338,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -424,12 +442,12 @@ function AppHome() {
                                         className: "w-6 h-6"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.tsx",
-                                        lineNumber: 341,
+                                        lineNumber: 361,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 340,
+                                    lineNumber: 360,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -437,7 +455,7 @@ function AppHome() {
                                     children: "Restricted Module Access"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 343,
+                                    lineNumber: 363,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -449,14 +467,14 @@ function AppHome() {
                                             children: currentRole.replace(/_/g, ' ')
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/page.tsx",
-                                            lineNumber: 345,
+                                            lineNumber: 365,
                                             columnNumber: 48
                                         }, this),
                                         ") does not have authorization to view this module."
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 344,
+                                    lineNumber: 364,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -467,18 +485,18 @@ function AppHome() {
                                         children: "Return to Dashboard"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.tsx",
-                                        lineNumber: 348,
+                                        lineNumber: 368,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 347,
+                                    lineNumber: 367,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/page.tsx",
-                            lineNumber: 339,
+                            lineNumber: 359,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                             children: [
@@ -487,7 +505,7 @@ function AppHome() {
                                     canViewCosts: canViewCosts
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 359,
+                                    lineNumber: 379,
                                     columnNumber: 17
                                 }, this),
                                 currentTab === 'products' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$ProductsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ProductsView"], {
@@ -496,24 +514,24 @@ function AppHome() {
                                     globalSearchQuery: searchQuery
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 365,
+                                    lineNumber: 385,
                                     columnNumber: 17
                                 }, this),
                                 currentTab === 'imports' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$ImportsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ImportsView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 371,
+                                    lineNumber: 391,
                                     columnNumber: 44
                                 }, this),
                                 currentTab === 'stock' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$StockView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["StockView"], {
                                     globalSearchQuery: searchQuery
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 372,
+                                    lineNumber: 392,
                                     columnNumber: 42
                                 }, this),
                                 currentTab === 'serials' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$SerialsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SerialsView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 373,
+                                    lineNumber: 393,
                                     columnNumber: 44
                                 }, this),
                                 currentTab === 'quotation' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$QuotationView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["QuotationView"], {
@@ -525,51 +543,51 @@ function AppHome() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 374,
+                                    lineNumber: 394,
                                     columnNumber: 46
                                 }, this),
                                 currentTab === 'bill-invoice' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$BillInvoiceView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BillInvoiceView"], {
                                     globalSearchQuery: searchQuery
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 380,
+                                    lineNumber: 400,
                                     columnNumber: 49
                                 }, this),
                                 currentTab === 'sales' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$SalesView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SalesView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 381,
+                                    lineNumber: 401,
                                     columnNumber: 42
                                 }, this),
                                 currentTab === 'projects' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$ProjectsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ProjectsView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 382,
+                                    lineNumber: 402,
                                     columnNumber: 45
                                 }, this),
                                 currentTab === 'customers' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$CustomersView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["CustomersView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 383,
+                                    lineNumber: 403,
                                     columnNumber: 46
                                 }, this),
                                 currentTab === 'suppliers' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$SuppliersView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SuppliersView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 384,
+                                    lineNumber: 404,
                                     columnNumber: 46
                                 }, this),
                                 currentTab === 'reports' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$ReportsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ReportsView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 385,
+                                    lineNumber: 405,
                                     columnNumber: 44
                                 }, this),
                                 currentTab === 'settings' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$modules$2f$SettingsView$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SettingsView"], {}, void 0, false, {
                                     fileName: "[project]/src/app/page.tsx",
-                                    lineNumber: 386,
+                                    lineNumber: 406,
                                     columnNumber: 45
                                 }, this)
                             ]
                         }, void 0, true)
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 337,
+                        lineNumber: 357,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -582,24 +600,24 @@ function AppHome() {
                             isMenuOpen: isMobileMenuOpen
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.tsx",
-                            lineNumber: 393,
+                            lineNumber: 413,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/page.tsx",
-                        lineNumber: 392,
+                        lineNumber: 412,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/page.tsx",
-                lineNumber: 316,
+                lineNumber: 336,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/page.tsx",
-        lineNumber: 301,
+        lineNumber: 321,
         columnNumber: 5
     }, this);
 }

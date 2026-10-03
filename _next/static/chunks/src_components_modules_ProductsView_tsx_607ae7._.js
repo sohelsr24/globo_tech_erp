@@ -105,6 +105,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
         };
         window.addEventListener('globotech_products_updated', handleProductsUpdate);
         window.addEventListener('globotech_categories_updated', handleCategoriesUpdate);
+        window.addEventListener('storage', handleProductsUpdate);
         const handleBackupRestored = ()=>{
             setProducts((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredProducts"])());
             setCategories((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$productsStorage$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getStoredCategories"])());
@@ -113,6 +114,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
         return ()=>{
             window.removeEventListener('globotech_products_updated', handleProductsUpdate);
             window.removeEventListener('globotech_categories_updated', handleCategoriesUpdate);
+            window.removeEventListener('storage', handleProductsUpdate);
             window.removeEventListener('globotech_backup_restored', handleBackupRestored);
         };
     }, []);
@@ -329,20 +331,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                         className: "w-4 h-4"
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 358,
+                        lineNumber: 360,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         children: toastMsg
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 359,
+                        lineNumber: 361,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 357,
+                lineNumber: 359,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -358,7 +360,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 367,
+                                        lineNumber: 369,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -369,13 +371,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-full bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-2 sm:py-1.5 text-sm sm:text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 368,
+                                        lineNumber: 370,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 366,
+                                lineNumber: 368,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -391,7 +393,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "All Categories"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 383,
+                                                lineNumber: 385,
                                                 columnNumber: 15
                                             }, this),
                                             categories.map((c)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -399,13 +401,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: c
                                                 }, c, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 385,
+                                                    lineNumber: 387,
                                                     columnNumber: 17
                                                 }, this))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 378,
+                                        lineNumber: 380,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -416,7 +418,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 399,
+                                                lineNumber: 401,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -427,25 +429,25 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 400,
+                                                lineNumber: 402,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 391,
+                                        lineNumber: 393,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 377,
+                                lineNumber: 379,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 365,
+                        lineNumber: 367,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -464,20 +466,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 418,
+                                                lineNumber: 420,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Cards"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 419,
+                                                lineNumber: 421,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 408,
+                                        lineNumber: 410,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -490,26 +492,26 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 className: "w-3.5 h-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 431,
+                                                lineNumber: 433,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                 children: "Table"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 432,
+                                                lineNumber: 434,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 421,
+                                        lineNumber: 423,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 407,
+                                lineNumber: 409,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -520,32 +522,32 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-4 h-4"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 441,
+                                        lineNumber: 443,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         children: "Add New Product"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 442,
+                                        lineNumber: 444,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 437,
+                                lineNumber: 439,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 406,
+                        lineNumber: 408,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 364,
+                lineNumber: 366,
                 columnNumber: 7
             }, this),
             viewMode === 'cards' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -557,7 +559,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             className: "w-10 h-10 mx-auto mb-2 text-slate-600 opacity-50"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 452,
+                            lineNumber: 454,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -565,7 +567,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             children: "No products found matching criteria"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 453,
+                            lineNumber: 455,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -573,7 +575,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             children: "Try adjusting your search query or category filter"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 454,
+                            lineNumber: 456,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -584,26 +586,26 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     className: "w-4 h-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 459,
+                                    lineNumber: 461,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Add New Product"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 460,
+                                    lineNumber: 462,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 455,
+                            lineNumber: 457,
                             columnNumber: 15
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                    lineNumber: 451,
+                    lineNumber: 453,
                     columnNumber: 13
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5",
@@ -625,7 +627,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.sku
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 476,
+                                                            lineNumber: 478,
                                                             columnNumber: 27
                                                         }, this),
                                                         item.barcode && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -633,13 +635,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.barcode
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 480,
+                                                            lineNumber: 482,
                                                             columnNumber: 29
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 475,
+                                                    lineNumber: 477,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -652,37 +654,37 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 489,
+                                                                    lineNumber: 491,
                                                                     columnNumber: 33
                                                                 }, this),
                                                                 " Low Stock"
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 488,
+                                                            lineNumber: 490,
                                                             columnNumber: 31
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 487,
+                                                        lineNumber: 489,
                                                         columnNumber: 29
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "success",
                                                         children: "In Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 493,
+                                                        lineNumber: 495,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 485,
+                                                    lineNumber: 487,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 474,
+                                            lineNumber: 476,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h3", {
@@ -690,7 +692,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: item.name
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 499,
+                                            lineNumber: 501,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -700,14 +702,14 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: item.category
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 505,
+                                                    lineNumber: 507,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "•"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 506,
+                                                    lineNumber: 508,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -715,7 +717,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: item.brand
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 507,
+                                                    lineNumber: 509,
                                                     columnNumber: 25
                                                 }, this),
                                                 item.isSerialTracked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -723,19 +725,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Serial Tracked"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 509,
+                                                    lineNumber: 511,
                                                     columnNumber: 27
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 504,
+                                            lineNumber: 506,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 473,
+                                    lineNumber: 475,
                                     columnNumber: 21
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -748,7 +750,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Available Stock"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 519,
+                                                    lineNumber: 521,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -760,7 +762,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 520,
+                                                    lineNumber: 522,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -773,13 +775,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 523,
+                                                    lineNumber: 525,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 518,
+                                            lineNumber: 520,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -789,7 +791,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Retail Price"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 527,
+                                                    lineNumber: 529,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -797,7 +799,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.retailPrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 528,
+                                                    lineNumber: 530,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -805,13 +807,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Standard MRP"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 531,
+                                                    lineNumber: 533,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 526,
+                                            lineNumber: 528,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -821,7 +823,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Wholesale Price"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 535,
+                                                    lineNumber: 537,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -829,7 +831,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.wholesalePrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 536,
+                                                    lineNumber: 538,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -837,13 +839,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Dealer/B2B"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 539,
+                                                    lineNumber: 541,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 534,
+                                            lineNumber: 536,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -853,7 +855,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: canViewCosts ? 'Landed Cost' : 'Project Price'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 543,
+                                                    lineNumber: 545,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -861,7 +863,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: canViewCosts ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.currentLandedCost) : __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.projectPrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 546,
+                                                    lineNumber: 548,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -869,19 +871,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: canViewCosts ? `¥${item.purchasePriceCNY}` : 'Tender / Contract'
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 549,
+                                                    lineNumber: 551,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 542,
+                                            lineNumber: 544,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 517,
+                                    lineNumber: 519,
                                     columnNumber: 21
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -895,20 +897,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-3.5 h-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 561,
+                                                    lineNumber: 563,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     children: "Edit Product"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 562,
+                                                    lineNumber: 564,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 557,
+                                            lineNumber: 559,
                                             columnNumber: 23
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -920,35 +922,35 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 className: "w-4 h-4"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 570,
+                                                lineNumber: 572,
                                                 columnNumber: 25
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 564,
+                                            lineNumber: 566,
                                             columnNumber: 23
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 556,
+                                    lineNumber: 558,
                                     columnNumber: 21
                                 }, this)
                             ]
                         }, item.id, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 468,
+                            lineNumber: 470,
                             columnNumber: 19
                         }, this);
                     })
                 }, void 0, false, {
                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                    lineNumber: 464,
+                    lineNumber: 466,
                     columnNumber: 13
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 449,
+                lineNumber: 451,
                 columnNumber: 9
             }, this),
             viewMode === 'table' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -964,7 +966,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-4 h-4 text-blue-400"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 586,
+                                        lineNumber: 588,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -975,13 +977,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 587,
+                                        lineNumber: 589,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 585,
+                                lineNumber: 587,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -989,13 +991,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                 children: "👉 Swipe horizontally"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 589,
+                                lineNumber: 591,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 584,
+                        lineNumber: 586,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1012,7 +1014,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "SKU / Barcode"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 596,
+                                                lineNumber: 598,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1020,7 +1022,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Product Details"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 597,
+                                                lineNumber: 599,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1028,7 +1030,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Category & Brand"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 598,
+                                                lineNumber: 600,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1036,7 +1038,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Stock / Reorder"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 599,
+                                                lineNumber: 601,
                                                 columnNumber: 19
                                             }, this),
                                             canViewCosts && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1044,7 +1046,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "China Cost (CNY)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 600,
+                                                lineNumber: 602,
                                                 columnNumber: 36
                                             }, this),
                                             canViewCosts && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1052,7 +1054,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Landed Cost (BDT)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 601,
+                                                lineNumber: 603,
                                                 columnNumber: 36
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1060,7 +1062,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Retail (BDT)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 602,
+                                                lineNumber: 604,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1068,7 +1070,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Wholesale (BDT)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 603,
+                                                lineNumber: 605,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1076,7 +1078,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Project (BDT)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 604,
+                                                lineNumber: 606,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1084,7 +1086,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Status"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 605,
+                                                lineNumber: 607,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("th", {
@@ -1092,18 +1094,18 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Actions"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 606,
+                                                lineNumber: 608,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 595,
+                                        lineNumber: 597,
                                         columnNumber: 17
                                     }, this)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 594,
+                                    lineNumber: 596,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -1121,7 +1123,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Add New Product"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 614,
+                                                    lineNumber: 616,
                                                     columnNumber: 23
                                                 }, this),
                                                 ' ',
@@ -1129,12 +1131,12 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 612,
+                                            lineNumber: 614,
                                             columnNumber: 21
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 611,
+                                        lineNumber: 613,
                                         columnNumber: 19
                                     }, this) : filtered.map((item)=>{
                                         const isLow = item.stock <= item.minStock;
@@ -1148,7 +1150,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.sku
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 629,
+                                                            lineNumber: 631,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1156,13 +1158,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.barcode
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 630,
+                                                            lineNumber: 632,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 628,
+                                                    lineNumber: 630,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1173,7 +1175,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.name
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 633,
+                                                            lineNumber: 635,
                                                             columnNumber: 27
                                                         }, this),
                                                         item.isSerialTracked && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1181,13 +1183,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "• Serial Tracked"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 635,
+                                                            lineNumber: 637,
                                                             columnNumber: 29
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 632,
+                                                    lineNumber: 634,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1198,7 +1200,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.category
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 641,
+                                                            lineNumber: 643,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1206,13 +1208,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: item.brand
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 642,
+                                                            lineNumber: 644,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 640,
+                                                    lineNumber: 642,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1227,7 +1229,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 645,
+                                                            lineNumber: 647,
                                                             columnNumber: 27
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1238,13 +1240,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 648,
+                                                            lineNumber: 650,
                                                             columnNumber: 27
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 644,
+                                                    lineNumber: 646,
                                                     columnNumber: 25
                                                 }, this),
                                                 canViewCosts && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1255,7 +1257,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 651,
+                                                    lineNumber: 653,
                                                     columnNumber: 27
                                                 }, this),
                                                 canViewCosts && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1263,7 +1265,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.currentLandedCost)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 656,
+                                                    lineNumber: 658,
                                                     columnNumber: 27
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1271,7 +1273,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.retailPrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 660,
+                                                    lineNumber: 662,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1279,7 +1281,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.wholesalePrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 663,
+                                                    lineNumber: 665,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1287,7 +1289,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$formatters$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Formatters"].currency(item.projectPrice)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 666,
+                                                    lineNumber: 668,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1297,19 +1299,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                         children: "Low Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 671,
+                                                        lineNumber: 673,
                                                         columnNumber: 29
                                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "success",
                                                         children: "In Stock"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 673,
+                                                        lineNumber: 675,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 669,
+                                                    lineNumber: 671,
                                                     columnNumber: 25
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("td", {
@@ -1325,12 +1327,12 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                     className: "w-3.5 h-3.5 text-blue-400"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 683,
+                                                                    lineNumber: 685,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                lineNumber: 678,
+                                                                lineNumber: 680,
                                                                 columnNumber: 29
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1341,52 +1343,52 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                     className: "w-3.5 h-3.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 690,
+                                                                    lineNumber: 692,
                                                                     columnNumber: 31
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                lineNumber: 685,
+                                                                lineNumber: 687,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 677,
+                                                        lineNumber: 679,
                                                         columnNumber: 27
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 676,
+                                                    lineNumber: 678,
                                                     columnNumber: 25
                                                 }, this)
                                             ]
                                         }, item.id, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 627,
+                                            lineNumber: 629,
                                             columnNumber: 23
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 609,
+                                    lineNumber: 611,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 593,
+                            lineNumber: 595,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                        lineNumber: 592,
+                        lineNumber: 594,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 583,
+                lineNumber: 585,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -1401,7 +1403,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             children: "Cancel"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 711,
+                            lineNumber: 713,
                             columnNumber: 13
                         }, void 0),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1412,20 +1414,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     className: "w-3.5 h-3.5"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 721,
+                                    lineNumber: 723,
                                     columnNumber: 15
                                 }, void 0),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     children: "Save & Register Product"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 722,
+                                    lineNumber: 724,
                                     columnNumber: 15
                                 }, void 0)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 717,
+                            lineNumber: 719,
                             columnNumber: 13
                         }, void 0)
                     ]
@@ -1441,7 +1443,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     children: "1. Product Identification"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 730,
+                                    lineNumber: 732,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1455,13 +1457,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "*"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 736,
+                                                    lineNumber: 738,
                                                     columnNumber: 30
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 735,
+                                            lineNumber: 737,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1475,13 +1477,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 738,
+                                            lineNumber: 740,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 734,
+                                    lineNumber: 736,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1498,13 +1500,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "*"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 750,
+                                                            lineNumber: 752,
                                                             columnNumber: 28
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 749,
+                                                    lineNumber: 751,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1518,13 +1520,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 font-mono text-xs uppercase focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 752,
+                                                    lineNumber: 754,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 748,
+                                            lineNumber: 750,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1534,7 +1536,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Brand"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 762,
+                                                    lineNumber: 764,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1548,19 +1550,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 763,
+                                                    lineNumber: 765,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 761,
+                                            lineNumber: 763,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 747,
+                                    lineNumber: 749,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1576,7 +1578,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "Category"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 776,
+                                                            lineNumber: 778,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1591,26 +1593,26 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                     className: "w-3 h-3"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 785,
+                                                                    lineNumber: 787,
                                                                     columnNumber: 21
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: isAddingCustomCategory ? 'Choose Existing' : '+ Add New Category'
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 786,
+                                                                    lineNumber: 788,
                                                                     columnNumber: 21
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 777,
+                                                            lineNumber: 779,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 775,
+                                                    lineNumber: 777,
                                                     columnNumber: 17
                                                 }, this),
                                                 isAddingCustomCategory ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1631,7 +1633,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             className: "flex-1 bg-slate-800 border border-blue-500 rounded-lg p-2 text-slate-100 text-xs focus:outline-none"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 792,
+                                                            lineNumber: 794,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1643,20 +1645,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                     className: "w-3.5 h-3.5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 811,
+                                                                    lineNumber: 813,
                                                                     columnNumber: 23
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                     children: "Add"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                    lineNumber: 812,
+                                                                    lineNumber: 814,
                                                                     columnNumber: 23
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 806,
+                                                            lineNumber: 808,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1666,13 +1668,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "✕"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 814,
+                                                            lineNumber: 816,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 791,
+                                                    lineNumber: 793,
                                                     columnNumber: 19
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                                     value: newProd.category,
@@ -1694,7 +1696,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                                 children: c
                                                             }, c, false, {
                                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                                lineNumber: 836,
+                                                                lineNumber: 838,
                                                                 columnNumber: 23
                                                             }, this)),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1703,19 +1705,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "➕ + Add New Category..."
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 840,
+                                                            lineNumber: 842,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 823,
+                                                    lineNumber: 825,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 774,
+                                            lineNumber: 776,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1725,7 +1727,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Unit of Measure"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 848,
+                                                    lineNumber: 850,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1741,7 +1743,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "pcs (Pieces)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 854,
+                                                            lineNumber: 856,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1749,7 +1751,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "unit (Units)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 855,
+                                                            lineNumber: 857,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1757,7 +1759,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "box (Boxes)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 856,
+                                                            lineNumber: 858,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1765,7 +1767,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "set (Sets)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 857,
+                                                            lineNumber: 859,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1773,7 +1775,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "meter (Meters)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 858,
+                                                            lineNumber: 860,
                                                             columnNumber: 19
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -1781,31 +1783,31 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             children: "roll (Rolls/Coils)"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 859,
+                                                            lineNumber: 861,
                                                             columnNumber: 19
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 849,
+                                                    lineNumber: 851,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 847,
+                                            lineNumber: 849,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 773,
+                                    lineNumber: 775,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 729,
+                            lineNumber: 731,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1816,7 +1818,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     children: "2. Warehouse Location & Initial Stock"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 867,
+                                    lineNumber: 869,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1826,7 +1828,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Target Warehouse"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 872,
+                                            lineNumber: 874,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1841,18 +1843,18 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: wh
                                                 }, wh, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 879,
+                                                    lineNumber: 881,
                                                     columnNumber: 19
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 873,
+                                            lineNumber: 875,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 871,
+                                    lineNumber: 873,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1869,7 +1871,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 888,
+                                                    lineNumber: 890,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1883,13 +1885,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-bold text-xs"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 891,
+                                                    lineNumber: 893,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 887,
+                                            lineNumber: 889,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1899,7 +1901,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Min Reorder Level"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 901,
+                                                    lineNumber: 903,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1913,13 +1915,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 902,
+                                                    lineNumber: 904,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 900,
+                                            lineNumber: 902,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1929,7 +1931,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Landed Cost (BDT) *"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 912,
+                                                    lineNumber: 914,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1943,25 +1945,25 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-blue-400 font-bold text-xs"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 913,
+                                                    lineNumber: 915,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 911,
+                                            lineNumber: 913,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 886,
+                                    lineNumber: 888,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 866,
+                            lineNumber: 868,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1972,7 +1974,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     children: "3. Multi-Tier Selling Prices (BDT)"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 928,
+                                    lineNumber: 930,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1985,7 +1987,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Retail (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 934,
+                                                    lineNumber: 936,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1998,13 +2000,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 text-xs font-semibold"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 935,
+                                                    lineNumber: 937,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 933,
+                                            lineNumber: 935,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2014,7 +2016,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Wholesale (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 943,
+                                                    lineNumber: 945,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2027,13 +2029,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-cyan-400 text-xs font-semibold"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 944,
+                                                    lineNumber: 946,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 942,
+                                            lineNumber: 944,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2043,7 +2045,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Project (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 952,
+                                                    lineNumber: 954,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2056,13 +2058,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-purple-400 text-xs font-semibold"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 953,
+                                                    lineNumber: 955,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 951,
+                                            lineNumber: 953,
                                             columnNumber: 15
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2072,7 +2074,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Dealer (BDT)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 961,
+                                                    lineNumber: 963,
                                                     columnNumber: 17
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2085,25 +2087,25 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-300 text-xs font-semibold"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 962,
+                                                    lineNumber: 964,
                                                     columnNumber: 17
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 960,
+                                            lineNumber: 962,
                                             columnNumber: 15
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 932,
+                                    lineNumber: 934,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 927,
+                            lineNumber: 929,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2121,7 +2123,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-4 h-4 rounded text-blue-600 focus:ring-blue-500 bg-slate-900 border-slate-700"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 975,
+                                        lineNumber: 977,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2131,7 +2133,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Enable Serial Number & Warranty Tracking"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 982,
+                                                lineNumber: 984,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2139,35 +2141,35 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                 children: "Enables scanning and RMA lifecycle tracking for this hardware model."
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                lineNumber: 983,
+                                                lineNumber: 985,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 981,
+                                        lineNumber: 983,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 974,
+                                lineNumber: 976,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 973,
+                            lineNumber: 975,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                    lineNumber: 727,
+                    lineNumber: 729,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 705,
+                lineNumber: 707,
                 columnNumber: 7
             }, this),
             editingProduct && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$Modal$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Modal"], {
@@ -2188,7 +2190,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             children: "Cancel"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1003,
+                            lineNumber: 1005,
                             columnNumber: 15
                         }, void 0),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2197,7 +2199,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                             children: "Save Changes"
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1012,
+                            lineNumber: 1014,
                             columnNumber: 15
                         }, void 0)
                     ]
@@ -2212,7 +2214,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     children: "Product Name *"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1023,
+                                    lineNumber: 1025,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2225,13 +2227,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                     className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1024,
+                                    lineNumber: 1026,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1022,
+                            lineNumber: 1024,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2244,7 +2246,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "SKU Code *"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1034,
+                                            lineNumber: 1036,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2257,13 +2259,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono uppercase"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1035,
+                                            lineNumber: 1037,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1033,
+                                    lineNumber: 1035,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2273,7 +2275,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Brand"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1043,
+                                            lineNumber: 1045,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2286,19 +2288,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1044,
+                                            lineNumber: 1046,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1042,
+                                    lineNumber: 1044,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1032,
+                            lineNumber: 1034,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2314,7 +2316,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "Category"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1056,
+                                                    lineNumber: 1058,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2329,26 +2331,26 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             className: "w-3 h-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 1065,
+                                                            lineNumber: 1067,
                                                             columnNumber: 21
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: isAddingEditCategory ? 'Choose Existing' : '+ Add New Category'
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 1066,
+                                                            lineNumber: 1068,
                                                             columnNumber: 21
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1057,
+                                                    lineNumber: 1059,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1055,
+                                            lineNumber: 1057,
                                             columnNumber: 17
                                         }, this),
                                         isAddingEditCategory ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2369,7 +2371,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     className: "flex-1 bg-slate-800 border border-blue-500 rounded-lg p-2 text-slate-100 text-xs focus:outline-none"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1072,
+                                                    lineNumber: 1074,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2381,20 +2383,20 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                             className: "w-3.5 h-3.5"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 1091,
+                                                            lineNumber: 1093,
                                                             columnNumber: 23
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                             children: "Add"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                            lineNumber: 1092,
+                                                            lineNumber: 1094,
                                                             columnNumber: 23
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1086,
+                                                    lineNumber: 1088,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2404,13 +2406,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "✕"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1094,
+                                                    lineNumber: 1096,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1071,
+                                            lineNumber: 1073,
                                             columnNumber: 19
                                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
                                             value: editingProduct.category,
@@ -2432,7 +2434,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                         children: c
                                                     }, c, false, {
                                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                        lineNumber: 1116,
+                                                        lineNumber: 1118,
                                                         columnNumber: 23
                                                     }, this)),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2441,19 +2443,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                                     children: "➕ + Add New Category..."
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                                    lineNumber: 1120,
+                                                    lineNumber: 1122,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1103,
+                                            lineNumber: 1105,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1054,
+                                    lineNumber: 1056,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2463,7 +2465,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Unit of Measure"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1127,
+                                            lineNumber: 1129,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2476,19 +2478,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1128,
+                                            lineNumber: 1130,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1126,
+                                    lineNumber: 1128,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1053,
+                            lineNumber: 1055,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2501,7 +2503,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Landed Cost (BDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1139,
+                                            lineNumber: 1141,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2514,13 +2516,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-blue-400 font-bold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1140,
+                                            lineNumber: 1142,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1138,
+                                    lineNumber: 1140,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2530,7 +2532,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Min Reorder Level"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1150,
+                                            lineNumber: 1152,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2543,19 +2545,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1151,
+                                            lineNumber: 1153,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1149,
+                                    lineNumber: 1151,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1137,
+                            lineNumber: 1139,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2568,7 +2570,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Retail (BDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1164,
+                                            lineNumber: 1166,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2581,13 +2583,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-semibold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1165,
+                                            lineNumber: 1167,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1163,
+                                    lineNumber: 1165,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2597,7 +2599,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Wholesale (BDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1175,
+                                            lineNumber: 1177,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2610,13 +2612,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-cyan-400 font-semibold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1176,
+                                            lineNumber: 1178,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1174,
+                                    lineNumber: 1176,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2626,7 +2628,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Project (BDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1186,
+                                            lineNumber: 1188,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2639,13 +2641,13 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-purple-400 font-semibold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1187,
+                                            lineNumber: 1189,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1185,
+                                    lineNumber: 1187,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2655,7 +2657,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             children: "Dealer (BDT)"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1197,
+                                            lineNumber: 1199,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -2668,19 +2670,19 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                             className: "w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-300 font-semibold"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                            lineNumber: 1198,
+                                            lineNumber: 1200,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                    lineNumber: 1196,
+                                    lineNumber: 1198,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1162,
+                            lineNumber: 1164,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2698,7 +2700,7 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         className: "w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 1211,
+                                        lineNumber: 1213,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2706,35 +2708,35 @@ function ProductsView({ canViewCosts, filterLowStock = false, globalSearchQuery 
                                         children: "Serial Number Tracked"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                        lineNumber: 1219,
+                                        lineNumber: 1221,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                                lineNumber: 1210,
+                                lineNumber: 1212,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/modules/ProductsView.tsx",
-                            lineNumber: 1209,
+                            lineNumber: 1211,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/modules/ProductsView.tsx",
-                    lineNumber: 1021,
+                    lineNumber: 1023,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/modules/ProductsView.tsx",
-                lineNumber: 994,
+                lineNumber: 996,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/modules/ProductsView.tsx",
-        lineNumber: 354,
+        lineNumber: 356,
         columnNumber: 5
     }, this);
 }
