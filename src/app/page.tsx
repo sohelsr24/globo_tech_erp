@@ -97,13 +97,23 @@ export default function AppHome() {
     }
 
     // Automatic Master Database Recovery:
-    // If browser localStorage has <= 4 stock items or is missing data,
-    // immediately populate with the complete master database across all modules!
+    // Non-destructively merges master records so user's existing records are ALWAYS 100% preserved
+    // and missing master records are seamlessly added without data loss!
     try {
       const currentStockStr = localStorage.getItem('globotech_erp_warehouse_stock');
+      const currentQuotesStr = localStorage.getItem('globotech_erp_quotations');
+      const currentBillsStr = localStorage.getItem('globotech_erp_bill_invoices');
       const currentStock = currentStockStr ? JSON.parse(currentStockStr) : [];
-      if (!Array.isArray(currentStock) || currentStock.length <= 4) {
-        restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD));
+      const currentQuotes = currentQuotesStr ? JSON.parse(currentQuotesStr) : [];
+      const currentBills = currentBillsStr ? JSON.parse(currentBillsStr) : [];
+
+      const isUnderpopulated =
+        !Array.isArray(currentStock) || currentStock.length <= 4 ||
+        !Array.isArray(currentQuotes) || currentQuotes.length < 15 ||
+        !Array.isArray(currentBills) || currentBills.length < 20;
+
+      if (isUnderpopulated) {
+        restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD), { mode: 'merge' });
       }
     } catch (e) {
       console.warn('Auto restore notice:', e);

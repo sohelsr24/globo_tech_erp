@@ -21,6 +21,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { DeviceSyncModal } from '@/components/modals/DeviceSyncModal';
+import { DataProtectionModal } from '@/components/modals/DataProtectionModal';
 import { UserRole } from '@/lib/permissions';
 import {
   getStoredProducts,
@@ -68,6 +69,7 @@ export function Header({
   const [selectedCategory, setSelectedCategory] = useState<'ALL' | 'PRODUCTS' | 'WAREHOUSE' | 'BILLS' | 'QUOTATIONS'>('ALL');
   const [backedUpSuccess, setBackedUpSuccess] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isProtectionModalOpen, setIsProtectionModalOpen] = useState(false);
   const [autoBackupJustSaved, setAutoBackupJustSaved] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
 
@@ -555,23 +557,25 @@ export function Header({
             {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-400" />}
           </button>
 
-          {/* Continuous Auto-Backup Live Status Indicator */}
-          <div 
-            className={`flex items-center gap-1.5 px-2 py-1.5 rounded-xl border text-[11px] font-medium transition-all duration-300 flex-shrink-0 ${
+          {/* Zero Data Loss Shield Interactive Status Trigger */}
+          <button 
+            onClick={() => setIsProtectionModalOpen(true)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[11px] font-medium transition-all duration-300 flex-shrink-0 cursor-pointer active:scale-95 shadow-sm ${
               autoBackupJustSaved
-                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 scale-105 shadow-sm shadow-emerald-500/20'
-                : 'bg-emerald-950/60 border-emerald-800/60 text-emerald-400'
+                ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200 scale-105 shadow-emerald-500/20'
+                : 'bg-emerald-950/70 hover:bg-emerald-900/60 border-emerald-700/60 text-emerald-300 hover:border-emerald-600'
             }`}
-            title="অটো-ব্যাকআপ সক্রিয়: প্রতিটি আপডেট বা এডিট সাথে সাথে লোকাল ডিস্ক ও পারসিস্টেন্ট ডেটাবেজে অটো ব্যাকআপ হয়ে যায়।"
+            title="জিরো ডেটা লস শিল্ড: ক্লিক করে ডাটাবেজ স্বাস্থ্য, ব্যাকআপ ও লাইভ রেকর্ড দেখুন"
           >
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
             <span className={`w-1.5 h-1.5 rounded-full ${autoBackupJustSaved ? 'bg-emerald-300 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
             <span className="hidden sm:inline font-semibold">
-              {autoBackupJustSaved ? 'অটো-ব্যাকআপ হয়েছে!' : 'অটো-ব্যাকআপ সক্রিয়'}
+              {autoBackupJustSaved ? 'সুরক্ষিত ও সংরক্ষিত!' : 'ডেটা শিল্ড সক্রিয়'}
             </span>
             <span className="sm:hidden font-semibold">
-              {autoBackupJustSaved ? 'সংরক্ষিত' : 'অটো'}
+              {autoBackupJustSaved ? 'সংরক্ষিত' : 'শিল্ড'}
             </span>
-          </div>
+          </button>
 
           {/* Mobile / PC Sync Button */}
           <button
@@ -709,6 +713,12 @@ export function Header({
       <DeviceSyncModal
         isOpen={isSyncModalOpen}
         onClose={() => setIsSyncModalOpen(false)}
+      />
+
+      {/* Zero Data Loss Protection Health Modal */}
+      <DataProtectionModal
+        isOpen={isProtectionModalOpen}
+        onClose={() => setIsProtectionModalOpen(false)}
       />
     </header>
   );

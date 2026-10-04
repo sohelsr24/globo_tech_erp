@@ -48,6 +48,7 @@ import {
   WarehouseStockItem,
   ProductItem
 } from '@/lib/productsStorage';
+import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
 
 // Types of Quotation Items
 export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
@@ -1086,6 +1087,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       try {
         localStorage.setItem('globotech_erp_quotations', JSON.stringify(quotations));
         window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: quotations }));
+        forceImmediateBackup('quotations_updated');
       } catch (e) {
         console.error('Error syncing quotations to localStorage:', e);
       }

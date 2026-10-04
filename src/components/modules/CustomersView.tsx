@@ -29,6 +29,7 @@ import {
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatDate } from '@/lib/formatters';
+import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
 
 export interface CustomerTransaction {
   id: string;
@@ -61,6 +62,70 @@ export interface Customer {
 }
 
 export const INITIAL_CUSTOMERS: Customer[] = [
+  {
+    id: 'cust-1790614207705',
+    name: 'Abdul Majid',
+    company: 'Bangladesh Parliament',
+    type: 'CORPORATE',
+    phone: '',
+    email: '',
+    address: 'National Parliament House.',
+    binNumber: '004728009-0202',
+    creditLimit: 5000000,
+    totalInvoiced: 281450,
+    totalPaid: 281450,
+    currentDues: 0,
+    advanceCredit: 0,
+    paymentTerms: 'Cash on Delivery (COD)'
+  },
+  {
+    id: 'cust-1790827005839',
+    name: 'Rubel',
+    company: 'Smart Technologies (BD) Ltd.',
+    type: 'CORPORATE',
+    phone: '',
+    email: '',
+    address: 'Asian University for Women (AUW)\n20/A, M. M. Ali Road, Chattogram 4000,',
+    binNumber: '',
+    creditLimit: 2000000,
+    totalInvoiced: 0,
+    totalPaid: 0,
+    currentDues: 0,
+    advanceCredit: 0,
+    paymentTerms: '60 days'
+  },
+  {
+    id: 'cust-1790616371389',
+    name: 'LGED',
+    company: 'LGED',
+    type: 'CORPORATE',
+    phone: '',
+    email: '',
+    address: 'Narayanganj',
+    binNumber: '',
+    creditLimit: 1000000,
+    totalInvoiced: 0,
+    totalPaid: 0,
+    currentDues: 0,
+    advanceCredit: 0,
+    paymentTerms: 'Net 30 Days'
+  },
+  {
+    id: 'cust-1790574690229',
+    name: 'Farhan',
+    company: 'Daraz Bangladesh LTD',
+    type: 'CORPORATE',
+    phone: '',
+    email: 'bd.procurement@list.alibaba-inc.com',
+    address: 'Asfia Tower, Plot:76, Road: 11, Banani, Dhaka-1213',
+    binNumber: '',
+    creditLimit: 2000000,
+    totalInvoiced: 480000,
+    totalPaid: 400000,
+    currentDues: 80000,
+    advanceCredit: 0,
+    paymentTerms: 'Net 30 Days'
+  },
   {
     id: 'cust-001',
     name: 'Procurement Officer',
@@ -290,7 +355,14 @@ export function CustomersView() {
         try {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            const existingKeys = new Set(
+              parsed.map((c: Customer) => c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name))
+            );
+            const newInitials = INITIAL_CUSTOMERS.filter((initC) => {
+              const k = initC.id || (initC.company ? `comp-${initC.company.trim().toLowerCase()}` : initC.name);
+              return !existingKeys.has(k) && !deletedCustIds.has(initC.id) && !deletedCustIds.has(initC.company || '');
+            });
+            return [...newInitials, ...parsed];
           }
         } catch (e) {
           console.error(e);
@@ -344,10 +416,16 @@ export function CustomersView() {
     paymentTerms: 'Net 30 Days'
   });
 
-  // Save to localStorage whenever customers change
+  // Save to localStorage whenever customers change & immediately mirror to IndexedDB
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('globotech_erp_customers', JSON.stringify(customers));
+      try {
+        localStorage.setItem('globotech_erp_customers', JSON.stringify(customers));
+        window.dispatchEvent(new CustomEvent('globotech_customers_updated', { detail: customers }));
+        forceImmediateBackup('customers_update');
+      } catch (e) {
+        console.error('Error saving customers:', e);
+      }
     }
   }, [customers]);
 

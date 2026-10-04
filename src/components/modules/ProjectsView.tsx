@@ -33,6 +33,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { formatBDT, formatDate } from '@/lib/formatters';
 import { INITIAL_CUSTOMERS, Customer } from './CustomersView';
+import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
 
 export interface ClientOption {
   id: string;
@@ -302,7 +303,16 @@ export function ProjectsView() {
       const saved = localStorage.getItem('globotech_erp_projects');
       if (saved) {
         try {
-          return JSON.parse(saved);
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingKeys = new Set(
+              parsed.map((p: ProjectRecord) => p.id || p.projectCode || p.projectName)
+            );
+            const newInitials = INITIAL_PROJECTS.filter(
+              (p) => !existingKeys.has(p.id || p.projectCode || p.projectName)
+            );
+            return [...newInitials, ...parsed];
+          }
         } catch (e) {
           console.error('Error loading projects:', e);
         }
@@ -382,6 +392,8 @@ export function ProjectsView() {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_projects', JSON.stringify(projects));
+        window.dispatchEvent(new CustomEvent('globotech_projects_updated', { detail: projects }));
+        forceImmediateBackup('projects_updated');
       } catch (e) {
         console.error('Error saving projects to localStorage:', e);
       }

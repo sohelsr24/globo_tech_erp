@@ -184,9 +184,14 @@ export function downloadERPBackupFile(): { filename: string; totalRecords: numbe
 }
 
 /**
- * Restores all ERP modules from a valid JSON backup string
+ * Restores all ERP modules from a valid JSON backup string.
+ * CRITICAL SAFETY: Uses Non-Destructive Union Merge by default.
+ * User-created records in the browser are ALWAYS preserved and merged with incoming backup data!
  */
-export function restoreERPBackupData(jsonString: string): { success: boolean; message: string; counts?: any } {
+export function restoreERPBackupData(
+  jsonString: string,
+  options?: { mode?: 'merge' | 'overwrite' }
+): { success: boolean; message: string; counts?: any } {
   try {
     const payload = JSON.parse(jsonString) as ERPBackupPayload;
 
@@ -195,78 +200,268 @@ export function restoreERPBackupData(jsonString: string): { success: boolean; me
     }
 
     const { data } = payload;
+    const isMergeMode = options?.mode !== 'overwrite';
 
     if (typeof window !== 'undefined') {
+      // 1. Quotations Safe Merge
       if (Array.isArray(data.quotations)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(data.quotations));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
+          const map = new Map<string, any>();
+          // Incoming items first
+          data.quotations.forEach((q: any) => {
+            const key = q.id || q.quotationNumber;
+            if (key) map.set(key, q);
+          });
+          // User local items take precedence so nothing user created or edited is lost!
+          current.forEach((q: any) => {
+            const key = q.id || q.quotationNumber;
+            if (key) map.set(key, q);
+          });
+          const merged = Array.from(map.values());
+          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(merged));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(data.quotations));
+        }
       }
       if (Array.isArray(data.deletedQuotationIds)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(data.deletedQuotationIds));
+        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, []);
+        const delSet = new Set<string>([...curDel, ...data.deletedQuotationIds]);
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(Array.from(delSet)));
       }
+
+      // 2. Bills Safe Merge
       if (Array.isArray(data.bills)) {
-        const cleanBills = data.bills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
-        localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(cleanBills));
+        const cleanIncoming = data.bills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
+          const map = new Map<string, any>();
+          cleanIncoming.forEach((b: any) => {
+            const key = b.id || b.billNo;
+            if (key) map.set(key, b);
+          });
+          current
+            .filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108')
+            .forEach((b: any) => {
+              const key = b.id || b.billNo;
+              if (key) map.set(key, b);
+            });
+          const merged = Array.from(map.values());
+          localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(merged));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(cleanIncoming));
+        }
       }
       if (Array.isArray(data.deletedBillIds)) {
-        const delSet = new Set<string>(data.deletedBillIds);
+        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_BILL_IDS, []);
+        const delSet = new Set<string>([...curDel, ...data.deletedBillIds]);
         delSet.add('bill-26108');
         delSet.add('GT/26108');
         localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(Array.from(delSet)));
       }
+
+      // 3. Customers Safe Merge
       if (Array.isArray(data.customers)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.CUSTOMERS, []);
+          const map = new Map<string, any>();
+          data.customers.forEach((c: any) => {
+            const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
+            if (key) map.set(key, c);
+          });
+          current.forEach((c: any) => {
+            const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
+            if (key) map.set(key, c);
+          });
+          const merged = Array.from(map.values());
+          localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(merged));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers));
+        }
       }
       if (Array.isArray(data.deletedCustomerIds)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, JSON.stringify(data.deletedCustomerIds));
+        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, []);
+        const delSet = new Set<string>([...curDel, ...data.deletedCustomerIds]);
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, JSON.stringify(Array.from(delSet)));
       }
+
+      // 4. Projects Safe Merge
       if (Array.isArray(data.projects)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.PROJECTS, JSON.stringify(data.projects));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.PROJECTS, []);
+          const map = new Map<string, any>();
+          data.projects.forEach((pr: any) => {
+            const key = pr.id || pr.projectCode || pr.projectName;
+            if (key) map.set(key, pr);
+          });
+          current.forEach((pr: any) => {
+            const key = pr.id || pr.projectCode || pr.projectName;
+            if (key) map.set(key, pr);
+          });
+          const merged = Array.from(map.values());
+          localStorage.setItem(ERP_STORAGE_KEYS.PROJECTS, JSON.stringify(merged));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.PROJECTS, JSON.stringify(data.projects));
+        }
       }
+
+      // 5. Client Directory Safe Merge
       if (Array.isArray(data.clientDirectory)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, JSON.stringify(data.clientDirectory));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, []);
+          const map = new Map<string, any>();
+          data.clientDirectory.forEach((cd: any) => {
+            const key = cd.id || cd.company || cd.name;
+            if (key) map.set(key, cd);
+          });
+          current.forEach((cd: any) => {
+            const key = cd.id || cd.company || cd.name;
+            if (key) map.set(key, cd);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, JSON.stringify(data.clientDirectory));
+        }
       }
+
+      // 6. Products Safe Merge
       if (Array.isArray(data.products)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.PRODUCTS, []);
+          const map = new Map<string, any>();
+          data.products.forEach((p: any) => {
+            const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
+            if (key) map.set(key, p);
+          });
+          current.forEach((p: any) => {
+            const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
+            if (key) map.set(key, p);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
+        }
       }
+
+      // 7. Warehouse Stock Safe Merge
       if (Array.isArray(data.warehouseStock)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(data.warehouseStock));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, []);
+          const map = new Map<string, any>();
+          data.warehouseStock.forEach((s: any) => {
+            const key = s.id || `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`;
+            if (key) map.set(key, s);
+          });
+          current.forEach((s: any) => {
+            const key = s.id || `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`;
+            if (key) map.set(key, s);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(data.warehouseStock));
+        }
       }
+
+      // 8. Stock Ledger Safe Merge
       if (Array.isArray(data.stockLedger)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.STOCK_LEDGER, JSON.stringify(data.stockLedger));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.STOCK_LEDGER, []);
+          const map = new Map<string, any>();
+          data.stockLedger.forEach((l: any) => {
+            const key = l.id || `${l.timestamp}-${l.referenceId || ''}-${l.productName || ''}`;
+            if (key) map.set(key, l);
+          });
+          current.forEach((l: any) => {
+            const key = l.id || `${l.timestamp}-${l.referenceId || ''}-${l.productName || ''}`;
+            if (key) map.set(key, l);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.STOCK_LEDGER, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.STOCK_LEDGER, JSON.stringify(data.stockLedger));
+        }
       }
+
+      // 9. Categories Safe Merge
       if (Array.isArray(data.categories)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.CATEGORIES, JSON.stringify(data.categories));
+        const curCats = readStorage<string[]>(ERP_STORAGE_KEYS.CATEGORIES, []);
+        const catSet = new Set<string>([...curCats, ...data.categories]);
+        localStorage.setItem(ERP_STORAGE_KEYS.CATEGORIES, JSON.stringify(Array.from(catSet)));
       }
+
+      // 10. Sales Safe Merge
       if (Array.isArray(data.sales)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.SALES, JSON.stringify(data.sales));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.SALES, []);
+          const map = new Map<string, any>();
+          data.sales.forEach((s: any) => { const key = s.id || s.invoiceNo; if (key) map.set(key, s); });
+          current.forEach((s: any) => { const key = s.id || s.invoiceNo; if (key) map.set(key, s); });
+          localStorage.setItem(ERP_STORAGE_KEYS.SALES, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.SALES, JSON.stringify(data.sales));
+        }
       }
+
+      // 11. Imports Safe Merge
       if (Array.isArray(data.imports)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.IMPORTS, JSON.stringify(data.imports));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.IMPORTS, []);
+          const map = new Map<string, any>();
+          data.imports.forEach((im: any) => { const key = im.id || im.lcNumber || im.shipmentNumber; if (key) map.set(key, im); });
+          current.forEach((im: any) => { const key = im.id || im.lcNumber || im.shipmentNumber; if (key) map.set(key, im); });
+          localStorage.setItem(ERP_STORAGE_KEYS.IMPORTS, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.IMPORTS, JSON.stringify(data.imports));
+        }
       }
+
+      // 12. Suppliers Safe Merge
       if (Array.isArray(data.suppliers)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(data.suppliers));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
+          const map = new Map<string, any>();
+          data.suppliers.forEach((sp: any) => { const key = sp.id || sp.company || sp.name; if (key) map.set(key, sp); });
+          current.forEach((sp: any) => { const key = sp.id || sp.company || sp.name; if (key) map.set(key, sp); });
+          localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(data.suppliers));
+        }
       }
+
+      // 13. Serials Safe Merge
       if (Array.isArray(data.serials)) {
-        localStorage.setItem(ERP_STORAGE_KEYS.SERIALS, JSON.stringify(data.serials));
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
+          const map = new Map<string, any>();
+          data.serials.forEach((sr: any) => { const key = sr.id || sr.serialNumber; if (key) map.set(key, sr); });
+          current.forEach((sr: any) => { const key = sr.id || sr.serialNumber; if (key) map.set(key, sr); });
+          localStorage.setItem(ERP_STORAGE_KEYS.SERIALS, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.SERIALS, JSON.stringify(data.serials));
+        }
       }
+
+      // 14. Settings Safe Merge
       if (data.settings && typeof data.settings === 'object') {
-        localStorage.setItem(ERP_STORAGE_KEYS.SETTINGS, JSON.stringify(data.settings));
+        const curSettings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
+        localStorage.setItem(ERP_STORAGE_KEYS.SETTINGS, JSON.stringify({ ...curSettings, ...data.settings }));
       }
 
       localStorage.setItem(ERP_STORAGE_KEYS.LAST_BACKUP_DATE, new Date().toISOString());
 
-      // Mirror directly to IndexedDB as hard copy
-      mirrorToIndexedDB(payload);
+      // Mirror complete merged state to IndexedDB as permanent hard copy
+      const completeMergedPayload = generateERPBackupPayload();
+      mirrorToIndexedDB(completeMergedPayload, 'safe_restore_merge');
 
       // Dispatch global events to inform active views
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
     }
 
+    const currentCounts = generateERPBackupPayload().meta.recordCounts;
     return {
       success: true,
-      message: 'All ERP records have been restored successfully!',
-      counts: payload.meta?.recordCounts
+      message: 'All ERP records have been non-destructively synced and preserved!',
+      counts: currentCounts
     };
   } catch (err: any) {
     return {

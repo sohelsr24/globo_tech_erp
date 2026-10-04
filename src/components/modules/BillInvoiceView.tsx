@@ -36,6 +36,7 @@ import { Formatters, formatBDT, numberToWordsBDT } from '@/lib/formatters';
 import { Quotation, INITIAL_QUOTATIONS } from '@/components/modules/QuotationView';
 import { Customer, INITIAL_CUSTOMERS } from '@/components/modules/CustomersView';
 import { mirrorToIndexedDB } from '@/lib/erpBackup';
+import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
 
 export interface POAttachment {
   id: string;
@@ -729,6 +730,8 @@ export function BillInvoiceView({
     if (isMounted && typeof window !== 'undefined') {
       try {
         localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(bills));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: bills }));
+        forceImmediateBackup('bills_updated');
       } catch (e) {
         console.error('Error saving bill invoices:', e);
       }
