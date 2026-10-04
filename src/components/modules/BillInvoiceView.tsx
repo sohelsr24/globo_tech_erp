@@ -207,8 +207,146 @@ export function downloadPOAttachment(attachment: POAttachment, poNumber?: string
   document.body.removeChild(link);
 }
 
-// Initial Sample Bill Invoices matching User's exact Pad Print bill (GT/26107)
+// Initial Sample Bill Invoices matching User's exact Pad Print bills (including GT/26145, GT/26144, GT/26143, GT/26107)
 export const INITIAL_BILL_INVOICES: BillInvoice[] = [
+  {
+    id: 'bill-1791140000000',
+    billNo: 'GT/26145',
+    date: '04-Oct-2026',
+    poNumber: '',
+    quotationRef: 'QT-2026-029',
+    quotationId: 'QT-2026-029',
+    binNumber: '004728009-0202',
+    tinNumber: '169493772750',
+    billToName: 'Bangladesh Parliament',
+    billToAddress: 'National Parliament House.',
+    deliverToAddress: 'Deputy Speaker Doptor , Deputy Speaker Flag',
+    deliverToName: 'Abdul Majid',
+    deliverToPhone: '',
+    items: [
+      {
+        id: 'bi-item-26145-1',
+        itemNo: 1,
+        sku: 'FLAG-DIGITAL-SS',
+        partNo: 'Deputy Speaker indoor Digital Flag With SS Stand',
+        serialNumbers: '',
+        name: 'Deputy Speaker indoor Digital Flag With SS Stand',
+        description: 'Deputy Speaker Indoor Flag with SS Stand full installation',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 85000,
+        amount: 85000
+      }
+    ],
+    subTotal: 85000,
+    vatTaxIncluded: false,
+    vatTaxAmount: 0,
+    grandTotal: 85000,
+    amountInWords: 'Eighty Five Thousand Taka Only.',
+    termsAndConditions: [
+      '1. VAT&TAX : Excluded',
+      '2. Payment: Cash on Delivery (COD)'
+    ],
+    bankAccountNo: '2051923010001',
+    bankAccountTitle: 'Globo Tech',
+    bankName: 'Brac Bank',
+    bankBranchName: 'Bijoynagar',
+    preparedBy: 'Engr. Sohel Rana',
+    status: 'ISSUED',
+    createdAt: '2026-10-04T18:00:00.000Z'
+  },
+  {
+    id: 'bill-1791139957223',
+    billNo: 'GT/26144',
+    date: '05-Oct-2026',
+    poNumber: '',
+    quotationRef: 'QT-2026-025',
+    quotationId: 'quote-1791015433001',
+    binNumber: '004728009-0202',
+    tinNumber: '169493772750',
+    billToName: 'Bangladesh Parliament',
+    billToAddress: 'National Parliament House.',
+    deliverToAddress: 'Common Shaka',
+    deliverToName: 'Abdul Majid',
+    deliverToPhone: '',
+    items: [
+      {
+        id: 'bi-item-1791015510969-1791139905131',
+        itemNo: 1,
+        sku: 'COATPINBOX',
+        partNo: '',
+        serialNumbers: '',
+        name: 'Coat Pin Box',
+        description: 'Coat Pin Box',
+        unit: 'pcs',
+        quantity: 150,
+        unitPrice: 180,
+        amount: 27000
+      }
+    ],
+    subTotal: 27000,
+    vatTaxIncluded: false,
+    vatTaxAmount: 0,
+    grandTotal: 27000,
+    amountInWords: 'Twenty Seven Thousand Taka Only.',
+    termsAndConditions: [
+      '1. VAT&TAX : Excluded',
+      '2. Payment: Cash on Delivery (COD)'
+    ],
+    bankAccountNo: '2051923010001',
+    bankAccountTitle: 'Globo Tech',
+    bankName: 'Brac Bank',
+    bankBranchName: 'Bijoynagar',
+    preparedBy: 'Engr. Sohel Rana',
+    status: 'ISSUED',
+    createdAt: '2026-10-04T18:52:37.223Z'
+  },
+  {
+    id: 'bill-1791015962538',
+    billNo: 'GT/26143',
+    date: '03-Oct-2026',
+    poNumber: '',
+    quotationRef: 'QT-2026-026',
+    quotationId: 'quote-1791015810208',
+    binNumber: '004728009-0202',
+    tinNumber: '169493772750',
+    billToName: 'Bangladesh Parliament',
+    billToAddress: 'National Parliament House.',
+    deliverToAddress: 'Parliament Speaker Doptor',
+    deliverToName: 'Abdul Majid',
+    deliverToPhone: '',
+    items: [
+      {
+        id: 'bi-item-1791015894960-1791015959920',
+        itemNo: 1,
+        sku: 'BOOKPMT',
+        partNo: '',
+        serialNumbers: '',
+        name: 'A Tale of A  Dark Period  Book',
+        description: 'All pages are 300gsm with a 600 gsm \ntop cover, and all pages are laminated  ',
+        unit: 'pcs',
+        quantity: 100,
+        unitPrice: 950,
+        amount: 95000
+      }
+    ],
+    subTotal: 95000,
+    vatTaxIncluded: false,
+    vatTaxAmount: 0,
+    grandTotal: 95000,
+    amountInWords: 'Ninety Five Thousand Taka Only.',
+    termsAndConditions: [
+      '1. VAT&TAX : Excluded',
+      '2. Payment: Cash on Delivery (COD)'
+    ],
+    bankAccountNo: '2051923010001',
+    bankAccountTitle: 'Globo Tech',
+    bankName: 'Brac Bank',
+    bankBranchName: 'Bijoynagar',
+    preparedBy: 'Engr. Sohel Rana',
+    status: 'ISSUED',
+    createdAt: '2026-10-03T08:26:02.538Z'
+  },
   {
     id: 'bill-26107',
     billNo: 'GT/26107',
@@ -329,7 +467,11 @@ export function BillInvoiceView({
                 b.id !== 'bill-26108' &&
                 b.billNo !== 'GT/26108'
             );
-            return cleanBills.map((b: BillInvoice) => {
+            const existingNos = new Set(cleanBills.map((b: BillInvoice) => b.billNo));
+            const missingInitials = INITIAL_BILL_INVOICES.filter(
+              (initB) => !existingNos.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo)
+            );
+            return [...missingInitials, ...cleanBills].map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
               }
@@ -526,7 +668,12 @@ export function BillInvoiceView({
                 b.id !== 'bill-26108' &&
                 b.billNo !== 'GT/26108'
             );
-            const hydrated = cleanBills.map((b: BillInvoice) => {
+            const existingNos = new Set(cleanBills.map((b: BillInvoice) => b.billNo));
+            const missingInitials = INITIAL_BILL_INVOICES.filter(
+              (initB) => !existingNos.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo)
+            );
+            const combinedBills = [...missingInitials, ...cleanBills];
+            const hydrated = combinedBills.map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
               }

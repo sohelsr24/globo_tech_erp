@@ -255,8 +255,66 @@ export const updateVatTaxString = (
   }
 };
 
-// Initial Quotations including Section 31 Example
+// Initial Quotations including Section 31 Example & Latest Bangladesh Parliament Quotations
 export const INITIAL_QUOTATIONS: Quotation[] = [
+  {
+    id: 'QT-2026-029',
+    quotationNumber: 'QT-2026-029',
+    version: 1,
+    type: 'PRODUCT',
+    date: '2026-10-04',
+    validUntil: '2026-10-18',
+    customerId: 'cust-1790614207705',
+    customerName: 'Abdul Majid',
+    customerCompany: 'Bangladesh Parliament',
+    customerType: 'CORPORATE',
+    customerPhone: '',
+    customerEmail: '',
+    customerAddress: 'National Parliament House.',
+    customerBin: '004728009-0202',
+    salesperson: 'Engr. Sohel Rana',
+    projectName: 'Deputy Speaker indoor Digital Flag With SS Stand',
+    projectLocation: 'Deputy Speaker Doptor, Deputy Speaker Flag',
+    reference: '',
+    currency: 'BDT',
+    paymentTerms: 'Cash on Delivery (COD)',
+    deliveryTerms: 'Within 3 Days',
+    warrantyTerms: '12 Months',
+    vatTaxTerms: 'EXCLUSIVE of 15% VAT and TAX / AIT.',
+    notes: '',
+    status: 'ACCEPTED',
+    stockReserved: false,
+    requiresApproval: false,
+    additionalDiscount: 0,
+    items: [
+      {
+        id: 'item-26145-1',
+        sku: 'FLAG-DIGITAL-SS',
+        name: 'Deputy Speaker indoor Digital Flag With SS Stand',
+        model: 'Digital Flag With SS Stand',
+        brand: 'Globo Tech',
+        description: 'Deputy Speaker Indoor Flag with SS Stand full installation',
+        category: 'Display & Electronics',
+        unit: 'pcs',
+        quantity: 1,
+        unitPrice: 85000,
+        totalPrice: 85000,
+        actualLandedCost: 60000,
+        profitMargin: 29.41,
+        warehouse: 'Dhaka Central Warehouse',
+        warranty: '12 Months'
+      }
+    ],
+    versionHistory: [],
+    timeline: [
+      {
+        date: '2026-10-04',
+        event: 'Quotation Created & Accepted',
+        actor: 'Engr. Sohel Rana',
+        comments: 'Official supply for Bangladesh Parliament'
+      }
+    ]
+  },
   {
     id: 'QT-2026-007',
     quotationNumber: 'QT-2026-007',
@@ -831,11 +889,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 !deletedIds.has(initQ.quotationNumber)
             );
             return [
+              ...newInitials,
               ...parsed.map((q: Quotation) => ({
                 ...q,
                 vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-              })),
-              ...newInitials
+              }))
             ];
           }
         } catch (e) {}
@@ -882,11 +940,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             // CRITICAL FIX: parsed is the user's saved database! Never filter parsed by deletedIds!
             // deletedIds is ONLY for INITIAL_QUOTATIONS to avoid resurrecting deleted demo mock quotations.
             const merged = [
+              ...newInitials,
               ...parsed.map((q: Quotation) => ({
                 ...q,
                 vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
-              })),
-              ...newInitials
+              }))
             ];
             setQuotations(merged);
             localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));

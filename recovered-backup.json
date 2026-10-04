@@ -6,8 +6,8 @@
     "exportedAt": "2026-10-03T19:08:03.477Z",
     "timestamp": 1791054483478,
     "recordCounts": {
-      "quotations": 17,
-      "bills": 24,
+      "quotations": 18,
+      "bills": 26,
       "customers": 5,
       "projects": 3,
       "products": 24,
@@ -22,6 +22,65 @@
   },
   "data": {
     "quotations": [
+      {
+        "id": "quote-1791140000000",
+        "quotationNumber": "QT-2026-029",
+        "version": 1,
+        "type": "PRODUCT",
+        "date": "2026-10-04",
+        "validUntil": "2026-10-18",
+        "customerId": "cust-1790614207705",
+        "customerName": "Abdul Majid",
+        "customerCompany": "Bangladesh Parliament",
+        "customerType": "CORPORATE",
+        "customerPhone": "",
+        "customerEmail": "",
+        "customerAddress": "National Parliament House.",
+        "customerBin": "004728009-0202",
+        "salesperson": "Engr. Sohel Rana",
+        "projectName": "Deputy Speaker indoor Digital Flag With SS Stand",
+        "projectLocation": "Deputy Speaker Doptor, Deputy Speaker Flag",
+        "reference": "",
+        "currency": "BDT",
+        "paymentTerms": "Cash on Delivery (COD)",
+        "deliveryTerms": "Within 3 Days",
+        "warrantyTerms": "12 Months",
+        "vatTaxTerms": "EXCLUSIVE of 15% VAT and TAX / AIT.",
+        "notes": "",
+        "status": "ACCEPTED",
+        "stockReserved": false,
+        "requiresApproval": false,
+        "additionalDiscount": 0,
+        "items": [
+          {
+            "id": "item-26145-1",
+            "sku": "FLAG-DIGITAL-SS",
+            "name": "Deputy Speaker indoor Digital Flag With SS Stand",
+            "model": "Digital Flag With SS Stand",
+            "brand": "Globo Tech",
+            "description": "Deputy Speaker Indoor Flag with SS Stand full installation",
+            "category": "Display & Electronics",
+            "unit": "pcs",
+            "quantity": 1,
+            "unitPrice": 85000,
+            "totalPrice": 85000,
+            "actualLandedCost": 60000,
+            "profitMargin": 29.41,
+            "warehouse": "Dhaka Central Warehouse",
+            "warranty": "12 Months"
+          }
+        ],
+        "approvalReason": "",
+        "versionHistory": [],
+        "timeline": [
+          {
+            "date": "2026-10-04",
+            "event": "Quotation Created & Accepted",
+            "actor": "Engr. Sohel Rana",
+            "comments": "Official supply for Bangladesh Parliament"
+          }
+        ]
+      },
       {
         "id": "quote-1791015810208",
         "quotationNumber": "QT-2026-026",
@@ -1607,6 +1666,98 @@
       "QT-2026-024"
     ],
     "bills": [
+      {
+        "id": "bill-1791140000000",
+        "billNo": "GT/26145",
+        "date": "04-Oct-2026",
+        "poNumber": "",
+        "quotationRef": "QT-2026-029",
+        "quotationId": "quote-1791140000000",
+        "binNumber": "004728009-0202",
+        "tinNumber": "169493772750",
+        "billToName": "Bangladesh Parliament",
+        "billToAddress": "National Parliament House.",
+        "deliverToAddress": "Deputy Speaker Doptor , Deputy Speaker Flag",
+        "deliverToName": "Abdul Majid",
+        "deliverToPhone": "",
+        "items": [
+          {
+            "id": "bi-item-26145-1",
+            "itemNo": 1,
+            "sku": "FLAG-DIGITAL-SS",
+            "partNo": "Deputy Speaker indoor Digital Flag With SS Stand",
+            "serialNumbers": "",
+            "name": "Deputy Speaker indoor Digital Flag With SS Stand",
+            "description": "Deputy Speaker Indoor Flag with SS Stand full installation",
+            "unit": "pcs",
+            "quantity": 1,
+            "unitPrice": 85000,
+            "amount": 85000
+          }
+        ],
+        "subTotal": 85000,
+        "vatTaxIncluded": false,
+        "vatTaxAmount": 0,
+        "grandTotal": 85000,
+        "amountInWords": "Eighty Five Thousand Taka Only.",
+        "termsAndConditions": [
+          "1. VAT&TAX : Excluded",
+          "2. Payment: Cash on Delivery (COD)"
+        ],
+        "bankAccountNo": "2051923010001",
+        "bankAccountTitle": "Globo Tech",
+        "bankName": "Brac Bank",
+        "bankBranchName": "Bijoynagar",
+        "preparedBy": "Engr. Sohel Rana",
+        "status": "ISSUED",
+        "createdAt": "2026-10-04T18:00:00.000Z"
+      },
+      {
+        "id": "bill-1791139957223",
+        "billNo": "GT/26144",
+        "date": "05-Oct-2026",
+        "poNumber": "",
+        "quotationRef": "QT-2026-025",
+        "quotationId": "quote-1791015433001",
+        "binNumber": "004728009-0202",
+        "tinNumber": "169493772750",
+        "billToName": "Bangladesh Parliament",
+        "billToAddress": "National Parliament House.",
+        "deliverToAddress": "Common Shaka",
+        "deliverToName": "Abdul Majid",
+        "deliverToPhone": "",
+        "items": [
+          {
+            "id": "bi-item-1791015510969-1791139905131",
+            "itemNo": 1,
+            "sku": "COATPINBOX",
+            "partNo": "",
+            "serialNumbers": "",
+            "name": "Coat Pin Box",
+            "description": "Coat Pin Box",
+            "unit": "pcs",
+            "quantity": 150,
+            "unitPrice": 180,
+            "amount": 27000
+          }
+        ],
+        "subTotal": 27000,
+        "vatTaxIncluded": false,
+        "vatTaxAmount": 0,
+        "grandTotal": 27000,
+        "amountInWords": "Twenty Seven Thousand Taka Only.",
+        "termsAndConditions": [
+          "1. VAT&TAX : Excluded",
+          "2. Payment: Cash on Delivery (COD)"
+        ],
+        "bankAccountNo": "2051923010001",
+        "bankAccountTitle": "Globo Tech",
+        "bankName": "Brac Bank",
+        "bankBranchName": "Bijoynagar",
+        "preparedBy": "Engr. Sohel Rana",
+        "status": "ISSUED",
+        "createdAt": "2026-10-04T18:52:37.223Z"
+      },
       {
         "id": "bill-1791015962538",
         "billNo": "GT/26143",
