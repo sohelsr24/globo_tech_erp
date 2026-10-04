@@ -2427,7 +2427,7 @@ export function BillInvoiceView({
                   </div>
 
                   {/* 4-COLUMN OFFICIAL SIGNATURE BLOCK */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '70px', fontSize: '11px', fontWeight: 'bold', color: '#000', textAlign: 'center', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '75px', fontSize: '11px', fontWeight: 'bold', color: '#000', textAlign: 'center', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <div>
                       <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Prepared By
@@ -2740,7 +2740,7 @@ export function BillInvoiceView({
                   </div>
 
                   {/* SIGNATURES: Received By (Left) & Prepared By (Right) */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '65px', fontSize: '12px', fontWeight: 'bold', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '70px', fontSize: '12px', fontWeight: 'bold', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <div style={{ textAlign: 'center', minWidth: '180px' }}>
                       <div style={{ borderTop: '1.5px solid #000', paddingTop: '5px' }}>
                         Received By
