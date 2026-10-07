@@ -275,8 +275,8 @@ export default function AppHome() {
         };
       case 'purchases':
         return {
-          title: 'কোম্পানি ক্রয়, প্রোডাক্ট রেট ও বকেয়া খতিয়ান (Supplier Purchases & Dues)',
-          desc: 'Company-wise purchased items, each item unit value, paid amount, and outstanding payables ledger'
+          title: 'Supplier Purchases, Product Rates & Due Ledger',
+          desc: 'Company-wise purchased products, each item unit value, paid amount, and outstanding payables'
         };
       case 'reports':
         return {
