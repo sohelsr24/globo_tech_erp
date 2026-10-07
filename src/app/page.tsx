@@ -21,6 +21,7 @@ import { ReportsView } from '@/components/modules/ReportsView';
 import { SettingsView } from '@/components/modules/SettingsView';
 import { QuotationView } from '@/components/modules/QuotationView';
 import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
+import { PurchasesView } from '@/components/modules/PurchasesView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
@@ -37,6 +38,7 @@ const VALID_TABS = [
   'serials',
   'customers',
   'suppliers',
+  'purchases',
   'quotation',
   'bill-invoice',
   'sales',
@@ -271,6 +273,11 @@ export default function AppHome() {
           title: 'China & International Suppliers',
           desc: 'Shenzhen/Guangzhou factory contacts, WeChat IDs, and foreign TT banking instructions'
         };
+      case 'purchases':
+        return {
+          title: 'কোম্পানি ক্রয়, প্রোডাক্ট রেট ও বকেয়া খতিয়ান (Supplier Purchases & Dues)',
+          desc: 'Company-wise purchased items, each item unit value, paid amount, and outstanding payables ledger'
+        };
       case 'reports':
         return {
           title: 'P&L, Cash Flow & Inventory Valuation',
@@ -300,6 +307,7 @@ export default function AppHome() {
       case 'projects': return 'PROJECTS';
       case 'customers': return 'SALES';
       case 'suppliers': return 'IMPORTS';
+      case 'purchases': return 'PAYMENTS';
       case 'reports': return 'REPORTS';
       case 'settings': return 'SETTINGS';
       default: return 'DASHBOARD';
@@ -423,6 +431,9 @@ export default function AppHome() {
               {currentTab === 'projects' && <ProjectsView />}
               {currentTab === 'customers' && <CustomersView />}
               {currentTab === 'suppliers' && <SuppliersView />}
+              {currentTab === 'purchases' && (
+                <PurchasesView canViewCosts={canViewCosts} globalSearchQuery={searchQuery} />
+              )}
               {currentTab === 'reports' && <ReportsView />}
               {currentTab === 'settings' && <SettingsView />}
             </>

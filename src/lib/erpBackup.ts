@@ -18,6 +18,7 @@ export const ERP_STORAGE_KEYS = {
   SALES: 'globotech_erp_sales',
   IMPORTS: 'globotech_erp_imports',
   SUPPLIERS: 'globotech_erp_suppliers',
+  PURCHASES: 'globotech_erp_purchases',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
   LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
@@ -44,6 +45,7 @@ export interface ERPBackupPayload {
       sales: number;
       imports: number;
       suppliers: number;
+      purchases?: number;
       serials: number;
     };
   };
@@ -63,6 +65,7 @@ export interface ERPBackupPayload {
     sales: any[];
     imports: any[];
     suppliers: any[];
+    purchases?: any[];
     serials: any[];
     settings: any;
   };
@@ -102,6 +105,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const sales = readStorage<any[]>(ERP_STORAGE_KEYS.SALES, []);
   const imports = readStorage<any[]>(ERP_STORAGE_KEYS.IMPORTS, []);
   const suppliers = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
+  const purchases = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
   const serials = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
   const settings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
 
@@ -126,6 +130,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
         sales: sales.length,
         imports: imports.length,
         suppliers: suppliers.length,
+        purchases: purchases.length,
         serials: serials.length
       }
     },
@@ -145,6 +150,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       sales,
       imports,
       suppliers,
+      purchases,
       serials,
       settings
     }
@@ -424,6 +430,19 @@ export function restoreERPBackupData(
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(data.suppliers));
+        }
+      }
+
+      // 13. Purchases & Supplier Dues Safe Merge
+      if (Array.isArray(data.purchases)) {
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
+          const map = new Map<string, any>();
+          data.purchases.forEach((pu: any) => { const key = pu.id || pu.billNumber; if (key) map.set(key, pu); });
+          current.forEach((pu: any) => { const key = pu.id || pu.billNumber; if (key) map.set(key, pu); });
+          localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(Array.from(map.values())));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(data.purchases));
         }
       }
 

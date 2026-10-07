@@ -120,7 +120,7 @@ export function DataProtectionModal({ isOpen, onClose }: DataProtectionModalProp
   const counts = status?.recordCounts || {};
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" title="জিরো ডেটা লস শিল্ড">
       <div className="p-6 space-y-6 text-slate-100">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-800 pb-4">

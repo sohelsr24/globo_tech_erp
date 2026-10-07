@@ -55,9 +55,10 @@ export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTH
 
 export interface QuotationItem {
   id: string;
-  type: QuotationItemType;
+  type?: QuotationItemType;
   name: string;
   sku?: string;
+  category?: string;
   brand?: string;
   model?: string;
   description?: string;
@@ -68,15 +69,18 @@ export interface QuotationItem {
   unit: string;
   quantity: number;
   unitPrice: number;
-  discountPercent: number;
-  vatPercent: number;
+  discountPercent?: number;
+  vatPercent?: number;
   taxPercent?: number; // Advance Income Tax (AIT / TDS %) e.g. 5%, 10%
   // Internal costing (hidden from customer PDF)
-  unitCost: number; // Actual Landed Cost or Estimated Landed Cost
+  unitCost?: number; // Actual Landed Cost or Estimated Landed Cost
   leadTime?: string;
   source?: 'CHINA_IMPORT' | 'LOCAL_PURCHASE' | 'EXISTING_STOCK' | 'PROJECT_PROCUREMENT';
   warranty?: string;
   remarks?: string;
+  totalPrice?: number;
+  actualLandedCost?: number;
+  profitMargin?: number;
 }
 
 export type QuotationStatus =
