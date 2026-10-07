@@ -122,6 +122,16 @@ button, a, input, select, textarea {
   pointer-events: none;
 }
 
+/* Top-level Page Definition for standard A4 document printing (Forces iOS AirPrint & Chrome to select A4) */
+@page {
+  size: A4 portrait;
+  margin: 4mm 8mm 4mm 8mm;
+}
+@page :first {
+  size: A4 portrait;
+  margin: 4mm 8mm 4mm 8mm;
+}
+
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Responsive) */
 @media print {
   @page {
@@ -139,7 +149,7 @@ button, a, input, select, textarea {
     padding: 0 !important;
     width: 100% !important;
     height: auto !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -172,26 +182,26 @@ button, a, input, select, textarea {
   }
 
   /* -----------------------------------------------------------
-     1. COMPUTER / DESKTOP VERSION (100% EXACT ORIGINAL)
-     Full A4 height, pinned footer at bottom, zero floating up
+     1. SINGLE-PAGE DOCUMENT (A4 & LETTER 1-PAGE GUARANTEE)
+     Fits naturally within ~220mm-240mm height so signatures
+     and footer NEVER spill over to page 2!
      ----------------------------------------------------------- */
   .printable-area,
   .print-sheet,
   #printable-quotation-sheet,
-  .desktop-single-page {
+  .desktop-single-page,
+  .mobile-single-page {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 284mm !important;
-    height: 284mm !important;
-    max-height: 284mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 275mm !important;
     box-sizing: border-box !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
+    display: block !important;
     margin: 0 !important;
     padding: 0 4mm !important;
     box-shadow: none !important;
@@ -200,7 +210,7 @@ button, a, input, select, textarea {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
-    overflow: hidden !important;
+    overflow: visible !important;
     page-break-before: avoid !important;
     break-before: avoid !important;
     page-break-after: avoid !important;
@@ -211,96 +221,48 @@ button, a, input, select, textarea {
     print-color-adjust: exact !important;
   }
 
-  /* Pinned footer to prevent floating up in print preview */
-  .print-footer,
-  .desktop-single-page .print-footer {
-    position: absolute !important;
-    bottom: 0.5mm !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    text-align: center !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  /* Pinned signatures block sitting cleanly above the bottom footer in print preview */
+  /* Signatures block sits right after Terms & Conditions with guaranteed 1-page cohesion */
   .quotation-signatures-block,
-  .desktop-single-page .quotation-signatures-block {
-    position: absolute !important;
-    bottom: 18mm !important;
-    left: 0 !important;
-    right: 0 !important;
+  .desktop-single-page .quotation-signatures-block,
+  .mobile-single-page .quotation-signatures-block {
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
     width: 100% !important;
-    margin: 0 !important;
+    margin-top: 14px !important;
+    margin-bottom: 6px !important;
     padding: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-  }
-
-  /* -----------------------------------------------------------
-     2. MOBILE VIEW (SINGLE-PAGE: US LETTER COMPATIBLE)
-     Calibrated to 258mm so iOS/Mobile AirPrint fits on 1 page
-     AND footer stays pinned at the bottom of the sheet!
-     ----------------------------------------------------------- */
-  body.is-mobile-device .mobile-single-page,
-  .mobile-single-page {
-    position: relative !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    min-height: 258mm !important;
-    height: 258mm !important;
-    max-height: 258mm !important;
-    box-sizing: border-box !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: flex-start !important;
-    margin: 0 !important;
-    padding: 0 4mm !important;
-    overflow: hidden !important;
-    page-break-before: avoid !important;
-    break-before: avoid !important;
     page-break-after: avoid !important;
     break-after: avoid !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
   }
 
-  body.is-mobile-device .mobile-single-page .quotation-signatures-block,
-  .mobile-single-page .quotation-signatures-block {
-    position: absolute !important;
-    bottom: 16mm !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-
-  body.is-mobile-device .mobile-single-page .print-footer,
+  /* Pinned footer cleanly sits under signatures on Page 1 */
+  .print-footer,
+  .desktop-single-page .print-footer,
   .mobile-single-page .print-footer {
-    position: absolute !important;
-    bottom: 0.5mm !important;
-    left: 0 !important;
-    right: 0 !important;
+    position: relative !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
     width: 100% !important;
-    margin: 0 !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
     padding: 0 !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   /* -----------------------------------------------------------
-     3. DYNAMIC MULTI-PAGE (WHEN ITEMS ARE MANY)
-     Natural pagination for quotations with > 4 items
+     2. DYNAMIC MULTI-PAGE (WHEN ITEMS ARE MANY: > 4 ITEMS)
+     Natural pagination for long quotations
      ----------------------------------------------------------- */
   .mobile-multi-page,
   .desktop-multi-page {

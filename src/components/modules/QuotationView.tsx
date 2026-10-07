@@ -2453,6 +2453,125 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
   };
 
+  // Dedicated A4 Print & PDF handler with iOS AirPrint auto-A4 detection and single-page containment
+  const handlePrintQuotation = () => {
+    if (typeof window === 'undefined') return;
+    const printElement = document.getElementById('printable-quotation-sheet');
+    if (!printElement) {
+      window.print();
+      return;
+    }
+
+    try {
+      const existingIframe = document.getElementById('isolated-quotation-print-frame');
+      if (existingIframe) existingIframe.remove();
+
+      const printIframe = document.createElement('iframe');
+      printIframe.id = 'isolated-quotation-print-frame';
+      printIframe.style.position = 'fixed';
+      printIframe.style.right = '0';
+      printIframe.style.bottom = '0';
+      printIframe.style.width = '0';
+      printIframe.style.height = '0';
+      printIframe.style.border = '0';
+      printIframe.style.zIndex = '-999';
+      document.body.appendChild(printIframe);
+
+      const frameDoc = printIframe.contentWindow?.document;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      const docTitle = `Quotation_${selectedQuotation?.quotationNumber || 'QT'}_${(selectedQuotation?.customerCompany || 'Customer').replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+      frameDoc.open();
+      frameDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>${docTitle}</title>
+            <style>
+              @page {
+                size: A4 portrait;
+                margin: 4mm 8mm 4mm 8mm;
+              }
+              @page :first {
+                size: A4 portrait;
+                margin: 4mm 8mm 4mm 8mm;
+              }
+              *, *::before, *::after {
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+              }
+              .print-sheet {
+                width: 100% !important;
+                max-width: 195mm !important;
+                margin: 0 auto !important;
+                padding: 2mm 0 !important;
+                background: #ffffff;
+                color: #000000;
+              }
+              table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+              }
+              tr, td, th {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+              }
+              .quotation-signatures-block,
+              .print-footer {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+              }
+              .no-print,
+              .print\\:hidden,
+              button {
+                display: none !important;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="print-sheet">
+              ${printElement.innerHTML}
+            </div>
+          </body>
+        </html>
+      `);
+      frameDoc.close();
+
+      setTimeout(() => {
+        try {
+          printIframe.contentWindow?.focus();
+          printIframe.contentWindow?.print();
+          setTimeout(() => {
+            printIframe.remove();
+          }, 2000);
+        } catch (err) {
+          window.print();
+        }
+      }, 350);
+    } catch (e) {
+      console.warn('Iframe print failed, falling back to window.print():', e);
+      window.print();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* ========================================================
@@ -4320,8 +4439,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 <span>Create Bill Invoice</span>
               </button>
               <button
-                onClick={() => window.print()}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20"
+                onClick={handlePrintQuotation}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-lg shadow-blue-500/20 active:scale-95"
               >
                 <Printer className="w-4 h-4" />
                 <span>Print Customer Quotation (A4)</span>

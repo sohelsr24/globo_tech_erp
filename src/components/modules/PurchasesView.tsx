@@ -1035,135 +1035,235 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   <p className="text-xs text-slate-500">Adjust search filters or create a new purchase bill</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto touch-scroll">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
-                        <th className="py-3 px-3 text-center w-12"># SL</th>
-                        <th className="py-3 px-4">Supplier / Company Name</th>
-                        <th className="py-3 px-3 text-center">Bills</th>
-                        <th className="py-3 px-3 text-center">Items</th>
-                        <th className="py-3 px-4 text-right">Total Purchases</th>
-                        <th className="py-3 px-4 text-right text-emerald-400">Total Paid</th>
-                        <th className="py-3 px-4 text-right text-rose-400">Outstanding Due</th>
-                        <th className="py-3 px-3 text-center">Status</th>
-                        <th className="py-3 px-4 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/80">
-                      {filteredCompanySummaries.map((comp, idx) => (
-                        <tr
-                          key={comp.supplierName}
-                          onClick={() => setSelectedSupplierName(comp.supplierName)}
-                          className="hover:bg-slate-800/60 transition cursor-pointer group"
-                        >
-                          {/* Serial Number */}
-                          <td className="py-3.5 px-3 text-center font-bold text-slate-400">
-                            <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[11px] mx-auto text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition">
+                <>
+                  {/* MOBILE RESPONSIVE CARDS (100% COMPLETE STATS & ACTIONS ON MOBILE PHONES) */}
+                  <div className="block md:hidden divide-y divide-slate-800">
+                    {filteredCompanySummaries.map((comp, idx) => (
+                      <div
+                        key={comp.supplierName}
+                        onClick={() => setSelectedSupplierName(comp.supplierName)}
+                        className="p-4 hover:bg-slate-850/50 transition cursor-pointer space-y-3 active:bg-slate-800/80"
+                      >
+                        {/* Top Header: SL, Company Name, Country, Status */}
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-6 h-6 rounded-lg bg-blue-600/20 text-blue-400 font-bold flex items-center justify-center text-xs border border-blue-500/30 flex-shrink-0">
                               {idx + 1}
                             </span>
-                          </td>
-
-                          {/* Company Details */}
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:border-blue-500/50 transition">
-                                <Building2 className="w-4 h-4" />
+                            <div>
+                              <div className="font-bold text-slate-100 text-sm leading-snug">
+                                {comp.supplierName}
                               </div>
-                              <div>
-                                <div className="font-bold text-slate-100 text-sm group-hover:text-blue-300 transition">
-                                  {comp.supplierName}
-                                </div>
-                                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                                  {comp.supplierCountry && (
-                                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
-                                      {comp.supplierCountry}
-                                    </span>
-                                  )}
-                                  {comp.supplierPhone && <span>{comp.supplierPhone}</span>}
-                                </div>
+                              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 flex-wrap">
+                                {comp.supplierCountry && (
+                                  <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
+                                    {comp.supplierCountry}
+                                  </span>
+                                )}
+                                {comp.supplierPhone && <span>{comp.supplierPhone}</span>}
                               </div>
                             </div>
-                          </td>
+                          </div>
 
-                          {/* Bills Count */}
-                          <td className="py-3.5 px-3 text-center">
-                            <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-semibold">
+                          <Badge
+                            variant={comp.status === 'PAID' ? 'success' : comp.status === 'PARTIAL' ? 'warning' : 'danger'}
+                          >
+                            {comp.status === 'PAID' ? 'Fully Paid' : comp.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
+                          </Badge>
+                        </div>
+
+                        {/* Financial KPI Summary (Purchased, Paid, Due) */}
+                        <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/90 text-center">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block uppercase font-medium">Purchased</span>
+                            <span className="text-xs font-bold text-slate-200 block truncate">
+                              {Formatters.currency(comp.totalPurchased)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-emerald-400 block uppercase font-medium">Paid</span>
+                            <span className="text-xs font-bold text-emerald-400 block truncate">
+                              {Formatters.currency(comp.totalPaid)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-rose-400 block uppercase font-medium">Due</span>
+                            <span className={`text-xs font-black block truncate ${comp.totalDue > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                              {Formatters.currency(comp.totalDue)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Footer Row: Bills & Items count + Action buttons */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5">
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                            <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
                               {comp.billsCount} Bills
                             </span>
-                          </td>
-
-                          {/* Items Count */}
-                          <td className="py-3.5 px-3 text-center">
-                            <span className="px-2 py-0.5 rounded-lg bg-blue-950/40 text-blue-300 border border-blue-800/60 text-[11px] font-semibold">
+                            <span className="px-2 py-0.5 rounded bg-blue-950/40 text-blue-300 border border-blue-800/60 font-semibold">
                               {comp.itemsCount} Items
                             </span>
-                          </td>
+                          </div>
 
-                          {/* Total Purchases */}
-                          <td className="py-3.5 px-4 text-right font-bold text-slate-200">
-                            {Formatters.currency(comp.totalPurchased)}
-                          </td>
-
-                          {/* Total Paid */}
-                          <td className="py-3.5 px-4 text-right font-bold text-emerald-400">
-                            {Formatters.currency(comp.totalPaid)}
-                          </td>
-
-                          {/* Outstanding Due */}
-                          <td className="py-3.5 px-4 text-right">
-                            {comp.totalDue > 0 ? (
-                              <span className="px-2 py-1 rounded-lg bg-rose-950/50 text-rose-300 border border-rose-900/60 font-black">
-                                {Formatters.currency(comp.totalDue)}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 font-medium">৳0.00</span>
-                            )}
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-3.5 px-3 text-center">
-                            <Badge
-                              variant={comp.status === 'PAID' ? 'success' : comp.status === 'PARTIAL' ? 'warning' : 'danger'}
+                          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => setSelectedSupplierName(comp.supplierName)}
+                              className="px-2.5 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95"
                             >
-                              {comp.status === 'PAID' ? 'Fully Paid' : comp.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
-                            </Badge>
-                          </td>
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>History</span>
+                            </button>
+                            <button
+                              onClick={() => openEditSupplierModal(comp)}
+                              className="p-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
+                              title="Edit Supplier"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteSupplierModal(comp)}
+                              className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
+                              title="Delete Supplier"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                          {/* Action Buttons */}
-                          <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center justify-center gap-1.5">
-                              <button
-                                onClick={() => setSelectedSupplierName(comp.supplierName)}
-                                className="px-2.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center gap-1 active:scale-95 shadow-sm"
-                                title="View Supplier History & Items"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                                <span className="hidden xl:inline">History</span>
-                              </button>
-
-                              <button
-                                onClick={() => openEditSupplierModal(comp)}
-                                className="p-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
-                                title="Edit Supplier Details"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-
-                              <button
-                                onClick={() => openDeleteSupplierModal(comp)}
-                                className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
-                                title="Delete Supplier & Records"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
+                  {/* DESKTOP TABLE (100% IDENTICAL COMPUTER VERSION) */}
+                  <div className="hidden md:block overflow-x-auto touch-scroll">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
+                          <th className="py-3 px-3 text-center w-12"># SL</th>
+                          <th className="py-3 px-4">Supplier / Company Name</th>
+                          <th className="py-3 px-3 text-center">Bills</th>
+                          <th className="py-3 px-3 text-center">Items</th>
+                          <th className="py-3 px-4 text-right">Total Purchases</th>
+                          <th className="py-3 px-4 text-right text-emerald-400">Total Paid</th>
+                          <th className="py-3 px-4 text-right text-rose-400">Outstanding Due</th>
+                          <th className="py-3 px-3 text-center">Status</th>
+                          <th className="py-3 px-4 text-center">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80">
+                        {filteredCompanySummaries.map((comp, idx) => (
+                          <tr
+                            key={comp.supplierName}
+                            onClick={() => setSelectedSupplierName(comp.supplierName)}
+                            className="hover:bg-slate-800/60 transition cursor-pointer group"
+                          >
+                            {/* Serial Number */}
+                            <td className="py-3.5 px-3 text-center font-bold text-slate-400">
+                              <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[11px] mx-auto text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition">
+                                {idx + 1}
+                              </span>
+                            </td>
+
+                            {/* Company Details */}
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:border-blue-500/50 transition">
+                                  <Building2 className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <div className="font-bold text-slate-100 text-sm group-hover:text-blue-300 transition">
+                                    {comp.supplierName}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                    {comp.supplierCountry && (
+                                      <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
+                                        {comp.supplierCountry}
+                                      </span>
+                                    )}
+                                    {comp.supplierPhone && <span>{comp.supplierPhone}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Bills Count */}
+                            <td className="py-3.5 px-3 text-center">
+                              <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-semibold">
+                                {comp.billsCount} Bills
+                              </span>
+                            </td>
+
+                            {/* Items Count */}
+                            <td className="py-3.5 px-3 text-center">
+                              <span className="px-2 py-0.5 rounded-lg bg-blue-950/40 text-blue-300 border border-blue-800/60 text-[11px] font-semibold">
+                                {comp.itemsCount} Items
+                              </span>
+                            </td>
+
+                            {/* Total Purchases */}
+                            <td className="py-3.5 px-4 text-right font-bold text-slate-200">
+                              {Formatters.currency(comp.totalPurchased)}
+                            </td>
+
+                            {/* Total Paid */}
+                            <td className="py-3.5 px-4 text-right font-bold text-emerald-400">
+                              {Formatters.currency(comp.totalPaid)}
+                            </td>
+
+                            {/* Outstanding Due */}
+                            <td className="py-3.5 px-4 text-right">
+                              {comp.totalDue > 0 ? (
+                                <span className="px-2 py-1 rounded-lg bg-rose-950/50 text-rose-300 border border-rose-900/60 font-black">
+                                  {Formatters.currency(comp.totalDue)}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-medium">৳0.00</span>
+                              )}
+                            </td>
+
+                            {/* Status */}
+                            <td className="py-3.5 px-3 text-center">
+                              <Badge
+                                variant={comp.status === 'PAID' ? 'success' : comp.status === 'PARTIAL' ? 'warning' : 'danger'}
+                              >
+                                {comp.status === 'PAID' ? 'Fully Paid' : comp.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
+                              </Badge>
+                            </td>
+
+                            {/* Action Buttons */}
+                            <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-center gap-1.5">
+                                <button
+                                  onClick={() => setSelectedSupplierName(comp.supplierName)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center gap-1 active:scale-95 shadow-sm"
+                                  title="View Supplier History & Items"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span className="hidden xl:inline">History</span>
+                                </button>
+
+                                <button
+                                  onClick={() => openEditSupplierModal(comp)}
+                                  className="p-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
+                                  title="Edit Supplier Details"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  onClick={() => openDeleteSupplierModal(comp)}
+                                  className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
+                                  title="Delete Supplier & Records"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           )}
@@ -1426,7 +1526,107 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto touch-scroll">
+                  {/* MOBILE RESPONSIVE ITEM CARDS (OPTIMIZED FOR TOUCHSCREENS) */}
+                  <div className="block md:hidden divide-y divide-slate-800">
+                    {activeSupplierFilteredItems.length === 0 ? (
+                      <div className="p-8 text-center text-slate-500 text-xs">
+                        No items found matching criteria for this supplier
+                      </div>
+                    ) : (
+                      activeSupplierFilteredItems.map((item, idx) => {
+                        const parentBill = activeSupplierSummary.bills.find((b) => b.id === item.billId);
+                        return (
+                          <div key={`m-item-${item.id}-${idx}`} className="p-4 space-y-2.5 hover:bg-slate-850/50 transition">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <div className="font-bold text-slate-100 text-sm">{item.productName}</div>
+                                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                  <span>{Formatters.date(item.purchaseDate)}</span>
+                                  <span>&bull;</span>
+                                  <span className="font-mono text-blue-400 font-semibold">{item.billNumber}</span>
+                                </div>
+                              </div>
+                              <Badge
+                                variant={
+                                  item.billStatus === 'PAID'
+                                    ? 'success'
+                                    : item.billStatus === 'PARTIAL'
+                                    ? 'warning'
+                                    : 'danger'
+                                }
+                              >
+                                {item.billStatus === 'PAID' ? 'Paid' : item.billStatus === 'PARTIAL' ? 'Partial' : 'Due'}
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs">
+                              <div>
+                                <span className="text-[10px] text-slate-400 block uppercase">Quantity</span>
+                                <span className="font-bold text-slate-200">{item.quantity} {item.unit}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-blue-400 block uppercase">Unit Rate</span>
+                                <span className="font-bold text-blue-300">{Formatters.currency(item.unitPrice)}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-slate-400 block uppercase">Item Total</span>
+                                <span className="font-bold text-slate-100">{Formatters.currency(item.totalPrice)}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] text-rose-400 block uppercase">Bill Due</span>
+                                <span className={`font-black ${item.billDue > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                                  {Formatters.currency(item.billDue)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2 pt-1">
+                              <div>
+                                {parentBill && parentBill.dueAmount > 0 ? (
+                                  <button
+                                    onClick={() => openPaymentModal(parentBill)}
+                                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition"
+                                  >
+                                    Pay Bill
+                                  </button>
+                                ) : (
+                                  <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/50">
+                                    Bill Settled
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  onClick={() => openAddItemModalForBill(item.billId, item.billNumber, selectedSupplierName || undefined)}
+                                  className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs"
+                                  title="Add Another Item"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => openEditItemModal(item)}
+                                  className="p-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs"
+                                  title="Edit Item"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteItem(item.billId, item.id, item.productName)}
+                                  className="p-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/40 text-xs"
+                                  title="Delete Item"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* DESKTOP TABLE (100% IDENTICAL COMPUTER VERSION) */}
+                  <div className="hidden md:block overflow-x-auto touch-scroll">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
                         <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">

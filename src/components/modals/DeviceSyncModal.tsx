@@ -169,6 +169,39 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
     reader.readAsText(file);
   };
 
+  const handleDirectServerSync = async () => {
+    setIsProcessing(true);
+    setFeedback({
+      type: 'success',
+      message: 'সার্ভার থেকে লেটেস্ট ডাটা ডাউনলোড হচ্ছে...'
+    });
+    try {
+      const res = await fetch(`/globotech-master-backup.json?t=${Date.now()}`);
+      if (!res.ok) throw new Error('সার্ভার থেকে ব্যাকআপ ফাইল লোড করা যায়নি');
+      const data = await res.json();
+      const restoreRes = restoreERPBackupData(JSON.stringify(data), { mode: 'merge' });
+      if (restoreRes.success) {
+        setFeedback({
+          type: 'success',
+          message: '🎉 অভিনন্দন! সার্ভারের ৮টি Amecon পারচেজ বিল ও সকল লেটেস্ট ডাটা সফলভাবে মোবাইলে আপডেট হয়েছে!',
+          counts: restoreRes.counts
+        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        throw new Error(restoreRes.message || 'ডাটা রিস্টোর করা যায়নি');
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        message: `সিঙ্ক ব্যর্থ হয়েছে: ${err?.message || 'Error'}`
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePasteFromClipboard = async () => {
     try {
       if (navigator.clipboard && navigator.clipboard.readText) {
@@ -213,6 +246,27 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
           >
             <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* 1-Click Server Cloud Sync Action Bar */}
+        <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 border-b border-blue-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>১-ক্লিক অটো ক্লাউড সিঙ্ক (মোবাইলে নতুন ডাটা আনতে)</span>
+            </div>
+            <p className="text-[11px] text-slate-400">
+              পিসির নতুন এন্ট্রি করা বিল ও Amecon পারচেজ সাথে সাথে মোবাইলে লোড করতে নিচের বাটনে চাপুন
+            </p>
+          </div>
+          <button
+            onClick={handleDirectServerSync}
+            disabled={isProcessing}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 flex-shrink-0 active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
+            <span>সার্ভার থেকে লাইভ সিঙ্ক করুন</span>
           </button>
         </div>
 

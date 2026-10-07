@@ -29,6 +29,7 @@ import { verifyAndRestoreStorageIntegrity, mirrorToIndexedDB, restoreERPBackupDa
 import { MASTER_DATABASE_PAYLOAD } from '@/lib/masterDatabasePayload';
 import { runCrossModuleSelfHealing } from '@/lib/crossModuleSync';
 import { startAutoBackupDaemon } from '@/lib/autoBackupDaemon';
+import { INITIAL_PURCHASES, getStoredPurchases } from '@/lib/purchasesStorage';
 
 const VALID_TABS = [
   'dashboard',
@@ -111,14 +112,63 @@ export default function AppHome() {
       const currentBills = currentBillsStr ? JSON.parse(currentBillsStr) : [];
       const currentPurchases = currentPurchasesStr ? JSON.parse(currentPurchasesStr) : [];
 
+      // 1. Immediately purge legacy demo suppliers (Hikvision, Dahua, TP-Link, Western Digital)
+      const isDemoPurchase = (p: any) =>
+        p &&
+        (p.id?.startsWith('PUR-HIK') ||
+          p.id?.startsWith('PUR-TPL') ||
+          p.id?.startsWith('PUR-WD') ||
+          p.id?.startsWith('PUR-DAH') ||
+          p.supplierName?.toLowerCase().includes('hikvision') ||
+          p.supplierName?.toLowerCase().includes('dahua') ||
+          p.supplierName?.toLowerCase().includes('tp-link') ||
+          p.supplierName?.toLowerCase().includes('western digital'));
+
+      const hasDemoPurchases = Array.isArray(currentPurchases) && currentPurchases.some(isDemoPurchase);
+      const hasRealAmecon = Array.isArray(currentPurchases) && currentPurchases.some(
+        (p: any) => p && p.supplierName?.includes('Amecon')
+      );
+
+      if (hasDemoPurchases || !hasRealAmecon || !Array.isArray(currentPurchases) || currentPurchases.length === 0) {
+        const cleanedPurchases = Array.isArray(currentPurchases)
+          ? currentPurchases.filter((p: any) => !isDemoPurchase(p))
+          : [];
+
+        // Prepend / merge all real Amecon purchases
+        INITIAL_PURCHASES.forEach((ap) => {
+          if (!cleanedPurchases.some((cp: any) => cp.id === ap.id || cp.billNumber === ap.billNumber)) {
+            cleanedPurchases.push(ap);
+          }
+        });
+
+        localStorage.setItem('globotech_erp_purchases', JSON.stringify(cleanedPurchases));
+        window.dispatchEvent(new CustomEvent('globotech_purchases_updated', { detail: cleanedPurchases }));
+      }
+
       const isUnderpopulated =
         !Array.isArray(currentStock) || currentStock.length <= 4 ||
         !Array.isArray(currentQuotes) || currentQuotes.length < 15 ||
-        !Array.isArray(currentBills) || currentBills.length < 20 ||
-        !Array.isArray(currentPurchases) || currentPurchases.length === 0;
+        !Array.isArray(currentBills) || currentBills.length < 20;
 
       if (isUnderpopulated) {
         restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD), { mode: 'merge' });
+      }
+
+      // 2. Background cloud sync check from master backup to ensure mobile gets latest changes
+      if (typeof window !== 'undefined') {
+        fetch(`/globotech-master-backup.json?t=${Date.now()}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((remoteData) => {
+            if (remoteData && remoteData.data) {
+              const localP = getStoredPurchases();
+              const hasAmeconNow = localP.some((p) => p.supplierName?.includes('Amecon'));
+              if (!hasAmeconNow || (remoteData.data.purchases && remoteData.data.purchases.length > localP.length)) {
+                restoreERPBackupData(JSON.stringify(remoteData), { mode: 'merge' });
+                window.dispatchEvent(new CustomEvent('globotech_purchases_updated', { detail: getStoredPurchases() }));
+              }
+            }
+          })
+          .catch(() => {});
       }
     } catch (e) {
       console.warn('Auto restore notice:', e);

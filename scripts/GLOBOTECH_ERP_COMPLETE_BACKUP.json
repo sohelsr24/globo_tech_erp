@@ -3,8 +3,8 @@
     "app": "Globo Tech Enterprise ERP",
     "company": "Globo Tech Bangladesh",
     "version": "1.0.0",
-    "exportedAt": "2026-10-07T20:54:37.628Z",
-    "timestamp": 1791406477628,
+    "exportedAt": "2026-10-07T22:05:30.108Z",
+    "timestamp": 1791410730109,
     "recordCounts": {
       "quotations": 20,
       "bills": 26,
@@ -18,7 +18,7 @@
       "imports": 2,
       "suppliers": 0,
       "serials": 5,
-      "purchases": 6
+      "purchases": 8
     }
   },
   "data": {
@@ -4837,336 +4837,295 @@
     },
     "purchases": [
       {
-        "id": "PUR-HIK-001",
-        "billNumber": "PO-HIK-2026-001",
-        "supplierId": "supp-001",
-        "supplierName": "Shenzhen Hikvision Security Tech Co., Ltd",
-        "supplierCountry": "China",
-        "supplierPhone": "+86 755 8899 1234",
-        "supplierEmail": "export@hikvision-sz.cn",
-        "date": "2026-09-02",
-        "dueDate": "2026-10-15",
+        "billNumber": "PO-2026-106",
+        "supplierId": "supp-1791405863836",
+        "supplierName": "Amecon",
+        "date": "2026-10-08",
         "items": [
           {
-            "id": "pi-1",
-            "productId": "PRD-CCTV-01",
-            "productName": "Hikvision 4MP ColorVu Bullet IP Camera (DS-2CD2047G2-LU)",
-            "sku": "HK-DS2CD2047G2",
-            "category": "CCTV & Security",
-            "quantity": 100,
-            "unit": "pcs",
-            "unitPrice": 8000,
-            "totalPrice": 800000,
-            "notes": "Ocean freight shipment batch #1"
-          },
-          {
-            "id": "pi-2",
-            "productId": "PRD-NVR-01",
-            "productName": "Hikvision 8-Channel 4K AcuSense NVR (DS-7608NXI-I2/8P)",
-            "sku": "HK-DS7608NXI",
-            "category": "CCTV & Security",
-            "quantity": 10,
+            "id": "pi-1791405863836-0",
+            "productName": "National Parliament Bhaban Erchitect",
+            "quantity": 1,
             "unit": "pcs",
             "unitPrice": 15000,
-            "totalPrice": 150000,
-            "notes": "Direct factory supply"
+            "totalPrice": 15000
           }
         ],
-        "subtotal": 950000,
-        "taxOrDuty": 0,
-        "totalAmount": 950000,
-        "paidAmount": 800000,
-        "dueAmount": 150000,
-        "status": "PARTIAL",
+        "subtotal": 15000,
+        "totalAmount": 15000,
+        "paidAmount": 15000,
         "payments": [
           {
-            "id": "pay-hik-1",
-            "date": "2026-09-02",
-            "amount": 500000,
-            "paymentMethod": "TT / LC",
-            "referenceNo": "TT-BOC-88910-SHZ",
-            "bankName": "Eastern Bank PLC",
-            "note": "Telegraphic Transfer 50% Advance via Bank of China",
-            "createdAt": "2026-09-02T10:30:00Z"
-          },
-          {
-            "id": "pay-hik-2",
-            "date": "2026-09-18",
-            "amount": 300000,
+            "id": "pay-1791405863836",
+            "date": "2026-10-08",
+            "amount": 15000,
             "paymentMethod": "Bank Transfer",
-            "referenceNo": "EBL-FT-44219",
-            "bankName": "Eastern Bank PLC",
-            "note": "Arrival interim release payment",
-            "createdAt": "2026-09-18T14:15:00Z"
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T20:44:23.836Z"
           }
         ],
-        "notes": "Chattogram Sea Port customs cleared. Final balance due on delivery inspection.",
-        "createdAt": "2026-09-02T10:00:00Z",
-        "updatedAt": "2026-09-18T14:15:00Z"
-      },
-      {
-        "id": "PUR-HIK-002",
-        "billNumber": "PO-HIK-2026-002",
-        "supplierId": "supp-001",
-        "supplierName": "Shenzhen Hikvision Security Tech Co., Ltd",
-        "supplierCountry": "China",
-        "supplierPhone": "+86 755 8899 1234",
-        "supplierEmail": "export@hikvision-sz.cn",
-        "date": "2026-09-24",
-        "dueDate": "2026-10-25",
-        "items": [
-          {
-            "id": "pi-3",
-            "productId": "PRD-PTZ-01",
-            "productName": "Hikvision PTZ 25x Optical Zoom Speed Dome Camera (DS-2DE4425IW-DE)",
-            "sku": "HK-DS2DE4425",
-            "category": "CCTV & Security",
-            "quantity": 5,
-            "unit": "pcs",
-            "unitPrice": 35000,
-            "totalPrice": 175000,
-            "notes": "High-speed highway project cameras"
-          }
-        ],
-        "subtotal": 175000,
-        "taxOrDuty": 0,
-        "totalAmount": 175000,
-        "paidAmount": 75000,
-        "dueAmount": 100000,
-        "status": "PARTIAL",
-        "payments": [
-          {
-            "id": "pay-hik-3",
-            "date": "2026-09-24",
-            "amount": 75000,
-            "paymentMethod": "Bank Transfer",
-            "referenceNo": "BRAC-TT-99021",
-            "bankName": "BRAC Bank PLC",
-            "note": "Booking advance payment",
-            "createdAt": "2026-09-24T11:00:00Z"
-          }
-        ],
-        "notes": "Special project dispatch order.",
-        "createdAt": "2026-09-24T11:00:00Z",
-        "updatedAt": "2026-09-24T11:00:00Z"
-      },
-      {
-        "id": "PUR-DAH-001",
-        "billNumber": "PO-DAH-2026-001",
-        "supplierId": "supp-002",
-        "supplierName": "Guangzhou Dahua Optics & AI Electronics",
-        "supplierCountry": "China",
-        "supplierPhone": "+86 20 8765 4321",
-        "supplierEmail": "helen.lin@dahua-gz.com",
-        "date": "2026-09-10",
-        "dueDate": "2026-10-10",
-        "items": [
-          {
-            "id": "pi-4",
-            "productId": "PRD-DAH-DOME",
-            "productName": "Dahua 4MP WizSense Full-Color Dome Camera (DH-IPC-HDBW3449E-AS-NI)",
-            "sku": "DH-IPC-HDBW3449",
-            "category": "CCTV & Security",
-            "quantity": 50,
-            "unit": "pcs",
-            "unitPrice": 7500,
-            "totalPrice": 375000,
-            "notes": "AI smart perimeter detection"
-          },
-          {
-            "id": "pi-5",
-            "productId": "PRD-DAH-NVR",
-            "productName": "Dahua 16-Channel 2-HDD PoE 4K NVR (DHI-NVR4216-16P-4KS2)",
-            "sku": "DH-NVR4216",
-            "category": "CCTV & Security",
-            "quantity": 5,
-            "unit": "pcs",
-            "unitPrice": 22000,
-            "totalPrice": 110000,
-            "notes": "Commercial installation package"
-          }
-        ],
-        "subtotal": 485000,
-        "taxOrDuty": 0,
-        "totalAmount": 485000,
-        "paidAmount": 350000,
-        "dueAmount": 135000,
-        "status": "PARTIAL",
-        "payments": [
-          {
-            "id": "pay-dah-1",
-            "date": "2026-09-10",
-            "amount": 200000,
-            "paymentMethod": "Bank Transfer",
-            "referenceNo": "BRAC-TXN-10992",
-            "bankName": "BRAC Bank PLC",
-            "note": "Telegraphic advance remittance",
-            "createdAt": "2026-09-10T09:45:00Z"
-          },
-          {
-            "id": "pay-dah-2",
-            "date": "2026-09-22",
-            "amount": 150000,
-            "paymentMethod": "Cheque",
-            "referenceNo": "CHQ-DBBL-552140",
-            "bankName": "Dutch-Bangla Bank PLC",
-            "note": "Port dispatch payment installment",
-            "createdAt": "2026-09-22T16:20:00Z"
-          }
-        ],
-        "notes": "Delivered to Tejgaon Central Warehouse. Remaining balance pending final signoff.",
-        "createdAt": "2026-09-10T09:30:00Z",
-        "updatedAt": "2026-09-22T16:20:00Z"
-      },
-      {
-        "id": "PUR-TPL-001",
-        "billNumber": "PO-TPL-2026-001",
-        "supplierId": "supp-003",
-        "supplierName": "Hangzhou TP-Link Communication Equip Co.",
-        "supplierCountry": "China",
-        "supplierPhone": "+86 571 8822 3344",
-        "supplierEmail": "zhang.wei@tp-hangzhou.cn",
-        "date": "2026-09-14",
-        "dueDate": "2026-10-20",
-        "items": [
-          {
-            "id": "pi-6",
-            "productId": "PRD-TPL-SW24",
-            "productName": "TP-Link 24-Port Gigabit Managed PoE+ Switch (TL-SG3428MP)",
-            "sku": "TPL-SG3428MP",
-            "category": "Networking",
-            "quantity": 50,
-            "unit": "pcs",
-            "unitPrice": 20000,
-            "totalPrice": 1000000,
-            "notes": "Layer 2+ enterprise rackmount switches"
-          },
-          {
-            "id": "pi-7",
-            "productId": "PRD-TPL-EAP",
-            "productName": "TP-Link Omada Ceiling Mount Wi-Fi 6 Access Point (EAP653)",
-            "sku": "TPL-EAP653",
-            "category": "Networking",
-            "quantity": 25,
-            "unit": "pcs",
-            "unitPrice": 8500,
-            "totalPrice": 212500,
-            "notes": "AX3000 high-density APs"
-          }
-        ],
-        "subtotal": 1212500,
-        "taxOrDuty": 0,
-        "totalAmount": 1212500,
-        "paidAmount": 1000000,
-        "dueAmount": 212500,
-        "status": "PARTIAL",
-        "payments": [
-          {
-            "id": "pay-tpl-1",
-            "date": "2026-09-14",
-            "amount": 1000000,
-            "paymentMethod": "TT / LC",
-            "referenceNo": "SCB-LC-771203-TPL",
-            "bankName": "Standard Chartered Bank",
-            "note": "Confirmed Letter of Credit LC 60 Days",
-            "createdAt": "2026-09-14T12:00:00Z"
-          }
-        ],
-        "notes": "LC maturity October 20. Balance due upon maturity.",
-        "createdAt": "2026-09-14T11:30:00Z",
-        "updatedAt": "2026-09-14T12:00:00Z"
-      },
-      {
-        "id": "PUR-TDT-001",
-        "billNumber": "PO-TDT-2026-001",
-        "supplierId": "supp-004",
-        "supplierName": "TechData Distribution Pte Ltd",
-        "supplierCountry": "Singapore",
-        "supplierPhone": "+65 6234 5678",
-        "supplierEmail": "orders.sg@techdata.com",
-        "date": "2026-09-18",
-        "dueDate": "2026-09-25",
-        "items": [
-          {
-            "id": "pi-8",
-            "productId": "PRD-CS-C9300",
-            "productName": "Cisco Catalyst 9300 24-Port Gigabit Modular Switch (C9300-24P-A)",
-            "sku": "CS-C9300-24P-A",
-            "category": "Networking",
-            "quantity": 4,
-            "unit": "pcs",
-            "unitPrice": 345000,
-            "totalPrice": 1380000,
-            "notes": "Data center core network backbone"
-          }
-        ],
-        "subtotal": 1380000,
-        "taxOrDuty": 0,
-        "totalAmount": 1380000,
-        "paidAmount": 1380000,
+        "id": "PUR-MUYKSQZG-810",
         "dueAmount": 0,
         "status": "PAID",
-        "payments": [
-          {
-            "id": "pay-tdt-1",
-            "date": "2026-09-18",
-            "amount": 1380000,
-            "paymentMethod": "Bank Transfer",
-            "referenceNo": "CITY-FT-99411-SG",
-            "bankName": "City Bank PLC",
-            "note": "Full payment via Swift TT to Singapore DBS Account",
-            "createdAt": "2026-09-18T15:00:00Z"
-          }
-        ],
-        "notes": "Fully cleared and inspected at airport cargo depot.",
-        "createdAt": "2026-09-18T14:00:00Z",
-        "updatedAt": "2026-09-18T15:00:00Z"
+        "createdAt": "2026-10-07T20:44:23.836Z",
+        "updatedAt": "2026-10-07T20:44:23.836Z"
       },
       {
-        "id": "PUR-WD-001",
-        "billNumber": "PO-WD-2026-001",
-        "supplierId": "supp-005",
-        "supplierName": "Western Digital & Seagate Storage Distribution",
-        "supplierCountry": "Singapore",
-        "supplierPhone": "+65 6789 0123",
-        "supplierEmail": "enterprise@wd-seagate.sg",
-        "date": "2026-09-20",
-        "dueDate": "2026-10-30",
+        "billNumber": "PO-2026-105",
+        "supplierId": "supp-1791405552236",
+        "supplierName": "Amecon",
+        "date": "2026-10-04",
         "items": [
           {
-            "id": "pi-9",
-            "productId": "PRD-SG-SKY-10TB",
-            "productName": "Seagate SkyHawk 10TB Surveillance Hard Drive (ST10000VX0004)",
-            "sku": "SG-SKY-10TB",
-            "category": "Storage",
-            "quantity": 20,
+            "id": "pi-1791405552235-0",
+            "productName": "Digital Flag national & Deputy with ss steal for deputy speaker",
+            "quantity": 2,
             "unit": "pcs",
-            "unitPrice": 28000,
-            "totalPrice": 560000,
-            "notes": "Surveillance optimized 256MB Cache 7200RPM"
+            "unitPrice": 15000,
+            "totalPrice": 30000
           }
         ],
-        "subtotal": 560000,
-        "taxOrDuty": 0,
-        "totalAmount": 560000,
-        "paidAmount": 400000,
-        "dueAmount": 160000,
-        "status": "PARTIAL",
+        "subtotal": 30000,
+        "totalAmount": 30000,
+        "paidAmount": 30000,
         "payments": [
           {
-            "id": "pay-wd-1",
-            "date": "2026-09-20",
-            "amount": 400000,
+            "id": "pay-1791405552235",
+            "date": "2026-10-04",
+            "amount": 30000,
             "paymentMethod": "Bank Transfer",
-            "referenceNo": "UCBL-901124-SG",
-            "bankName": "United Commercial Bank (UCB)",
-            "note": "Advance wire transfer",
-            "createdAt": "2026-09-20T11:45:00Z"
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T20:39:12.235Z"
           }
         ],
-        "notes": "Warehouse batch serial tracked.",
-        "createdAt": "2026-09-20T10:30:00Z",
-        "updatedAt": "2026-09-20T11:45:00Z"
+        "notes": "Full paid",
+        "id": "PUR-MUYKM2JW-503",
+        "dueAmount": 0,
+        "status": "PAID",
+        "createdAt": "2026-10-07T20:39:12.236Z",
+        "updatedAt": "2026-10-07T20:39:12.236Z"
+      },
+      {
+        "billNumber": "PO-2026-104",
+        "supplierId": "supp-1791405381961",
+        "supplierName": "Amecon",
+        "date": "2026-09-20",
+        "items": [
+          {
+            "id": "pi-1791405381961-0",
+            "productName": "Arabic Caliography for deputy speaker office",
+            "quantity": 1,
+            "unit": "pcs",
+            "unitPrice": 45000,
+            "totalPrice": 45000
+          }
+        ],
+        "subtotal": 45000,
+        "totalAmount": 45000,
+        "paidAmount": 0,
+        "payments": [],
+        "id": "PUR-MUYKIF61-455",
+        "dueAmount": 45000,
+        "status": "UNPAID",
+        "createdAt": "2026-10-07T20:36:21.961Z",
+        "updatedAt": "2026-10-07T20:36:21.961Z"
+      },
+      {
+        "billNumber": "PO-2026-103",
+        "supplierId": "supp-1791405276761",
+        "supplierName": "Amecon",
+        "date": "2026-09-22",
+        "items": [
+          {
+            "id": "pi-1791405276761-0",
+            "productName": "Car Monogram for deputy Speaker",
+            "quantity": 2,
+            "unit": "pcs",
+            "unitPrice": 15000,
+            "totalPrice": 30000
+          }
+        ],
+        "subtotal": 30000,
+        "totalAmount": 30000,
+        "paidAmount": 30000,
+        "payments": [
+          {
+            "id": "pay-1791405276761",
+            "date": "2026-09-22",
+            "amount": 30000,
+            "paymentMethod": "Bank Transfer",
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T20:34:36.761Z"
+          }
+        ],
+        "notes": "Full paid",
+        "id": "PUR-MUYKG5ZT-123",
+        "dueAmount": 0,
+        "status": "PAID",
+        "createdAt": "2026-10-07T20:34:36.761Z",
+        "updatedAt": "2026-10-07T20:34:36.761Z"
+      },
+      {
+        "billNumber": "PO-2026-102",
+        "supplierId": "supp-1791403945180",
+        "supplierName": "Amecon",
+        "date": "2026-08-09",
+        "items": [
+          {
+            "id": "pi-1791403945180-0",
+            "productName": "wodden Crest for deputy speaker",
+            "quantity": 15,
+            "unit": "pcs",
+            "unitPrice": 2200,
+            "totalPrice": 33000
+          },
+          {
+            "id": "pi-1791405066265-11",
+            "productName": "wodden Crest Sample",
+            "quantity": 2,
+            "unit": "pcs",
+            "unitPrice": 3500,
+            "totalPrice": 7000
+          }
+        ],
+        "subtotal": 40000,
+        "totalAmount": 40000,
+        "paidAmount": 40000,
+        "payments": [
+          {
+            "id": "pay-1791403945180",
+            "date": "2026-08-09",
+            "amount": 33000,
+            "paymentMethod": "Bank Transfer",
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T20:12:25.180Z"
+          },
+          {
+            "date": "2026-10-07",
+            "amount": 7000,
+            "paymentMethod": "Bank Transfer",
+            "id": "pay-muykcdbp-782",
+            "createdAt": "2026-10-07T20:31:39.637Z"
+          }
+        ],
+        "notes": "full paid 1st 10 pcs & 2nd 5 pcs . Total bill paid",
+        "id": "PUR-MUYJNMJG-579",
+        "dueAmount": 0,
+        "status": "PAID",
+        "createdAt": "2026-10-07T20:12:25.180Z",
+        "updatedAt": "2026-10-07T20:31:39.637Z"
+      },
+      {
+        "billNumber": "PO-2026-5750",
+        "supplierId": "supp-1791401539742",
+        "supplierName": "Amecon",
+        "date": "2026-08-16",
+        "items": [
+          {
+            "id": "pi-1791401539742-0",
+            "productName": "Metal Arabic Caliography for deputy Speaker",
+            "quantity": 1,
+            "unit": "pcs",
+            "unitPrice": 45000,
+            "totalPrice": 45000
+          }
+        ],
+        "subtotal": 45000,
+        "totalAmount": 45000,
+        "paidAmount": 20000,
+        "payments": [
+          {
+            "id": "pay-1791401539742",
+            "date": "2026-08-16",
+            "amount": 20000,
+            "paymentMethod": "Bank Transfer",
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T19:32:19.742Z"
+          }
+        ],
+        "notes": "amecon bill no 20489",
+        "id": "PUR-MUYI82HQ-172",
+        "dueAmount": 25000,
+        "status": "PARTIAL",
+        "createdAt": "2026-10-07T19:32:19.742Z",
+        "updatedAt": "2026-10-07T19:32:19.742Z"
+      },
+      {
+        "billNumber": "PO-2026-2727",
+        "supplierId": "supp-1791401134887",
+        "supplierName": "Amecon",
+        "date": "2026-12-08",
+        "items": [
+          {
+            "id": "pi-1791401134887-0",
+            "productName": "Parliament Logo Pitol 19 inches",
+            "quantity": 2,
+            "unit": "pcs",
+            "unitPrice": 43000,
+            "totalPrice": 86000
+          },
+          {
+            "id": "pi-1791401134887-1",
+            "productName": "Fitting Charge",
+            "quantity": 1,
+            "unit": "pcs",
+            "unitPrice": 1000,
+            "totalPrice": 1000
+          }
+        ],
+        "subtotal": 87000,
+        "totalAmount": 87000,
+        "paidAmount": 70000,
+        "payments": [
+          {
+            "id": "pay-1791401134887",
+            "date": "2026-12-08",
+            "amount": 70000,
+            "paymentMethod": "Bank Transfer",
+            "note": "Initial down payment at bill creation",
+            "createdAt": "2026-10-07T19:25:34.887Z"
+          }
+        ],
+        "id": "PUR-MUYHZE3R-153",
+        "dueAmount": 17000,
+        "status": "PARTIAL",
+        "createdAt": "2026-10-07T19:25:34.887Z",
+        "updatedAt": "2026-10-07T19:25:34.887Z"
+      },
+      {
+        "billNumber": "PO-2026-101",
+        "supplierId": "supp-1791398409726",
+        "supplierName": "Amecon",
+        "date": "2026-08-06",
+        "items": [
+          {
+            "id": "pi-1791398409726-0",
+            "productName": "Parliament Logo for Deputy Speaker",
+            "quantity": 1,
+            "unit": "pcs",
+            "unitPrice": 50000,
+            "totalPrice": 50000
+          }
+        ],
+        "subtotal": 50000,
+        "totalAmount": 50000,
+        "paidAmount": 50000,
+        "payments": [
+          {
+            "date": "2026-06-08",
+            "amount": 50000,
+            "paymentMethod": "Bank Transfer",
+            "bankName": "Brac",
+            "id": "pay-muyh6dcd-417",
+            "createdAt": "2026-10-07T19:03:00.877Z"
+          }
+        ],
+        "notes": "Full paid",
+        "id": "PUR-MUYGCZCU-386",
+        "dueAmount": 0,
+        "status": "PAID",
+        "createdAt": "2026-10-07T18:40:09.726Z",
+        "updatedAt": "2026-10-07T19:03:00.877Z"
       }
     ]
   }
