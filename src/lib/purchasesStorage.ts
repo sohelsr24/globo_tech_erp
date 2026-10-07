@@ -496,6 +496,103 @@ export function recordSupplierPayment(
 }
 
 /**
+ * Generates the next sequential PO number based on existing purchase records.
+ * Ensures numbers are serial (e.g. PO-2026-101 -> PO-2026-102 or PO-2026-001 -> PO-2026-002),
+ * avoiding random numbers.
+ */
+export function getNextPONumber(bills?: PurchaseBillRecord[]): string {
+  const allBills = bills && bills.length > 0 ? bills : getStoredPurchases();
+  const currentYear = new Date().getFullYear();
+  const yearStr = String(currentYear);
+
+  const seqNumbers: number[] = [];
+  const numbersForCurrentYear: number[] = [];
+
+  for (const b of allBills) {
+    if (!b.billNumber) continue;
+    const trimmed = b.billNumber.trim();
+
+    const matchYearSeq = trimmed.match(/(?:20\d{2})[-_](\d+)/);
+    const matchEndSeq = trimmed.match(/(\d+)$/);
+
+    if (matchYearSeq) {
+      const year = trimmed.includes(yearStr);
+      const seq = parseInt(matchYearSeq[1], 10);
+      if (!isNaN(seq)) {
+        if (year) numbersForCurrentYear.push(seq);
+        seqNumbers.push(seq);
+      }
+    } else if (matchEndSeq) {
+      const seq = parseInt(matchEndSeq[1], 10);
+      if (!isNaN(seq)) {
+        seqNumbers.push(seq);
+      }
+    }
+  }
+
+  // Filter out artifact random numbers (>= 1000 from old Math.random()) when smaller sequence exists
+  const candidates = numbersForCurrentYear.length > 0 ? numbersForCurrentYear : seqNumbers;
+  const reasonableCandidates = candidates.filter((n) => {
+    if (allBills.length < 500 && n >= 1000) {
+      const hasSmaller = candidates.some((c) => c < 1000);
+      return !hasSmaller;
+    }
+    return true;
+  });
+
+  let nextSeq = 1;
+  if (reasonableCandidates.length > 0) {
+    const maxSeq = Math.max(...reasonableCandidates);
+    nextSeq = maxSeq + 1;
+  } else if (candidates.length > 0) {
+    nextSeq = Math.max(...candidates) + 1;
+  }
+
+  const padLength = nextSeq >= 1000 ? 4 : 3;
+  const formattedSeq = String(nextSeq).padStart(padLength, '0');
+
+  let candidatePO = `PO-${currentYear}-${formattedSeq}`;
+  let attempt = nextSeq;
+  while (allBills.some((b) => b.billNumber && b.billNumber.trim().toUpperCase() === candidatePO.toUpperCase())) {
+    attempt++;
+    candidatePO = `PO-${currentYear}-${String(attempt).padStart(padLength, '0')}`;
+  }
+
+  return candidatePO;
+}
+
+/**
+ * Updates basic bill details (bill number, date, due date, notes)
+ */
+export function updatePurchaseBill(
+  billId: string,
+  updatedData: {
+    billNumber?: string;
+    date?: string;
+    dueDate?: string;
+    notes?: string;
+  }
+): boolean {
+  const all = getStoredPurchases();
+  const index = all.findIndex((b) => b.id === billId);
+  if (index === -1) return false;
+
+  const bill = all[index];
+  const oldBillNo = bill.billNumber;
+  const newBillNo = updatedData.billNumber ? updatedData.billNumber.trim() : oldBillNo;
+
+  bill.billNumber = newBillNo;
+  if (updatedData.date) bill.date = updatedData.date;
+  if (updatedData.dueDate !== undefined) bill.dueDate = updatedData.dueDate || undefined;
+  if (updatedData.notes !== undefined) bill.notes = updatedData.notes.trim() || undefined;
+  bill.updatedAt = new Date().toISOString();
+
+  all[index] = bill;
+  saveStoredPurchases(all);
+  return true;
+}
+
+/**
  * Deletes a purchase bill
  */
 export function deletePurchaseBill(billId: string): boolean {
