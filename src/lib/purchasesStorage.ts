@@ -641,6 +641,119 @@ export function addNewSupplier(supplier: {
   return false;
 }
 
+/**
+ * Updates an individual purchase item inside its parent bill,
+ * recalculating item total, bill subtotal, bill total, due amount and payment status.
+ */
+export function updatePurchaseItem(
+  billId: string,
+  itemId: string,
+  updatedItemData: {
+    productName: string;
+    sku?: string;
+    category?: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    purchaseDate?: string;
+    notes?: string;
+  }
+): boolean {
+  const allBills = getStoredPurchases();
+  const billIndex = allBills.findIndex((b) => b.id === billId);
+  if (billIndex === -1) return false;
+
+  const bill = allBills[billIndex];
+  const itemIndex = bill.items.findIndex((it) => it.id === itemId);
+  if (itemIndex === -1) return false;
+
+  const qty = Math.max(1, Number(updatedItemData.quantity) || 1);
+  const unitRate = Math.max(0, Number(updatedItemData.unitPrice) || 0);
+  const newTotalPrice = qty * unitRate;
+
+  // Update item
+  bill.items[itemIndex] = {
+    ...bill.items[itemIndex],
+    productName: updatedItemData.productName.trim(),
+    sku: updatedItemData.sku !== undefined ? updatedItemData.sku.trim() || undefined : bill.items[itemIndex].sku,
+    category: updatedItemData.category !== undefined ? updatedItemData.category.trim() || undefined : bill.items[itemIndex].category,
+    quantity: qty,
+    unit: updatedItemData.unit?.trim() || bill.items[itemIndex].unit || 'pcs',
+    unitPrice: unitRate,
+    totalPrice: newTotalPrice,
+    notes: updatedItemData.notes !== undefined ? updatedItemData.notes.trim() || undefined : bill.items[itemIndex].notes
+  };
+
+  // If purchase date was updated, update bill.date
+  if (updatedItemData.purchaseDate) {
+    bill.date = updatedItemData.purchaseDate;
+  }
+
+  // Recalculate bill subtotal and total
+  const newSubtotal = bill.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+  bill.subtotal = newSubtotal;
+  const tax = Number(bill.taxOrDuty) || 0;
+  bill.totalAmount = newSubtotal + tax;
+
+  // Recalculate due amount and status
+  const paid = Number(bill.paidAmount) || 0;
+  bill.dueAmount = Math.max(0, bill.totalAmount - paid);
+
+  if (bill.dueAmount <= 0) {
+    bill.status = 'PAID';
+  } else if (paid > 0) {
+    bill.status = 'PARTIAL';
+  } else {
+    bill.status = 'UNPAID';
+  }
+
+  bill.updatedAt = new Date().toISOString();
+
+  allBills[billIndex] = bill;
+  saveStoredPurchases(allBills);
+  return true;
+}
+
+/**
+ * Deletes an individual purchase item from its parent bill
+ */
+export function deletePurchaseItem(billId: string, itemId: string): boolean {
+  const allBills = getStoredPurchases();
+  const billIndex = allBills.findIndex((b) => b.id === billId);
+  if (billIndex === -1) return false;
+
+  const bill = allBills[billIndex];
+  bill.items = bill.items.filter((it) => it.id !== itemId);
+
+  // If bill now has 0 items, delete the whole bill
+  if (bill.items.length === 0) {
+    const remaining = allBills.filter((b) => b.id !== billId);
+    saveStoredPurchases(remaining);
+    return true;
+  }
+
+  // Recalculate bill subtotal and total
+  const newSubtotal = bill.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+  bill.subtotal = newSubtotal;
+  const tax = Number(bill.taxOrDuty) || 0;
+  bill.totalAmount = newSubtotal + tax;
+  const paid = Number(bill.paidAmount) || 0;
+  bill.dueAmount = Math.max(0, bill.totalAmount - paid);
+
+  if (bill.dueAmount <= 0) {
+    bill.status = 'PAID';
+  } else if (paid > 0) {
+    bill.status = 'PARTIAL';
+  } else {
+    bill.status = 'UNPAID';
+  }
+
+  bill.updatedAt = new Date().toISOString();
+  allBills[billIndex] = bill;
+  saveStoredPurchases(allBills);
+  return true;
+}
+
 export interface CompanySummary {
   supplierName: string;
   supplierId: string;
