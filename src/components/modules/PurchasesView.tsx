@@ -56,7 +56,8 @@ import {
   updatePurchaseItem,
   deletePurchaseItem,
   getNextPONumber,
-  updatePurchaseBill
+  updatePurchaseBill,
+  addItemToPurchaseBill
 } from '@/lib/purchasesStorage';
 import { getStoredProducts, ProductItem } from '@/lib/productsStorage';
 
@@ -116,6 +117,23 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [editItemUnit, setEditItemUnit] = useState<string>('pcs');
   const [editItemUnitPrice, setEditItemUnitPrice] = useState<number>(0);
   const [editItemNotes, setEditItemNotes] = useState<string>('');
+
+  // Add Item to Bill Modal State
+  const [isAddItemToBillModalOpen, setIsAddItemToBillModalOpen] = useState<boolean>(false);
+  const [targetBillForNewItem, setTargetBillForNewItem] = useState<{
+    billId: string;
+    billNumber: string;
+    supplierName?: string;
+    currentTotal?: number;
+    currentDue?: number;
+  } | null>(null);
+  const [newItemProductName, setNewItemProductName] = useState<string>('');
+  const [newItemSku, setNewItemSku] = useState<string>('');
+  const [newItemCategory, setNewItemCategory] = useState<string>('');
+  const [newItemQuantity, setNewItemQuantity] = useState<number>(1);
+  const [newItemUnit, setNewItemUnit] = useState<string>('pcs');
+  const [newItemUnitPrice, setNewItemUnitPrice] = useState<number>(0);
+  const [newItemNotes, setNewItemNotes] = useState<string>('');
 
   // Synchronize global search
   useEffect(() => {
@@ -640,6 +658,77 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     if (confirm(`Are you sure you want to remove item "${productName}" from this purchase bill?`)) {
       deletePurchaseItem(billId, itemId);
       setPurchases(getStoredPurchases());
+    }
+  };
+
+  // Open Add Item to Existing Bill Modal
+  const openAddItemModalForBill = (
+    billId: string,
+    billNumber: string,
+    supplierName?: string,
+    currentTotal?: number,
+    currentDue?: number
+  ) => {
+    const foundBill = purchases.find((b) => b.id === billId || b.billNumber === billNumber);
+    setTargetBillForNewItem({
+      billId: foundBill ? foundBill.id : billId,
+      billNumber: foundBill ? foundBill.billNumber : billNumber,
+      supplierName: foundBill ? foundBill.supplierName : (supplierName || selectedSupplierName || ''),
+      currentTotal: foundBill ? foundBill.totalAmount : (currentTotal || 0),
+      currentDue: foundBill ? foundBill.dueAmount : (currentDue || 0)
+    });
+    setNewItemProductName('');
+    setNewItemSku('');
+    setNewItemCategory('');
+    setNewItemQuantity(1);
+    setNewItemUnit('pcs');
+    setNewItemUnitPrice(0);
+    setNewItemNotes('');
+    setIsAddItemToBillModalOpen(true);
+  };
+
+  // Select Product in Add Item Modal (auto-fill from ERP inventory)
+  const handleSelectNewItemProduct = (name: string) => {
+    setNewItemProductName(name);
+    const found = products.find((p) => p.name.toLowerCase() === name.trim().toLowerCase());
+    if (found) {
+      if (found.sku) setNewItemSku(found.sku);
+      if (found.category) setNewItemCategory(found.category);
+      if (found.unit) setNewItemUnit(found.unit);
+      if (found.currentLandedCost) setNewItemUnitPrice(found.currentLandedCost);
+    }
+  };
+
+  // Submit Add Item to Bill
+  const handleAddItemToBillSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetBillForNewItem) return;
+
+    const trimmedName = newItemProductName.trim();
+    if (!trimmedName) {
+      alert('Please enter a product name');
+      return;
+    }
+
+    const qty = Math.max(1, Number(newItemQuantity) || 1);
+    const rate = Math.max(0, Number(newItemUnitPrice) || 0);
+
+    const success = addItemToPurchaseBill(targetBillForNewItem.billId, {
+      productName: trimmedName,
+      sku: newItemSku.trim() || undefined,
+      category: newItemCategory.trim() || undefined,
+      quantity: qty,
+      unit: newItemUnit.trim() || 'pcs',
+      unitPrice: rate,
+      notes: newItemNotes.trim() || undefined
+    });
+
+    if (success) {
+      setPurchases(getStoredPurchases());
+      setIsAddItemToBillModalOpen(false);
+      setTargetBillForNewItem(null);
+    } else {
+      alert('Failed to add item to bill. Bill not found.');
     }
   };
 
@@ -1311,9 +1400,30 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                         Individual breakdown showing purchase dates, item costs, bill values, paid amounts, and dues.
                       </p>
                     </div>
-                    <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-800">
-                      {activeSupplierFilteredItems.length} Items Recorded
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-800">
+                        {activeSupplierFilteredItems.length} Items Recorded
+                      </span>
+                      {activeSupplierSummary.bills.length > 0 && (
+                        <button
+                          onClick={() => {
+                            const latestBill = activeSupplierSummary.bills[0];
+                            openAddItemModalForBill(
+                              latestBill.id,
+                              latestBill.billNumber,
+                              activeSupplierSummary.supplierName,
+                              latestBill.totalAmount,
+                              latestBill.dueAmount
+                            );
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95"
+                          title="Add an item to the latest purchase bill"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Add Item to Bill</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="overflow-x-auto">
@@ -1441,6 +1551,14 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                                     )}
 
                                     <button
+                                      onClick={() => openAddItemModalForBill(item.billId, item.billNumber, selectedSupplierName || undefined)}
+                                      className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs transition active:scale-95 shadow-sm"
+                                      title={`Add Another Item to Bill (${item.billNumber})`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+
+                                    <button
                                       onClick={() => openEditItemModal(item)}
                                       className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
                                       title="Edit Item Details & Rate"
@@ -1514,6 +1632,22 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                               Pay
                             </button>
                           )}
+                          <button
+                            onClick={() =>
+                              openAddItemModalForBill(
+                                bill.id,
+                                bill.billNumber,
+                                bill.supplierName,
+                                bill.totalAmount,
+                                bill.dueAmount
+                              )
+                            }
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs font-semibold transition flex items-center gap-1 shadow-sm active:scale-95"
+                            title="Add Another Item to this Bill"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Item</span>
+                          </button>
                           <button
                             onClick={() => openEditBillModal(bill)}
                             className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
@@ -1687,6 +1821,14 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                               Settled
                             </span>
                           )}
+
+                          <button
+                            onClick={() => openAddItemModalForBill(item.billId, item.billNumber, item.supplierName)}
+                            className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs transition active:scale-95 shadow-sm"
+                            title={`Add Another Item to Bill (${item.billNumber})`}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
 
                           <button
                             onClick={() => openEditItemModal(item)}
@@ -2630,18 +2772,36 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
         {itemToEdit && (
           <form onSubmit={handleEditItemSubmit} className="space-y-4">
             {/* Context Badge */}
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs flex-wrap gap-2">
-              <div className="flex items-center gap-2">
-                <Package className="w-4 h-4 text-blue-400" />
-                <span className="text-slate-400">Bill:</span>
-                <span className="font-mono font-bold text-slate-100">{itemToEdit.billNumber}</span>
-              </div>
-              {itemToEdit.supplierName && (
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs flex-wrap gap-2.5">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400">Supplier:</span>
-                  <span className="font-bold text-blue-300">{itemToEdit.supplierName}</span>
+                  <Package className="w-4 h-4 text-blue-400" />
+                  <span className="text-slate-400">Bill:</span>
+                  <span className="font-mono font-bold text-slate-100">{itemToEdit.billNumber}</span>
                 </div>
-              )}
+                {itemToEdit.supplierName && (
+                  <div className="flex items-center gap-1.5 pl-2 border-l border-slate-800">
+                    <span className="text-slate-400">Supplier:</span>
+                    <span className="font-bold text-blue-300">{itemToEdit.supplierName}</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const bId = itemToEdit.billId;
+                  const bNum = itemToEdit.billNumber;
+                  const sName = itemToEdit.supplierName;
+                  setIsEditItemModalOpen(false);
+                  openAddItemModalForBill(bId, bNum, sName);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+                title="Add another item to this bill"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Item to this Bill</span>
+              </button>
             </div>
 
             {/* Product Name */}
@@ -2791,24 +2951,41 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 flex-wrap">
               <button
                 type="button"
                 onClick={() => {
+                  const bId = itemToEdit.billId;
+                  const bNum = itemToEdit.billNumber;
+                  const sName = itemToEdit.supplierName;
                   setIsEditItemModalOpen(false);
-                  setItemToEdit(null);
+                  openAddItemModalForBill(bId, bNum, sName);
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                className="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1.5 active:scale-95"
               >
-                Cancel
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Item to this Bill</span>
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-1.5"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Save Item Changes</span>
-              </button>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditItemModalOpen(false);
+                    setItemToEdit(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Save Item Changes</span>
+                </button>
+              </div>
             </div>
           </form>
         )}
@@ -2826,7 +3003,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
       >
         {billToEdit && (
           <form onSubmit={handleEditBillSubmit} className="space-y-4">
-            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Supplier:</span>
                 <span className="font-bold text-slate-100">{billToEdit.supplierName}</span>
@@ -2834,6 +3011,23 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
               <div className="flex items-center justify-between">
                 <span className="text-slate-400">Total Items:</span>
                 <span className="text-slate-200">{billToEdit.items.length} Items ({Formatters.currency(billToEdit.totalAmount)})</span>
+              </div>
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                <span className="text-slate-400 text-[11px]">Need to include another product?</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const bId = billToEdit.id;
+                    const bNum = billToEdit.billNumber;
+                    const sName = billToEdit.supplierName;
+                    setIsEditBillModalOpen(false);
+                    openAddItemModalForBill(bId, bNum, sName);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-bold transition flex items-center gap-1 active:scale-95"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>+ Add Item to this Bill</span>
+                </button>
               </div>
             </div>
 
@@ -2911,6 +3105,204 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Save Bill Changes</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* MODAL 9: ADD ITEM TO PURCHASE BILL */}
+      <Modal
+        isOpen={isAddItemToBillModalOpen}
+        onClose={() => {
+          setIsAddItemToBillModalOpen(false);
+          setTargetBillForNewItem(null);
+        }}
+        title={targetBillForNewItem ? `Add Purchased Item to Bill (${targetBillForNewItem.billNumber})` : 'Add Item to Purchase Bill'}
+        size="lg"
+      >
+        {targetBillForNewItem && (
+          <form onSubmit={handleAddItemToBillSubmit} className="space-y-4">
+            {/* Bill Context Banner */}
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-emerald-400" />
+                  <span className="text-slate-400">Target Purchase Bill:</span>
+                  <span className="font-mono font-bold text-emerald-400">{targetBillForNewItem.billNumber}</span>
+                </div>
+                {targetBillForNewItem.supplierName && (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-400">Supplier:</span>
+                    <span className="font-bold text-slate-200">{targetBillForNewItem.supplierName}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[11px] text-slate-400 flex-wrap gap-2">
+                <span>Current Bill Total: <strong className="text-slate-200">{Formatters.currency(targetBillForNewItem.currentTotal || 0)}</strong></span>
+                <span>Current Outstanding Due: <strong className="text-rose-400">{Formatters.currency(targetBillForNewItem.currentDue || 0)}</strong></span>
+              </div>
+            </div>
+
+            {/* Product Name */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Product Name / Description *
+              </label>
+              <input
+                type="text"
+                required
+                list="products-erp-list"
+                value={newItemProductName}
+                onChange={(e) => handleSelectNewItemProduct(e.target.value)}
+                placeholder="e.g. Hikvision 4MP IP Bullet Camera"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+              <span className="text-[10px] text-slate-500 mt-1 block">
+                Select from existing inventory products or type a custom item description.
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* SKU / Model */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Model / SKU
+                </label>
+                <input
+                  type="text"
+                  value={newItemSku}
+                  onChange={(e) => setNewItemSku(e.target.value)}
+                  placeholder="e.g. DS-2CD2043G2-I"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              {/* Category */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={newItemCategory}
+                  onChange={(e) => setNewItemCategory(e.target.value)}
+                  placeholder="e.g. CCTV & Security"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Quantity */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Quantity *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  required
+                  value={newItemQuantity}
+                  onChange={(e) => setNewItemQuantity(Math.max(1, Number(e.target.value) || 1))}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              {/* Unit */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Unit
+                </label>
+                <select
+                  value={newItemUnit}
+                  onChange={(e) => setNewItemUnit(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                >
+                  <option value="pcs">pcs (Pieces)</option>
+                  <option value="unit">unit (Units)</option>
+                  <option value="set">set (Sets)</option>
+                  <option value="box">box (Boxes)</option>
+                  <option value="meter">meter</option>
+                  <option value="coil">coil</option>
+                  <option value="roll">roll</option>
+                  <option value="job">job (Job/Labor)</option>
+                </select>
+              </div>
+
+              {/* Unit Price (Rate) */}
+              <div>
+                <label className="block text-xs font-semibold text-blue-300 mb-1">
+                  Unit Price (Item Value BDT) *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  required
+                  value={newItemUnitPrice || ''}
+                  onChange={(e) => setNewItemUnitPrice(Math.max(0, Number(e.target.value) || 0))}
+                  placeholder="0.00"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-blue-500/50 text-xs font-bold text-blue-300 outline-none focus:border-blue-400"
+                />
+              </div>
+            </div>
+
+            {/* Calculations Preview */}
+            <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-950 to-blue-950/40 border border-emerald-800/40 flex items-center justify-between text-xs flex-wrap gap-3">
+              <div>
+                <span className="text-slate-400 block text-[11px]">Calculated Item Total</span>
+                <span className="text-sm font-black text-emerald-400">
+                  {Formatters.currency((Number(newItemQuantity) || 1) * (Number(newItemUnitPrice) || 0))}
+                </span>
+                <span className="text-[10px] text-slate-400 block mt-0.5">
+                  {Number(newItemQuantity) || 1} {newItemUnit} &times; {Formatters.currency(Number(newItemUnitPrice) || 0)}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-400 block text-[11px]">Updated Bill Total</span>
+                <span className="text-xs font-bold text-slate-100">
+                  {Formatters.currency((targetBillForNewItem.currentTotal || 0) + (Number(newItemQuantity) || 1) * (Number(newItemUnitPrice) || 0))}
+                </span>
+                <span className="text-[11px] font-semibold text-rose-400 block mt-0.5">
+                  Updated Due: {Formatters.currency((targetBillForNewItem.currentDue || 0) + (Number(newItemQuantity) || 1) * (Number(newItemUnitPrice) || 0))}
+                </span>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Notes / Batch Description
+              </label>
+              <input
+                type="text"
+                value={newItemNotes}
+                onChange={(e) => setNewItemNotes(e.target.value)}
+                placeholder="Optional notes or batch description..."
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddItemToBillModalOpen(false);
+                  setTargetBillForNewItem(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 active:scale-95 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Item to Bill</span>
               </button>
             </div>
           </form>

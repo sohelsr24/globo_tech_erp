@@ -2275,6 +2275,9 @@ video {
 .to-indigo-950\/40 {
   --tw-gradient-to: rgb(30 27 75 / 0.4) var(--tw-gradient-to-position);
 }
+.to-blue-950\/40 {
+  --tw-gradient-to: rgb(23 37 84 / 0.4) var(--tw-gradient-to-position);
+}
 .object-contain {
   -o-object-fit: contain;
      object-fit: contain;
@@ -3649,6 +3652,10 @@ button, a, input, select, textarea {
 .hover\:bg-rose-600:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(225 29 72 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-emerald-600:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(5 150 105 / var(--tw-bg-opacity, 1));
 }
 .hover\:from-blue-500:hover {
   --tw-gradient-from: #3b82f6 var(--tw-gradient-from-position);

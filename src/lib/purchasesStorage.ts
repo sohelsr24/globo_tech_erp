@@ -851,6 +851,71 @@ export function deletePurchaseItem(billId: string, itemId: string): boolean {
   return true;
 }
 
+/**
+ * Adds a new item to an existing purchase bill,
+ * recalculating bill subtotal, total amount, due amount and status.
+ */
+export function addItemToPurchaseBill(
+  billId: string,
+  newItem: {
+    productName: string;
+    sku?: string;
+    category?: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    notes?: string;
+  }
+): boolean {
+  const allBills = getStoredPurchases();
+  const index = allBills.findIndex((b) => b.id === billId);
+  if (index === -1) return false;
+
+  const bill = allBills[index];
+  const qty = Math.max(1, Number(newItem.quantity) || 1);
+  const rate = Math.max(0, Number(newItem.unitPrice) || 0);
+
+  const itemRecord: PurchaseItem = {
+    id: `pi-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    productName: newItem.productName.trim(),
+    sku: newItem.sku !== undefined ? newItem.sku.trim() || undefined : undefined,
+    category: newItem.category !== undefined ? newItem.category.trim() || undefined : undefined,
+    quantity: qty,
+    unit: newItem.unit?.trim() || 'pcs',
+    unitPrice: rate,
+    totalPrice: qty * rate,
+    notes: newItem.notes !== undefined ? newItem.notes.trim() || undefined : undefined
+  };
+
+  if (!Array.isArray(bill.items)) {
+    bill.items = [];
+  }
+  bill.items.push(itemRecord);
+
+  // Recalculate bill subtotal & total
+  const newSubtotal = bill.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+  bill.subtotal = newSubtotal;
+  const tax = Number(bill.taxOrDuty) || 0;
+  bill.totalAmount = newSubtotal + tax;
+
+  // Recalculate due & status
+  const paid = Number(bill.paidAmount) || 0;
+  bill.dueAmount = Math.max(0, bill.totalAmount - paid);
+
+  if (bill.dueAmount <= 0) {
+    bill.status = 'PAID';
+  } else if (paid > 0) {
+    bill.status = 'PARTIAL';
+  } else {
+    bill.status = 'UNPAID';
+  }
+
+  bill.updatedAt = new Date().toISOString();
+  allBills[index] = bill;
+  saveStoredPurchases(allBills);
+  return true;
+}
+
 export interface CompanySummary {
   supplierName: string;
   supplierId: string;
