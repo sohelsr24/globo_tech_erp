@@ -4317,11 +4317,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 flexDirection: 'column',
                 padding: '10px 24px 14px 24px',
               }}
-              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none"
+              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:block print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none print:min-h-0 print:h-auto"
             >
               {/* Watermark in background matching company pad */}
               <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
+                className="quotation-watermark absolute inset-0 flex items-center justify-center pointer-events-none select-none z-0 overflow-hidden"
                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.14 }}
               >
                 <img
@@ -4508,7 +4508,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   const hasVatOrTax = totals.totalVat > 0 || totals.totalTax > 0;
                   const isExclusive = (selectedQuotation.vatTaxTerms || '').toLowerCase().includes('exclusive');
                   return (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '8px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '6px', marginBottom: '8px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <tbody>
                         <tr>
                           {/* Left: Amount in Words */}
@@ -4591,7 +4591,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 })()}
 
                 {/* 6. Terms & Conditions */}
-                <div style={{ marginTop: '4px', marginBottom: '6px', fontSize: '10px', color: '#1e293b', lineHeight: 1.45 }}>
+                <div style={{ marginTop: '4px', marginBottom: '6px', fontSize: '10px', color: '#1e293b', lineHeight: 1.45, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
                     <span style={{ fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.5px' }}>TERMS & CONDITIONS:</span>
                     <button
