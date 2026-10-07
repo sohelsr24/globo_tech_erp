@@ -4,6 +4,11 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'Globo Tech ERP — Enterprise Management & Inventory System',
   description: 'Enterprise ERP for IT, CCTV, Networking, Data Center Import & Project Distribution in Bangladesh',
+  other: {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  }
 };
 
 export const viewport: Viewport = {

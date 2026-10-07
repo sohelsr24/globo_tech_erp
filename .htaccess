@@ -22,3 +22,12 @@ Options -Indexes
   AddType application/json .json
   AddType image/svg+xml .svg
 </IfModule>
+
+# Cache Prevention for HTML files so users always see the latest build immediately
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+</IfModule>
