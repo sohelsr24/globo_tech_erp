@@ -506,6 +506,141 @@ export function deletePurchaseBill(billId: string): boolean {
   return true;
 }
 
+/**
+ * Updates supplier details across all associated purchase bills and supplier directories
+ */
+export function updateSupplierDetails(
+  oldSupplierName: string,
+  updatedData: {
+    supplierName: string;
+    supplierCountry?: string;
+    supplierPhone?: string;
+    supplierEmail?: string;
+  }
+): boolean {
+  const allBills = getStoredPurchases();
+  let updatedCount = 0;
+
+  const newBills = allBills.map((bill) => {
+    if (bill.supplierName.trim().toLowerCase() === oldSupplierName.trim().toLowerCase()) {
+      updatedCount++;
+      return {
+        ...bill,
+        supplierName: updatedData.supplierName.trim(),
+        supplierCountry: updatedData.supplierCountry !== undefined ? updatedData.supplierCountry.trim() : bill.supplierCountry,
+        supplierPhone: updatedData.supplierPhone !== undefined ? updatedData.supplierPhone.trim() : bill.supplierPhone,
+        supplierEmail: updatedData.supplierEmail !== undefined ? updatedData.supplierEmail.trim() : bill.supplierEmail,
+        updatedAt: new Date().toISOString()
+      };
+    }
+    return bill;
+  });
+
+  saveStoredPurchases(newBills);
+
+  // Also sync with globotech_erp_suppliers in localStorage if present
+  if (typeof window !== 'undefined') {
+    try {
+      const savedSuppliers = localStorage.getItem('globotech_erp_suppliers');
+      if (savedSuppliers) {
+        const parsedSuppliers = JSON.parse(savedSuppliers);
+        if (Array.isArray(parsedSuppliers)) {
+          let found = false;
+          const updatedSuppliers = parsedSuppliers.map((s: any) => {
+            if (s.name && s.name.trim().toLowerCase() === oldSupplierName.trim().toLowerCase()) {
+              found = true;
+              return {
+                ...s,
+                name: updatedData.supplierName.trim(),
+                country: updatedData.supplierCountry !== undefined ? updatedData.supplierCountry.trim() : s.country,
+                phone: updatedData.supplierPhone !== undefined ? updatedData.supplierPhone.trim() : s.phone,
+                email: updatedData.supplierEmail !== undefined ? updatedData.supplierEmail.trim() : s.email
+              };
+            }
+            return s;
+          });
+          if (found) {
+            localStorage.setItem('globotech_erp_suppliers', JSON.stringify(updatedSuppliers));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error syncing updated supplier to globotech_erp_suppliers:', e);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Deletes a supplier and all their associated purchase bills
+ */
+export function deleteSupplierAndBills(supplierName: string): boolean {
+  const allBills = getStoredPurchases();
+  const filteredBills = allBills.filter(
+    (bill) => bill.supplierName.trim().toLowerCase() !== supplierName.trim().toLowerCase()
+  );
+
+  saveStoredPurchases(filteredBills);
+
+  // Also remove from globotech_erp_suppliers if present
+  if (typeof window !== 'undefined') {
+    try {
+      const savedSuppliers = localStorage.getItem('globotech_erp_suppliers');
+      if (savedSuppliers) {
+        const parsedSuppliers = JSON.parse(savedSuppliers);
+        if (Array.isArray(parsedSuppliers)) {
+          const remainingSuppliers = parsedSuppliers.filter(
+            (s: any) => s.name && s.name.trim().toLowerCase() !== supplierName.trim().toLowerCase()
+          );
+          localStorage.setItem('globotech_erp_suppliers', JSON.stringify(remainingSuppliers));
+        }
+      }
+    } catch (e) {
+      console.error('Error syncing deleted supplier from globotech_erp_suppliers:', e);
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Adds a new supplier record
+ */
+export function addNewSupplier(supplier: {
+  name: string;
+  country?: string;
+  phone?: string;
+  email?: string;
+}): boolean {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('globotech_erp_suppliers');
+      const list = saved ? JSON.parse(saved) : [];
+      const newEntry = {
+        id: `supp-${Date.now()}`,
+        name: supplier.name.trim(),
+        country: supplier.country?.trim() || 'Bangladesh',
+        city: '',
+        contactPerson: '',
+        email: supplier.email?.trim() || '',
+        phone: supplier.phone?.trim() || '',
+        defaultCurrency: 'BDT',
+        paymentTerms: 'Payment on Invoice',
+        totalShipments: 0,
+        totalVolumeCNY: 0,
+        status: 'ACTIVE'
+      };
+      list.push(newEntry);
+      localStorage.setItem('globotech_erp_suppliers', JSON.stringify(list));
+      return true;
+    } catch (e) {
+      console.error('Error adding new supplier:', e);
+    }
+  }
+  return false;
+}
+
 export interface CompanySummary {
   supplierName: string;
   supplierId: string;
@@ -593,6 +728,41 @@ export function getCompanySummaries(bills: PurchaseBillRecord[]): CompanySummary
           billId: bill.id
         });
       }
+    }
+  }
+
+  // Also include any registered suppliers from globotech_erp_suppliers that have no bills yet
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('globotech_erp_suppliers');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          for (const s of parsed) {
+            const key = (s.name || '').trim();
+            if (key && !map.has(key)) {
+              map.set(key, {
+                supplierName: key,
+                supplierId: s.id || '',
+                supplierCountry: s.country || '',
+                supplierPhone: s.phone || '',
+                supplierEmail: s.email || '',
+                totalPurchased: 0,
+                totalPaid: 0,
+                totalDue: 0,
+                billsCount: 0,
+                itemsCount: 0,
+                status: 'PAID',
+                bills: [],
+                allItems: [],
+                allPayments: []
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
     }
   }
 

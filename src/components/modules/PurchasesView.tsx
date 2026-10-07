@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Eye,
   Trash2,
+  Edit2,
   FileText,
   Calendar,
   Layers,
@@ -48,7 +49,10 @@ import {
   addPurchaseBill,
   recordSupplierPayment,
   deletePurchaseBill,
-  getCompanySummaries
+  getCompanySummaries,
+  updateSupplierDetails,
+  deleteSupplierAndBills,
+  addNewSupplier
 } from '@/lib/purchasesStorage';
 import { getStoredProducts, ProductItem } from '@/lib/productsStorage';
 
@@ -77,6 +81,25 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
   const [selectedBillForPayment, setSelectedBillForPayment] = useState<PurchaseBillRecord | null>(null);
   const [selectedCompanyForPrint, setSelectedCompanyForPrint] = useState<CompanySummary | null>(null);
+
+  // Supplier Edit, Delete & Add Modals State
+  const [isEditSupplierModalOpen, setIsEditSupplierModalOpen] = useState<boolean>(false);
+  const [isDeleteSupplierModalOpen, setIsDeleteSupplierModalOpen] = useState<boolean>(false);
+  const [isAddSupplierModalOpen, setIsAddSupplierModalOpen] = useState<boolean>(false);
+  const [supplierToEdit, setSupplierToEdit] = useState<CompanySummary | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<CompanySummary | null>(null);
+
+  // Edit Supplier Form Fields
+  const [editSupplierName, setEditSupplierName] = useState<string>('');
+  const [editSupplierCountry, setEditSupplierCountry] = useState<string>('');
+  const [editSupplierPhone, setEditSupplierPhone] = useState<string>('');
+  const [editSupplierEmail, setEditSupplierEmail] = useState<string>('');
+
+  // Add Supplier Form Fields
+  const [newSupplierName, setNewSupplierName] = useState<string>('');
+  const [newSupplierCountry, setNewSupplierCountry] = useState<string>('Bangladesh');
+  const [newSupplierPhone, setNewSupplierPhone] = useState<string>('');
+  const [newSupplierEmail, setNewSupplierEmail] = useState<string>('');
 
   // Synchronize global search
   useEffect(() => {
@@ -463,6 +486,87 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     setIsPrintModalOpen(true);
   };
 
+  // Open Edit Supplier Modal
+  const openEditSupplierModal = (company: CompanySummary) => {
+    setSupplierToEdit(company);
+    setEditSupplierName(company.supplierName);
+    setEditSupplierCountry(company.supplierCountry || '');
+    setEditSupplierPhone(company.supplierPhone || '');
+    setEditSupplierEmail(company.supplierEmail || '');
+    setIsEditSupplierModalOpen(true);
+  };
+
+  // Submit Edit Supplier
+  const handleEditSupplierSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supplierToEdit) return;
+    const trimmedName = editSupplierName.trim();
+    if (!trimmedName) {
+      alert('Please enter a valid supplier name');
+      return;
+    }
+
+    updateSupplierDetails(supplierToEdit.supplierName, {
+      supplierName: trimmedName,
+      supplierCountry: editSupplierCountry.trim(),
+      supplierPhone: editSupplierPhone.trim(),
+      supplierEmail: editSupplierEmail.trim()
+    });
+
+    if (selectedSupplierName === supplierToEdit.supplierName) {
+      setSelectedSupplierName(trimmedName);
+    }
+
+    setPurchases(getStoredPurchases());
+    setIsEditSupplierModalOpen(false);
+    setSupplierToEdit(null);
+  };
+
+  // Open Delete Supplier Modal
+  const openDeleteSupplierModal = (company: CompanySummary) => {
+    setSupplierToDelete(company);
+    setIsDeleteSupplierModalOpen(true);
+  };
+
+  // Confirm Delete Supplier
+  const handleConfirmDeleteSupplier = () => {
+    if (!supplierToDelete) return;
+
+    deleteSupplierAndBills(supplierToDelete.supplierName);
+
+    if (selectedSupplierName === supplierToDelete.supplierName) {
+      setSelectedSupplierName(null);
+    }
+
+    setPurchases(getStoredPurchases());
+    setIsDeleteSupplierModalOpen(false);
+    setSupplierToDelete(null);
+  };
+
+  // Submit Add Supplier
+  const handleAddSupplierSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedName = newSupplierName.trim();
+    if (!trimmedName) {
+      alert('Please enter a valid supplier name');
+      return;
+    }
+
+    addNewSupplier({
+      name: trimmedName,
+      country: newSupplierCountry.trim(),
+      phone: newSupplierPhone.trim(),
+      email: newSupplierEmail.trim()
+    });
+
+    setPurchases(getStoredPurchases());
+    setIsAddSupplierModalOpen(false);
+    setNewSupplierName('');
+    setNewSupplierCountry('Bangladesh');
+    setNewSupplierPhone('');
+    setNewSupplierEmail('');
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner / Header Area */}
@@ -704,9 +808,18 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                     Serialized list of suppliers. Click on any supplier to drill down into their complete purchased items history, unit rates, and bill payment ledger.
                   </p>
                 </div>
-                <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-3 py-1 rounded-lg border border-blue-800 w-fit">
-                  {filteredCompanySummaries.length} Partner Suppliers
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setIsAddSupplierModalOpen(true)}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Supplier</span>
+                  </button>
+                  <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-3 py-1.5 rounded-xl border border-blue-800 w-fit">
+                    {filteredCompanySummaries.length} Partner Suppliers
+                  </span>
+                </div>
               </div>
 
               {filteredCompanySummaries.length === 0 ? (
@@ -811,18 +924,34 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                             </Badge>
                           </td>
 
-                          {/* Action Button */}
-                          <td className="py-3.5 px-4 text-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedSupplierName(comp.supplierName);
-                              }}
-                              className="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center justify-center gap-1.5 mx-auto active:scale-95 shadow-sm"
-                            >
-                              <span>View History</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </button>
+                          {/* Action Buttons */}
+                          <td className="py-3.5 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => setSelectedSupplierName(comp.supplierName)}
+                                className="px-2.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center gap-1 active:scale-95 shadow-sm"
+                                title="View Supplier History & Items"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span className="hidden xl:inline">History</span>
+                              </button>
+
+                              <button
+                                onClick={() => openEditSupplierModal(comp)}
+                                className="p-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
+                                title="Edit Supplier Details"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+
+                              <button
+                                onClick={() => openDeleteSupplierModal(comp)}
+                                className="p-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
+                                title="Delete Supplier & Records"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -854,7 +983,23 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => openEditSupplierModal(activeSupplierSummary)}
+                    className="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <button
+                    onClick={() => openDeleteSupplierModal(activeSupplierSummary)}
+                    className="px-3 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete</span>
+                  </button>
+
                   <button
                     onClick={() => {
                       setNewBillSupplierName(activeSupplierSummary.supplierName);
@@ -863,7 +1008,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                     className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>New Bill for this Supplier</span>
+                    <span>New Bill</span>
                   </button>
 
                   {activeSupplierSummary.bills.some((b) => b.dueAmount > 0) && (
@@ -2033,6 +2178,258 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* MODAL 4: EDIT SUPPLIER */}
+      <Modal
+        isOpen={isEditSupplierModalOpen}
+        onClose={() => {
+          setIsEditSupplierModalOpen(false);
+          setSupplierToEdit(null);
+        }}
+        title="Edit Supplier Details"
+        size="md"
+      >
+        {supplierToEdit && (
+          <form onSubmit={handleEditSupplierSubmit} className="space-y-4">
+            <div className="p-3 rounded-xl bg-blue-950/30 border border-blue-800/50 flex items-center gap-2.5 text-xs text-blue-300">
+              <Building2 className="w-4 h-4 text-blue-400 flex-shrink-0" />
+              <span>
+                Editing supplier records will update the supplier name &amp; contacts across all associated purchase bills and item ledgers.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Supplier / Company Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={editSupplierName}
+                onChange={(e) => setEditSupplierName(e.target.value)}
+                placeholder="e.g. Shenzhen Hikvision Security Tech Co., Ltd"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Country
+                </label>
+                <input
+                  type="text"
+                  value={editSupplierCountry}
+                  onChange={(e) => setEditSupplierCountry(e.target.value)}
+                  placeholder="e.g. China, Bangladesh"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Contact Phone
+                </label>
+                <input
+                  type="text"
+                  value={editSupplierPhone}
+                  onChange={(e) => setEditSupplierPhone(e.target.value)}
+                  placeholder="e.g. +86 755 8899 1234"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={editSupplierEmail}
+                onChange={(e) => setEditSupplierEmail(e.target.value)}
+                placeholder="e.g. export@company.com"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditSupplierModalOpen(false);
+                  setSupplierToEdit(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* MODAL 5: DELETE SUPPLIER CONFIRMATION */}
+      <Modal
+        isOpen={isDeleteSupplierModalOpen}
+        onClose={() => {
+          setIsDeleteSupplierModalOpen(false);
+          setSupplierToDelete(null);
+        }}
+        title="Delete Supplier Confirmation"
+        size="md"
+      >
+        {supplierToDelete && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-900/60 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-rose-300 uppercase tracking-wide">
+                  Permanent Action Warning
+                </h4>
+                <p className="text-xs text-rose-200/90 leading-relaxed">
+                  Are you sure you want to delete supplier <strong className="text-white underline">{supplierToDelete.supplierName}</strong>?
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Associated Purchase Bills:</span>
+                <span className="font-bold text-slate-100">{supplierToDelete.billsCount} Bills</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Purchased Items:</span>
+                <span className="font-bold text-slate-100">{supplierToDelete.itemsCount} Items</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-300">
+                <span>Total Purchases Value:</span>
+                <span className="font-bold text-slate-100">{Formatters.currency(supplierToDelete.totalPurchased)}</span>
+              </div>
+              {supplierToDelete.totalDue > 0 && (
+                <div className="flex items-center justify-between text-rose-400 font-semibold pt-1 border-t border-slate-800">
+                  <span>Pending Outstanding Due:</span>
+                  <span className="font-bold">{Formatters.currency(supplierToDelete.totalDue)}</span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-slate-400 italic">
+              Deleting this supplier will remove all their purchase records, item entries, and payment ledgers from the system.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDeleteSupplierModalOpen(false);
+                  setSupplierToDelete(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteSupplier}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-lg shadow-rose-600/30 active:scale-95 flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Supplier &amp; Records</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* MODAL 6: ADD NEW SUPPLIER */}
+      <Modal
+        isOpen={isAddSupplierModalOpen}
+        onClose={() => setIsAddSupplierModalOpen(false)}
+        title="Register New Supplier"
+        size="md"
+      >
+        <form onSubmit={handleAddSupplierSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Supplier / Company Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={newSupplierName}
+              onChange={(e) => setNewSupplierName(e.target.value)}
+              placeholder="e.g. Cisco Systems BD / Dahua Technology"
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Country
+              </label>
+              <input
+                type="text"
+                value={newSupplierCountry}
+                onChange={(e) => setNewSupplierCountry(e.target.value)}
+                placeholder="e.g. Bangladesh, China"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">
+                Contact Phone
+              </label>
+              <input
+                type="text"
+                value={newSupplierPhone}
+                onChange={(e) => setNewSupplierPhone(e.target.value)}
+                placeholder="e.g. +880 1712 345678"
+                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">
+              Email Address
+            </label>
+            <input
+              type="email"
+              value={newSupplierEmail}
+              onChange={(e) => setNewSupplierEmail(e.target.value)}
+              placeholder="e.g. sales@supplier.com"
+              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <button
+              type="button"
+              onClick={() => setIsAddSupplierModalOpen(false)}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 active:scale-95 flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Supplier</span>
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
