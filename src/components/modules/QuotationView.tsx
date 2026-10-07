@@ -1172,6 +1172,31 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // State to toggle digital Seal & Signature on customer PDF view
   const [includeSealAndSignature, setIncludeSealAndSignature] = useState(true);
 
+  // Device detection state for Print View (mobile vs desktop)
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const detectMobile = () => {
+      if (typeof window === 'undefined') return false;
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const isNarrow = window.innerWidth < 1024;
+      return isMobileUA || (isTouch && isNarrow);
+    };
+    const mobile = detectMobile();
+    setIsMobileDevice(mobile);
+    if (typeof document !== 'undefined') {
+      if (mobile) {
+        document.body.classList.add('is-mobile-device');
+        document.body.classList.remove('is-desktop-device');
+      } else {
+        document.body.classList.add('is-desktop-device');
+        document.body.classList.remove('is-mobile-device');
+      }
+    }
+  }, []);
+
   const handleOpenEditTerms = (quote: Quotation) => {
     setSelectedQuotation(quote);
     setTermsForm({
@@ -4317,7 +4342,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 flexDirection: 'column',
                 padding: '10px 24px 14px 24px',
               }}
-              className="relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:block print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none print:min-h-0 print:h-auto"
+              className={`relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none ${
+                isMobileDevice
+                  ? ((selectedQuotation?.items?.length || 0) > 4 ? 'mobile-multi-page' : 'mobile-single-page')
+                  : ((selectedQuotation?.items?.length || 0) > 4 ? 'desktop-multi-page' : 'desktop-single-page')
+              }`}
             >
               {/* Watermark in background matching company pad */}
               <div
