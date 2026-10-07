@@ -105,14 +105,17 @@ export default function AppHome() {
       const currentStockStr = localStorage.getItem('globotech_erp_warehouse_stock');
       const currentQuotesStr = localStorage.getItem('globotech_erp_quotations');
       const currentBillsStr = localStorage.getItem('globotech_erp_bill_invoices');
+      const currentPurchasesStr = localStorage.getItem('globotech_erp_purchases');
       const currentStock = currentStockStr ? JSON.parse(currentStockStr) : [];
       const currentQuotes = currentQuotesStr ? JSON.parse(currentQuotesStr) : [];
       const currentBills = currentBillsStr ? JSON.parse(currentBillsStr) : [];
+      const currentPurchases = currentPurchasesStr ? JSON.parse(currentPurchasesStr) : [];
 
       const isUnderpopulated =
         !Array.isArray(currentStock) || currentStock.length <= 4 ||
         !Array.isArray(currentQuotes) || currentQuotes.length < 15 ||
-        !Array.isArray(currentBills) || currentBills.length < 20;
+        !Array.isArray(currentBills) || currentBills.length < 20 ||
+        !Array.isArray(currentPurchases) || currentPurchases.length === 0;
 
       if (isUnderpopulated) {
         restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD), { mode: 'merge' });

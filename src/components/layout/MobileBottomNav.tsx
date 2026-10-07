@@ -7,7 +7,8 @@ import {
   Warehouse,
   FileText,
   Menu,
-  FileCheck
+  FileCheck,
+  WalletCards
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -53,10 +54,10 @@ export function MobileBottomNav({
     },
     {
       id: 'menu',
-      label: 'Menu',
-      icon: Menu,
+      label: currentTab === 'purchases' ? 'Purchases' : 'Menu',
+      icon: currentTab === 'purchases' ? WalletCards : Menu,
       action: onOpenMenu,
-      isActive: isMenuOpen
+      isActive: isMenuOpen || currentTab === 'purchases'
     }
   ];
 

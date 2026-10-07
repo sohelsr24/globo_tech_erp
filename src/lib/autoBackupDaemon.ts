@@ -17,7 +17,7 @@ function computeDataSignature(): string {
   try {
     const payload = generateERPBackupPayload();
     const counts = payload.meta.recordCounts;
-    return `${counts.quotations}-${counts.bills}-${counts.warehouseStock}-${counts.products}-${counts.customers}-${counts.stockLedger}`;
+    return `${counts.quotations}-${counts.bills}-${counts.warehouseStock}-${counts.products}-${counts.customers}-${counts.stockLedger}-${counts.purchases || 0}`;
   } catch (e) {
     return '';
   }
@@ -88,6 +88,7 @@ export function startAutoBackupDaemon(): () => void {
     'globotech_ledger_updated',
     'globotech_categories_updated',
     'globotech_suppliers_updated',
+    'globotech_purchases_updated',
     'globotech_projects_updated',
     'globotech_sales_updated',
     'globotech_serials_updated'

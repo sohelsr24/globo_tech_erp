@@ -945,13 +945,13 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
         {/* View Mode Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-800/80">
-          <div className="flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl p-1 w-fit">
+          <div className="flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl p-1 w-full sm:w-fit overflow-x-auto touch-scroll">
             <button
               onClick={() => {
                 setViewMode('companies');
                 setSelectedSupplierName(null);
               }}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 viewMode === 'companies'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
@@ -963,7 +963,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
             <button
               onClick={() => setViewMode('items')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 viewMode === 'items'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
@@ -975,7 +975,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
             <button
               onClick={() => setViewMode('bills')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+              className={`px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                 viewMode === 'bills'
                   ? 'bg-blue-600 text-white shadow'
                   : 'text-slate-400 hover:text-slate-200'
@@ -1035,10 +1035,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   <p className="text-xs text-slate-500">Adjust search filters or create a new purchase bill</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto touch-scroll">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold">
+                      <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
                         <th className="py-3 px-3 text-center w-12"># SL</th>
                         <th className="py-3 px-4">Supplier / Company Name</th>
                         <th className="py-3 px-3 text-center">Bills</th>
@@ -1334,10 +1334,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
                 {/* Sub-Tabs within Supplier */}
                 <div className="p-3 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl p-1">
+                  <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl p-1 w-full sm:w-fit overflow-x-auto touch-scroll">
                     <button
                       onClick={() => setSupplierSubTab('items')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                         supplierSubTab === 'items'
                           ? 'bg-blue-600 text-white shadow'
                           : 'text-slate-400 hover:text-slate-200'
@@ -1349,7 +1349,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
                     <button
                       onClick={() => setSupplierSubTab('bills')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                         supplierSubTab === 'bills'
                           ? 'bg-blue-600 text-white shadow'
                           : 'text-slate-400 hover:text-slate-200'
@@ -1361,7 +1361,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
 
                     <button
                       onClick={() => setSupplierSubTab('payments')}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                         supplierSubTab === 'payments'
                           ? 'bg-blue-600 text-white shadow'
                           : 'text-slate-400 hover:text-slate-200'
@@ -1426,10 +1426,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto">
+                  <div className="overflow-x-auto touch-scroll">
                     <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold">
+                        <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
                           <th className="py-3 px-3 text-center w-12"># SL</th>
                           <th className="py-3 px-3.5">Purchase Date</th>
                           <th className="py-3 px-3.5">Product Name & Model / Specs</th>
@@ -1732,10 +1732,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </span>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto touch-scroll">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold">
+                <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
                   <th className="py-3 px-3.5">Supplier / Company</th>
                   <th className="py-3 px-3.5">Product & Model (Item)</th>
                   <th className="py-3 px-3.5">Bill Number</th>
@@ -1909,6 +1909,22 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                         Pay
                       </button>
                     )}
+                    <button
+                      onClick={() =>
+                        openAddItemModalForBill(
+                          bill.id,
+                          bill.billNumber,
+                          bill.supplierName,
+                          bill.totalAmount,
+                          bill.dueAmount
+                        )
+                      }
+                      className="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs font-semibold transition flex items-center gap-1 shadow-sm active:scale-95"
+                      title="Add Another Item to this Bill"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add Item</span>
+                    </button>
                     <button
                       onClick={() => openEditBillModal(bill)}
                       className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
@@ -2796,7 +2812,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   setIsEditItemModalOpen(false);
                   openAddItemModalForBill(bId, bNum, sName);
                 }}
-                className="px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
+                className="w-full sm:w-auto justify-center px-3 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[11px] font-bold transition flex items-center gap-1.5 active:scale-95 shadow-sm"
                 title="Add another item to this bill"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -2951,7 +2967,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800 flex-wrap">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => {
@@ -2961,26 +2977,26 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   setIsEditItemModalOpen(false);
                   openAddItemModalForBill(bId, bNum, sName);
                 }}
-                className="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1.5 active:scale-95"
+                className="w-full sm:w-auto justify-center px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1.5 active:scale-95 text-center"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Add Item to this Bill</span>
               </button>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditItemModalOpen(false);
                     setItemToEdit(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition text-center"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-1.5"
+                  className="flex-1 sm:flex-initial justify-center px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-lg shadow-blue-600/30 active:scale-95 flex items-center gap-1.5"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Save Item Changes</span>
@@ -3286,20 +3302,20 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
               <button
                 type="button"
                 onClick={() => {
                   setIsAddItemToBillModalOpen(false);
                   setTargetBillForNewItem(null);
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition"
+                className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition text-center"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 active:scale-95 flex items-center gap-1.5"
+                className="flex-1 sm:flex-initial justify-center px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-lg shadow-emerald-600/30 active:scale-95 flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item to Bill</span>
