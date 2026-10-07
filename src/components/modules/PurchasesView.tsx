@@ -17,6 +17,8 @@ import {
   AlertTriangle,
   Clock,
   ArrowRight,
+  ArrowLeft,
+  Eye,
   Trash2,
   FileText,
   Calendar,
@@ -64,12 +66,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'ALL' | 'DUE' | 'PAID'>('ALL');
   const [viewMode, setViewMode] = useState<'companies' | 'items' | 'bills'>('companies');
   
-  // Expanded company cards state
-  const [expandedCompanies, setExpandedCompanies] = useState<Record<string, boolean>>({
-    'Shenzhen Hikvision Security Tech Co., Ltd': true,
-    'Guangzhou Dahua Optics & AI Electronics': true,
-    'Hangzhou TP-Link Communication Equip Co.': true
-  });
+  // Selected supplier drilldown state
+  const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
+  const [supplierSubTab, setSupplierSubTab] = useState<'items' | 'bills' | 'payments'>('items');
+  const [supplierItemSearch, setSupplierItemSearch] = useState<string>('');
 
   // Modal States
   const [isNewBillModalOpen, setIsNewBillModalOpen] = useState<boolean>(false);
@@ -105,6 +105,25 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const companySummaries = useMemo(() => {
     return getCompanySummaries(purchases);
   }, [purchases]);
+
+  // Active supplier details if drilled down
+  const activeSupplierSummary = useMemo(() => {
+    if (!selectedSupplierName) return null;
+    return companySummaries.find((c) => c.supplierName === selectedSupplierName) || null;
+  }, [companySummaries, selectedSupplierName]);
+
+  // Filtered items inside active supplier
+  const activeSupplierFilteredItems = useMemo(() => {
+    if (!activeSupplierSummary) return [];
+    const q = supplierItemSearch.trim().toLowerCase();
+    if (!q) return activeSupplierSummary.allItems;
+    return activeSupplierSummary.allItems.filter((it) =>
+      it.productName.toLowerCase().includes(q) ||
+      (it.sku && it.sku.toLowerCase().includes(q)) ||
+      it.billNumber.toLowerCase().includes(q) ||
+      (it.notes && it.notes.toLowerCase().includes(q))
+    );
+  }, [activeSupplierSummary, supplierItemSearch]);
 
   // Overall KPIs
   const overallKPIs = useMemo(() => {
@@ -234,22 +253,6 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     });
   }, [purchases, selectedCompanyFilter, selectedStatusFilter, searchQuery]);
 
-  // Toggle company accordion
-  const toggleCompany = (companyName: string) => {
-    setExpandedCompanies((prev) => ({
-      ...prev,
-      [companyName]: !prev[companyName]
-    }));
-  };
-
-  // Expand / Collapse all
-  const expandAllCompanies = (expand: boolean) => {
-    const update: Record<string, boolean> = {};
-    for (const c of companySummaries) {
-      update[c.supplierName] = expand;
-    }
-    setExpandedCompanies(update);
-  };
 
   // Form State for New Bill Modal
   const [newBillSupplierName, setNewBillSupplierName] = useState<string>('');
@@ -572,8 +575,18 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
             {/* Company Dropdown */}
             <select
-              value={selectedCompanyFilter}
-              onChange={(e) => setSelectedCompanyFilter(e.target.value)}
+              value={selectedSupplierName || selectedCompanyFilter}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === 'ALL') {
+                  setSelectedCompanyFilter('ALL');
+                  setSelectedSupplierName(null);
+                } else {
+                  setSelectedCompanyFilter(val);
+                  setSelectedSupplierName(val);
+                  setViewMode('companies');
+                }
+              }}
               className="px-3 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 outline-none focus:border-blue-500 transition cursor-pointer max-w-[200px] truncate"
             >
               <option value="ALL">All Companies ({companySummaries.length})</option>
@@ -620,11 +633,14 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
           </div>
         </div>
 
-        {/* View Mode Tabs & Quick Expand */}
+        {/* View Mode Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-800/80">
           <div className="flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl p-1 w-fit">
             <button
-              onClick={() => setViewMode('companies')}
+              onClick={() => {
+                setViewMode('companies');
+                setSelectedSupplierName(null);
+              }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
                 viewMode === 'companies'
                   ? 'bg-blue-600 text-white shadow'
@@ -632,7 +648,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
               }`}
             >
               <Building2 className="w-3.5 h-3.5" />
-              <span>Company Breakdown ({filteredCompanySummaries.length})</span>
+              <span>Suppliers Directory ({filteredCompanySummaries.length})</span>
             </button>
 
             <button
@@ -644,7 +660,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
               }`}
             >
               <Package className="w-3.5 h-3.5" />
-              <span>Itemized Ledger ({allFlattenedItems.length})</span>
+              <span>All Items Ledger ({allFlattenedItems.length})</span>
             </button>
 
             <button
@@ -660,336 +676,622 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
             </button>
           </div>
 
-          {viewMode === 'companies' && (
-            <div className="flex items-center gap-2 text-xs">
-              <button
-                onClick={() => expandAllCompanies(true)}
-                className="text-blue-400 hover:underline"
-              >
-                Expand All
-              </button>
-              <span className="text-slate-600">&bull;</span>
-              <button
-                onClick={() => expandAllCompanies(false)}
-                className="text-slate-400 hover:underline"
-              >
-                Collapse All
-              </button>
-            </div>
+          {viewMode === 'companies' && activeSupplierSummary && (
+            <button
+              onClick={() => setSelectedSupplierName(null)}
+              className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to All Suppliers</span>
+            </button>
           )}
         </div>
       </div>
 
-      {/* VIEW 1: COMPANY-WISE BREAKDOWN (USER'S PRIMARY DEMAND) */}
+      {/* VIEW 1: SUPPLIERS DIRECTORY (SERIALIZED 1ST LIST) & DEDICATED HISTORY VIEW */}
       {viewMode === 'companies' && (
-        <div className="space-y-4">
-          {filteredCompanySummaries.length === 0 ? (
-            <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-              <Package className="w-10 h-10 text-slate-500 mx-auto" />
-              <p className="text-sm font-semibold text-slate-300">No supplier purchase records found</p>
-              <p className="text-xs text-slate-500">Adjust search filters or create a new purchase bill</p>
-            </div>
-          ) : (
-            filteredCompanySummaries.map((comp) => {
-              const isExpanded = !!expandedCompanies[comp.supplierName];
-              const paidPercent = comp.totalPurchased > 0 ? (comp.totalPaid / comp.totalPurchased) * 100 : 0;
+        <>
+          {/* STATE A: SERIALIZED SUPPLIERS DIRECTORY (1ST LIST) */}
+          {!activeSupplierSummary && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div className="p-4 sm:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-100 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-400" />
+                    <span>Suppliers Master Directory & Ledger</span>
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Serialized list of suppliers. Click on any supplier to drill down into their complete purchased items history, unit rates, and bill payment ledger.
+                  </p>
+                </div>
+                <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-3 py-1 rounded-lg border border-blue-800 w-fit">
+                  {filteredCompanySummaries.length} Partner Suppliers
+                </span>
+              </div>
 
-              return (
-                <div
-                  key={comp.supplierName}
-                  className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition hover:border-slate-700/80"
-                >
-                  {/* Company Summary Banner / Card Header */}
-                  <div
-                    onClick={() => toggleCompany(comp.supplierName)}
-                    className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-850 cursor-pointer select-none flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800/80"
-                  >
-                    {/* Left: Company Details */}
-                    <div className="flex items-start sm:items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0 shadow-inner">
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <h3 className="text-sm sm:text-base font-bold text-slate-100 leading-tight">
-                            {comp.supplierName}
-                          </h3>
-                          {comp.supplierCountry && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
-                              {comp.supplierCountry}
+              {filteredCompanySummaries.length === 0 ? (
+                <div className="p-12 text-center space-y-3">
+                  <Package className="w-10 h-10 text-slate-500 mx-auto" />
+                  <p className="text-sm font-semibold text-slate-300">No supplier purchase records found</p>
+                  <p className="text-xs text-slate-500">Adjust search filters or create a new purchase bill</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold">
+                        <th className="py-3 px-3 text-center w-12"># SL</th>
+                        <th className="py-3 px-4">Supplier / Company Name</th>
+                        <th className="py-3 px-3 text-center">Bills</th>
+                        <th className="py-3 px-3 text-center">Items</th>
+                        <th className="py-3 px-4 text-right">Total Purchases</th>
+                        <th className="py-3 px-4 text-right text-emerald-400">Total Paid</th>
+                        <th className="py-3 px-4 text-right text-rose-400">Outstanding Due</th>
+                        <th className="py-3 px-3 text-center">Status</th>
+                        <th className="py-3 px-4 text-center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/80">
+                      {filteredCompanySummaries.map((comp, idx) => (
+                        <tr
+                          key={comp.supplierName}
+                          onClick={() => setSelectedSupplierName(comp.supplierName)}
+                          className="hover:bg-slate-800/60 transition cursor-pointer group"
+                        >
+                          {/* Serial Number */}
+                          <td className="py-3.5 px-3 text-center font-bold text-slate-400">
+                            <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[11px] mx-auto text-slate-300 group-hover:bg-blue-600 group-hover:text-white transition">
+                              {idx + 1}
                             </span>
-                          )}
-                          <Badge
-                            variant={comp.status === 'PAID' ? 'success' : comp.status === 'PARTIAL' ? 'warning' : 'danger'}
-                          >
-                            {comp.status === 'PAID' ? 'Fully Paid' : comp.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
-                          </Badge>
-                        </div>
+                          </td>
 
-                        <div className="flex items-center gap-4 text-xs text-slate-400 mt-1 flex-wrap">
-                          {comp.supplierPhone && (
-                            <span className="flex items-center gap-1 text-slate-400">
-                              <Phone className="w-3 h-3 text-slate-500" />
-                              {comp.supplierPhone}
+                          {/* Company Details */}
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 flex-shrink-0 group-hover:border-blue-500/50 transition">
+                                <Building2 className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-100 text-sm group-hover:text-blue-300 transition">
+                                  {comp.supplierName}
+                                </div>
+                                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                  {comp.supplierCountry && (
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
+                                      {comp.supplierCountry}
+                                    </span>
+                                  )}
+                                  {comp.supplierPhone && <span>{comp.supplierPhone}</span>}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Bills Count */}
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 text-[11px] font-semibold">
+                              {comp.billsCount} Bills
                             </span>
-                          )}
-                          <span className="text-slate-400">
-                            Total Bills: <strong>{comp.billsCount}</strong>
-                          </span>
-                          <span className="text-slate-400">
-                            Purchased Items: <strong>{comp.itemsCount}</strong>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                          </td>
 
-                    {/* Right: Key Financials */}
-                    <div className="flex items-center gap-3 sm:gap-6 flex-wrap sm:flex-nowrap justify-between lg:justify-end">
-                      {/* Total Purchased */}
-                      <div className="text-left sm:text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                          Total Purchases
-                        </span>
-                        <span className="text-xs sm:text-sm font-bold text-slate-200">
-                          {Formatters.currency(comp.totalPurchased)}
-                        </span>
-                      </div>
+                          {/* Items Count */}
+                          <td className="py-3.5 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded-lg bg-blue-950/40 text-blue-300 border border-blue-800/60 text-[11px] font-semibold">
+                              {comp.itemsCount} Items
+                            </span>
+                          </td>
 
-                      {/* Total Paid */}
-                      <div className="text-left sm:text-right">
-                        <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">
-                          Paid Amount
-                        </span>
-                        <span className="text-xs sm:text-sm font-bold text-emerald-400">
-                          {Formatters.currency(comp.totalPaid)}
-                        </span>
-                      </div>
+                          {/* Total Purchases */}
+                          <td className="py-3.5 px-4 text-right font-bold text-slate-200">
+                            {Formatters.currency(comp.totalPurchased)}
+                          </td>
 
-                      {/* Total Due */}
-                      <div className="text-left sm:text-right px-3 py-1.5 rounded-xl bg-rose-950/40 border border-rose-900/60">
-                        <span className="text-[10px] uppercase font-bold text-rose-400 block tracking-wider">
-                          Total Due
-                        </span>
-                        <span className="text-xs sm:text-sm font-black text-rose-400">
-                          {Formatters.currency(comp.totalDue)}
-                        </span>
-                      </div>
+                          {/* Total Paid */}
+                          <td className="py-3.5 px-4 text-right font-bold text-emerald-400">
+                            {Formatters.currency(comp.totalPaid)}
+                          </td>
 
-                      {/* Expand Chevron */}
-                      <button
-                        className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-100 transition"
-                        aria-label="Toggle details"
-                      >
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                          {/* Outstanding Due */}
+                          <td className="py-3.5 px-4 text-right">
+                            {comp.totalDue > 0 ? (
+                              <span className="px-2 py-1 rounded-lg bg-rose-950/50 text-rose-300 border border-rose-900/60 font-black">
+                                {Formatters.currency(comp.totalDue)}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 font-medium">৳0.00</span>
+                            )}
+                          </td>
 
-                  {/* Payment Progress Bar */}
-                  <div className="w-full h-1 bg-slate-800">
-                    <div
-                      className={`h-full transition-all duration-500 ${
-                        comp.totalDue <= 0 ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-amber-500'
-                      }`}
-                      style={{ width: `${Math.min(100, Math.max(0, paidPercent))}%` }}
-                    />
-                  </div>
+                          {/* Status */}
+                          <td className="py-3.5 px-3 text-center">
+                            <Badge
+                              variant={comp.status === 'PAID' ? 'success' : comp.status === 'PARTIAL' ? 'warning' : 'danger'}
+                            >
+                              {comp.status === 'PAID' ? 'Fully Paid' : comp.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
+                            </Badge>
+                          </td>
 
-                  {/* Collapsible Details Body */}
-                  {isExpanded && (
-                    <div className="p-4 sm:p-5 space-y-5 bg-slate-950/40">
-                      {/* Top Action Buttons within Company */}
-                      <div className="flex items-center justify-between gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                            <Package className="w-4 h-4 text-blue-400" />
-                            <span>Purchased Items & Unit Rates</span>
-                          </h4>
-                          <span className="text-xs text-slate-400">({comp.allItems.length} items)</span>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openPrintStatement(comp);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                            <span>Print Statement</span>
-                          </button>
-
-                          {comp.bills.some((b) => b.dueAmount > 0) && (
+                          {/* Action Button */}
+                          <td className="py-3.5 px-4 text-center">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const firstDueBill = comp.bills.find((b) => b.dueAmount > 0);
-                                if (firstDueBill) openPaymentModal(firstDueBill);
+                                setSelectedSupplierName(comp.supplierName);
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                              className="px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center justify-center gap-1.5 mx-auto active:scale-95 shadow-sm"
                             >
-                              <CreditCard className="w-3.5 h-3.5" />
-                              <span>Pay Outstanding Due</span>
+                              <span>View History</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
                             </button>
-                          )}
-                        </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* STATE B: DEDICATED SUPPLIER HISTORY & ITEMIZED LEDGER */}
+          {activeSupplierSummary && (
+            <div className="space-y-5">
+              {/* Top Navigation & Breadcrumbs */}
+              <div className="flex items-center justify-between gap-3 flex-wrap bg-slate-900 border border-slate-800 rounded-2xl p-3.5 sm:p-4">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setSelectedSupplierName(null)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition flex items-center gap-2 active:scale-95 shadow-sm"
+                  >
+                    <ArrowLeft className="w-4 h-4 text-blue-400" />
+                    <span>Back to Suppliers Directory</span>
+                  </button>
+                  <span className="text-slate-600 hidden sm:inline">&bull;</span>
+                  <div className="text-xs text-slate-400 hidden sm:flex items-center gap-1.5">
+                    <span>Suppliers</span>
+                    <span>&gt;</span>
+                    <span className="text-slate-200 font-bold">{activeSupplierSummary.supplierName}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setNewBillSupplierName(activeSupplierSummary.supplierName);
+                      setIsNewBillModalOpen(true);
+                    }}
+                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>New Bill for this Supplier</span>
+                  </button>
+
+                  {activeSupplierSummary.bills.some((b) => b.dueAmount > 0) && (
+                    <button
+                      onClick={() => {
+                        const dueBill = activeSupplierSummary.bills.find((b) => b.dueAmount > 0);
+                        if (dueBill) openPaymentModal(dueBill);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span>Record Payment</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => openPrintStatement(activeSupplierSummary)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition flex items-center gap-1.5"
+                    title="Print Statement"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print Statement</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Supplier Profile Banner Card */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-850 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                  {/* Identity */}
+                  <div className="flex items-start sm:items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600/30 to-indigo-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 flex-shrink-0 shadow-lg">
+                      <Building2 className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <h2 className="text-base sm:text-xl font-black text-slate-100">
+                          {activeSupplierSummary.supplierName}
+                        </h2>
+                        {activeSupplierSummary.supplierCountry && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                            {activeSupplierSummary.supplierCountry}
+                          </span>
+                        )}
+                        <Badge
+                          variant={
+                            activeSupplierSummary.status === 'PAID'
+                              ? 'success'
+                              : activeSupplierSummary.status === 'PARTIAL'
+                              ? 'warning'
+                              : 'danger'
+                          }
+                        >
+                          {activeSupplierSummary.status === 'PAID' ? 'Fully Paid' : activeSupplierSummary.status === 'PARTIAL' ? 'Partial Due' : 'Unpaid'}
+                        </Badge>
                       </div>
-
-                      {/* Itemized Table */}
-                      <div className="overflow-x-auto rounded-xl border border-slate-800">
-                        <table className="w-full text-left border-collapse text-xs">
-                          <thead>
-                            <tr className="bg-slate-850/80 text-slate-400 border-b border-slate-800 font-semibold">
-                              <th className="py-2.5 px-3">Product Name & Description</th>
-                              <th className="py-2.5 px-3">Bill / Invoice No</th>
-                              <th className="py-2.5 px-3">Date</th>
-                              <th className="py-2.5 px-3 text-center">Qty</th>
-                              <th className="py-2.5 px-3 text-right bg-blue-950/30 text-blue-300">
-                                Unit Price (Item Value)
-                              </th>
-                              <th className="py-2.5 px-3 text-right font-bold text-slate-200">
-                                Total Value
-                              </th>
-                              <th className="py-2.5 px-3 text-right text-emerald-400">Bill Paid</th>
-                              <th className="py-2.5 px-3 text-right text-rose-400">Bill Due</th>
-                              <th className="py-2.5 px-3 text-center">Status</th>
-                              <th className="py-2.5 px-3 text-center">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-800/80 bg-slate-900/50">
-                            {comp.allItems.map((item, idx) => {
-                              const parentBill = comp.bills.find((b) => b.id === item.billId);
-                              return (
-                                <tr key={`${item.id}-${idx}`} className="hover:bg-slate-800/40 transition">
-                                  {/* Product Name */}
-                                  <td className="py-3 px-3">
-                                    <div className="font-semibold text-slate-100">{item.productName}</div>
-                                    {item.sku && (
-                                      <div className="text-[11px] text-slate-400 font-mono">
-                                        SKU: {item.sku}
-                                        {item.category ? ` • ${item.category}` : ''}
-                                      </div>
-                                    )}
-                                    {item.notes && (
-                                      <div className="text-[10px] text-slate-500 italic mt-0.5">{item.notes}</div>
-                                    )}
-                                  </td>
-
-                                  {/* Bill Number */}
-                                  <td className="py-3 px-3 font-mono text-slate-300">
-                                    {item.billNumber}
-                                  </td>
-
-                                  {/* Purchase Date */}
-                                  <td className="py-3 px-3 text-slate-400 whitespace-nowrap">
-                                    {Formatters.date(item.purchaseDate)}
-                                  </td>
-
-                                  {/* Quantity */}
-                                  <td className="py-3 px-3 text-center font-bold text-slate-200">
-                                    {item.quantity} <span className="text-[11px] text-slate-400 font-normal">{item.unit}</span>
-                                  </td>
-
-                                  {/* EACH ITEM VALUE (Unit Price) */}
-                                  <td className="py-3 px-3 text-right font-bold text-blue-300 bg-blue-950/20 whitespace-nowrap">
-                                    {Formatters.currency(item.unitPrice)}
-                                    <span className="text-[10px] text-slate-400 block font-normal">per {item.unit}</span>
-                                  </td>
-
-                                  {/* Total Item Price */}
-                                  <td className="py-3 px-3 text-right font-bold text-slate-100 whitespace-nowrap">
-                                    {Formatters.currency(item.totalPrice)}
-                                  </td>
-
-                                  {/* Bill Paid */}
-                                  <td className="py-3 px-3 text-right font-semibold text-emerald-400 whitespace-nowrap">
-                                    {Formatters.currency(item.billPaid)}
-                                  </td>
-
-                                  {/* Bill Due */}
-                                  <td className="py-3 px-3 text-right font-bold text-rose-400 whitespace-nowrap">
-                                    {Formatters.currency(item.billDue)}
-                                  </td>
-
-                                  {/* Status */}
-                                  <td className="py-3 px-3 text-center">
-                                    <Badge
-                                      variant={
-                                        item.billStatus === 'PAID'
-                                          ? 'success'
-                                          : item.billStatus === 'PARTIAL'
-                                          ? 'warning'
-                                          : 'danger'
-                                      }
-                                    >
-                                      {item.billStatus === 'PAID' ? 'Paid' : item.billStatus === 'PARTIAL' ? 'Partial' : 'Due'}
-                                    </Badge>
-                                  </td>
-
-                                  {/* Action */}
-                                  <td className="py-3 px-3 text-center">
-                                    {parentBill && parentBill.dueAmount > 0 ? (
-                                      <button
-                                        onClick={() => openPaymentModal(parentBill)}
-                                        className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 border border-blue-500/30 text-[11px] font-semibold transition"
-                                      >
-                                        Pay
-                                      </button>
-                                    ) : (
-                                      <span className="text-[11px] text-emerald-500 font-medium">Settled</span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                      <div className="flex items-center gap-4 text-xs text-slate-400 mt-1.5 flex-wrap">
+                        {activeSupplierSummary.supplierPhone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3.5 h-3.5 text-slate-500" />
+                            {activeSupplierSummary.supplierPhone}
+                          </span>
+                        )}
+                        {activeSupplierSummary.supplierEmail && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5 text-slate-500" />
+                            {activeSupplierSummary.supplierEmail}
+                          </span>
+                        )}
+                        <span>Total Bills: <strong className="text-slate-200">{activeSupplierSummary.billsCount}</strong></span>
+                        <span>Purchased Items: <strong className="text-slate-200">{activeSupplierSummary.itemsCount}</strong></span>
                       </div>
+                    </div>
+                  </div>
 
-                      {/* Payment History Log for this Company */}
-                      {comp.allPayments.length > 0 && (
-                        <div className="pt-2">
-                          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                            <Clock className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Payment Transaction History</span>
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {comp.allPayments.map((pay) => (
-                              <div
-                                key={pay.id}
-                                className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs space-y-1.5"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-bold text-emerald-400 text-sm">
-                                    {Formatters.currency(pay.amount)}
-                                  </span>
-                                  <Badge variant="success">{pay.paymentMethod}</Badge>
-                                </div>
-                                <div className="text-slate-400 flex items-center justify-between text-[11px]">
-                                  <span>Date: {Formatters.date(pay.date)}</span>
-                                  <span className="font-mono text-slate-300">{pay.billNumber}</span>
-                                </div>
-                                {pay.referenceNo && (
-                                  <div className="text-[11px] text-slate-400">
-                                    Ref: <span className="text-slate-200 font-mono">{pay.referenceNo}</span>
-                                  </div>
-                                )}
-                                {pay.note && (
-                                  <div className="text-[11px] text-slate-400 italic">Note: {pay.note}</div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                  {/* Financial KPI Summary */}
+                  <div className="flex items-center gap-4 sm:gap-6 flex-wrap sm:flex-nowrap justify-between lg:justify-end">
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Purchases</span>
+                      <span className="text-sm sm:text-base font-bold text-slate-100">
+                        {Formatters.currency(activeSupplierSummary.totalPurchased)}
+                      </span>
+                    </div>
+
+                    <div className="text-left sm:text-right">
+                      <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">Total Paid</span>
+                      <span className="text-sm sm:text-base font-bold text-emerald-400">
+                        {Formatters.currency(activeSupplierSummary.totalPaid)}
+                      </span>
+                    </div>
+
+                    <div className="text-left sm:text-right px-3.5 py-2 rounded-xl bg-rose-950/50 border border-rose-900/70 shadow-sm">
+                      <span className="text-[10px] uppercase font-bold text-rose-400 block tracking-wider">Outstanding Due</span>
+                      <span className="text-sm sm:text-base font-black text-rose-400">
+                        {Formatters.currency(activeSupplierSummary.totalDue)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-full h-1.5 bg-slate-800">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      activeSupplierSummary.totalDue <= 0 ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-amber-500'
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(
+                          0,
+                          activeSupplierSummary.totalPurchased > 0
+                            ? (activeSupplierSummary.totalPaid / activeSupplierSummary.totalPurchased) * 100
+                            : 0
+                        )
+                      )}%`
+                    }}
+                  />
+                </div>
+
+                {/* Sub-Tabs within Supplier */}
+                <div className="p-3 bg-slate-950/60 border-t border-slate-800/80 flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-xl p-1">
+                    <button
+                      onClick={() => setSupplierSubTab('items')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                        supplierSubTab === 'items'
+                          ? 'bg-blue-600 text-white shadow'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      <span>Purchased Items History ({activeSupplierSummary.allItems.length})</span>
+                    </button>
+
+                    <button
+                      onClick={() => setSupplierSubTab('bills')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                        supplierSubTab === 'bills'
+                          ? 'bg-blue-600 text-white shadow'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>Invoices & Bills ({activeSupplierSummary.bills.length})</span>
+                    </button>
+
+                    <button
+                      onClick={() => setSupplierSubTab('payments')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                        supplierSubTab === 'payments'
+                          ? 'bg-blue-600 text-white shadow'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>Payment Transactions ({activeSupplierSummary.allPayments.length})</span>
+                    </button>
+                  </div>
+
+                  {supplierSubTab === 'items' && (
+                    <div className="relative min-w-[220px]">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search items for this supplier..."
+                        value={supplierItemSearch}
+                        onChange={(e) => setSupplierItemSearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 outline-none focus:border-blue-500"
+                      />
                     </div>
                   )}
                 </div>
-              );
-            })
+              </div>
+
+              {/* SUB-VIEW 1: ITEM-BY-ITEM PURCHASE HISTORY (USER CORE DEMAND) */}
+              {supplierSubTab === 'items' && (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                  <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                        <Package className="w-4 h-4 text-blue-400" />
+                        <span>Complete Item-by-Item Purchase & Rate History</span>
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Individual breakdown showing purchase dates, item costs, bill values, paid amounts, and dues.
+                      </p>
+                    </div>
+                    <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-800">
+                      {activeSupplierFilteredItems.length} Items Recorded
+                    </span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold">
+                          <th className="py-3 px-3 text-center w-12"># SL</th>
+                          <th className="py-3 px-3.5">Purchase Date</th>
+                          <th className="py-3 px-3.5">Product Name & Model / Specs</th>
+                          <th className="py-3 px-3.5">Bill / Invoice No</th>
+                          <th className="py-3 px-3 text-center">Qty</th>
+                          <th className="py-3 px-3.5 text-right bg-blue-950/30 text-blue-300 font-bold">
+                            Unit Price (Item Value)
+                          </th>
+                          <th className="py-3 px-3.5 text-right font-bold text-slate-200">Total Item Value</th>
+                          <th className="py-3 px-3.5 text-right text-slate-300">Bill Total</th>
+                          <th className="py-3 px-3.5 text-right text-emerald-400">Bill Paid</th>
+                          <th className="py-3 px-3.5 text-right text-rose-400">Bill Due</th>
+                          <th className="py-3 px-3 text-center">Bill Status</th>
+                          <th className="py-3 px-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/80">
+                        {activeSupplierFilteredItems.length === 0 ? (
+                          <tr>
+                            <td colSpan={12} className="py-8 text-center text-slate-500">
+                              No items found matching criteria for this supplier
+                            </td>
+                          </tr>
+                        ) : (
+                          activeSupplierFilteredItems.map((item, idx) => {
+                            const parentBill = activeSupplierSummary.bills.find((b) => b.id === item.billId);
+                            return (
+                              <tr key={`${item.id}-${idx}`} className="hover:bg-slate-800/40 transition">
+                                {/* SL */}
+                                <td className="py-3 px-3 text-center text-slate-500 font-mono text-[11px]">
+                                  {idx + 1}
+                                </td>
+
+                                {/* Purchase Date */}
+                                <td className="py-3 px-3.5 text-slate-300 whitespace-nowrap font-medium">
+                                  {Formatters.date(item.purchaseDate)}
+                                </td>
+
+                                {/* Product Name & SKU */}
+                                <td className="py-3 px-3.5">
+                                  <div className="font-semibold text-slate-100">{item.productName}</div>
+                                  {item.sku && (
+                                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                      SKU: {item.sku}
+                                      {item.category ? ` • ${item.category}` : ''}
+                                    </div>
+                                  )}
+                                  {item.notes && (
+                                    <div className="text-[10px] text-slate-500 italic mt-0.5">{item.notes}</div>
+                                  )}
+                                </td>
+
+                                {/* Bill Number */}
+                                <td className="py-3 px-3.5 font-mono text-slate-300 whitespace-nowrap">
+                                  {item.billNumber}
+                                </td>
+
+                                {/* Quantity */}
+                                <td className="py-3 px-3 text-center font-bold text-slate-200">
+                                  {item.quantity} <span className="text-[11px] text-slate-400 font-normal">{item.unit}</span>
+                                </td>
+
+                                {/* UNIT PRICE (ITEM VALUE) */}
+                                <td className="py-3 px-3.5 text-right font-bold text-blue-300 bg-blue-950/20 whitespace-nowrap">
+                                  {Formatters.currency(item.unitPrice)}
+                                  <span className="text-[10px] text-slate-400 block font-normal">per {item.unit}</span>
+                                </td>
+
+                                {/* Total Item Value */}
+                                <td className="py-3 px-3.5 text-right font-bold text-slate-100 whitespace-nowrap">
+                                  {Formatters.currency(item.totalPrice)}
+                                </td>
+
+                                {/* Bill Total Amount */}
+                                <td className="py-3 px-3.5 text-right text-slate-300 whitespace-nowrap">
+                                  {parentBill ? Formatters.currency(parentBill.totalAmount) : '-'}
+                                </td>
+
+                                {/* Bill Paid Amount */}
+                                <td className="py-3 px-3.5 text-right font-semibold text-emerald-400 whitespace-nowrap">
+                                  {Formatters.currency(item.billPaid)}
+                                </td>
+
+                                {/* Bill Due Amount */}
+                                <td className="py-3 px-3.5 text-right font-bold text-rose-400 whitespace-nowrap">
+                                  {Formatters.currency(item.billDue)}
+                                </td>
+
+                                {/* Status */}
+                                <td className="py-3 px-3 text-center">
+                                  <Badge
+                                    variant={
+                                      item.billStatus === 'PAID'
+                                        ? 'success'
+                                        : item.billStatus === 'PARTIAL'
+                                        ? 'warning'
+                                        : 'danger'
+                                    }
+                                  >
+                                    {item.billStatus === 'PAID' ? 'Paid' : item.billStatus === 'PARTIAL' ? 'Partial' : 'Due'}
+                                  </Badge>
+                                </td>
+
+                                {/* Action */}
+                                <td className="py-3 px-3 text-center">
+                                  {parentBill && parentBill.dueAmount > 0 ? (
+                                    <button
+                                      onClick={() => openPaymentModal(parentBill)}
+                                      className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-sm"
+                                    >
+                                      Pay
+                                    </button>
+                                  ) : (
+                                    <span className="text-[11px] text-emerald-500 font-medium">Settled</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* SUB-VIEW 2: INVOICES & BILLS */}
+              {supplierSubTab === 'bills' && (
+                <div className="space-y-3">
+                  {activeSupplierSummary.bills.map((bill) => (
+                    <div
+                      key={bill.id}
+                      className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md"
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span className="font-mono text-sm font-bold text-blue-400">{bill.billNumber}</span>
+                          <span className="text-xs text-slate-400">&bull;</span>
+                          <span className="text-xs text-slate-300 font-medium">Date: {Formatters.date(bill.date)}</span>
+                          <Badge
+                            variant={bill.status === 'PAID' ? 'success' : bill.status === 'PARTIAL' ? 'warning' : 'danger'}
+                          >
+                            {bill.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          Items ({bill.items.length}): <span className="text-slate-300">{bill.items.map((i) => `${i.productName} (${i.quantity} ${i.unit})`).join(', ')}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap justify-between md:justify-end">
+                        <div className="text-right">
+                          <span className="text-[10px] text-slate-400 uppercase font-semibold block">Total Bill</span>
+                          <span className="text-xs font-bold text-slate-100">{Formatters.currency(bill.totalAmount)}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] text-emerald-400 uppercase font-semibold block">Paid</span>
+                          <span className="text-xs font-bold text-emerald-400">{Formatters.currency(bill.paidAmount)}</span>
+                        </div>
+                        <div className="text-right px-3 py-1 rounded-lg bg-rose-950/40 border border-rose-900/60">
+                          <span className="text-[10px] text-rose-400 uppercase font-semibold block">Due</span>
+                          <span className="text-xs font-black text-rose-400">{Formatters.currency(bill.dueAmount)}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {bill.dueAmount > 0 && (
+                            <button
+                              onClick={() => openPaymentModal(bill)}
+                              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition"
+                            >
+                              Pay
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteBill(bill.id, bill.billNumber)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition"
+                            title="Delete Bill"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* SUB-VIEW 3: PAYMENT TRANSACTION LOGS */}
+              {supplierSubTab === 'payments' && (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl p-5 space-y-4">
+                  <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-emerald-400" />
+                    <span>Payment Transaction History</span>
+                  </h4>
+
+                  {activeSupplierSummary.allPayments.length === 0 ? (
+                    <p className="text-xs text-slate-500 text-center py-6">No payments recorded yet for this supplier.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {activeSupplierSummary.allPayments.map((pay) => (
+                        <div
+                          key={pay.id}
+                          className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-emerald-400 text-sm">
+                              {Formatters.currency(pay.amount)}
+                            </span>
+                            <Badge variant="success">{pay.paymentMethod}</Badge>
+                          </div>
+                          <div className="text-slate-400 flex items-center justify-between text-[11px]">
+                            <span>Date: {Formatters.date(pay.date)}</span>
+                            <span className="font-mono text-slate-300">{pay.billNumber}</span>
+                          </div>
+                          {pay.referenceNo && (
+                            <div className="text-[11px] text-slate-400">
+                              Ref: <span className="text-slate-200 font-mono">{pay.referenceNo}</span>
+                            </div>
+                          )}
+                          {pay.note && (
+                            <div className="text-[11px] text-slate-400 italic">Note: {pay.note}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
-        </div>
+        </>
       )}
 
       {/* VIEW 2: FLAT ITEMS MASTER TABLE */}
