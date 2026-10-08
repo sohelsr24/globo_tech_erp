@@ -345,8 +345,9 @@ if ($action === 'push') {
         }
     }
 
-    // Perform Server-Side Union Merge
-    $finalData = mergeErpDatasets($existingData, $incomingPayload['data']);
+    // Perform Server-Side Union Merge (or clean overwrite if explicitly requested)
+    $isOverwrite = (isset($_GET['mode']) && $_GET['mode'] === 'overwrite') || (isset($incomingPayload['mode']) && $incomingPayload['mode'] === 'overwrite');
+    $finalData = $isOverwrite ? $incomingPayload['data'] : mergeErpDatasets($existingData, $incomingPayload['data']);
 
     // Recompute record counts
     $recordCounts = [
