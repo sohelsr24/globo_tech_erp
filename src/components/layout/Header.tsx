@@ -18,10 +18,12 @@ import {
   CheckCircle2,
   Building2,
   Download,
-  Smartphone
+  Smartphone,
+  RefreshCw
 } from 'lucide-react';
 import { DeviceSyncModal } from '@/components/modals/DeviceSyncModal';
 import { DataProtectionModal } from '@/components/modals/DataProtectionModal';
+import { startAutoSyncEngine, AutoSyncStatus } from '@/lib/erpAutoSync';
 import { UserRole } from '@/lib/permissions';
 import {
   getStoredProducts,
@@ -71,7 +73,16 @@ export function Header({
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isProtectionModalOpen, setIsProtectionModalOpen] = useState(false);
   const [autoBackupJustSaved, setAutoBackupJustSaved] = useState(false);
+  const [autoSyncStatus, setAutoSyncStatus] = useState<AutoSyncStatus | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize background cloud auto-sync engine
+  useEffect(() => {
+    const cleanup = startAutoSyncEngine((status) => {
+      setAutoSyncStatus(status);
+    });
+    return () => cleanup();
+  }, []);
 
   // Listen for background auto-backup completed events
   useEffect(() => {
@@ -577,14 +588,24 @@ export function Header({
             </span>
           </button>
 
-          {/* Mobile / PC Sync Button */}
+          {/* Mobile / PC Cloud Sync Button */}
           <button
             onClick={() => setIsSyncModalOpen(true)}
-            className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-sky-600/20 hover:bg-sky-600/30 border border-sky-500/40 text-sky-400 hover:text-sky-300 transition active:scale-95 cursor-pointer flex-shrink-0"
-            title="পিসি ও মোবাইলের মধ্যে ডেটা সিঙ্ক করুন (PC to Mobile Sync)"
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition active:scale-95 cursor-pointer flex-shrink-0 ${
+              autoSyncStatus?.isSyncing
+                ? 'bg-amber-600/20 border-amber-500/40 text-amber-300'
+                : 'bg-sky-600/20 hover:bg-sky-600/30 border-sky-500/40 text-sky-400 hover:text-sky-300'
+            }`}
+            title={autoSyncStatus?.statusText || 'পিসি ও মোবাইলের মাঝে স্বয়ংক্রিয় ক্লাউড সিঙ্ক'}
           >
-            <Smartphone className="w-3.5 h-3.5 text-sky-400" />
-            <span className="font-medium">মোবাইল সিঙ্ক</span>
+            {autoSyncStatus?.isSyncing ? (
+              <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+            ) : (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            )}
+            <span className="font-medium">
+              {autoSyncStatus?.isSyncing ? 'সিঙ্ক হচ্ছে...' : 'অটো সিঙ্ক'}
+            </span>
           </button>
 
           {/* Quick 1-Click Backup Button */}

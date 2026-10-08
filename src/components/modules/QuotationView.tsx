@@ -2453,7 +2453,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
   };
 
-  // Dedicated A4 Print & PDF handler with iOS AirPrint auto-A4 detection and single-page containment
+  // Dedicated A4 Print & PDF handler with iOS AirPrint auto-A4 detection and bottom footer cohesion
   const handlePrintQuotation = () => {
     if (typeof window === 'undefined') return;
     const printElement = document.getElementById('printable-quotation-sheet');
@@ -2462,114 +2462,13 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       return;
     }
 
-    try {
-      const existingIframe = document.getElementById('isolated-quotation-print-frame');
-      if (existingIframe) existingIframe.remove();
-
-      const printIframe = document.createElement('iframe');
-      printIframe.id = 'isolated-quotation-print-frame';
-      printIframe.style.position = 'fixed';
-      printIframe.style.right = '0';
-      printIframe.style.bottom = '0';
-      printIframe.style.width = '0';
-      printIframe.style.height = '0';
-      printIframe.style.border = '0';
-      printIframe.style.zIndex = '-999';
-      document.body.appendChild(printIframe);
-
-      const frameDoc = printIframe.contentWindow?.document;
-      if (!frameDoc) {
-        window.print();
-        return;
-      }
-
-      const docTitle = `Quotation_${selectedQuotation?.quotationNumber || 'QT'}_${(selectedQuotation?.customerCompany || 'Customer').replace(/[^a-zA-Z0-9]/g, '_')}`;
-
-      frameDoc.open();
-      frameDoc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>${docTitle}</title>
-            <style>
-              @page {
-                size: A4 portrait;
-                margin: 4mm 8mm 4mm 8mm;
-              }
-              @page :first {
-                size: A4 portrait;
-                margin: 4mm 8mm 4mm 8mm;
-              }
-              *, *::before, *::after {
-                box-sizing: border-box;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-              html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
-                background-color: #ffffff !important;
-                color: #000000 !important;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                -webkit-font-smoothing: antialiased;
-              }
-              .print-sheet {
-                width: 100% !important;
-                max-width: 195mm !important;
-                margin: 0 auto !important;
-                padding: 2mm 0 !important;
-                background: #ffffff;
-                color: #000000;
-              }
-              table {
-                width: 100% !important;
-                border-collapse: collapse !important;
-              }
-              tr, td, th {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-              }
-              .quotation-signatures-block,
-              .print-footer {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-                page-break-after: avoid !important;
-                break-after: avoid !important;
-              }
-              .no-print,
-              .print\\:hidden,
-              button {
-                display: none !important;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="print-sheet">
-              ${printElement.innerHTML}
-            </div>
-          </body>
-        </html>
-      `);
-      frameDoc.close();
-
-      setTimeout(() => {
-        try {
-          printIframe.contentWindow?.focus();
-          printIframe.contentWindow?.print();
-          setTimeout(() => {
-            printIframe.remove();
-          }, 2000);
-        } catch (err) {
-          window.print();
-        }
-      }, 350);
-    } catch (e) {
-      console.warn('Iframe print failed, falling back to window.print():', e);
-      window.print();
-    }
+    const docTitle = `Quotation_${selectedQuotation?.quotationNumber || 'QT'}_${(selectedQuotation?.customerCompany || 'Customer').replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const originalTitle = document.title;
+    document.title = docTitle;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1500);
   };
 
   return (
@@ -4810,10 +4709,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Flexible spacer between Signatures and Footer - creates generous breathing room before the bottom footer */}
-              <div style={{ flex: '1.2 1 0%', minHeight: '44px' }} className="print:hidden" />
+              <div style={{ flex: '1 1 auto', minHeight: '28px' }} className="quotation-print-spacer" />
 
               {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
-              <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+              <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid', marginTop: 'auto', paddingTop: '8px', paddingBottom: '2px' }}>
                 <p style={{ margin: 0, color: '#334155', fontWeight: 500 }}>
                   Cell: +88 01622-152133, 01715-763303, E-mail: info@globotechbd.com
                 </p>

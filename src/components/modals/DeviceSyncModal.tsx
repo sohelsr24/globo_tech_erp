@@ -27,6 +27,11 @@ import {
   clearAppCacheAndReload,
   getERPStorageStatus
 } from '@/lib/erpBackup';
+import {
+  pushToCloud,
+  pullFromCloud,
+  getCurrentAutoSyncStatus
+} from '@/lib/erpAutoSync';
 
 interface DeviceSyncModalProps {
   isOpen: boolean;
@@ -169,33 +174,56 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
     reader.readAsText(file);
   };
 
-  const handleDirectServerSync = async () => {
+  const handlePushToCloud = async () => {
     setIsProcessing(true);
     setFeedback({
       type: 'success',
-      message: 'সার্ভার থেকে লেটেস্ট ডাটা ডাউনলোড হচ্ছে...'
+      message: 'পিসির সকল ডাটা ক্লাউড সার্ভারে পাঠানো হচ্ছে...'
     });
     try {
-      const res = await fetch(`/globotech-master-backup.json?t=${Date.now()}`);
-      if (!res.ok) throw new Error('সার্ভার থেকে ব্যাকআপ ফাইল লোড করা যায়নি');
-      const data = await res.json();
-      const restoreRes = restoreERPBackupData(JSON.stringify(data), { mode: 'merge' });
-      if (restoreRes.success) {
+      const res = await pushToCloud();
+      if (res.success) {
         setFeedback({
           type: 'success',
-          message: '🎉 অভিনন্দন! সার্ভারের ৮টি Amecon পারচেজ বিল ও সকল লেটেস্ট ডাটা সফলভাবে মোবাইলে আপডেট হয়েছে!',
-          counts: restoreRes.counts
+          message: '🚀 অভিনন্দন! পিসির সব বিল, স্টক ও পারচেজ ডাটা ক্লাউড সার্ভারে সেভ হয়েছে!'
         });
-        setTimeout(() => {
-          window.location.reload();
-        }, 1200);
       } else {
-        throw new Error(restoreRes.message || 'ডাটা রিস্টোর করা যায়নি');
+        throw new Error(res.message);
       }
     } catch (err: any) {
       setFeedback({
         type: 'error',
-        message: `সিঙ্ক ব্যর্থ হয়েছে: ${err?.message || 'Error'}`
+        message: `ক্লাউড সেভ ব্যর্থ: ${err?.message || 'Error'}`
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePullFromCloud = async () => {
+    setIsProcessing(true);
+    setFeedback({
+      type: 'success',
+      message: 'ক্লাউড সার্ভার থেকে নতুন ডাটা নামানো হচ্ছে...'
+    });
+    try {
+      const res = await pullFromCloud();
+      if (res.success) {
+        setFeedback({
+          type: 'success',
+          message: '🎉 অভিনন্দন! ক্লাউড থেকে লেটেস্ট সব ডাটা মোবাইলে সফলভাবে আপডেট হয়েছে!'
+        });
+        setStatus(getERPStorageStatus());
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        message: `ক্লাউড সিঙ্ক ব্যর্থ: ${err?.message || 'Error'}`
       });
     } finally {
       setIsProcessing(false);
@@ -232,12 +260,12 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 পিসি ⇄ মোবাইল ডেটা সিঙ্ক
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30">
-                  Instant Sync
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                  Auto Cloud Sync
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                পিসির সকল কোটেশন, বিল, স্টক ও প্রোডাক্ট এক ক্লিকে মোবাইলে আপডেট করুন
+                পিসির সকল কোটেশন, বিল, স্টক ও প্রোডাক্ট ক্লাউড দিয়ে স্বয়ংক্রিয়ভাবে মোবাইলে সিঙ্ক হয়
               </p>
             </div>
           </div>
@@ -249,25 +277,35 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
           </button>
         </div>
 
-        {/* 1-Click Server Cloud Sync Action Bar */}
-        <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-950/60 via-slate-900 to-indigo-950/60 border-b border-blue-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Real-Time Cloud Sync Action Bar */}
+        <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-950/70 via-slate-900 to-indigo-950/70 border-b border-blue-900/50 flex flex-col gap-3">
           <div className="space-y-0.5">
             <div className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-400" />
-              <span>১-ক্লিক অটো ক্লাউড সিঙ্ক (মোবাইলে নতুন ডাটা আনতে)</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>স্বয়ংক্রিয় ক্লাউড সিঙ্ক (Auto Cloud Sync Engine)</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              পিসির নতুন এন্ট্রি করা বিল ও Amecon পারচেজ সাথে সাথে মোবাইলে লোড করতে নিচের বাটনে চাপুন
+              পিসিতে ডাটা এন্ট্রি করলে তা স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ডে ক্লাউডে সেভ হয় এবং মোবাইলে রিয়েল-টাইম চলে আসে। প্রয়োজনে ম্যানুয়ালি ১-ক্লিকে সিঙ্ক করতে নিচের বাটন ব্যবহার করুন:
             </p>
           </div>
-          <button
-            onClick={handleDirectServerSync}
-            disabled={isProcessing}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition flex items-center justify-center gap-2 flex-shrink-0 active:scale-95 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-            <span>সার্ভার থেকে লাইভ সিঙ্ক করুন</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button
+              onClick={handlePushToCloud}
+              disabled={isProcessing}
+              className="flex-1 min-w-[140px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-600/30 transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+            >
+              <Upload className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
+              <span>পিসি ➔ ক্লাউডে সেভ করুন</span>
+            </button>
+            <button
+              onClick={handlePullFromCloud}
+              disabled={isProcessing}
+              className="flex-1 min-w-[140px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+            >
+              <Download className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
+              <span>ক্লাউড ➔ মোবাইলে আপডেট আনুন</span>
+            </button>
+          </div>
         </div>
 
         {/* Storage Summary Bar */}

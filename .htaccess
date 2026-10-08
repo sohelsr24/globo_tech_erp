@@ -11,6 +11,9 @@ Options -Indexes
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # Pass through API requests directly to PHP
+  RewriteRule ^api/ - [L]
+
   # Route all other requests to index.html for SPA client-side routing
   RewriteRule ^ index.html [L]
 </IfModule>
