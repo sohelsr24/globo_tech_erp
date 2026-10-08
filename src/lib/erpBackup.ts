@@ -425,8 +425,21 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
           const map = new Map<string, any>();
-          data.suppliers.forEach((sp: any) => { const key = sp.id || sp.company || sp.name; if (key) map.set(key, sp); });
-          current.forEach((sp: any) => { const key = sp.id || sp.company || sp.name; if (key) map.set(key, sp); });
+          data.suppliers.forEach((sp: any) => {
+            if (!sp) return;
+            const nameKey = (sp.name || sp.company || '').trim().toLowerCase();
+            const key = nameKey ? `name:${nameKey}` : (sp.id || '');
+            if (key) map.set(key, sp);
+          });
+          current.forEach((sp: any) => {
+            if (!sp) return;
+            const nameKey = (sp.name || sp.company || '').trim().toLowerCase();
+            const key = nameKey ? `name:${nameKey}` : (sp.id || '');
+            if (key) {
+              const existing = map.get(key);
+              map.set(key, existing ? { ...existing, ...sp } : sp);
+            }
+          });
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(data.suppliers));
@@ -438,15 +451,26 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
           const map = new Map<string, any>();
-          data.purchases.forEach((pu: any) => { const key = pu.id || pu.billNumber; if (key) map.set(key, pu); });
-          current.forEach((pu: any) => { const key = pu.id || pu.billNumber; if (key) map.set(key, pu); });
+          data.purchases.forEach((pu: any) => {
+            if (!pu) return;
+            const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
+            if (billKey) map.set(billKey, pu);
+          });
+          current.forEach((pu: any) => {
+            if (!pu) return;
+            const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
+            if (billKey) {
+              const existing = map.get(billKey);
+              map.set(billKey, existing ? { ...existing, ...pu } : pu);
+            }
+          });
           localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(data.purchases));
         }
       }
 
-      // 13. Serials Safe Merge
+      // 14. Serials Safe Merge
       if (Array.isArray(data.serials)) {
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
@@ -459,7 +483,7 @@ export function restoreERPBackupData(
         }
       }
 
-      // 14. Settings Safe Merge
+      // 15. Settings Safe Merge
       if (data.settings && typeof data.settings === 'object') {
         const curSettings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
         localStorage.setItem(ERP_STORAGE_KEYS.SETTINGS, JSON.stringify({ ...curSettings, ...data.settings }));
@@ -474,6 +498,11 @@ export function restoreERPBackupData(
       // Dispatch global events to inform active views
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
+      window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_suppliers_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
     }
 
     const currentCounts = generateERPBackupPayload().meta.recordCounts;

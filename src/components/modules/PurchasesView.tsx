@@ -79,6 +79,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
   const [supplierSubTab, setSupplierSubTab] = useState<'items' | 'bills' | 'payments'>('items');
   const [supplierItemSearch, setSupplierItemSearch] = useState<string>('');
+  const [updateRevision, setUpdateRevision] = useState<number>(0);
 
   // Modal States
   const [isNewBillModalOpen, setIsNewBillModalOpen] = useState<boolean>(false);
@@ -147,13 +148,18 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     const handleUpdates = () => {
       setPurchases(getStoredPurchases());
       setProducts(getStoredProducts());
+      setUpdateRevision((prev) => prev + 1);
     };
     window.addEventListener('globotech_purchases_updated', handleUpdates);
+    window.addEventListener('globotech_suppliers_updated', handleUpdates);
     window.addEventListener('globotech_backup_restored', handleUpdates);
+    window.addEventListener('globotech:cloud_data_synced', handleUpdates);
     window.addEventListener('storage', handleUpdates);
     return () => {
       window.removeEventListener('globotech_purchases_updated', handleUpdates);
+      window.removeEventListener('globotech_suppliers_updated', handleUpdates);
       window.removeEventListener('globotech_backup_restored', handleUpdates);
+      window.removeEventListener('globotech:cloud_data_synced', handleUpdates);
       window.removeEventListener('storage', handleUpdates);
     };
   }, []);
@@ -161,7 +167,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   // Compute rollups
   const companySummaries = useMemo(() => {
     return getCompanySummaries(purchases);
-  }, [purchases]);
+  }, [purchases, updateRevision]);
 
   // Active supplier details if drilled down
   const activeSupplierSummary = useMemo(() => {
@@ -560,6 +566,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     }
 
     setPurchases(getStoredPurchases());
+    setUpdateRevision((prev) => prev + 1);
     setIsEditSupplierModalOpen(false);
     setSupplierToEdit(null);
   };
@@ -581,6 +588,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     }
 
     setPurchases(getStoredPurchases());
+    setUpdateRevision((prev) => prev + 1);
     setIsDeleteSupplierModalOpen(false);
     setSupplierToDelete(null);
   };
@@ -602,6 +610,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     });
 
     setPurchases(getStoredPurchases());
+    setUpdateRevision((prev) => prev + 1);
     setIsAddSupplierModalOpen(false);
     setNewSupplierName('');
     setNewSupplierCountry('Bangladesh');

@@ -20,6 +20,8 @@ copy /Y out\404.html 404.html
 copy /Y out\index.txt index.txt
 if exist _next rmdir /s /q _next
 xcopy /E /I /Y out\_next _next
+if not exist api mkdir api
+copy /Y public\api\sync.php api\sync.php
 
 echo [3/4] Creating updated globotech-erp-hostinger-live.zip...
 powershell.exe -Command "Compress-Archive -Path 'out\*' -DestinationPath 'globotech-erp-hostinger-live.zip' -Force"

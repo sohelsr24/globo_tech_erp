@@ -30,6 +30,7 @@ import {
 import {
   pushToCloud,
   pullFromCloud,
+  forceSyncNow,
   getCurrentAutoSyncStatus
 } from '@/lib/erpAutoSync';
 
@@ -230,6 +231,36 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
     }
   };
 
+  const handleFullSync = async () => {
+    setIsProcessing(true);
+    setFeedback({
+      type: 'success',
+      message: '🔄 ক্লাউড সার্ভারের সাথে সম্পূর্ণ উভমুখী সিঙ্ক হচ্ছে...'
+    });
+    try {
+      const res = await forceSyncNow();
+      if (res.success) {
+        setFeedback({
+          type: 'success',
+          message: '🎉 অভিনন্দন! পিসি ও মোবাইলের সকল ডাটা সম্পূর্ণভাবে এক সাথে মার্জ ও সিঙ্ক হয়েছে!'
+        });
+        setStatus(getERPStorageStatus());
+        setTimeout(() => {
+          window.location.reload();
+        }, 1200);
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        message: `সিঙ্ক ব্যর্থ: ${err?.message || 'Error'}`
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePasteFromClipboard = async () => {
     try {
       if (navigator.clipboard && navigator.clipboard.readText) {
@@ -265,7 +296,7 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                পিসির সকল কোটেশন, বিল, স্টক ও প্রোডাক্ট ক্লাউড দিয়ে স্বয়ংক্রিয়ভাবে মোবাইলে সিঙ্ক হয়
+                পিসির সকল কোটেশন, বিল, স্টক, পারচেজ ও সাপ্লায়ার রিয়েল-টাইমে মোবাইলে সিঙ্ক হয়
               </p>
             </div>
           </div>
@@ -282,29 +313,39 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
           <div className="space-y-0.5">
             <div className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>স্বয়ংক্রিয় ক্লাউড সিঙ্ক (Auto Cloud Sync Engine)</span>
+              <span>স্বয়ংক্রিয় ক্লাউড সিঙ্ক ইঞ্জিন (Zero Data Loss Union Merge)</span>
             </div>
             <p className="text-[11px] text-slate-400">
-              পিসিতে ডাটা এন্ট্রি করলে তা স্বয়ংক্রিয়ভাবে ব্যাকগ্রাউন্ডে ক্লাউডে সেভ হয় এবং মোবাইলে রিয়েল-টাইম চলে আসে। প্রয়োজনে ম্যানুয়ালি ১-ক্লিকে সিঙ্ক করতে নিচের বাটন ব্যবহার করুন:
+              পিসি বা মোবাইলে নতুন কোনো সাপ্লায়ার, পারচেজ বা বিল এন্ট্রি করলে তা স্বয়ংক্রিয়ভাবে উভয় ডিভাইসে মার্জ হয়ে যায়। যেকোনো সময় ১-ক্লিকে এখনই উভমুখী সিঙ্ক করতে নিচের বাটনটি চাপুন:
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 pt-1">
+          <div className="flex flex-col gap-2 pt-1">
             <button
-              onClick={handlePushToCloud}
+              onClick={handleFullSync}
               disabled={isProcessing}
-              className="flex-1 min-w-[140px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-600/30 transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+              className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 hover:from-blue-500 hover:via-indigo-500 hover:to-emerald-500 text-white font-bold text-xs sm:text-sm shadow-xl shadow-blue-600/30 transition flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
             >
-              <Upload className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-              <span>পিসি ➔ ক্লাউডে সেভ করুন</span>
+              <RefreshCw className={`w-4 h-4 ${isProcessing ? 'animate-spin' : ''}`} />
+              <span>🔄 এখনই সম্পূর্ণ উভমুখী সিঙ্ক করুন (পিসি ও মোবাইল এক সাথে মিলিয়ে নিন)</span>
             </button>
-            <button
-              onClick={handlePullFromCloud}
-              disabled={isProcessing}
-              className="flex-1 min-w-[140px] px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
-            >
-              <Download className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-              <span>ক্লাউড ➔ মোবাইলে আপডেট আনুন</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={handlePushToCloud}
+                disabled={isProcessing}
+                className="flex-1 min-w-[130px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-sky-500/30 text-sky-300 font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+              >
+                <Upload className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
+                <span>পিসি ➔ ক্লাউডে পাঠান</span>
+              </button>
+              <button
+                onClick={handlePullFromCloud}
+                disabled={isProcessing}
+                className="flex-1 min-w-[130px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-emerald-500/30 text-emerald-300 font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+              >
+                <Download className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
+                <span>ক্লাউড ➔ মোবাইলে আনুন</span>
+              </button>
+            </div>
           </div>
         </div>
 

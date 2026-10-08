@@ -2,8 +2,8 @@
 
 /**
  * Globo Tech ERP - High-Speed Automatic Cloud Data Synchronization Engine
- * Automatically synchronizes master database between PC and Mobile devices in the background.
- * Uses Hostinger Server Cloud Sync API (/api/sync.php) - Zero third-party setup required.
+ * Automatically synchronizes master database between PC and Mobile devices in real time.
+ * Uses Hostinger Server Cloud Sync API (/api/sync.php) with Intelligent Bidirectional Union Merge.
  */
 
 import {
@@ -24,7 +24,15 @@ export interface AutoSyncStatus {
 
 const STORAGE_KEY_LAST_SYNCED = 'globotech_erp_cloud_last_synced_timestamp';
 const STORAGE_KEY_LOCAL_MODIFIED = 'globotech_erp_local_last_modified_timestamp';
-const SYNC_API_ENDPOINT = '/api/sync.php';
+
+export function getSyncApiEndpoint(): string {
+  if (typeof window === 'undefined') return 'https://erp.globotechbd.com/api/sync.php';
+  // If running locally, connect directly to Hostinger cloud API so local dev & mobile also sync in real time!
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'https://erp.globotechbd.com/api/sync.php';
+  }
+  return '/api/sync.php';
+}
 
 let syncDebounceTimer: NodeJS.Timeout | null = null;
 let backgroundIntervalId: NodeJS.Timeout | null = null;
@@ -57,6 +65,23 @@ function updateStatus(patch: Partial<AutoSyncStatus>) {
 }
 
 /**
+ * Dispatches refresh events to all ERP modules so UI components update immediately
+ */
+function dispatchAllModuleRefreshEvents(timestamp: number) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent('globotech:cloud_data_synced', { detail: { timestamp } }));
+    window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_quotations_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
+  } catch (e) {
+    console.warn('Dispatch module events error:', e);
+  }
+}
+
+/**
  * Detects device category (Mobile vs PC)
  */
 export function getDeviceCategory(): string {
@@ -70,7 +95,7 @@ export function getDeviceCategory(): string {
 
 /**
  * Call whenever any module saves, updates, or deletes data locally.
- * Schedules an automatic background push to the cloud within 1.5 seconds.
+ * Schedules an automatic background push to the cloud within 800ms.
  */
 export function markLocalDataChanged(): void {
   if (typeof window === 'undefined') return;
@@ -86,28 +111,31 @@ export function markLocalDataChanged(): void {
     pushToCloud().catch((err) => {
       console.warn('Debounced auto-push failed:', err);
     });
-  }, 1500);
+  }, 800);
 }
 
 /**
  * Pushes the full master database from current device to Cloud Server
+ * Server performs Non-Destructive Union Merge, ensuring PC and Mobile data combine without loss.
  */
 export async function pushToCloud(): Promise<{ success: boolean; message: string; timestamp?: number }> {
   if (typeof window === 'undefined') return { success: false, message: 'SSR' };
   if (isSyncInProgress) return { success: false, message: 'Sync already in progress' };
 
   isSyncInProgress = true;
-  updateStatus({ isSyncing: true, statusText: 'ক্লাউড সার্ভারে ডাটা পাঠানো হচ্ছে...', lastAction: 'PUSH' });
+  updateStatus({ isSyncing: true, statusText: 'ক্লাউড সার্ভারে ডাটা সিঙ্ক হচ্ছে...', lastAction: 'PUSH' });
 
   try {
     const payload: ERPBackupPayload = generateERPBackupPayload();
     const device = getDeviceCategory();
+    const endpoint = getSyncApiEndpoint();
 
-    const response = await fetch(`${SYNC_API_ENDPOINT}?action=push&device=${encodeURIComponent(device)}`, {
+    const response = await fetch(`${endpoint}?action=push&device=${encodeURIComponent(device)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       },
       body: JSON.stringify(payload)
     });
@@ -122,14 +150,25 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
       localStorage.setItem(STORAGE_KEY_LAST_SYNCED, serverTime.toString());
       localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, serverTime.toString());
 
+      // If server returned merged data, safely update local store so incoming records from other devices are reflected
+      if (result.mergedPayload && result.mergedPayload.data) {
+        try {
+          restoreERPBackupData(JSON.stringify(result.mergedPayload), { mode: 'merge' });
+        } catch (e) {
+          console.warn('Local merge after push error:', e);
+        }
+      }
+
       updateStatus({
         isSyncing: false,
         lastSyncedAt: serverTime,
         serverTimestamp: serverTime,
-        statusText: '✅ ক্লাউডে সফলভাবে সিঙ্ক হয়েছে!',
+        statusText: '🟢 ক্লাউডে রিয়েল-টাইম সিঙ্ক সম্পন্ন!',
         error: null,
         lastAction: 'PUSH'
       });
+
+      dispatchAllModuleRefreshEvents(serverTime);
 
       return { success: true, message: 'Cloud sync successful', timestamp: serverTime };
     } else {
@@ -150,7 +189,7 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
 }
 
 /**
- * Pulls the latest master database from Cloud Server and updates local device storage
+ * Pulls the latest master database from Cloud Server and updates local device storage via Union Merge
  */
 export async function pullFromCloud(options: { silent?: boolean } = {}): Promise<{ success: boolean; message: string }> {
   if (typeof window === 'undefined') return { success: false, message: 'SSR' };
@@ -162,10 +201,12 @@ export async function pullFromCloud(options: { silent?: boolean } = {}): Promise
   }
 
   try {
-    const response = await fetch(`${SYNC_API_ENDPOINT}?action=pull&_t=${Date.now()}`, {
+    const endpoint = getSyncApiEndpoint();
+    const response = await fetch(`${endpoint}?action=pull&_t=${Date.now()}`, {
       method: 'GET',
       headers: {
-        'Cache-Control': 'no-cache'
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       }
     });
 
@@ -187,8 +228,8 @@ export async function pullFromCloud(options: { silent?: boolean } = {}): Promise
       }
     } catch (e) {}
 
-    // Restore to local storage and IndexedDB
-    const restoreResult = restoreERPBackupData(jsonText, false);
+    // Restore to local storage and IndexedDB with safe Union Merge
+    const restoreResult = restoreERPBackupData(jsonText, { mode: 'merge' });
     if (restoreResult.success) {
       let serverTimestamp = Date.now();
       try {
@@ -203,15 +244,12 @@ export async function pullFromCloud(options: { silent?: boolean } = {}): Promise
         isSyncing: false,
         lastSyncedAt: serverTimestamp,
         serverTimestamp: serverTimestamp,
-        statusText: '🎉 ক্লাউড থেকে লেটেস্ট ডাটা আপডেট হয়েছে!',
+        statusText: '🎉 মোবাইল ও পিসির ডাটা লাইভ আপডেট হয়েছে!',
         error: null,
         lastAction: 'PULL'
       });
 
-      // Dispatch custom browser event so components can auto-refresh
-      window.dispatchEvent(new CustomEvent('globotech:cloud_data_synced', {
-        detail: { timestamp: serverTimestamp, counts: restoreResult.counts }
-      }));
+      dispatchAllModuleRefreshEvents(serverTimestamp);
 
       return { success: true, message: 'Data restored successfully' };
     } else {
@@ -238,9 +276,13 @@ export async function checkAndAutoSync(): Promise<void> {
   if (typeof window === 'undefined' || isSyncInProgress) return;
 
   try {
-    const res = await fetch(`${SYNC_API_ENDPOINT}?action=check&_t=${Date.now()}`, {
+    const endpoint = getSyncApiEndpoint();
+    const res = await fetch(`${endpoint}?action=check&_t=${Date.now()}`, {
       method: 'GET',
-      headers: { 'Cache-Control': 'no-cache' }
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
     });
 
     if (!res.ok) return;
@@ -257,8 +299,8 @@ export async function checkAndAutoSync(): Promise<void> {
       return;
     }
 
-    // 2. If local device has modified data newer than server, push it!
-    if (localModified > serverTs && localModified > localLastSynced) {
+    // 2. If local device has modified data newer than last sync, push and union merge!
+    if (localModified > localLastSynced || (localModified > 0 && serverTs === 0)) {
       await pushToCloud();
       return;
     }
@@ -276,6 +318,17 @@ export async function checkAndAutoSync(): Promise<void> {
   }
 }
 
+/**
+ * Force manual immediate bidirectional sync (called on button click)
+ */
+export async function forceSyncNow(): Promise<{ success: boolean; message: string }> {
+  // First push our local changes
+  const pushRes = await pushToCloud();
+  // Then pull latest merged state
+  const pullRes = await pullFromCloud({ silent: false });
+  return pullRes.success ? pullRes : pushRes;
+}
+
 // Hook into localStorage.setItem so ANY module writing data triggers automatic cloud sync
 let isLocalStoragePatched = false;
 function patchLocalStorageForAutoSync() {
@@ -289,7 +342,8 @@ function patchLocalStorageForAutoSync() {
         key.startsWith('globotech_erp_') &&
         !key.includes('cloud_last_synced') &&
         !key.includes('local_last_modified') &&
-        !key.includes('auto_snapshot')
+        !key.includes('auto_snapshot') &&
+        !key.includes('persistence_status')
       ) {
         markLocalDataChanged();
       }
@@ -302,7 +356,7 @@ function patchLocalStorageForAutoSync() {
 
 /**
  * Initializes Automatic Background Sync on application startup.
- * Sets up listeners for window focus, tab visibility, and periodic 20-second polling.
+ * Sets up listeners for window focus, tab visibility, and periodic 8-second polling.
  */
 export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) => void): () => void {
   if (typeof window === 'undefined') return () => {};
@@ -317,15 +371,15 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
   // 1. Initial check immediately on load
   setTimeout(() => {
     checkAndAutoSync();
-  }, 1200);
+  }, 1000);
 
-  // 2. Periodic background check every 20 seconds
+  // 2. High-speed periodic background check every 8 seconds (only ~60 bytes per ping)
   if (backgroundIntervalId) {
     clearInterval(backgroundIntervalId);
   }
   backgroundIntervalId = setInterval(() => {
     checkAndAutoSync();
-  }, 20000);
+  }, 8000);
 
   // 3. Check immediately when user switches tabs or unlocks phone screen
   const handleVisibilityOrFocus = () => {

@@ -658,6 +658,8 @@ export function updateSupplierDetails(
           });
           if (found) {
             localStorage.setItem('globotech_erp_suppliers', JSON.stringify(updatedSuppliers));
+            window.dispatchEvent(new CustomEvent('globotech_suppliers_updated', { detail: updatedSuppliers }));
+            window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
           }
         }
       }
@@ -691,6 +693,8 @@ export function deleteSupplierAndBills(supplierName: string): boolean {
             (s: any) => s.name && s.name.trim().toLowerCase() !== supplierName.trim().toLowerCase()
           );
           localStorage.setItem('globotech_erp_suppliers', JSON.stringify(remainingSuppliers));
+          window.dispatchEvent(new CustomEvent('globotech_suppliers_updated', { detail: remainingSuppliers }));
+          window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
         }
       }
     } catch (e) {
@@ -730,6 +734,8 @@ export function addNewSupplier(supplier: {
       };
       list.push(newEntry);
       localStorage.setItem('globotech_erp_suppliers', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('globotech_suppliers_updated', { detail: list }));
+      window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
       return true;
     } catch (e) {
       console.error('Error adding new supplier:', e);
