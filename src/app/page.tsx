@@ -59,18 +59,6 @@ export default function AppHome() {
   const [filterLowStock, setFilterLowStock] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const [cloudSyncKey, setCloudSyncKey] = useState<number>(0);
-
-  // Listen for real-time cloud data updates to instantly refresh views
-  useEffect(() => {
-    const handleCloudSync = () => {
-      setCloudSyncKey((prev) => prev + 1);
-    };
-    window.addEventListener('globotech:cloud_data_synced', handleCloudSync);
-    return () => {
-      window.removeEventListener('globotech:cloud_data_synced', handleCloudSync);
-    };
-  }, []);
 
   // Verify authentication and storage integrity on mount from browser storage
   useEffect(() => {
@@ -468,7 +456,7 @@ export default function AppHome() {
               </div>
             </div>
           ) : (
-            <div key={cloudSyncKey} className="w-full">
+            <div className="w-full">
               {currentTab === 'dashboard' && (
                 <DashboardView
                   onNavigateTab={(t) => setCurrentTab(t)}

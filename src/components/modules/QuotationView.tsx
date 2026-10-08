@@ -1026,7 +1026,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     return INITIAL_QUOTATIONS;
   });
   const [isMounted, setIsMounted] = useState(false);
-  const hasLoadedFromStorage = useRef(true);
+  const hasLoadedFromStorage = useRef(false);
 
   // Sync from localStorage on initial client mount
   useEffect(() => {
@@ -1102,12 +1102,21 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   useEffect(() => {
     const handleQuotesUpdated = (e: any) => {
       if (e?.detail && Array.isArray(e.detail)) {
-        setQuotations(e.detail);
+        setQuotations((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(e.detail)) return prev;
+          return e.detail;
+        });
       } else if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_quotations');
         if (saved) {
           try {
-            setQuotations(JSON.parse(saved));
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              setQuotations((prev) => {
+                if (JSON.stringify(prev) === JSON.stringify(parsed)) return prev;
+                return parsed;
+              });
+            }
           } catch (err) {}
         }
       }
@@ -1125,7 +1134,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           try {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
-              setQuotations(parsed);
+              setQuotations((prev) => {
+                if (JSON.stringify(prev) === JSON.stringify(parsed)) return prev;
+                return parsed;
+              });
               hasLoadedFromStorage.current = true;
             }
           } catch (e) {
@@ -2491,6 +2503,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           <div className="flex items-center gap-2">
             {activeViewMode !== 'LIST' && (
               <button
+                type="button"
                 onClick={() => {
                   setEditingQuotationId(null);
                   setActiveViewMode('LIST');
@@ -2504,6 +2517,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             {activeViewMode === 'LIST' && (
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={handleCleanDemoQuotations}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 font-semibold text-xs transition"
                   title="Permanently remove sample/demo quotations (QT-2026-001 to QT-2026-005)"
@@ -2513,6 +2527,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <span className="sm:hidden">Clean Demo</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
                     const nextQuoteNo = generateNextQuotationNumber(quotations);
                     const defaultCust = customers[0];
@@ -2733,7 +2748,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         Inspect
                       </button>
                       <button
-                        onClick={() => handleStartEditQuotation(q)}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartEditQuotation(q);
+                        }}
                         className="py-2 px-1 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition flex items-center justify-center gap-0.5 min-h-[40px] active:scale-95"
                         title="Edit Quotation"
                       >
@@ -2879,7 +2898,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           </td>
                           <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
                             <button
-                              onClick={() => {
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedQuotation(q);
                                 setActiveViewMode('DETAIL');
                               }}
@@ -2888,7 +2909,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               Inspect
                             </button>
                             <button
-                              onClick={() => handleStartEditQuotation(q)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleStartEditQuotation(q);
+                              }}
                               className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition inline-flex items-center gap-1"
                               title="Edit Quotation"
                             >
@@ -2896,7 +2921,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               Edit
                             </button>
                             <button
-                              onClick={() => {
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 if (onNavigateTab) {
                                   onNavigateTab('bill-invoice', q.id);
                                 } else {
@@ -2910,7 +2937,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               Bill
                             </button>
                             <button
-                              onClick={() => {
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedQuotation(q);
                                 setActiveViewMode('PDF');
                               }}
@@ -2921,7 +2950,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               PDF
                             </button>
                             <button
-                              onClick={() => handleDeleteQuotation(q)}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteQuotation(q);
+                              }}
                               className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs border border-rose-500/30 transition inline-flex items-center gap-1"
                               title="Delete this Quotation"
                             >
@@ -3193,6 +3226,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
               <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setSelectedItemCategory('IN_STOCK');
                     setIsAddItemModalOpen(true);
@@ -3897,6 +3931,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             {/* Form Actions */}
           <div className="flex items-center justify-end gap-3 pt-2">
             <button
+              type="button"
               onClick={() => {
                 setEditingQuotationId(null);
                 if (selectedQuotation && editingQuotationId) {
@@ -3910,6 +3945,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSaveQuotation}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-blue-500/20"
             >
