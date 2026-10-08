@@ -252,7 +252,26 @@ function mergeErpDatasets($existing, $incoming) {
             }
         }
     }
-    $merged['quotations'] = array_values($quotationMap);
+    $quotesList = array_values($quotationMap);
+    usort($quotesList, function($a, $b) {
+        $getScore = function($item) {
+            $num = !empty($item['quotationNumber']) ? trim($item['quotationNumber']) : (!empty($item['id']) ? trim($item['id']) : '');
+            if (preg_match('/QT-(\d{4})-(\d+)/i', $num, $m)) {
+                return (int)$m[1] * 1000000 + (int)$m[2];
+            }
+            if (preg_match('/(\d+)(?!.*\d)/', $num, $m)) {
+                return 2026000000 + (int)$m[1];
+            }
+            return 0;
+        };
+        $scoreA = $getScore($a);
+        $scoreB = $getScore($b);
+        if ($scoreA !== $scoreB) return $scoreB - $scoreA;
+        $dateA = !empty($a['date']) ? $a['date'] : '';
+        $dateB = !empty($b['date']) ? $b['date'] : '';
+        return strcmp($dateB, $dateA);
+    });
+    $merged['quotations'] = $quotesList;
 
     // 4. Sales Bills: merge by billNo or id
     $billMap = [];

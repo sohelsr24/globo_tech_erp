@@ -982,6 +982,66 @@ export function generateNextQuotationNumber(existingQuotes: Quotation[] = []): s
   return `QT-${currentYear}-${String(maxSeq + 1).padStart(3, '0')}`;
 }
 
+/**
+ * Sorts quotations in strict descending order so newly created quotations and higher serial numbers ALWAYS sit at the top.
+ */
+export function sortQuotationsDesc(list: Quotation[]): Quotation[] {
+  if (!Array.isArray(list)) return [];
+  return [...list].sort((a, b) => {
+    // 1. Extract sequence score from quotation number or ID
+    const getSeqScore = (q: Quotation) => {
+      const qNum = (q.quotationNumber || '').trim();
+      const qId = (q.id || '').trim();
+
+      // Standard format: QT-YYYY-NNN (e.g. QT-2026-030 -> 2026000030)
+      const qtMatch = qNum.match(/QT-(\d{4})-(\d+)/i) || qId.match(/QT-(\d{4})-(\d+)/i);
+      if (qtMatch) {
+        const year = parseInt(qtMatch[1], 10);
+        const seq = parseInt(qtMatch[2], 10);
+        return year * 1000000 + seq;
+      }
+
+      // Trailing numbers (e.g. QT-031 or 031)
+      const numMatch = qNum.match(/(\d+)(?!.*\d)/) || qId.match(/(\d+)(?!.*\d)/);
+      if (numMatch) {
+        return 2026000000 + parseInt(numMatch[1], 10);
+      }
+
+      // Timestamp fallback (e.g. quote-1791492000000)
+      const tsMatch = qId.match(/quote-(\d{10,})/i);
+      if (tsMatch) {
+        return parseInt(tsMatch[1].slice(-7), 10);
+      }
+
+      return 0;
+    };
+
+    const scoreA = getSeqScore(a);
+    const scoreB = getSeqScore(b);
+
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA; // Descending: highest sequence at top!
+    }
+
+    // 2. Date comparison (YYYY-MM-DD) descending
+    const dateA = a.date || '';
+    const dateB = b.date || '';
+    if (dateA !== dateB) {
+      return dateB.localeCompare(dateA); // Newer date at top!
+    }
+
+    // 3. Version comparison (higher revision on top)
+    const verA = a.version || 1;
+    const verB = b.version || 1;
+    if (verA !== verB) {
+      return verB - verA;
+    }
+
+    // 4. Fallback string comparison
+    return (b.quotationNumber || b.id || '').localeCompare(a.quotationNumber || a.id || '');
+  });
+}
+
 export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string, meta?: any) => void } = {}) {
   const [quotations, setQuotations] = useState<Quotation[]>(() => {
     if (typeof window !== 'undefined') {
@@ -1009,21 +1069,23 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 !deletedIds.has(initQ.id) &&
                 !deletedIds.has(initQ.quotationNumber)
             );
-            return [
+            return sortQuotationsDesc([
               ...newInitials,
               ...parsed.map((q: Quotation) => ({
                 ...q,
                 vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
               }))
-            ];
+            ]);
           }
         } catch (e) {}
       }
-      return INITIAL_QUOTATIONS.filter(
-        (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+      return sortQuotationsDesc(
+        INITIAL_QUOTATIONS.filter(
+          (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+        )
       );
     }
-    return INITIAL_QUOTATIONS;
+    return sortQuotationsDesc(INITIAL_QUOTATIONS);
   });
   const [isMounted, setIsMounted] = useState(false);
   const hasLoadedFromStorage = useRef(false);
@@ -1060,13 +1122,13 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             );
             // CRITICAL FIX: parsed is the user's saved database! Never filter parsed by deletedIds!
             // deletedIds is ONLY for INITIAL_QUOTATIONS to avoid resurrecting deleted demo mock quotations.
-            const merged = [
+            const merged = sortQuotationsDesc([
               ...newInitials,
               ...parsed.map((q: Quotation) => ({
                 ...q,
                 vatTaxTerms: cleanVatTaxTerms(q.vatTaxTerms)
               }))
-            ];
+            ]);
             setQuotations(merged);
             localStorage.setItem('globotech_erp_quotations', JSON.stringify(merged));
             hasLoadedFromStorage.current = true;
@@ -1076,8 +1138,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           console.error('Error loading quotations from localStorage', e);
         }
       }
-      const filteredInitials = INITIAL_QUOTATIONS.filter(
-        (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+      const filteredInitials = sortQuotationsDesc(
+        INITIAL_QUOTATIONS.filter(
+          (initQ) => !deletedIds.has(initQ.id) && !deletedIds.has(initQ.quotationNumber)
+        )
       );
       setQuotations(filteredInitials);
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(filteredInitials));
@@ -1107,8 +1171,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     const handleQuotesUpdated = (e: any) => {
       if (e?.detail && Array.isArray(e.detail)) {
         setQuotations((prev) => {
-          if (JSON.stringify(prev) === JSON.stringify(e.detail)) return prev;
-          return e.detail;
+          const sorted = sortQuotationsDesc(e.detail);
+          if (JSON.stringify(prev) === JSON.stringify(sorted)) return prev;
+          return sorted;
         });
       } else if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_quotations');
@@ -1117,8 +1182,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
               setQuotations((prev) => {
-                if (JSON.stringify(prev) === JSON.stringify(parsed)) return prev;
-                return parsed;
+                const sorted = sortQuotationsDesc(parsed);
+                if (JSON.stringify(prev) === JSON.stringify(sorted)) return prev;
+                return sorted;
               });
             }
           } catch (err) {}
@@ -1139,8 +1205,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed)) {
               setQuotations((prev) => {
-                if (JSON.stringify(prev) === JSON.stringify(parsed)) return prev;
-                return parsed;
+                const sorted = sortQuotationsDesc(parsed);
+                if (JSON.stringify(prev) === JSON.stringify(sorted)) return prev;
+                return sorted;
               });
               hasLoadedFromStorage.current = true;
             }
@@ -1797,17 +1864,19 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     };
   };
 
-  // Filtered Quotations
-  const filteredQuotations = quotations.filter((q) => {
-    const matchSearch =
-      q.quotationNumber.toLowerCase().includes(search.toLowerCase()) ||
-      q.customerCompany.toLowerCase().includes(search.toLowerCase()) ||
-      q.customerName.toLowerCase().includes(search.toLowerCase()) ||
-      q.projectName.toLowerCase().includes(search.toLowerCase());
+  // Filtered Quotations (Strictly sorted descending: newest quotation & serial at top)
+  const filteredQuotations = sortQuotationsDesc(
+    quotations.filter((q) => {
+      const matchSearch =
+        q.quotationNumber.toLowerCase().includes(search.toLowerCase()) ||
+        q.customerCompany.toLowerCase().includes(search.toLowerCase()) ||
+        q.customerName.toLowerCase().includes(search.toLowerCase()) ||
+        q.projectName.toLowerCase().includes(search.toLowerCase());
 
-    const matchStatus = statusFilter === 'ALL' || q.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+      const matchStatus = statusFilter === 'ALL' || q.status === statusFilter;
+      return matchSearch && matchStatus;
+    })
+  );
 
   // Dashboard Metrics
   const totalCount = quotations.length;
@@ -2237,10 +2306,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       }
     }
 
-    const updatedList = [
+    const updatedList = sortQuotationsDesc([
       savedQuotation,
       ...quotations.filter((q) => q.id !== savedQuotation.id && q.quotationNumber !== savedQuotation.quotationNumber)
-    ];
+    ]);
     setQuotations(updatedList);
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));

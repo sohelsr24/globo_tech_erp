@@ -217,8 +217,29 @@ export function restoreERPBackupData(
     const isMergeMode = options?.mode !== 'overwrite';
 
     if (typeof window !== 'undefined') {
-      // 1. Quotations Safe Merge
+      // 1. Quotations Safe Merge (Strictly sorted descending so newest sit at the top)
       if (Array.isArray(data.quotations)) {
+        const sortDesc = (arr: any[]) => {
+          return [...arr].sort((a, b) => {
+            const getScore = (q: any) => {
+              const num = (q?.quotationNumber || '').trim();
+              const id = (q?.id || '').trim();
+              const m = num.match(/QT-(\d{4})-(\d+)/i) || id.match(/QT-(\d{4})-(\d+)/i);
+              if (m) return parseInt(m[1], 10) * 1000000 + parseInt(m[2], 10);
+              const trailing = num.match(/(\d+)(?!.*\d)/) || id.match(/(\d+)(?!.*\d)/);
+              if (trailing) return 2026000000 + parseInt(trailing[1], 10);
+              return 0;
+            };
+            const sA = getScore(a);
+            const sB = getScore(b);
+            if (sA !== sB) return sB - sA;
+            const dA = a?.date || '';
+            const dB = b?.date || '';
+            if (dA !== dB) return dB.localeCompare(dA);
+            return (b?.quotationNumber || b?.id || '').localeCompare(a?.quotationNumber || a?.id || '');
+          });
+        };
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
           const map = new Map<string, any>();
@@ -232,10 +253,10 @@ export function restoreERPBackupData(
             const key = q.id || q.quotationNumber;
             if (key) map.set(key, q);
           });
-          const merged = Array.from(map.values());
+          const merged = sortDesc(Array.from(map.values()));
           localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(merged));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(data.quotations));
+          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(sortDesc(data.quotations)));
         }
       }
       if (Array.isArray(data.deletedQuotationIds)) {
