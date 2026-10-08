@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { DeviceSyncModal } from '@/components/modals/DeviceSyncModal';
 import { DataProtectionModal } from '@/components/modals/DataProtectionModal';
-import { startAutoSyncEngine, AutoSyncStatus } from '@/lib/erpAutoSync';
+import { startAutoSyncEngine, AutoSyncStatus, forceSyncNow } from '@/lib/erpAutoSync';
 import { UserRole } from '@/lib/permissions';
 import {
   getStoredProducts,
@@ -590,7 +590,12 @@ export function Header({
 
           {/* Mobile / PC Cloud Sync Button */}
           <button
-            onClick={() => setIsSyncModalOpen(true)}
+            onClick={async () => {
+              setIsSyncModalOpen(true);
+              try {
+                await forceSyncNow();
+              } catch (e) {}
+            }}
             className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition active:scale-95 cursor-pointer flex-shrink-0 ${
               autoSyncStatus?.isSyncing
                 ? 'bg-amber-600/20 border-amber-500/40 text-amber-300'

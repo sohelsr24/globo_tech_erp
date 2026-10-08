@@ -24,19 +24,20 @@ export interface AutoSyncStatus {
 
 const STORAGE_KEY_LAST_SYNCED = 'globotech_erp_cloud_last_synced_timestamp';
 const STORAGE_KEY_LOCAL_MODIFIED = 'globotech_erp_local_last_modified_timestamp';
+const STORAGE_KEY_HAS_UNSYNCED = 'globotech_erp_has_unsynced_local_changes';
 
 export function getSyncApiEndpoint(): string {
   if (typeof window === 'undefined') return 'https://erp.globotechbd.com/api/sync.php';
-  // If running locally, connect directly to Hostinger cloud API so local dev & mobile also sync in real time!
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'https://erp.globotechbd.com/api/sync.php';
+  if (window.location.hostname === 'erp.globotechbd.com' || window.location.hostname === 'www.erp.globotechbd.com') {
+    return '/api/sync.php';
   }
-  return '/api/sync.php';
+  return 'https://erp.globotechbd.com/api/sync.php';
 }
 
 let syncDebounceTimer: NodeJS.Timeout | null = null;
 let backgroundIntervalId: NodeJS.Timeout | null = null;
 let isSyncInProgress = false;
+let isRestoringFromSync = false;
 const listeners = new Set<(status: AutoSyncStatus) => void>();
 
 let currentStatus: AutoSyncStatus = {
@@ -72,6 +73,7 @@ function dispatchAllModuleRefreshEvents(timestamp: number) {
   try {
     window.dispatchEvent(new CustomEvent('globotech:cloud_data_synced', { detail: { timestamp } }));
     window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_suppliers_updated'));
     window.dispatchEvent(new CustomEvent('globotech_quotations_updated'));
     window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
     window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
@@ -95,13 +97,14 @@ export function getDeviceCategory(): string {
 
 /**
  * Call whenever any module saves, updates, or deletes data locally.
- * Schedules an automatic background push to the cloud within 800ms.
+ * Marks unsynced state and schedules an automatic background push to the cloud within 300ms.
  */
 export function markLocalDataChanged(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || isRestoringFromSync) return;
   const now = Date.now();
+  localStorage.setItem(STORAGE_KEY_HAS_UNSYNCED, 'true');
   localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, now.toString());
-  updateStatus({ statusText: 'লোকাল ডাটা আপডেট হয়েছে, ক্লাউডে সিঙ্ক হচ্ছে...' });
+  updateStatus({ statusText: 'লোকাল ডাটা সেভ হয়েছে, ক্লাউডে সিঙ্ক হচ্ছে...' });
 
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
@@ -111,7 +114,7 @@ export function markLocalDataChanged(): void {
     pushToCloud().catch((err) => {
       console.warn('Debounced auto-push failed:', err);
     });
-  }, 800);
+  }, 300);
 }
 
 /**
@@ -149,13 +152,17 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
       const serverTime = Number(result.timestamp) || Date.now();
       localStorage.setItem(STORAGE_KEY_LAST_SYNCED, serverTime.toString());
       localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, serverTime.toString());
+      localStorage.removeItem(STORAGE_KEY_HAS_UNSYNCED);
 
       // If server returned merged data, safely update local store so incoming records from other devices are reflected
       if (result.mergedPayload && result.mergedPayload.data) {
         try {
+          isRestoringFromSync = true;
           restoreERPBackupData(JSON.stringify(result.mergedPayload), { mode: 'merge' });
         } catch (e) {
           console.warn('Local merge after push error:', e);
+        } finally {
+          isRestoringFromSync = false;
         }
       }
 
@@ -229,7 +236,14 @@ export async function pullFromCloud(options: { silent?: boolean } = {}): Promise
     } catch (e) {}
 
     // Restore to local storage and IndexedDB with safe Union Merge
-    const restoreResult = restoreERPBackupData(jsonText, { mode: 'merge' });
+    let restoreResult: { success: boolean; message: string } = { success: false, message: 'Failed' };
+    try {
+      isRestoringFromSync = true;
+      restoreResult = restoreERPBackupData(jsonText, { mode: 'merge' });
+    } finally {
+      isRestoringFromSync = false;
+    }
+
     if (restoreResult.success) {
       let serverTimestamp = Date.now();
       try {
@@ -291,21 +305,27 @@ export async function checkAndAutoSync(): Promise<void> {
 
     const serverTs = Number(meta.timestamp) || 0;
     const localLastSynced = Number(localStorage.getItem(STORAGE_KEY_LAST_SYNCED)) || 0;
-    const localModified = Number(localStorage.getItem(STORAGE_KEY_LOCAL_MODIFIED)) || 0;
+    const hasUnsynced = localStorage.getItem(STORAGE_KEY_HAS_UNSYNCED) === 'true';
 
-    // 1. If server has newer data than our last sync point, pull it immediately!
-    if (serverTs > 0 && serverTs > localLastSynced) {
-      await pullFromCloud({ silent: true });
-      return;
-    }
-
-    // 2. If local device has modified data newer than last sync, push and union merge!
-    if (localModified > localLastSynced || (localModified > 0 && serverTs === 0)) {
+    // 1. If this device has unsynced local modifications, push to cloud with Union Merge!
+    if (hasUnsynced) {
       await pushToCloud();
       return;
     }
 
-    // If both are synchronized
+    // 2. If this device has never synced, push local state to ensure server merges it!
+    if (localLastSynced === 0) {
+      await pushToCloud();
+      return;
+    }
+
+    // 3. If server has a newer/different timestamp than local last sync, pull and union-merge!
+    if (serverTs > 0 && serverTs !== localLastSynced) {
+      await pullFromCloud({ silent: true });
+      return;
+    }
+
+    // 4. If synchronized
     if (serverTs > 0) {
       updateStatus({
         lastSyncedAt: serverTs,
@@ -322,11 +342,10 @@ export async function checkAndAutoSync(): Promise<void> {
  * Force manual immediate bidirectional sync (called on button click)
  */
 export async function forceSyncNow(): Promise<{ success: boolean; message: string }> {
-  // First push our local changes
+  // Push local changes first and adopt server-merged master state
   const pushRes = await pushToCloud();
-  // Then pull latest merged state
-  const pullRes = await pullFromCloud({ silent: false });
-  return pullRes.success ? pullRes : pushRes;
+  if (pushRes.success) return pushRes;
+  return await pullFromCloud({ silent: false });
 }
 
 // Hook into localStorage.setItem so ANY module writing data triggers automatic cloud sync
@@ -337,11 +356,13 @@ function patchLocalStorageForAutoSync() {
     const originalSetItem = localStorage.setItem;
     localStorage.setItem = function (key: string, value: string) {
       originalSetItem.apply(this, [key, value]);
+      if (isRestoringFromSync) return;
       if (
         key &&
         key.startsWith('globotech_erp_') &&
         !key.includes('cloud_last_synced') &&
         !key.includes('local_last_modified') &&
+        !key.includes('has_unsynced') &&
         !key.includes('auto_snapshot') &&
         !key.includes('persistence_status')
       ) {
@@ -356,7 +377,7 @@ function patchLocalStorageForAutoSync() {
 
 /**
  * Initializes Automatic Background Sync on application startup.
- * Sets up listeners for window focus, tab visibility, and periodic 8-second polling.
+ * Sets up listeners for window focus, tab visibility, and periodic 5-second polling.
  */
 export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) => void): () => void {
   if (typeof window === 'undefined') return () => {};
@@ -368,18 +389,28 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
     onStatusChange({ ...currentStatus });
   }
 
+  // Hook into module update events
+  const handleDataChangedEvent = () => {
+    markLocalDataChanged();
+  };
+  window.addEventListener('globotech_purchases_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_suppliers_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_quotations_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_bills_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_stock_updated', handleDataChangedEvent);
+
   // 1. Initial check immediately on load
   setTimeout(() => {
     checkAndAutoSync();
-  }, 1000);
+  }, 800);
 
-  // 2. High-speed periodic background check every 8 seconds (only ~60 bytes per ping)
+  // 2. Periodic background check every 5 seconds (ultra-lightweight ~60 bytes ping)
   if (backgroundIntervalId) {
     clearInterval(backgroundIntervalId);
   }
   backgroundIntervalId = setInterval(() => {
     checkAndAutoSync();
-  }, 8000);
+  }, 5000);
 
   // 3. Check immediately when user switches tabs or unlocks phone screen
   const handleVisibilityOrFocus = () => {
@@ -409,6 +440,11 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
     document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
+    window.removeEventListener('globotech_purchases_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_suppliers_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_quotations_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_bills_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_stock_updated', handleDataChangedEvent);
   };
 }
 

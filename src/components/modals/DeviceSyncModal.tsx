@@ -31,7 +31,8 @@ import {
   pushToCloud,
   pullFromCloud,
   forceSyncNow,
-  getCurrentAutoSyncStatus
+  getCurrentAutoSyncStatus,
+  getDeviceCategory
 } from '@/lib/erpAutoSync';
 
 interface DeviceSyncModalProps {
@@ -335,7 +336,7 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
                 className="flex-1 min-w-[130px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-sky-500/30 text-sky-300 font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
               >
                 <Upload className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-                <span>পিসি ➔ ক্লাউডে পাঠান</span>
+                <span>{getDeviceCategory() === 'Mobile' ? '📱 এই মোবাইলের ডাটা ক্লাউডে পাঠান' : '💻 এই পিসির ডাটা ক্লাউডে পাঠান'}</span>
               </button>
               <button
                 onClick={handlePullFromCloud}
@@ -343,7 +344,7 @@ export function DeviceSyncModal({ isOpen, onClose }: DeviceSyncModalProps) {
                 className="flex-1 min-w-[130px] px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-emerald-500/30 text-emerald-300 font-semibold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
               >
                 <Download className={`w-3.5 h-3.5 ${isProcessing ? 'animate-spin' : ''}`} />
-                <span>ক্লাউড ➔ মোবাইলে আনুন</span>
+                <span>{getDeviceCategory() === 'Mobile' ? '📥 ক্লাউড ➔ মোবাইলে আপডেট নিন' : '📥 ক্লাউড ➔ পিসিতে আপডেট নিন'}</span>
               </button>
             </div>
           </div>
