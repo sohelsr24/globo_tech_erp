@@ -119,7 +119,58 @@ function mergeErpDatasets($existing, $incoming) {
 
     $merged = $existing;
 
-    // 1. Suppliers: merge by name or id
+    // 0. Deleted Tracking Sets
+    $delSuppSet = [];
+    $allDelSupp = array_merge(
+        isset($existing['deletedSupplierNames']) && is_array($existing['deletedSupplierNames']) ? $existing['deletedSupplierNames'] : [],
+        isset($incoming['deletedSupplierNames']) && is_array($incoming['deletedSupplierNames']) ? $incoming['deletedSupplierNames'] : []
+    );
+    foreach ($allDelSupp as $ds) {
+        if (is_string($ds) && trim($ds) !== '') $delSuppSet[trim(mb_strtolower($ds))] = true;
+    }
+    $merged['deletedSupplierNames'] = array_keys($delSuppSet);
+
+    $delPurSet = [];
+    $allDelPur = array_merge(
+        isset($existing['deletedPurchaseIds']) && is_array($existing['deletedPurchaseIds']) ? $existing['deletedPurchaseIds'] : [],
+        isset($incoming['deletedPurchaseIds']) && is_array($incoming['deletedPurchaseIds']) ? $incoming['deletedPurchaseIds'] : []
+    );
+    foreach ($allDelPur as $dp) {
+        if (is_string($dp) && trim($dp) !== '') $delPurSet[trim(mb_strtoupper($dp))] = true;
+    }
+    $merged['deletedPurchaseIds'] = array_keys($delPurSet);
+
+    $delQuoteSet = [];
+    $allDelQuotes = array_merge(
+        isset($existing['deletedQuotationIds']) && is_array($existing['deletedQuotationIds']) ? $existing['deletedQuotationIds'] : [],
+        isset($incoming['deletedQuotationIds']) && is_array($incoming['deletedQuotationIds']) ? $incoming['deletedQuotationIds'] : []
+    );
+    foreach ($allDelQuotes as $dq) {
+        if (is_string($dq) && trim($dq) !== '') $delQuoteSet[trim(mb_strtoupper($dq))] = true;
+    }
+    $merged['deletedQuotationIds'] = array_keys($delQuoteSet);
+
+    $delBillSet = [];
+    $allDelBills = array_merge(
+        isset($existing['deletedBillIds']) && is_array($existing['deletedBillIds']) ? $existing['deletedBillIds'] : [],
+        isset($incoming['deletedBillIds']) && is_array($incoming['deletedBillIds']) ? $incoming['deletedBillIds'] : []
+    );
+    foreach ($allDelBills as $db) {
+        if (is_string($db) && trim($db) !== '') $delBillSet[trim(mb_strtoupper($db))] = true;
+    }
+    $merged['deletedBillIds'] = array_keys($delBillSet);
+
+    $delCustSet = [];
+    $allDelCust = array_merge(
+        isset($existing['deletedCustomerIds']) && is_array($existing['deletedCustomerIds']) ? $existing['deletedCustomerIds'] : [],
+        isset($incoming['deletedCustomerIds']) && is_array($incoming['deletedCustomerIds']) ? $incoming['deletedCustomerIds'] : []
+    );
+    foreach ($allDelCust as $dc) {
+        if (is_string($dc) && trim($dc) !== '') $delCustSet[trim(mb_strtolower($dc))] = true;
+    }
+    $merged['deletedCustomerIds'] = array_keys($delCustSet);
+
+    // 1. Suppliers: merge by name or id (respecting deletion tombstones)
     $supplierMap = [];
     $allSuppliers = array_merge(
         isset($existing['suppliers']) && is_array($existing['suppliers']) ? $existing['suppliers'] : [],
@@ -127,7 +178,10 @@ function mergeErpDatasets($existing, $incoming) {
     );
     foreach ($allSuppliers as $s) {
         if (!is_array($s)) continue;
-        $nameKey = !empty($s['name']) ? trim(mb_strtolower($s['name'])) : '';
+        $name = !empty($s['name']) ? trim($s['name']) : '';
+        $nameLower = mb_strtolower($name);
+        if ($nameLower !== '' && isset($delSuppSet[$nameLower])) continue;
+        $nameKey = $name !== '' ? $nameLower : '';
         $idKey = !empty($s['id']) ? trim($s['id']) : '';
         $key = $nameKey !== '' ? 'name:' . $nameKey : 'id:' . $idKey;
         if ($key !== 'id:') {
@@ -140,7 +194,7 @@ function mergeErpDatasets($existing, $incoming) {
     }
     $merged['suppliers'] = array_values($supplierMap);
 
-    // 2. Purchases & Bills: merge by billNumber or id
+    // 2. Purchases & Bills: merge by billNumber or id (respecting deletion tombstones)
     $purchaseMap = [];
     $allPurchases = array_merge(
         isset($existing['purchases']) && is_array($existing['purchases']) ? $existing['purchases'] : [],
@@ -148,13 +202,18 @@ function mergeErpDatasets($existing, $incoming) {
     );
     foreach ($allPurchases as $p) {
         if (!is_array($p)) continue;
-        $billKey = !empty($p['billNumber']) ? trim($p['billNumber']) : (!empty($p['id']) ? trim($p['id']) : '');
+        $pId = !empty($p['id']) ? trim(mb_strtoupper($p['id'])) : '';
+        $pBill = !empty($p['billNumber']) ? trim(mb_strtoupper($p['billNumber'])) : '';
+        if ($pId !== '' && isset($delPurSet[$pId])) continue;
+        if ($pBill !== '' && isset($delPurSet[$pBill])) continue;
+        $suppName = !empty($p['supplierName']) ? trim(mb_strtolower($p['supplierName'])) : '';
+        if ($suppName !== '' && isset($delSuppSet[$suppName])) continue;
+
+        $billKey = $pBill !== '' ? $pBill : $pId;
         if ($billKey !== '') {
             if (isset($purchaseMap[$billKey])) {
-                // If existing has items and incoming doesn't, or vice versa, keep more detailed
                 $existingP = $purchaseMap[$billKey];
                 $mergedP = array_merge($existingP, $p);
-                // Merge items inside bill
                 if (!empty($existingP['items']) && !empty($p['items']) && is_array($existingP['items']) && is_array($p['items'])) {
                     $itemMap = [];
                     foreach (array_merge($existingP['items'], $p['items']) as $it) {
@@ -179,7 +238,12 @@ function mergeErpDatasets($existing, $incoming) {
     );
     foreach ($allQuotes as $q) {
         if (!is_array($q)) continue;
-        $qKey = !empty($q['quotationNumber']) ? trim($q['quotationNumber']) : (!empty($q['id']) ? trim($q['id']) : '');
+        $qId = !empty($q['id']) ? trim(mb_strtoupper($q['id'])) : '';
+        $qNo = !empty($q['quotationNumber']) ? trim(mb_strtoupper($q['quotationNumber'])) : '';
+        if ($qId !== '' && isset($delQuoteSet[$qId])) continue;
+        if ($qNo !== '' && isset($delQuoteSet[$qNo])) continue;
+
+        $qKey = $qNo !== '' ? $qNo : $qId;
         if ($qKey !== '') {
             if (isset($quotationMap[$qKey])) {
                 $quotationMap[$qKey] = array_merge($quotationMap[$qKey], $q);
@@ -198,9 +262,14 @@ function mergeErpDatasets($existing, $incoming) {
     );
     foreach ($allBills as $b) {
         if (!is_array($b)) continue;
+        $bId = !empty($b['id']) ? trim(mb_strtoupper($b['id'])) : '';
+        $bNo = !empty($b['billNo']) ? trim(mb_strtoupper($b['billNo'])) : '';
+        if ($bId !== '' && isset($delBillSet[$bId])) continue;
+        if ($bNo !== '' && isset($delBillSet[$bNo])) continue;
         // Never resurrect demo bill
-        if ((!empty($b['id']) && $b['id'] === 'bill-26108') || (!empty($b['billNo']) && $b['billNo'] === 'GT/26108')) continue;
-        $bKey = !empty($b['billNo']) ? trim($b['billNo']) : (!empty($b['id']) ? trim($b['id']) : '');
+        if ($bId === 'BILL-26108' || $bNo === 'GT/26108') continue;
+
+        $bKey = $bNo !== '' ? $bNo : $bId;
         if ($bKey !== '') {
             if (isset($billMap[$bKey])) {
                 $billMap[$bKey] = array_merge($billMap[$bKey], $b);
@@ -219,7 +288,14 @@ function mergeErpDatasets($existing, $incoming) {
     );
     foreach ($allCust as $c) {
         if (!is_array($c)) continue;
-        $cKey = !empty($c['company']) ? trim(mb_strtolower($c['company'])) : (!empty($c['name']) ? trim(mb_strtolower($c['name'])) : (!empty($c['id']) ? trim($c['id']) : ''));
+        $cId = !empty($c['id']) ? trim(mb_strtolower($c['id'])) : '';
+        $cComp = !empty($c['company']) ? trim(mb_strtolower($c['company'])) : '';
+        $cName = !empty($c['name']) ? trim(mb_strtolower($c['name'])) : '';
+        if ($cId !== '' && isset($delCustSet[$cId])) continue;
+        if ($cComp !== '' && isset($delCustSet[$cComp])) continue;
+        if ($cName !== '' && isset($delCustSet[$cName])) continue;
+
+        $cKey = $cComp !== '' ? $cComp : ($cName !== '' ? $cName : $cId);
         if ($cKey !== '') {
             if (isset($custMap[$cKey])) {
                 $custMap[$cKey] = array_merge($custMap[$cKey], $c);

@@ -18,7 +18,9 @@ export const ERP_STORAGE_KEYS = {
   SALES: 'globotech_erp_sales',
   IMPORTS: 'globotech_erp_imports',
   SUPPLIERS: 'globotech_erp_suppliers',
+  DELETED_SUPPLIER_NAMES: 'globotech_erp_deleted_supplier_names',
   PURCHASES: 'globotech_erp_purchases',
+  DELETED_PURCHASE_IDS: 'globotech_erp_deleted_purchases',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
   LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
@@ -65,7 +67,9 @@ export interface ERPBackupPayload {
     sales: any[];
     imports: any[];
     suppliers: any[];
+    deletedSupplierNames?: string[];
     purchases?: any[];
+    deletedPurchaseIds?: string[];
     serials: any[];
     settings: any;
   };
@@ -105,7 +109,9 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const sales = readStorage<any[]>(ERP_STORAGE_KEYS.SALES, []);
   const imports = readStorage<any[]>(ERP_STORAGE_KEYS.IMPORTS, []);
   const suppliers = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
+  const deletedSupplierNames = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, []);
   const purchases = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
+  const deletedPurchaseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
   const serials = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
   const settings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
 
@@ -150,7 +156,9 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       sales,
       imports,
       suppliers,
+      deletedSupplierNames,
       purchases,
+      deletedPurchaseIds,
       serials,
       settings
     }
@@ -420,21 +428,42 @@ export function restoreERPBackupData(
         }
       }
 
+      // Merge Deleted Supplier Names
+      if (Array.isArray(data.deletedSupplierNames)) {
+        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, []);
+        const delSet = new Set<string>([...curDel.map(s => s.trim().toLowerCase()), ...data.deletedSupplierNames.map(s => s.trim().toLowerCase())]);
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, JSON.stringify(Array.from(delSet)));
+      }
+
+      // Merge Deleted Purchase IDs
+      if (Array.isArray(data.deletedPurchaseIds)) {
+        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
+        const delSet = new Set<string>([...curDel.map(s => s.trim().toUpperCase()), ...data.deletedPurchaseIds.map(s => s.trim().toUpperCase())]);
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, JSON.stringify(Array.from(delSet)));
+      }
+
       // 12. Suppliers Safe Merge
       if (Array.isArray(data.suppliers)) {
+        const delSuppList = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, []);
+        const delSuppSet = new Set<string>(delSuppList.map(s => s.trim().toLowerCase()));
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
           const map = new Map<string, any>();
           data.suppliers.forEach((sp: any) => {
             if (!sp) return;
-            const nameKey = (sp.name || sp.company || '').trim().toLowerCase();
-            const key = nameKey ? `name:${nameKey}` : (sp.id || '');
+            const name = (sp.name || sp.company || '').trim();
+            const nameLower = name.toLowerCase();
+            if (delSuppSet.has(nameLower)) return;
+            const key = nameLower ? `name:${nameLower}` : (sp.id || '');
             if (key) map.set(key, sp);
           });
           current.forEach((sp: any) => {
             if (!sp) return;
-            const nameKey = (sp.name || sp.company || '').trim().toLowerCase();
-            const key = nameKey ? `name:${nameKey}` : (sp.id || '');
+            const name = (sp.name || sp.company || '').trim();
+            const nameLower = name.toLowerCase();
+            if (delSuppSet.has(nameLower)) return;
+            const key = nameLower ? `name:${nameLower}` : (sp.id || '');
             if (key) {
               const existing = map.get(key);
               map.set(key, existing ? { ...existing, ...sp } : sp);
@@ -442,22 +471,42 @@ export function restoreERPBackupData(
           });
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(Array.from(map.values())));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(data.suppliers));
+          const filtered = data.suppliers.filter((sp: any) => {
+            const name = (sp?.name || sp?.company || '').trim().toLowerCase();
+            return !delSuppSet.has(name);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(filtered));
         }
       }
 
       // 13. Purchases & Supplier Dues Safe Merge
       if (Array.isArray(data.purchases)) {
+        const delPurList = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
+        const delPurSet = new Set<string>(delPurList.map(s => s.trim().toUpperCase()));
+        const delSuppList = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, []);
+        const delSuppSet = new Set<string>(delSuppList.map(s => s.trim().toLowerCase()));
+
+        const isValidPurchase = (pu: any) => {
+          if (!pu) return false;
+          const id = (pu.id || '').trim().toUpperCase();
+          const billNo = (pu.billNumber || '').trim().toUpperCase();
+          if (id && delPurSet.has(id)) return false;
+          if (billNo && delPurSet.has(billNo)) return false;
+          const supp = (pu.supplierName || '').trim().toLowerCase();
+          if (supp && delSuppSet.has(supp)) return false;
+          return true;
+        };
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
           const map = new Map<string, any>();
           data.purchases.forEach((pu: any) => {
-            if (!pu) return;
+            if (!isValidPurchase(pu)) return;
             const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
             if (billKey) map.set(billKey, pu);
           });
           current.forEach((pu: any) => {
-            if (!pu) return;
+            if (!isValidPurchase(pu)) return;
             const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
             if (billKey) {
               const existing = map.get(billKey);
@@ -466,7 +515,7 @@ export function restoreERPBackupData(
           });
           localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(Array.from(map.values())));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(data.purchases));
+          localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(data.purchases.filter(isValidPurchase)));
         }
       }
 

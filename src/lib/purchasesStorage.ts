@@ -675,22 +675,49 @@ export function updateSupplierDetails(
  * Deletes a supplier and all their associated purchase bills
  */
 export function deleteSupplierAndBills(supplierName: string): boolean {
+  const cleanName = supplierName.trim();
+  const cleanNameLower = cleanName.toLowerCase();
+
   const allBills = getStoredPurchases();
-  const filteredBills = allBills.filter(
-    (bill) => bill.supplierName.trim().toLowerCase() !== supplierName.trim().toLowerCase()
-  );
+  const deletedBillIds: string[] = [];
+  const filteredBills = allBills.filter((bill) => {
+    if (bill.supplierName && bill.supplierName.trim().toLowerCase() === cleanNameLower) {
+      if (bill.id) deletedBillIds.push(bill.id);
+      if (bill.billNumber) deletedBillIds.push(bill.billNumber);
+      return false;
+    }
+    return true;
+  });
 
   saveStoredPurchases(filteredBills);
 
-  // Also remove from globotech_erp_suppliers if present
   if (typeof window !== 'undefined') {
     try {
+      // 1. Persist deleted supplier name tombstone
+      const savedDelSupp = localStorage.getItem('globotech_erp_deleted_supplier_names');
+      const delSuppList: string[] = savedDelSupp ? JSON.parse(savedDelSupp) : [];
+      if (!delSuppList.includes(cleanNameLower)) {
+        delSuppList.push(cleanNameLower);
+        localStorage.setItem('globotech_erp_deleted_supplier_names', JSON.stringify(delSuppList));
+      }
+
+      // 2. Persist deleted bill IDs
+      if (deletedBillIds.length > 0) {
+        const savedDelPur = localStorage.getItem('globotech_erp_deleted_purchases');
+        const delPurList: string[] = savedDelPur ? JSON.parse(savedDelPur) : [];
+        deletedBillIds.forEach((id) => {
+          if (!delPurList.includes(id)) delPurList.push(id);
+        });
+        localStorage.setItem('globotech_erp_deleted_purchases', JSON.stringify(delPurList));
+      }
+
+      // 3. Remove from globotech_erp_suppliers
       const savedSuppliers = localStorage.getItem('globotech_erp_suppliers');
       if (savedSuppliers) {
         const parsedSuppliers = JSON.parse(savedSuppliers);
         if (Array.isArray(parsedSuppliers)) {
           const remainingSuppliers = parsedSuppliers.filter(
-            (s: any) => s.name && s.name.trim().toLowerCase() !== supplierName.trim().toLowerCase()
+            (s: any) => s.name && s.name.trim().toLowerCase() !== cleanNameLower
           );
           localStorage.setItem('globotech_erp_suppliers', JSON.stringify(remainingSuppliers));
           window.dispatchEvent(new CustomEvent('globotech_suppliers_updated', { detail: remainingSuppliers }));
@@ -716,11 +743,23 @@ export function addNewSupplier(supplier: {
 }): boolean {
   if (typeof window !== 'undefined') {
     try {
+      const cleanName = supplier.name.trim();
+
+      // Clear deletion tombstone if previously deleted
+      try {
+        const savedDel = localStorage.getItem('globotech_erp_deleted_supplier_names');
+        if (savedDel) {
+          const list: string[] = JSON.parse(savedDel);
+          const filtered = list.filter((n) => n.toLowerCase() !== cleanName.toLowerCase());
+          localStorage.setItem('globotech_erp_deleted_supplier_names', JSON.stringify(filtered));
+        }
+      } catch (e) {}
+
       const saved = localStorage.getItem('globotech_erp_suppliers');
       const list = saved ? JSON.parse(saved) : [];
       const newEntry = {
         id: `supp-${Date.now()}`,
-        name: supplier.name.trim(),
+        name: cleanName,
         country: supplier.country?.trim() || 'Bangladesh',
         city: '',
         contactPerson: '',
@@ -954,8 +993,19 @@ export interface CompanySummary {
 export function getCompanySummaries(bills: PurchaseBillRecord[]): CompanySummary[] {
   const map = new Map<string, CompanySummary>();
 
+  let delSuppSet = new Set<string>();
+  if (typeof window !== 'undefined') {
+    try {
+      const savedDeleted = localStorage.getItem('globotech_erp_deleted_supplier_names');
+      if (savedDeleted) {
+        delSuppSet = new Set<string>(JSON.parse(savedDeleted).map((s: string) => s.toLowerCase()));
+      }
+    } catch (e) {}
+  }
+
   for (const bill of bills) {
     const key = (bill.supplierName || 'Unknown Company').trim();
+    if (delSuppSet.has(key.toLowerCase())) continue;
     if (!map.has(key)) {
       map.set(key, {
         supplierName: key,
@@ -1021,7 +1071,7 @@ export function getCompanySummaries(bills: PurchaseBillRecord[]): CompanySummary
         if (Array.isArray(parsed)) {
           for (const s of parsed) {
             const key = (s.name || '').trim();
-            if (key && !map.has(key)) {
+            if (key && !delSuppSet.has(key.toLowerCase()) && !map.has(key)) {
               map.set(key, {
                 supplierName: key,
                 supplierId: s.id || '',
