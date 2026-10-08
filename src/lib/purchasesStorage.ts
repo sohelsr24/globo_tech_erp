@@ -961,6 +961,125 @@ export function addItemToPurchaseBill(
   return true;
 }
 
+/**
+ * Moves or splits an individual purchase item from its current bill to another existing bill,
+ * or creates a brand new Purchase Order (PO) bill for it.
+ */
+export function movePurchaseItemToBill(
+  sourceBillId: string,
+  targetBillOption: {
+    type: 'EXISTING' | 'NEW';
+    targetBillId?: string;
+    newBillNumber?: string;
+    newBillDate?: string;
+    initialPaidAmount?: number;
+  },
+  itemId: string
+): { success: boolean; newBillId?: string; error?: string } {
+  const allBills = getStoredPurchases();
+  const sourceIndex = allBills.findIndex((b) => b.id === sourceBillId);
+  if (sourceIndex === -1) return { success: false, error: 'Source bill not found' };
+
+  const sourceBill = allBills[sourceIndex];
+  const itemIndex = sourceBill.items.findIndex((it) => it.id === itemId);
+  if (itemIndex === -1) return { success: false, error: 'Item not found in source bill' };
+
+  const [item] = sourceBill.items.splice(itemIndex, 1);
+
+  // Recalculate source bill subtotal, total, due, status
+  const sourceSubtotal = sourceBill.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+  sourceBill.subtotal = sourceSubtotal;
+  const sourceTax = Number(sourceBill.taxOrDuty) || 0;
+  sourceBill.totalAmount = sourceSubtotal + sourceTax;
+  
+  // Paid amount for source bill
+  const sourcePaid = Math.min(Number(sourceBill.paidAmount) || 0, sourceBill.totalAmount);
+  sourceBill.paidAmount = sourcePaid;
+  sourceBill.dueAmount = Math.max(0, sourceBill.totalAmount - sourcePaid);
+  if (sourceBill.dueAmount <= 0) {
+    sourceBill.status = 'PAID';
+  } else if (sourcePaid > 0) {
+    sourceBill.status = 'PARTIAL';
+  } else {
+    sourceBill.status = 'UNPAID';
+  }
+  sourceBill.updatedAt = new Date().toISOString();
+
+  let resultingNewBillId: string | undefined;
+
+  if (targetBillOption.type === 'EXISTING' && targetBillOption.targetBillId) {
+    const targetIndex = allBills.findIndex((b) => b.id === targetBillOption.targetBillId);
+    if (targetIndex === -1) return { success: false, error: 'Target bill not found' };
+
+    const targetBill = allBills[targetIndex];
+    if (!Array.isArray(targetBill.items)) targetBill.items = [];
+    targetBill.items.push(item);
+
+    const targetSubtotal = targetBill.items.reduce((sum, it) => sum + (it.totalPrice || 0), 0);
+    targetBill.subtotal = targetSubtotal;
+    const targetTax = Number(targetBill.taxOrDuty) || 0;
+    targetBill.totalAmount = targetSubtotal + targetTax;
+    const targetPaid = Number(targetBill.paidAmount) || 0;
+    targetBill.dueAmount = Math.max(0, targetBill.totalAmount - targetPaid);
+    if (targetBill.dueAmount <= 0) {
+      targetBill.status = 'PAID';
+    } else if (targetPaid > 0) {
+      targetBill.status = 'PARTIAL';
+    } else {
+      targetBill.status = 'UNPAID';
+    }
+    targetBill.updatedAt = new Date().toISOString();
+    resultingNewBillId = targetBill.id;
+  } else {
+    // Create new bill
+    const newBillNo = targetBillOption.newBillNumber?.trim() || getNextPONumber(allBills);
+    const newBillDate = targetBillOption.newBillDate || sourceBill.date || new Date().toISOString().split('T')[0];
+    const newBillId = `PUR-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900) + 100}`;
+    const initialPaid = Math.max(0, Number(targetBillOption.initialPaidAmount) || 0);
+    const newBillTotal = item.totalPrice;
+    const newBillDue = Math.max(0, newBillTotal - initialPaid);
+
+    const newBill: PurchaseBillRecord = {
+      id: newBillId,
+      billNumber: newBillNo,
+      supplierId: sourceBill.supplierId,
+      supplierName: sourceBill.supplierName,
+      supplierCountry: sourceBill.supplierCountry,
+      supplierPhone: sourceBill.supplierPhone,
+      supplierEmail: sourceBill.supplierEmail,
+      date: newBillDate,
+      items: [item],
+      subtotal: newBillTotal,
+      totalAmount: newBillTotal,
+      paidAmount: initialPaid,
+      dueAmount: newBillDue,
+      status: newBillDue <= 0 ? 'PAID' : initialPaid > 0 ? 'PARTIAL' : 'UNPAID',
+      payments: initialPaid > 0 ? [{
+        id: `pay-${Date.now()}`,
+        date: newBillDate,
+        amount: initialPaid,
+        paymentMethod: 'Bank Transfer',
+        note: `Initial payment for moved item (${item.productName})`,
+        createdAt: new Date().toISOString()
+      }] : [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    allBills.push(newBill);
+    resultingNewBillId = newBillId;
+  }
+
+  // If source bill now has 0 items, delete source bill
+  let finalBills = allBills;
+  if (sourceBill.items.length === 0) {
+    finalBills = allBills.filter((b) => b.id !== sourceBillId);
+  }
+
+  saveStoredPurchases(finalBills);
+  return { success: true, newBillId: resultingNewBillId };
+}
+
 export interface CompanySummary {
   supplierName: string;
   supplierId: string;

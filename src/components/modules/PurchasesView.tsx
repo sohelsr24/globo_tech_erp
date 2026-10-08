@@ -32,7 +32,9 @@ import {
   ShieldAlert,
   Sparkles,
   TrendingUp,
-  ArrowDownRight
+  ArrowDownRight,
+  Split,
+  FolderTree
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -57,7 +59,8 @@ import {
   deletePurchaseItem,
   getNextPONumber,
   updatePurchaseBill,
-  addItemToPurchaseBill
+  addItemToPurchaseBill,
+  movePurchaseItemToBill
 } from '@/lib/purchasesStorage';
 import { getStoredProducts, ProductItem } from '@/lib/productsStorage';
 
@@ -79,6 +82,9 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [selectedSupplierName, setSelectedSupplierName] = useState<string | null>(null);
   const [supplierSubTab, setSupplierSubTab] = useState<'items' | 'bills' | 'payments'>('items');
   const [supplierItemSearch, setSupplierItemSearch] = useState<string>('');
+  const [selectedPOFilter, setSelectedPOFilter] = useState<string>('ALL');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('ALL');
+  const [itemsViewMode, setItemsViewMode] = useState<'grouped' | 'flat'>('grouped');
   const [updateRevision, setUpdateRevision] = useState<number>(0);
 
   // Modal States
@@ -118,6 +124,11 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
   const [editItemUnit, setEditItemUnit] = useState<string>('pcs');
   const [editItemUnitPrice, setEditItemUnitPrice] = useState<number>(0);
   const [editItemNotes, setEditItemNotes] = useState<string>('');
+  const [editItemTargetPOType, setEditItemTargetPOType] = useState<'CURRENT' | 'EXISTING' | 'NEW'>('CURRENT');
+  const [editItemTargetBillId, setEditItemTargetBillId] = useState<string>('');
+  const [editItemNewPONumber, setEditItemNewPONumber] = useState<string>('');
+  const [editItemNewPODate, setEditItemNewPODate] = useState<string>('');
+  const [editItemNewPOInitialPaid, setEditItemNewPOInitialPaid] = useState<number>(0);
 
   // Add Item to Bill Modal State
   const [isAddItemToBillModalOpen, setIsAddItemToBillModalOpen] = useState<boolean>(false);
@@ -142,6 +153,13 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
       setSearchQuery(globalSearchQuery);
     }
   }, [globalSearchQuery]);
+
+  // Reset PO & category filter whenever selected supplier changes
+  useEffect(() => {
+    setSelectedPOFilter('ALL');
+    setSelectedCategoryFilter('ALL');
+    setSupplierItemSearch('');
+  }, [selectedSupplierName]);
 
   // Listen for storage & external update events
   useEffect(() => {
@@ -175,18 +193,84 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     return companySummaries.find((c) => c.supplierName === selectedSupplierName) || null;
   }, [companySummaries, selectedSupplierName]);
 
+  // Distinct item categories for active supplier
+  const availableSupplierItemCategories = useMemo(() => {
+    if (!activeSupplierSummary) return [];
+    const set = new Set<string>();
+    for (const it of activeSupplierSummary.allItems) {
+      if (it.category && it.category.trim()) {
+        set.add(it.category.trim());
+      }
+    }
+    return Array.from(set).sort();
+  }, [activeSupplierSummary]);
+
   // Filtered items inside active supplier
   const activeSupplierFilteredItems = useMemo(() => {
     if (!activeSupplierSummary) return [];
+    let items = activeSupplierSummary.allItems;
+
+    if (selectedPOFilter !== 'ALL') {
+      items = items.filter(
+        (it) => it.billNumber.toLowerCase() === selectedPOFilter.toLowerCase() || it.billId === selectedPOFilter
+      );
+    }
+
+    if (selectedCategoryFilter !== 'ALL') {
+      items = items.filter(
+        (it) => (it.category || '').toLowerCase() === selectedCategoryFilter.toLowerCase()
+      );
+    }
+
     const q = supplierItemSearch.trim().toLowerCase();
-    if (!q) return activeSupplierSummary.allItems;
-    return activeSupplierSummary.allItems.filter((it) =>
+    if (!q) return items;
+    return items.filter((it) =>
       it.productName.toLowerCase().includes(q) ||
       (it.sku && it.sku.toLowerCase().includes(q)) ||
       it.billNumber.toLowerCase().includes(q) ||
-      (it.notes && it.notes.toLowerCase().includes(q))
+      (it.notes && it.notes.toLowerCase().includes(q)) ||
+      (it.category && it.category.toLowerCase().includes(q))
     );
-  }, [activeSupplierSummary, supplierItemSearch]);
+  }, [activeSupplierSummary, supplierItemSearch, selectedPOFilter, selectedCategoryFilter]);
+
+  // Bills inside active supplier filtered by PO filter and search
+  const activeSupplierFilteredBills = useMemo(() => {
+    if (!activeSupplierSummary) return [];
+    let billsList = activeSupplierSummary.bills;
+
+    if (selectedPOFilter !== 'ALL') {
+      billsList = billsList.filter(
+        (b) => b.billNumber.toLowerCase() === selectedPOFilter.toLowerCase() || b.id === selectedPOFilter
+      );
+    }
+
+    const q = supplierItemSearch.trim().toLowerCase();
+    if (!q && selectedCategoryFilter === 'ALL') return billsList;
+
+    return billsList.filter((bill) => {
+      const matchBillNo = bill.billNumber.toLowerCase().includes(q);
+      const matchItems = bill.items.some((it) => {
+        const matchesCategory =
+          selectedCategoryFilter === 'ALL' ||
+          (it.category || '').toLowerCase() === selectedCategoryFilter.toLowerCase();
+        const matchesText =
+          !q ||
+          it.productName.toLowerCase().includes(q) ||
+          (it.sku && it.sku.toLowerCase().includes(q)) ||
+          (it.category && it.category.toLowerCase().includes(q));
+        return matchesCategory && matchesText;
+      });
+      return matchBillNo || matchItems;
+    });
+  }, [activeSupplierSummary, supplierItemSearch, selectedPOFilter, selectedCategoryFilter]);
+
+  // Active filtered single bill (if a specific PO is chosen)
+  const activeFilteredBill = useMemo(() => {
+    if (!activeSupplierSummary || selectedPOFilter === 'ALL') return null;
+    return activeSupplierSummary.bills.find(
+      (b) => b.billNumber.toLowerCase() === selectedPOFilter.toLowerCase() || b.id === selectedPOFilter
+    ) || null;
+  }, [activeSupplierSummary, selectedPOFilter]);
 
   // Overall KPIs
   const overallKPIs = useMemo(() => {
@@ -629,6 +713,11 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     setEditItemUnit(item.unit || 'pcs');
     setEditItemUnitPrice(item.unitPrice || 0);
     setEditItemNotes(item.notes || '');
+    setEditItemTargetPOType('CURRENT');
+    setEditItemTargetBillId(item.billId);
+    setEditItemNewPONumber(getNextPONumber(purchases));
+    setEditItemNewPODate(item.purchaseDate || new Date().toISOString().split('T')[0]);
+    setEditItemNewPOInitialPaid(0);
     setIsEditItemModalOpen(true);
   };
 
@@ -646,6 +735,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     const qty = Math.max(1, Number(editItemQuantity) || 1);
     const unitRate = Math.max(0, Number(editItemUnitPrice) || 0);
 
+    // 1. Update the item's properties
     updatePurchaseItem(itemToEdit.billId, itemToEdit.id, {
       productName: trimmedName,
       sku: editItemSku.trim() || undefined,
@@ -657,7 +747,31 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
       notes: editItemNotes.trim() || undefined
     });
 
+    // 2. Check if user moved or split this item to another PO
+    if (editItemTargetPOType === 'EXISTING' && editItemTargetBillId && editItemTargetBillId !== itemToEdit.billId) {
+      movePurchaseItemToBill(
+        itemToEdit.billId,
+        {
+          type: 'EXISTING',
+          targetBillId: editItemTargetBillId
+        },
+        itemToEdit.id
+      );
+    } else if (editItemTargetPOType === 'NEW') {
+      movePurchaseItemToBill(
+        itemToEdit.billId,
+        {
+          type: 'NEW',
+          newBillNumber: editItemNewPONumber.trim() || getNextPONumber(purchases),
+          newBillDate: editItemNewPODate || editItemDate,
+          initialPaidAmount: Math.max(0, Number(editItemNewPOInitialPaid) || 0)
+        },
+        itemToEdit.id
+      );
+    }
+
     setPurchases(getStoredPurchases());
+    setUpdateRevision((prev) => prev + 1);
     setIsEditItemModalOpen(false);
     setItemToEdit(null);
   };
@@ -1496,239 +1610,652 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                 </div>
               </div>
 
-              {/* SUB-VIEW 1: ITEM-BY-ITEM PURCHASE HISTORY (USER CORE DEMAND) */}
+              {/* SUB-VIEW 1: ITEM-BY-ITEM PURCHASE HISTORY & PO CATEGORY DRILLDOWN */}
               {supplierSubTab === 'items' && (
-                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                  <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
-                        <Package className="w-4 h-4 text-blue-400" />
-                        <span>Complete Item-by-Item Purchase & Rate History</span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        Individual breakdown showing purchase dates, item costs, bill values, paid amounts, and dues.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-800">
-                        {activeSupplierFilteredItems.length} Items Recorded
-                      </span>
-                      {activeSupplierSummary.bills.length > 0 && (
+                <div className="space-y-4">
+                  {/* Category & PO Filtering Header Card */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="p-4 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
+                          <Package className="w-4 h-4 text-blue-400" />
+                          <span>Complete Item-by-Item Purchase & Rate History</span>
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          View purchased products organized by Purchase Order (PO) categories or full catalog breakdown.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* View Mode Toggle */}
+                        <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setItemsViewMode('grouped')}
+                            className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
+                              itemsViewMode === 'grouped'
+                                ? 'bg-blue-600 text-white shadow'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            title="Group items into separate cards for each PO"
+                          >
+                            <Layers className="w-3.5 h-3.5" />
+                            <span>Group by PO</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setItemsViewMode('flat')}
+                            className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
+                              itemsViewMode === 'flat'
+                                ? 'bg-blue-600 text-white shadow'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            title="View all items in a single unified table"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>Flat Table</span>
+                          </button>
+                        </div>
+
+                        <span className="text-xs text-blue-400 font-bold bg-blue-950/60 px-2.5 py-1.5 rounded-xl border border-blue-800 whitespace-nowrap">
+                          {activeSupplierFilteredItems.length} Items Recorded
+                        </span>
+
+                        {activeSupplierSummary.bills.length > 0 && (
+                          <button
+                            onClick={() => {
+                              const targetBill = activeFilteredBill || activeSupplierSummary.bills[0];
+                              openAddItemModalForBill(
+                                targetBill.id,
+                                targetBill.billNumber,
+                                activeSupplierSummary.supplierName,
+                                targetBill.totalAmount,
+                                targetBill.dueAmount
+                              );
+                            }}
+                            className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95 whitespace-nowrap"
+                            title="Add an item to purchase bill"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>+ Add Item</span>
+                          </button>
+                        )}
+
                         <button
-                          onClick={() => {
-                            const latestBill = activeSupplierSummary.bills[0];
-                            openAddItemModalForBill(
-                              latestBill.id,
-                              latestBill.billNumber,
-                              activeSupplierSummary.supplierName,
-                              latestBill.totalAmount,
-                              latestBill.dueAmount
-                            );
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95"
-                          title="Add an item to the latest purchase bill"
+                          onClick={() => openNewBillModal(activeSupplierSummary.supplierName)}
+                          className="px-2.5 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-bold transition flex items-center gap-1 shadow-sm active:scale-95 whitespace-nowrap"
+                          title="Create a new Purchase Order for this supplier"
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>+ Add Item to Bill</span>
+                          <span>+ New PO</span>
                         </button>
+                      </div>
+                    </div>
+
+                    {/* PO Category Chips Bar */}
+                    <div className="p-3.5 bg-slate-950/80 border-b border-slate-800 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <FolderTree className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Select Purchase Order (PO Category):</span>
+                        </span>
+                        {selectedPOFilter !== 'ALL' && (
+                          <button
+                            onClick={() => setSelectedPOFilter('ALL')}
+                            className="text-[11px] text-blue-400 hover:underline font-semibold"
+                          >
+                            Reset to All POs
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 overflow-x-auto touch-scroll pb-1">
+                        {/* All POs Button */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPOFilter('ALL')}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 whitespace-nowrap flex-shrink-0 border ${
+                            selectedPOFilter === 'ALL'
+                              ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30 ring-2 ring-blue-500/40'
+                              : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                          }`}
+                        >
+                          <Layers className="w-3.5 h-3.5" />
+                          <span>All Purchase Orders</span>
+                          <span
+                            className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              selectedPOFilter === 'ALL'
+                                ? 'bg-blue-800 text-blue-100'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {activeSupplierSummary.allItems.length}
+                          </span>
+                        </button>
+
+                        {/* Individual PO Buttons */}
+                        {activeSupplierSummary.bills.map((bill) => {
+                          const isSelected =
+                            selectedPOFilter.toLowerCase() === bill.billNumber.toLowerCase() ||
+                            selectedPOFilter === bill.id;
+                          return (
+                            <button
+                              key={bill.id}
+                              type="button"
+                              onClick={() => setSelectedPOFilter(isSelected ? 'ALL' : bill.billNumber)}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 whitespace-nowrap flex-shrink-0 border ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-600/30 ring-2 ring-blue-500/40'
+                                  : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:bg-slate-850'
+                              }`}
+                            >
+                              <FileText className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-blue-400'}`} />
+                              <span className="font-mono font-bold">{bill.billNumber}</span>
+                              <span className="text-[11px] opacity-85">
+                                ({bill.items.length} items &bull; {Formatters.currency(bill.totalAmount)})
+                              </span>
+                              <span
+                                className={`w-2 h-2 rounded-full ${
+                                  bill.status === 'PAID'
+                                    ? 'bg-emerald-400'
+                                    : bill.status === 'PARTIAL'
+                                    ? 'bg-amber-400'
+                                    : 'bg-rose-400'
+                                }`}
+                                title={`Status: ${bill.status}`}
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Product Category Filter Chips (if any exist) */}
+                      {availableSupplierItemCategories.length > 0 && (
+                        <div className="flex items-center gap-2 overflow-x-auto touch-scroll pt-2 border-t border-slate-800/60">
+                          <span className="text-[10px] font-bold uppercase text-slate-400 whitespace-nowrap">
+                            Item Categories:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCategoryFilter('ALL')}
+                            className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition whitespace-nowrap border ${
+                              selectedCategoryFilter === 'ALL'
+                                ? 'bg-slate-800 text-white border-slate-600'
+                                : 'bg-transparent text-slate-400 border-transparent hover:text-slate-200'
+                            }`}
+                          >
+                            All Categories
+                          </button>
+                          {availableSupplierItemCategories.map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() =>
+                                setSelectedCategoryFilter(selectedCategoryFilter === cat ? 'ALL' : cat)
+                              }
+                              className={`px-2 py-0.5 rounded-lg text-[11px] font-semibold transition whitespace-nowrap border ${
+                                selectedCategoryFilter === cat
+                                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/50'
+                                  : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
                       )}
                     </div>
-                  </div>
 
-                  {/* MOBILE RESPONSIVE ITEM CARDS (OPTIMIZED FOR TOUCHSCREENS) */}
-                  <div className="block md:hidden divide-y divide-slate-800">
-                    {activeSupplierFilteredItems.length === 0 ? (
-                      <div className="p-8 text-center text-slate-500 text-xs">
-                        No items found matching criteria for this supplier
-                      </div>
-                    ) : (
-                      activeSupplierFilteredItems.map((item, idx) => {
-                        const parentBill = activeSupplierSummary.bills.find((b) => b.id === item.billId);
-                        return (
-                          <div key={`m-item-${item.id}-${idx}`} className="p-4 space-y-2.5 hover:bg-slate-850/50 transition">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <div className="font-bold text-slate-100 text-sm">{item.productName}</div>
-                                <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
-                                  <span>{Formatters.date(item.purchaseDate)}</span>
-                                  <span>&bull;</span>
-                                  <span className="font-mono text-blue-400 font-semibold">{item.billNumber}</span>
-                                </div>
-                              </div>
-                              <Badge
-                                variant={
-                                  item.billStatus === 'PAID'
-                                    ? 'success'
-                                    : item.billStatus === 'PARTIAL'
-                                    ? 'warning'
-                                    : 'danger'
-                                }
-                              >
-                                {item.billStatus === 'PAID' ? 'Paid' : item.billStatus === 'PARTIAL' ? 'Partial' : 'Due'}
-                              </Badge>
+                    {/* Active Selected PO Dedicated Info Banner */}
+                    {activeFilteredBill && (
+                      <div className="p-4 bg-gradient-to-r from-blue-950/40 via-slate-900 to-indigo-950/40 border-b border-blue-900/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">
+                              Filtered PO:
+                            </span>
+                            <span className="font-mono text-base font-black text-white">
+                              {activeFilteredBill.billNumber}
+                            </span>
+                            <span className="text-xs text-slate-400">&bull;</span>
+                            <span className="text-xs text-slate-300">
+                              Date: {Formatters.date(activeFilteredBill.date)}
+                            </span>
+                            <Badge
+                              variant={
+                                activeFilteredBill.status === 'PAID'
+                                  ? 'success'
+                                  : activeFilteredBill.status === 'PARTIAL'
+                                  ? 'warning'
+                                  : 'danger'
+                              }
+                            >
+                              {activeFilteredBill.status === 'PAID'
+                                ? 'Fully Paid'
+                                : activeFilteredBill.status === 'PARTIAL'
+                                ? 'Partial Due'
+                                : 'Unpaid'}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-slate-400">
+                            Viewing all {activeFilteredBill.items.length} products purchased under this specific PO.
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-3 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block uppercase">PO Total</span>
+                              <span className="font-bold text-slate-100">
+                                {Formatters.currency(activeFilteredBill.totalAmount)}
+                              </span>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs">
-                              <div>
-                                <span className="text-[10px] text-slate-400 block uppercase">Quantity</span>
-                                <span className="font-bold text-slate-200">{item.quantity} {item.unit}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-blue-400 block uppercase">Unit Rate</span>
-                                <span className="font-bold text-blue-300">{Formatters.currency(item.unitPrice)}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-slate-400 block uppercase">Item Total</span>
-                                <span className="font-bold text-slate-100">{Formatters.currency(item.totalPrice)}</span>
-                              </div>
-                              <div>
-                                <span className="text-[10px] text-rose-400 block uppercase">Bill Due</span>
-                                <span className={`font-black ${item.billDue > 0 ? 'text-rose-400' : 'text-slate-400'}`}>
-                                  {Formatters.currency(item.billDue)}
-                                </span>
-                              </div>
+                            <div className="h-5 w-px bg-slate-800" />
+                            <div>
+                              <span className="text-[10px] text-emerald-400 block uppercase">Paid</span>
+                              <span className="font-bold text-emerald-400">
+                                {Formatters.currency(activeFilteredBill.paidAmount)}
+                              </span>
                             </div>
-
-                            <div className="flex items-center justify-between gap-2 pt-1">
-                              <div>
-                                {parentBill && parentBill.dueAmount > 0 ? (
-                                  <button
-                                    onClick={() => openPaymentModal(parentBill)}
-                                    className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition"
-                                  >
-                                    Pay Bill
-                                  </button>
-                                ) : (
-                                  <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/50">
-                                    Bill Settled
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  onClick={() => openAddItemModalForBill(item.billId, item.billNumber, selectedSupplierName || undefined)}
-                                  className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs"
-                                  title="Add Another Item"
-                                >
-                                  <Plus className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => openEditItemModal(item)}
-                                  className="p-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs"
-                                  title="Edit Item"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteItem(item.billId, item.id, item.productName)}
-                                  className="p-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/40 text-xs"
-                                  title="Delete Item"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                            <div className="h-5 w-px bg-slate-800" />
+                            <div>
+                              <span className="text-[10px] text-rose-400 block uppercase">Due</span>
+                              <span className="font-black text-rose-400">
+                                {Formatters.currency(activeFilteredBill.dueAmount)}
+                              </span>
                             </div>
                           </div>
-                        );
-                      })
+
+                          <div className="flex items-center gap-1.5">
+                            {activeFilteredBill.dueAmount > 0 && (
+                              <button
+                                onClick={() => openPaymentModal(activeFilteredBill)}
+                                className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition shadow-sm active:scale-95"
+                              >
+                                Pay Due
+                              </button>
+                            )}
+                            <button
+                              onClick={() =>
+                                openAddItemModalForBill(
+                                  activeFilteredBill.id,
+                                  activeFilteredBill.billNumber,
+                                  activeSupplierSummary.supplierName,
+                                  activeFilteredBill.totalAmount,
+                                  activeFilteredBill.dueAmount
+                                )
+                              }
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1 active:scale-95"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Add Item</span>
+                            </button>
+                            <button
+                              onClick={() => setSelectedPOFilter('ALL')}
+                              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+                            >
+                              Show All
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
 
-                  {/* DESKTOP TABLE (100% IDENTICAL COMPUTER VERSION) */}
-                  <div className="hidden md:block overflow-x-auto touch-scroll">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
-                          <th className="py-3 px-3 text-center w-12"># SL</th>
-                          <th className="py-3 px-3.5">Purchase Date</th>
-                          <th className="py-3 px-3.5">Product Name & Model / Specs</th>
-                          <th className="py-3 px-3.5">Bill / Invoice No</th>
-                          <th className="py-3 px-3 text-center">Qty</th>
-                          <th className="py-3 px-3.5 text-right bg-blue-950/30 text-blue-300 font-bold">
-                            Unit Price (Item Value)
-                          </th>
-                          <th className="py-3 px-3.5 text-right font-bold text-slate-200">Total Item Value</th>
-                          <th className="py-3 px-3.5 text-right text-slate-300">Bill Total</th>
-                          <th className="py-3 px-3.5 text-right text-emerald-400">Bill Paid</th>
-                          <th className="py-3 px-3.5 text-right text-rose-400">Bill Due</th>
-                          <th className="py-3 px-3 text-center">Bill Status</th>
-                          <th className="py-3 px-3 text-center">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-800/80">
+                  {/* VIEW MODE 1: GROUPED BY PO (SEPARATE CARDS PER PO - SOLVES USER PROBLEM COMPLETELY) */}
+                  {itemsViewMode === 'grouped' && (
+                    <div className="space-y-4">
+                      {activeSupplierFilteredBills.length === 0 ? (
+                        <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-2xl text-slate-500 text-xs">
+                          No purchase bills found matching current filter
+                        </div>
+                      ) : (
+                        activeSupplierFilteredBills.map((bill) => {
+                          const billItems = bill.items.filter((it) => {
+                            if (
+                              selectedCategoryFilter !== 'ALL' &&
+                              (it.category || '').toLowerCase() !== selectedCategoryFilter.toLowerCase()
+                            ) {
+                              return false;
+                            }
+                            const q = supplierItemSearch.trim().toLowerCase();
+                            if (!q) return true;
+                            return (
+                              it.productName.toLowerCase().includes(q) ||
+                              (it.sku && it.sku.toLowerCase().includes(q)) ||
+                              (it.category && it.category.toLowerCase().includes(q)) ||
+                              (it.notes && it.notes.toLowerCase().includes(q))
+                            );
+                          });
+
+                          return (
+                            <div
+                              key={bill.id}
+                              className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl"
+                            >
+                              {/* PO Header Card */}
+                              <div className="p-4 bg-slate-850/80 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2.5 flex-wrap">
+                                    <span className="font-mono text-sm font-bold text-blue-400 bg-blue-950/60 px-2.5 py-0.5 rounded-lg border border-blue-800">
+                                      {bill.billNumber}
+                                    </span>
+                                    <span className="text-xs text-slate-400">&bull;</span>
+                                    <span className="text-xs text-slate-300 font-medium">
+                                      Date: {Formatters.date(bill.date)}
+                                    </span>
+                                    <Badge
+                                      variant={
+                                        bill.status === 'PAID'
+                                          ? 'success'
+                                          : bill.status === 'PARTIAL'
+                                          ? 'warning'
+                                          : 'danger'
+                                      }
+                                    >
+                                      {bill.status === 'PAID'
+                                        ? 'Fully Paid'
+                                        : bill.status === 'PARTIAL'
+                                        ? 'Partial Due'
+                                        : 'Unpaid'}
+                                    </Badge>
+                                    <span className="text-xs text-slate-400 font-medium">
+                                      ({billItems.length} Products in this PO)
+                                    </span>
+                                  </div>
+                                  {bill.notes && (
+                                    <p className="text-[11px] text-slate-400 italic">{bill.notes}</p>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-3 flex-wrap justify-between md:justify-end">
+                                  <div className="flex items-center gap-3 text-xs bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                                    <div>
+                                      <span className="text-[10px] text-slate-400 block uppercase">PO Total</span>
+                                      <span className="font-bold text-slate-100">
+                                        {Formatters.currency(bill.totalAmount)}
+                                      </span>
+                                    </div>
+                                    <div className="h-5 w-px bg-slate-800" />
+                                    <div>
+                                      <span className="text-[10px] text-emerald-400 block uppercase">Paid</span>
+                                      <span className="font-bold text-emerald-400">
+                                        {Formatters.currency(bill.paidAmount)}
+                                      </span>
+                                    </div>
+                                    <div className="h-5 w-px bg-slate-800" />
+                                    <div>
+                                      <span className="text-[10px] text-rose-400 block uppercase">Due</span>
+                                      <span
+                                        className={`font-black ${
+                                          bill.dueAmount > 0 ? 'text-rose-400' : 'text-slate-400'
+                                        }`}
+                                      >
+                                        {Formatters.currency(bill.dueAmount)}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    {bill.dueAmount > 0 && (
+                                      <button
+                                        onClick={() => openPaymentModal(bill)}
+                                        className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition active:scale-95"
+                                      >
+                                        Pay
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() =>
+                                        openAddItemModalForBill(
+                                          bill.id,
+                                          bill.billNumber,
+                                          bill.supplierName,
+                                          bill.totalAmount,
+                                          bill.dueAmount
+                                        )
+                                      }
+                                      className="p-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs transition active:scale-95"
+                                      title={`Add Another Item to PO ${bill.billNumber}`}
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      onClick={() => openEditBillModal(bill)}
+                                      className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95"
+                                      title="Edit PO Details"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Mobile View for this PO */}
+                              <div className="block md:hidden divide-y divide-slate-800">
+                                {billItems.length === 0 ? (
+                                  <div className="p-4 text-center text-slate-500 text-xs">
+                                    No items match search criteria in this PO
+                                  </div>
+                                ) : (
+                                  billItems.map((item, itemIdx) => (
+                                    <div
+                                      key={`g-m-${bill.id}-${item.id}-${itemIdx}`}
+                                      className="p-4 space-y-2.5 hover:bg-slate-850/50 transition"
+                                    >
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div>
+                                          <div className="font-bold text-slate-100 text-sm">
+                                            {item.productName}
+                                          </div>
+                                          {item.sku && (
+                                            <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                              SKU: {item.sku}
+                                              {item.category ? ` • ${item.category}` : ''}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs">
+                                        <div>
+                                          <span className="text-[10px] text-slate-400 block uppercase">Qty</span>
+                                          <span className="font-bold text-slate-200">
+                                            {item.quantity} {item.unit}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <span className="text-[10px] text-blue-400 block uppercase">Rate</span>
+                                          <span className="font-bold text-blue-300">
+                                            {Formatters.currency(item.unitPrice)}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <span className="text-[10px] text-slate-400 block uppercase">Total</span>
+                                          <span className="font-bold text-slate-100">
+                                            {Formatters.currency(item.totalPrice)}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      <div className="flex items-center justify-end gap-1.5 pt-1">
+                                        <button
+                                          onClick={() =>
+                                            openEditItemModal({
+                                              ...item,
+                                              billId: bill.id,
+                                              billNumber: bill.billNumber,
+                                              purchaseDate: bill.date,
+                                              supplierName: bill.supplierName
+                                            })
+                                          }
+                                          className="px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs flex items-center gap-1"
+                                          title="Edit Item or Move to Another PO"
+                                        >
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                          <span>Edit / Move PO</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteItem(bill.id, item.id, item.productName)}
+                                          className="p-1 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/40 text-xs"
+                                          title="Delete Item"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+
+                              {/* Desktop Table for this PO */}
+                              <div className="hidden md:block overflow-x-auto touch-scroll">
+                                <table className="w-full text-left border-collapse text-xs">
+                                  <thead>
+                                    <tr className="bg-slate-950/60 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
+                                      <th className="py-2.5 px-3 text-center w-12"># SL</th>
+                                      <th className="py-2.5 px-3.5">Product Name & Specs</th>
+                                      <th className="py-2.5 px-3.5">SKU & Category</th>
+                                      <th className="py-2.5 px-3 text-center">Qty</th>
+                                      <th className="py-2.5 px-3.5 text-right bg-blue-950/20 text-blue-300 font-bold">
+                                        Unit Price (Item Value)
+                                      </th>
+                                      <th className="py-2.5 px-3.5 text-right font-bold text-slate-200">
+                                        Total Item Value
+                                      </th>
+                                      <th className="py-2.5 px-3 text-center w-28">Actions</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-800/60">
+                                    {billItems.length === 0 ? (
+                                      <tr>
+                                        <td colSpan={7} className="py-6 text-center text-slate-500">
+                                          No items match criteria in this PO
+                                        </td>
+                                      </tr>
+                                    ) : (
+                                      billItems.map((item, itemIdx) => (
+                                        <tr
+                                          key={`g-row-${bill.id}-${item.id}-${itemIdx}`}
+                                          className="hover:bg-slate-800/30 transition"
+                                        >
+                                          <td className="py-2.5 px-3 text-center text-slate-500 font-mono text-[11px]">
+                                            {itemIdx + 1}
+                                          </td>
+                                          <td className="py-2.5 px-3.5 font-semibold text-slate-100">
+                                            {item.productName}
+                                            {item.notes && (
+                                              <span className="block text-[10px] text-slate-500 italic font-normal">
+                                                {item.notes}
+                                              </span>
+                                            )}
+                                          </td>
+                                          <td className="py-2.5 px-3.5 text-slate-400">
+                                            {item.sku && <span className="font-mono text-slate-300">{item.sku}</span>}
+                                            {item.category && (
+                                              <span className="ml-1 text-[11px] text-blue-400">
+                                                ({item.category})
+                                              </span>
+                                            )}
+                                            {!item.sku && !item.category && <span className="text-slate-600">-</span>}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center font-bold text-slate-200">
+                                            {item.quantity}{' '}
+                                            <span className="text-[11px] text-slate-400 font-normal">
+                                              {item.unit}
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 px-3.5 text-right font-bold text-blue-300 bg-blue-950/20 whitespace-nowrap">
+                                            {Formatters.currency(item.unitPrice)}
+                                            <span className="text-[10px] text-slate-400 block font-normal">
+                                              per {item.unit}
+                                            </span>
+                                          </td>
+                                          <td className="py-2.5 px-3.5 text-right font-bold text-slate-100 whitespace-nowrap">
+                                            {Formatters.currency(item.totalPrice)}
+                                          </td>
+                                          <td className="py-2.5 px-3 text-center">
+                                            <div className="flex items-center justify-center gap-1.5">
+                                              <button
+                                                onClick={() =>
+                                                  openEditItemModal({
+                                                    ...item,
+                                                    billId: bill.id,
+                                                    billNumber: bill.billNumber,
+                                                    purchaseDate: bill.date,
+                                                    supplierName: bill.supplierName
+                                                  })
+                                                }
+                                                className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
+                                                title="Edit Item Details, Rate, or Move/Split to another PO"
+                                              >
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  handleDeleteItem(bill.id, item.id, item.productName)
+                                                }
+                                                className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
+                                                title="Delete Item"
+                                              >
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                              </button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      ))
+                                    )}
+                                  </tbody>
+                                  <tfoot className="bg-slate-950/70 border-t border-slate-800 text-xs font-semibold text-slate-300">
+                                    <tr>
+                                      <td colSpan={5} className="py-2.5 px-3.5 text-right">
+                                        PO Total Value:
+                                      </td>
+                                      <td className="py-2.5 px-3.5 text-right font-bold text-slate-100">
+                                        {Formatters.currency(bill.totalAmount)}
+                                      </td>
+                                      <td className="py-2.5 px-3 text-center text-slate-500">
+                                        Due: {Formatters.currency(bill.dueAmount)}
+                                      </td>
+                                    </tr>
+                                  </tfoot>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+
+                  {/* VIEW MODE 2: FLAT ALL-ITEMS TABLE */}
+                  {itemsViewMode === 'flat' && (
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                      {/* MOBILE RESPONSIVE ITEM CARDS */}
+                      <div className="block md:hidden divide-y divide-slate-800">
                         {activeSupplierFilteredItems.length === 0 ? (
-                          <tr>
-                            <td colSpan={12} className="py-8 text-center text-slate-500">
-                              No items found matching criteria for this supplier
-                            </td>
-                          </tr>
+                          <div className="p-8 text-center text-slate-500 text-xs">
+                            No items found matching criteria for this supplier
+                          </div>
                         ) : (
                           activeSupplierFilteredItems.map((item, idx) => {
                             const parentBill = activeSupplierSummary.bills.find((b) => b.id === item.billId);
                             return (
-                              <tr key={`${item.id}-${idx}`} className="hover:bg-slate-800/40 transition">
-                                {/* SL */}
-                                <td className="py-3 px-3 text-center text-slate-500 font-mono text-[11px]">
-                                  {idx + 1}
-                                </td>
-
-                                {/* Purchase Date */}
-                                <td className="py-3 px-3.5 text-slate-300 whitespace-nowrap font-medium">
-                                  {Formatters.date(item.purchaseDate)}
-                                </td>
-
-                                {/* Product Name & SKU */}
-                                <td className="py-3 px-3.5">
-                                  <div className="font-semibold text-slate-100">{item.productName}</div>
-                                  {item.sku && (
-                                    <div className="text-[11px] text-slate-400 font-mono mt-0.5">
-                                      SKU: {item.sku}
-                                      {item.category ? ` • ${item.category}` : ''}
+                              <div
+                                key={`m-item-${item.id}-${idx}`}
+                                className="p-4 space-y-2.5 hover:bg-slate-850/50 transition"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <div className="font-bold text-slate-100 text-sm">{item.productName}</div>
+                                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400">
+                                      <span>{Formatters.date(item.purchaseDate)}</span>
+                                      <span>&bull;</span>
+                                      <span className="font-mono text-blue-400 font-semibold">
+                                        {item.billNumber}
+                                      </span>
                                     </div>
-                                  )}
-                                  {item.notes && (
-                                    <div className="text-[10px] text-slate-500 italic mt-0.5">{item.notes}</div>
-                                  )}
-                                </td>
-
-                                {/* Bill Number */}
-                                <td className="py-3 px-3.5 font-mono text-slate-300 whitespace-nowrap">
-                                  {item.billNumber}
-                                </td>
-
-                                {/* Quantity */}
-                                <td className="py-3 px-3 text-center font-bold text-slate-200">
-                                  {item.quantity} <span className="text-[11px] text-slate-400 font-normal">{item.unit}</span>
-                                </td>
-
-                                {/* UNIT PRICE (ITEM VALUE) */}
-                                <td className="py-3 px-3.5 text-right font-bold text-blue-300 bg-blue-950/20 whitespace-nowrap">
-                                  {Formatters.currency(item.unitPrice)}
-                                  <span className="text-[10px] text-slate-400 block font-normal">per {item.unit}</span>
-                                </td>
-
-                                {/* Total Item Value */}
-                                <td className="py-3 px-3.5 text-right font-bold text-slate-100 whitespace-nowrap">
-                                  {Formatters.currency(item.totalPrice)}
-                                </td>
-
-                                {/* Bill Total Amount */}
-                                <td className="py-3 px-3.5 text-right text-slate-300 whitespace-nowrap">
-                                  {parentBill ? Formatters.currency(parentBill.totalAmount) : '-'}
-                                </td>
-
-                                {/* Bill Paid Amount */}
-                                <td className="py-3 px-3.5 text-right font-semibold text-emerald-400 whitespace-nowrap">
-                                  {Formatters.currency(item.billPaid)}
-                                </td>
-
-                                {/* Bill Due Amount */}
-                                <td className="py-3 px-3.5 text-right font-bold text-rose-400 whitespace-nowrap">
-                                  {Formatters.currency(item.billDue)}
-                                </td>
-
-                                {/* Status */}
-                                <td className="py-3 px-3 text-center">
+                                  </div>
                                   <Badge
                                     variant={
                                       item.billStatus === 'PAID'
@@ -1738,59 +2265,260 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                                         : 'danger'
                                     }
                                   >
-                                    {item.billStatus === 'PAID' ? 'Paid' : item.billStatus === 'PARTIAL' ? 'Partial' : 'Due'}
+                                    {item.billStatus === 'PAID'
+                                      ? 'Paid'
+                                      : item.billStatus === 'PARTIAL'
+                                      ? 'Partial'
+                                      : 'Due'}
                                   </Badge>
-                                </td>
+                                </div>
 
-                                {/* Action */}
-                                <td className="py-3 px-3 text-center">
-                                  <div className="flex items-center justify-center gap-1.5">
+                                <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800 text-xs">
+                                  <div>
+                                    <span className="text-[10px] text-slate-400 block uppercase">Quantity</span>
+                                    <span className="font-bold text-slate-200">
+                                      {item.quantity} {item.unit}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-blue-400 block uppercase">Unit Rate</span>
+                                    <span className="font-bold text-blue-300">
+                                      {Formatters.currency(item.unitPrice)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-slate-400 block uppercase">Item Total</span>
+                                    <span className="font-bold text-slate-100">
+                                      {Formatters.currency(item.totalPrice)}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-[10px] text-rose-400 block uppercase">Bill Due</span>
+                                    <span
+                                      className={`font-black ${
+                                        item.billDue > 0 ? 'text-rose-400' : 'text-slate-400'
+                                      }`}
+                                    >
+                                      {Formatters.currency(item.billDue)}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center justify-between gap-2 pt-1">
+                                  <div>
                                     {parentBill && parentBill.dueAmount > 0 ? (
                                       <button
                                         onClick={() => openPaymentModal(parentBill)}
-                                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-sm active:scale-95"
-                                        title="Record Payment for Bill"
+                                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition"
                                       >
-                                        Pay
+                                        Pay Bill
                                       </button>
                                     ) : (
-                                      <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-900/50">
-                                        Settled
+                                      <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/50">
+                                        Bill Settled
                                       </span>
                                     )}
-
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
                                     <button
-                                      onClick={() => openAddItemModalForBill(item.billId, item.billNumber, selectedSupplierName || undefined)}
-                                      className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs transition active:scale-95 shadow-sm"
-                                      title={`Add Another Item to Bill (${item.billNumber})`}
+                                      onClick={() =>
+                                        openAddItemModalForBill(
+                                          item.billId,
+                                          item.billNumber,
+                                          selectedSupplierName || undefined
+                                        )
+                                      }
+                                      className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 text-xs"
+                                      title="Add Another Item"
                                     >
                                       <Plus className="w-3.5 h-3.5" />
                                     </button>
-
                                     <button
                                       onClick={() => openEditItemModal(item)}
-                                      className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
-                                      title="Edit Item Details & Rate"
+                                      className="p-1.5 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/40 text-xs"
+                                      title="Edit Item / Move PO"
                                     >
                                       <Edit2 className="w-3.5 h-3.5" />
                                     </button>
-
                                     <button
-                                      onClick={() => handleDeleteItem(item.billId, item.id, item.productName)}
-                                      className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
-                                      title="Delete Item from Bill"
+                                      onClick={() =>
+                                        handleDeleteItem(item.billId, item.id, item.productName)
+                                      }
+                                      className="p-1.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/40 text-xs"
+                                      title="Delete Item"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
                                   </div>
-                                </td>
-                              </tr>
+                                </div>
+                              </div>
                             );
                           })
                         )}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+
+                      {/* DESKTOP TABLE */}
+                      <div className="hidden md:block overflow-x-auto touch-scroll">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-slate-850 text-slate-400 border-b border-slate-800 font-semibold whitespace-nowrap">
+                              <th className="py-3 px-3 text-center w-12"># SL</th>
+                              <th className="py-3 px-3.5">Purchase Date</th>
+                              <th className="py-3 px-3.5">Product Name & Model / Specs</th>
+                              <th className="py-3 px-3.5">Bill / Invoice No</th>
+                              <th className="py-3 px-3 text-center">Qty</th>
+                              <th className="py-3 px-3.5 text-right bg-blue-950/30 text-blue-300 font-bold">
+                                Unit Price (Item Value)
+                              </th>
+                              <th className="py-3 px-3.5 text-right font-bold text-slate-200">
+                                Total Item Value
+                              </th>
+                              <th className="py-3 px-3.5 text-right text-slate-300">Bill Total</th>
+                              <th className="py-3 px-3.5 text-right text-emerald-400">Bill Paid</th>
+                              <th className="py-3 px-3.5 text-right text-rose-400">Bill Due</th>
+                              <th className="py-3 px-3 text-center">Bill Status</th>
+                              <th className="py-3 px-3 text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-800/80">
+                            {activeSupplierFilteredItems.length === 0 ? (
+                              <tr>
+                                <td colSpan={12} className="py-8 text-center text-slate-500">
+                                  No items found matching criteria for this supplier
+                                </td>
+                              </tr>
+                            ) : (
+                              activeSupplierFilteredItems.map((item, idx) => {
+                                const parentBill = activeSupplierSummary.bills.find(
+                                  (b) => b.id === item.billId
+                                );
+                                return (
+                                  <tr key={`${item.id}-${idx}`} className="hover:bg-slate-800/40 transition">
+                                    <td className="py-3 px-3 text-center text-slate-500 font-mono text-[11px]">
+                                      {idx + 1}
+                                    </td>
+                                    <td className="py-3 px-3.5 text-slate-300 whitespace-nowrap font-medium">
+                                      {Formatters.date(item.purchaseDate)}
+                                    </td>
+                                    <td className="py-3 px-3.5">
+                                      <div className="font-semibold text-slate-100">{item.productName}</div>
+                                      {item.sku && (
+                                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                          SKU: {item.sku}
+                                          {item.category ? ` • ${item.category}` : ''}
+                                        </div>
+                                      )}
+                                      {item.notes && (
+                                        <div className="text-[10px] text-slate-500 italic mt-0.5">
+                                          {item.notes}
+                                        </div>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-3.5 font-mono text-slate-300 whitespace-nowrap">
+                                      <button
+                                        onClick={() => setSelectedPOFilter(item.billNumber)}
+                                        className="text-blue-400 hover:underline font-bold"
+                                        title="Click to filter by this PO"
+                                      >
+                                        {item.billNumber}
+                                      </button>
+                                    </td>
+                                    <td className="py-3 px-3 text-center font-bold text-slate-200">
+                                      {item.quantity}{' '}
+                                      <span className="text-[11px] text-slate-400 font-normal">
+                                        {item.unit}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3.5 text-right font-bold text-blue-300 bg-blue-950/20 whitespace-nowrap">
+                                      {Formatters.currency(item.unitPrice)}
+                                      <span className="text-[10px] text-slate-400 block font-normal">
+                                        per {item.unit}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3.5 text-right font-bold text-slate-100 whitespace-nowrap">
+                                      {Formatters.currency(item.totalPrice)}
+                                    </td>
+                                    <td className="py-3 px-3.5 text-right text-slate-300 whitespace-nowrap">
+                                      {parentBill ? Formatters.currency(parentBill.totalAmount) : '-'}
+                                    </td>
+                                    <td className="py-3 px-3.5 text-right font-semibold text-emerald-400 whitespace-nowrap">
+                                      {Formatters.currency(item.billPaid)}
+                                    </td>
+                                    <td className="py-3 px-3.5 text-right font-bold text-rose-400 whitespace-nowrap">
+                                      {Formatters.currency(item.billDue)}
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                      <Badge
+                                        variant={
+                                          item.billStatus === 'PAID'
+                                            ? 'success'
+                                            : item.billStatus === 'PARTIAL'
+                                            ? 'warning'
+                                            : 'danger'
+                                        }
+                                      >
+                                        {item.billStatus === 'PAID'
+                                          ? 'Paid'
+                                          : item.billStatus === 'PARTIAL'
+                                          ? 'Partial'
+                                          : 'Due'}
+                                      </Badge>
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                      <div className="flex items-center justify-center gap-1.5">
+                                        {parentBill && parentBill.dueAmount > 0 ? (
+                                          <button
+                                            onClick={() => openPaymentModal(parentBill)}
+                                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-sm active:scale-95"
+                                            title="Record Payment for Bill"
+                                          >
+                                            Pay
+                                          </button>
+                                        ) : (
+                                          <span className="text-[10px] text-emerald-400 font-medium px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-900/50">
+                                            Settled
+                                          </span>
+                                        )}
+                                        <button
+                                          onClick={() =>
+                                            openAddItemModalForBill(
+                                              item.billId,
+                                              item.billNumber,
+                                              selectedSupplierName || undefined
+                                            )
+                                          }
+                                          className="p-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-xs transition active:scale-95 shadow-sm"
+                                          title={`Add Another Item to Bill (${item.billNumber})`}
+                                        >
+                                          <Plus className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => openEditItemModal(item)}
+                                          className="p-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-600 text-amber-300 hover:text-white border border-amber-500/40 text-xs transition active:scale-95 shadow-sm"
+                                          title="Edit Item Details, Rate, or Move/Split PO"
+                                        >
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            handleDeleteItem(item.billId, item.id, item.productName)
+                                          }
+                                          className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-xs transition active:scale-95 shadow-sm"
+                                          title="Delete Item from Bill"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1833,6 +2561,17 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                         </div>
 
                         <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedPOFilter(bill.billNumber);
+                              setSupplierSubTab('items');
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white border border-blue-500/40 text-xs font-semibold transition flex items-center gap-1 shadow-sm active:scale-95"
+                            title="View all items purchased in this PO"
+                          >
+                            <Package className="w-3.5 h-3.5" />
+                            <span>View Items ({bill.items.length})</span>
+                          </button>
                           {bill.dueAmount > 0 && (
                             <button
                               onClick={() => openPaymentModal(bill)}
@@ -3175,6 +3914,84 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
               />
             </div>
 
+            {/* Purchase Order (PO) / Bill Assignment */}
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Split className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Assign to Purchase Order (PO) / Bill</span>
+                </label>
+                <span className="text-[11px] text-slate-400">
+                  Current: <strong className="text-blue-300 font-mono">{itemToEdit.billNumber}</strong>
+                </span>
+              </div>
+
+              <select
+                value={editItemTargetPOType === 'NEW' ? 'NEW_PO' : editItemTargetBillId}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === 'NEW_PO') {
+                    setEditItemTargetPOType('NEW');
+                    setEditItemNewPONumber(getNextPONumber(purchases));
+                    setEditItemNewPODate(editItemDate || new Date().toISOString().split('T')[0]);
+                  } else {
+                    setEditItemTargetPOType(val === itemToEdit.billId ? 'CURRENT' : 'EXISTING');
+                    setEditItemTargetBillId(val);
+                  }
+                }}
+                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500 font-medium"
+              >
+                <option value={itemToEdit.billId}>
+                  Keep in Current PO: {itemToEdit.billNumber}
+                </option>
+                {activeSupplierSummary?.bills
+                  .filter((b) => b.id !== itemToEdit.billId)
+                  .map((b) => (
+                    <option key={b.id} value={b.id}>
+                      Move to Existing PO: {b.billNumber} ({Formatters.date(b.date)} - {b.items.length} items)
+                    </option>
+                  ))}
+                <option value="NEW_PO">
+                  ➕ Split / Move to Brand New PO (Create Separate Purchase Order)...
+                </option>
+              </select>
+
+              {editItemTargetPOType === 'NEW' && (
+                <div className="p-3 rounded-lg bg-blue-950/40 border border-blue-800/50 space-y-2.5 mt-2 animate-in fade-in duration-200">
+                  <p className="text-[11px] text-blue-300 font-semibold">
+                    This item will be moved to a brand new Purchase Order for this supplier:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        New PO Number *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editItemNewPONumber}
+                        onChange={(e) => setEditItemNewPONumber(e.target.value)}
+                        placeholder="e.g. PO-2026-108"
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-100 font-mono outline-none focus:border-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">
+                        New PO Purchase Date *
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={editItemNewPODate}
+                        onChange={(e) => setEditItemNewPODate(e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Actions */}
             <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-800">
               <button
@@ -3368,6 +4185,37 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                 <span>Current Outstanding Due: <strong className="text-rose-400">{Formatters.currency(targetBillForNewItem.currentDue || 0)}</strong></span>
               </div>
             </div>
+
+            {/* Target PO Selector (if supplier has multiple bills) */}
+            {activeSupplierSummary && activeSupplierSummary.bills.length > 1 && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  Choose Purchase Order (PO) *
+                </label>
+                <select
+                  value={targetBillForNewItem.billId}
+                  onChange={(e) => {
+                    const chosenBill = activeSupplierSummary.bills.find((b) => b.id === e.target.value);
+                    if (chosenBill) {
+                      setTargetBillForNewItem({
+                        billId: chosenBill.id,
+                        billNumber: chosenBill.billNumber,
+                        supplierName: chosenBill.supplierName,
+                        currentTotal: chosenBill.totalAmount,
+                        currentDue: chosenBill.dueAmount
+                      });
+                    }
+                  }}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-xs text-slate-100 outline-none focus:border-blue-500 font-medium"
+                >
+                  {activeSupplierSummary.bills.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.billNumber} &bull; Date: {Formatters.date(b.date)} &bull; {b.items.length} items &bull; Total: {Formatters.currency(b.totalAmount)} ({b.status})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Product Name */}
             <div>
