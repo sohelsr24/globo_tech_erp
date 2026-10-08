@@ -404,13 +404,58 @@ export function getStoredPurchases(): PurchaseBillRecord[] {
           } catch (err) {}
         }
 
-        return finalPurchases;
+        return finalPurchases.sort(sortBillsDesc);
       }
     }
   } catch (e) {
     console.error('Error reading purchases from storage:', e);
   }
-  return INITIAL_PURCHASES;
+  return [...INITIAL_PURCHASES].sort(sortBillsDesc);
+}
+
+/**
+ * Sorts purchase bills in descending order by serial number / creation date
+ * so that newer POs (e.g. PO-2026-110 before PO-2026-107) are always at the top.
+ */
+export function sortBillsDesc(a: PurchaseBillRecord, b: PurchaseBillRecord): number {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+
+  // 1. Compare PO Number numeric sequences if present
+  const extractSeq = (billNo?: string) => {
+    if (!billNo) return null;
+    const trimmed = String(billNo).trim();
+    const match = trimmed.match(/(?:(\d{4})[-_])?(\d+)$/);
+    if (match) {
+      return {
+        year: parseInt(match[1] || '0', 10),
+        seq: parseInt(match[2], 10)
+      };
+    }
+    return null;
+  };
+
+  const pa = extractSeq(a.billNumber);
+  const pb = extractSeq(b.billNumber);
+
+  if (pa && pb) {
+    if (pb.year !== pa.year) return pb.year - pa.year;
+    if (pb.seq !== pa.seq) return pb.seq - pa.seq;
+  }
+
+  // 2. Compare bill dates (YYYY-MM-DD) descending
+  if (a.date && b.date && a.date !== b.date) {
+    return b.date.localeCompare(a.date);
+  }
+
+  // 3. Compare createdAt timestamps descending
+  if (a.createdAt && b.createdAt && a.createdAt !== b.createdAt) {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  }
+
+  // 4. Natural numeric string sort descending
+  return (b.billNumber || '').localeCompare(a.billNumber || '', undefined, { numeric: true });
 }
 
 /**
@@ -419,8 +464,9 @@ export function getStoredPurchases(): PurchaseBillRecord[] {
 export function saveStoredPurchases(purchases: PurchaseBillRecord[]): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(PURCHASES_STORAGE_KEY, JSON.stringify(purchases));
-    window.dispatchEvent(new CustomEvent('globotech_purchases_updated', { detail: purchases }));
+    const sorted = [...purchases].sort(sortBillsDesc);
+    localStorage.setItem(PURCHASES_STORAGE_KEY, JSON.stringify(sorted));
+    window.dispatchEvent(new CustomEvent('globotech_purchases_updated', { detail: sorted }));
   } catch (e) {
     console.error('Error saving purchases to storage:', e);
   }
@@ -1216,8 +1262,18 @@ export function getCompanySummaries(bills: PurchaseBillRecord[]): CompanySummary
     }
   }
 
-  // Determine overall company status
+  // Determine overall company status and sort bills descending (newest PO at the top)
   Array.from(map.values()).forEach((summary) => {
+    summary.bills.sort(sortBillsDesc);
+    summary.allItems.sort((a, b) => {
+      const billCompare = sortBillsDesc(
+        { billNumber: a.billNumber, date: a.purchaseDate } as any,
+        { billNumber: b.billNumber, date: b.purchaseDate } as any
+      );
+      if (billCompare !== 0) return billCompare;
+      return 0;
+    });
+
     if (summary.totalDue <= 0) {
       summary.status = 'PAID';
     } else if (summary.totalPaid > 0) {

@@ -60,7 +60,8 @@ import {
   getNextPONumber,
   updatePurchaseBill,
   addItemToPurchaseBill,
-  movePurchaseItemToBill
+  movePurchaseItemToBill,
+  sortBillsDesc
 } from '@/lib/purchasesStorage';
 import { getStoredProducts, ProductItem } from '@/lib/productsStorage';
 
@@ -233,10 +234,10 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     );
   }, [activeSupplierSummary, supplierItemSearch, selectedPOFilter, selectedCategoryFilter]);
 
-  // Bills inside active supplier filtered by PO filter and search
+  // Bills inside active supplier filtered by PO filter and search (newest PO serial on top)
   const activeSupplierFilteredBills = useMemo(() => {
     if (!activeSupplierSummary) return [];
-    let billsList = activeSupplierSummary.bills;
+    let billsList = [...activeSupplierSummary.bills];
 
     if (selectedPOFilter !== 'ALL') {
       billsList = billsList.filter(
@@ -245,23 +246,25 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     }
 
     const q = supplierItemSearch.trim().toLowerCase();
-    if (!q && selectedCategoryFilter === 'ALL') return billsList;
-
-    return billsList.filter((bill) => {
-      const matchBillNo = bill.billNumber.toLowerCase().includes(q);
-      const matchItems = bill.items.some((it) => {
-        const matchesCategory =
-          selectedCategoryFilter === 'ALL' ||
-          (it.category || '').toLowerCase() === selectedCategoryFilter.toLowerCase();
-        const matchesText =
-          !q ||
-          it.productName.toLowerCase().includes(q) ||
-          (it.sku && it.sku.toLowerCase().includes(q)) ||
-          (it.category && it.category.toLowerCase().includes(q));
-        return matchesCategory && matchesText;
+    if (q || selectedCategoryFilter !== 'ALL') {
+      billsList = billsList.filter((bill) => {
+        const matchBillNo = bill.billNumber.toLowerCase().includes(q);
+        const matchItems = bill.items.some((it) => {
+          const matchesCategory =
+            selectedCategoryFilter === 'ALL' ||
+            (it.category || '').toLowerCase() === selectedCategoryFilter.toLowerCase();
+          const matchesText =
+            !q ||
+            it.productName.toLowerCase().includes(q) ||
+            (it.sku && it.sku.toLowerCase().includes(q)) ||
+            (it.category && it.category.toLowerCase().includes(q));
+          return matchesCategory && matchesText;
+        });
+        return matchBillNo || matchItems;
       });
-      return matchBillNo || matchItems;
-    });
+    }
+
+    return billsList.sort(sortBillsDesc);
   }, [activeSupplierSummary, supplierItemSearch, selectedPOFilter, selectedCategoryFilter]);
 
   // Active filtered single bill (if a specific PO is chosen)
@@ -366,7 +369,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
     }
 
     const query = searchQuery.trim().toLowerCase();
-    return list.filter((item) => {
+    const filtered = list.filter((item) => {
       if (selectedCompanyFilter !== 'ALL' && item.supplierName !== selectedCompanyFilter) return false;
       if (selectedStatusFilter === 'DUE' && item.billDue <= 0) return false;
       if (selectedStatusFilter === 'PAID' && item.billDue > 0) return false;
@@ -379,13 +382,15 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
         item.billNumber.toLowerCase().includes(query)
       );
     });
+
+    return filtered.sort((a, b) => sortBillsDesc(a.fullBill, b.fullBill));
   }, [purchases, selectedCompanyFilter, selectedStatusFilter, searchQuery]);
 
   // Filtered Bills
   const filteredBills = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return purchases.filter((bill) => {
+    const filtered = purchases.filter((bill) => {
       if (selectedCompanyFilter !== 'ALL' && bill.supplierName !== selectedCompanyFilter) return false;
       if (selectedStatusFilter === 'DUE' && bill.dueAmount <= 0) return false;
       if (selectedStatusFilter === 'PAID' && bill.dueAmount > 0) return false;
@@ -398,6 +403,8 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
       );
       return matchBillNo || matchSupplier || matchItem;
     });
+
+    return filtered.sort(sortBillsDesc);
   }, [purchases, selectedCompanyFilter, selectedStatusFilter, searchQuery]);
 
 
