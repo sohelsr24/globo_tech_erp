@@ -198,7 +198,7 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
 /**
  * Pulls the latest master database from Cloud Server and updates local device storage via Union Merge
  */
-export async function pullFromCloud(options: { silent?: boolean } = {}): Promise<{ success: boolean; message: string }> {
+export async function pullFromCloud(options: { silent?: boolean; expectedTimestamp?: number } = {}): Promise<{ success: boolean; message: string }> {
   if (typeof window === 'undefined') return { success: false, message: 'SSR' };
   if (isSyncInProgress) return { success: false, message: 'Sync already in progress' };
 
@@ -245,10 +245,10 @@ export async function pullFromCloud(options: { silent?: boolean } = {}): Promise
     }
 
     if (restoreResult.success) {
-      let serverTimestamp = Date.now();
+      let serverTimestamp = options.expectedTimestamp || Date.now();
       try {
         const payload = JSON.parse(jsonText);
-        serverTimestamp = Number(payload.meta?.timestamp) || serverTimestamp;
+        serverTimestamp = Number(payload.meta?.timestamp) || options.expectedTimestamp || serverTimestamp;
       } catch (e) {}
 
       localStorage.setItem(STORAGE_KEY_LAST_SYNCED, serverTimestamp.toString());
@@ -319,9 +319,9 @@ export async function checkAndAutoSync(): Promise<void> {
       return;
     }
 
-    // 3. If server has a newer/different timestamp than local last sync, pull and union-merge!
-    if (serverTs > 0 && serverTs !== localLastSynced) {
-      await pullFromCloud({ silent: true });
+    // 3. If server has a newer timestamp than local last sync, pull and union-merge!
+    if (serverTs > 0 && serverTs > localLastSynced) {
+      await pullFromCloud({ silent: true, expectedTimestamp: serverTs });
       return;
     }
 

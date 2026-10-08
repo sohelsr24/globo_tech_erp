@@ -1085,13 +1085,17 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
   }, []);
 
-  // Continuous auto-sync to localStorage whenever quotations state updates (safeguarded: only after initial storage load completes)
+  // Continuous auto-sync to localStorage whenever quotations state updates (safeguarded: only after initial storage load completes and when data actually differs)
   useEffect(() => {
     if (hasLoadedFromStorage.current && typeof window !== 'undefined') {
       try {
-        localStorage.setItem('globotech_erp_quotations', JSON.stringify(quotations));
-        window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: quotations }));
-        forceImmediateBackup('quotations_updated');
+        const currentSaved = localStorage.getItem('globotech_erp_quotations');
+        const nextJson = JSON.stringify(quotations);
+        if (currentSaved !== nextJson) {
+          localStorage.setItem('globotech_erp_quotations', nextJson);
+          window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: quotations }));
+          forceImmediateBackup('quotations_updated');
+        }
       } catch (e) {
         console.error('Error syncing quotations to localStorage:', e);
       }
