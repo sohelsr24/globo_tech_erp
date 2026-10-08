@@ -4694,8 +4694,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </div>
               </div>
 
-              {/* Flexible spacer between Terms and Signatures - brings signatures UP to natural position */}
-              <div style={{ flex: '1 1 0%', minHeight: '36px' }} className="print:hidden" />
+              {/* Flexible spacer between Terms and Signatures - matches on-screen PDF layout in both preview and print */}
+              <div style={{ flex: '1 1 0%', minHeight: '36px' }} className="quotation-terms-spacer" />
 
               {/* SIGNATURES SECTION */}
               <div className="quotation-signatures-block relative z-10 w-full" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
