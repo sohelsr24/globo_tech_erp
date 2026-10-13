@@ -1267,17 +1267,26 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       const isNarrow = window.innerWidth < 1024;
       return isMobileUA || (isTouch && isNarrow);
     };
-    const mobile = detectMobile();
-    setIsMobileDevice(mobile);
-    if (typeof document !== 'undefined') {
-      if (mobile) {
-        document.body.classList.add('is-mobile-device');
-        document.body.classList.remove('is-desktop-device');
-      } else {
-        document.body.classList.add('is-desktop-device');
-        document.body.classList.remove('is-mobile-device');
+    const update = () => {
+      const mobile = detectMobile();
+      setIsMobileDevice(mobile);
+      if (typeof document !== 'undefined') {
+        if (mobile) {
+          document.body.classList.add('is-mobile-device');
+          document.body.classList.remove('is-desktop-device');
+        } else {
+          document.body.classList.add('is-desktop-device');
+          document.body.classList.remove('is-mobile-device');
+        }
       }
-    }
+    };
+    update();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
   }, []);
 
   const handleOpenEditTerms = (quote: Quotation) => {
@@ -2541,6 +2550,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Dedicated A4 Print & PDF handler with iOS AirPrint auto-A4 detection and bottom footer cohesion
   const handlePrintQuotation = () => {
     if (typeof window === 'undefined') return;
+    const isMobile = window.innerWidth < 1024 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile && typeof document !== 'undefined') {
+      document.body.classList.add('is-mobile-device');
+      setIsMobileDevice(true);
+    }
     const printElement = document.getElementById('printable-quotation-sheet');
     if (!printElement) {
       window.print();
@@ -4463,11 +4477,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: '280mm',
+                minHeight: isMobileDevice ? 'auto' : '280mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                padding: '10px 24px 14px 24px',
+                padding: isMobileDevice ? '12px 14px 12px 14px' : '10px 24px 14px 24px',
               }}
               className={`relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none ${
                 isMobileDevice

@@ -1186,6 +1186,9 @@ video {
 .resize-none {
   resize: none;
 }
+.resize {
+  resize: both;
+}
 .list-inside {
   list-style-position: inside;
 }
@@ -1477,6 +1480,10 @@ video {
 .border-blue-200 {
   --tw-border-opacity: 1;
   border-color: rgb(191 219 254 / var(--tw-border-opacity, 1));
+}
+.border-blue-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(96 165 250 / var(--tw-border-opacity, 1));
 }
 .border-blue-500 {
   --tw-border-opacity: 1;
@@ -1818,6 +1825,10 @@ video {
 }
 .bg-blue-600\/30 {
   background-color: rgb(37 99 235 / 0.3);
+}
+.bg-blue-800 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(30 64 175 / var(--tw-bg-opacity, 1));
 }
 .bg-blue-950 {
   --tw-bg-opacity: 1;
@@ -2633,6 +2644,10 @@ video {
   --tw-text-opacity: 1;
   color: rgb(0 0 0 / var(--tw-text-opacity, 1));
 }
+.text-blue-100 {
+  --tw-text-opacity: 1;
+  color: rgb(219 234 254 / var(--tw-text-opacity, 1));
+}
 .text-blue-200 {
   --tw-text-opacity: 1;
   color: rgb(191 219 254 / var(--tw-text-opacity, 1));
@@ -2848,6 +2863,9 @@ video {
 .opacity-80 {
   opacity: 0.8;
 }
+.opacity-85 {
+  opacity: 0.85;
+}
 .opacity-90 {
   opacity: 0.9;
 }
@@ -2986,6 +3004,11 @@ video {
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(1px + var(--tw-ring-offset-width)) var(--tw-ring-color);
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
+.ring-2 {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
 .ring-4 {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);
@@ -2994,6 +3017,9 @@ video {
 .ring-blue-500 {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity, 1));
+}
+.ring-blue-500\/40 {
+  --tw-ring-color: rgb(59 130 246 / 0.4);
 }
 .ring-purple-500\/20 {
   --tw-ring-color: rgb(168 85 247 / 0.2);
@@ -3199,16 +3225,14 @@ button, a, input, select, textarea {
   pointer-events: none;
 }
 
-/* Top-level Page Definition for standard A4 document printing (Forces iOS AirPrint & Chrome to select A4) */
+/* Top-level Page Definition for standard document printing (A4 & US Letter AirPrint Safe) */
 @page {
   size: A4 portrait;
-  size: 210mm 297mm;
-  margin: 4mm 8mm 4mm 8mm;
+  margin: 4mm 6mm 4mm 6mm;
 }
 @page :first {
   size: A4 portrait;
-  size: 210mm 297mm;
-  margin: 4mm 8mm 4mm 8mm;
+  margin: 4mm 6mm 4mm 6mm;
 }
 
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Responsive) */
@@ -3222,8 +3246,12 @@ button, a, input, select, textarea {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    height: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
     overflow: visible !important;
+    -webkit-text-size-adjust: 100% !important;
+    -moz-text-size-adjust: 100% !important;
+         text-size-adjust: 100% !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -3255,28 +3283,16 @@ button, a, input, select, textarea {
     visibility: visible;
   }
 
-  /* -----------------------------------------------------------
-     EXACT A4 PRINT LAYOUT (MATCHING ON-SCREEN PDF PREVIEW 100%)
-     Dynamic Flexbox: Signatures and Footer flow naturally,
-     matching the on-screen PDF preview position perfectly.
-     When items increase, signatures automatically move downward.
-     ----------------------------------------------------------- */
+  /* Base Printable Sheet Setup */
   .printable-area,
   .print-sheet,
-  #printable-quotation-sheet,
-  .desktop-single-page,
-  .mobile-single-page,
-  .desktop-multi-page,
-  .mobile-multi-page {
+  #printable-quotation-sheet {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-    min-height: 278mm !important;
-    height: auto !important;
-    max-height: none !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: column !important;
@@ -3290,40 +3306,114 @@ button, a, input, select, textarea {
     background-color: #ffffff !important;
     color: #000000 !important;
     overflow: visible !important;
-    page-break-before: avoid !important;
-    -moz-column-break-before: avoid !important;
-         break-before: avoid !important;
-    page-break-inside: auto !important;
-    -moz-column-break-inside: auto !important;
-         break-inside: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Spacers: Match the exact screen PDF layout in print */
-  .quotation-terms-spacer {
-    display: flex !important;
-    flex: 1 1 0% !important;
-    min-height: 32px !important;
+  /* -----------------------------------------------------------
+     1. MOBILE & TABLET SINGLE-PAGE (AIRPRINT / ANDROID 100% 1-PAGE)
+     Guaranteed 1-Page on iOS Safari AirPrint (US Letter & A4) & Android!
+     Signatures & footer sit naturally below content with zero page overflow.
+     ----------------------------------------------------------- */
+  body.is-mobile-device .printable-area,
+  body.is-mobile-device #printable-quotation-sheet,
+  body.is-mobile-device .mobile-single-page,
+  .mobile-single-page {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    page-break-before: avoid !important;
+    -moz-column-break-before: avoid !important;
+         break-before: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
   }
 
-  .quotation-print-spacer {
+  body.is-mobile-device .quotation-terms-spacer,
+  .mobile-single-page .quotation-terms-spacer {
     display: flex !important;
-    flex: 1 1 auto !important;
-    min-height: 28px !important;
+    flex: 0 0 auto !important;
+    min-height: 20px !important;
   }
 
-  /* Signatures: 100% Dynamic, exact same relative position as on-screen PDF */
-  .quotation-signatures-block,
-  .desktop-single-page .quotation-signatures-block,
-  .mobile-single-page .quotation-signatures-block,
-  .desktop-multi-page .quotation-signatures-block,
-  .mobile-multi-page .quotation-signatures-block {
+  body.is-mobile-device .quotation-signatures-block,
+  .mobile-single-page .quotation-signatures-block {
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 6px !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+  }
+
+  body.is-mobile-device .quotation-print-spacer,
+  .mobile-single-page .quotation-print-spacer {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 16px !important;
+  }
+
+  body.is-mobile-device .print-footer,
+  .mobile-single-page .print-footer {
     position: relative !important;
     top: auto !important;
     bottom: auto !important;
     left: auto !important;
     right: auto !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+    margin-bottom: 0 !important;
+    padding-top: 4px !important;
+    padding-bottom: 0 !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+  }
+
+  /* -----------------------------------------------------------
+     2. DESKTOP SINGLE-PAGE (PC VIEW - A4 & LETTER SAFE)
+     Calibrated to 260mm to fit comfortably on both A4 (297mm) and
+     Letter (279.4mm) without ever overflowing to page 2!
+     ----------------------------------------------------------- */
+  .desktop-single-page {
+    min-height: 260mm !important;
+    height: auto !important;
+    max-height: none !important;
+    page-break-before: avoid !important;
+    -moz-column-break-before: avoid !important;
+         break-before: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+  }
+
+  .desktop-single-page .quotation-terms-spacer {
+    display: flex !important;
+    flex: 1 1 0% !important;
+    min-height: 24px !important;
+  }
+
+  .desktop-single-page .quotation-print-spacer {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    min-height: 20px !important;
+  }
+
+  .desktop-single-page .quotation-signatures-block {
+    position: relative !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -3332,21 +3422,54 @@ button, a, input, select, textarea {
          break-inside: avoid !important;
   }
 
-  /* Footer: Sits cleanly at the bottom via flexbox margin-top: auto */
-  .print-footer,
-  .desktop-single-page .print-footer,
-  .mobile-single-page .print-footer,
-  .desktop-multi-page .print-footer,
-  .mobile-multi-page .print-footer {
+  .desktop-single-page .print-footer {
     position: relative !important;
-    top: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding-top: 8px !important;
+    padding-top: 6px !important;
+    padding-bottom: 2px !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+  }
+
+  /* -----------------------------------------------------------
+     3. MULTI-PAGE DOCUMENTS (> 4 items)
+     Natural pagination across pages for long quotations
+     ----------------------------------------------------------- */
+  .desktop-multi-page,
+  .mobile-multi-page {
+    min-height: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    page-break-inside: auto !important;
+    -moz-column-break-inside: auto !important;
+         break-inside: auto !important;
+  }
+
+  .desktop-multi-page .quotation-signatures-block,
+  .mobile-multi-page .quotation-signatures-block {
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+  }
+
+  .desktop-multi-page .print-footer,
+  .mobile-multi-page .print-footer {
+    position: relative !important;
+    width: 100% !important;
+    margin-top: 12px !important;
+    margin-bottom: 0 !important;
+    padding-top: 6px !important;
     padding-bottom: 2px !important;
     text-align: center !important;
     page-break-inside: avoid !important;
@@ -3681,6 +3804,9 @@ button, a, input, select, textarea {
 .hover\:bg-slate-800:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(30 41 59 / var(--tw-bg-opacity, 1));
+}
+.hover\:bg-slate-800\/30:hover {
+  background-color: rgb(30 41 59 / 0.3);
 }
 .hover\:bg-slate-800\/40:hover {
   background-color: rgb(30 41 59 / 0.4);
