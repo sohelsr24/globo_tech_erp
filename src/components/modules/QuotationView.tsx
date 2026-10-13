@@ -1262,7 +1262,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     const detectMobile = () => {
       if (typeof window === 'undefined') return false;
       const ua = navigator.userAgent || '';
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      const isIPad = navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua);
+      const isSmallScreen = window.innerWidth <= 800;
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      return isMobileUA || isIPad || (isTouch && isSmallScreen);
     };
     const update = () => {
       const mobile = detectMobile();
@@ -2548,7 +2552,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   const handlePrintQuotation = () => {
     if (typeof window === 'undefined') return;
     const ua = navigator.userAgent || '';
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const isIPad = navigator.maxTouchPoints > 1 && /Macintosh/i.test(ua);
+    const isSmallScreen = window.innerWidth <= 800;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isMobile = isMobileUA || isIPad || (isTouch && isSmallScreen);
     if (typeof document !== 'undefined') {
       if (isMobile) {
         document.body.classList.add('is-mobile-device');
@@ -4422,7 +4430,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           5. CUSTOMER-FACING PRINTABLE A4 PDF VIEW
           ======================================================== */}
       {activeViewMode === 'PDF' && selectedQuotation && (
-        <div className="space-y-4">
+        <div className="space-y-4 print:space-y-0 print:m-0 print:p-0">
           <div className="flex items-center justify-between no-print">
             <button
               onClick={() => setActiveViewMode('LIST')}
@@ -4836,8 +4844,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 </table>
               </div>
 
-              {/* Fixed spacing between Signatures and Footer - keeps signatures and footer neatly grouped at the bottom */}
-              <div style={{ flex: '0 0 14px', minHeight: '14px', height: '14px' }} className="quotation-print-spacer" />
+              {/* Lifted spacing between Signatures and Footer - keeps signatures higher up and footer pinned at bottom */}
+              <div style={{ flex: '0 0 32px', minHeight: '32px', height: '32px' }} className="quotation-print-spacer" />
 
               {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
               <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid', marginTop: 'auto', paddingTop: '8px', paddingBottom: '2px' }}>
