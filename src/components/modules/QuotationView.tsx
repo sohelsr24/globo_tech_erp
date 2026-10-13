@@ -1262,10 +1262,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     const detectMobile = () => {
       if (typeof window === 'undefined') return false;
       const ua = navigator.userAgent || '';
-      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      const isNarrow = window.innerWidth < 1024;
-      return isMobileUA || (isTouch && isNarrow);
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
     };
     const update = () => {
       const mobile = detectMobile();
@@ -2550,10 +2547,18 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Dedicated A4 Print & PDF handler with iOS AirPrint auto-A4 detection and bottom footer cohesion
   const handlePrintQuotation = () => {
     if (typeof window === 'undefined') return;
-    const isMobile = window.innerWidth < 1024 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    if (isMobile && typeof document !== 'undefined') {
-      document.body.classList.add('is-mobile-device');
-      setIsMobileDevice(true);
+    const ua = navigator.userAgent || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    if (typeof document !== 'undefined') {
+      if (isMobile) {
+        document.body.classList.add('is-mobile-device');
+        document.body.classList.remove('is-desktop-device');
+        setIsMobileDevice(true);
+      } else {
+        document.body.classList.add('is-desktop-device');
+        document.body.classList.remove('is-mobile-device');
+        setIsMobileDevice(false);
+      }
     }
     const printElement = document.getElementById('printable-quotation-sheet');
     if (!printElement) {
@@ -4477,11 +4482,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: isMobileDevice ? '265mm' : '283mm',
+                minHeight: isMobileDevice ? '275mm' : '297mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                padding: isMobileDevice ? '8px 14px 10px 14px' : '10px 24px 14px 24px',
+                padding: isMobileDevice ? '8mm 12mm 8mm 12mm' : '10mm 16mm 10mm 16mm',
               }}
               className={`relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none ${
                 isMobileDevice
