@@ -130,11 +130,11 @@ button, a, input, select, textarea {
 /* Top-level Page Definition for standard document printing (A4 & US Letter AirPrint Safe) */
 @page {
   size: A4 portrait;
-  margin: 0mm;
+  margin: 6mm 8mm;
 }
 @page :first {
   size: A4 portrait;
-  margin: 0mm;
+  margin: 6mm 8mm;
 }
 
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Responsive) */
@@ -199,7 +199,7 @@ button, a, input, select, textarea {
     flex-direction: column !important;
     justify-content: flex-start !important;
     margin: 0 auto !important;
-    padding: 0 !important;
+    padding: 0 4mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -212,21 +212,24 @@ button, a, input, select, textarea {
   }
 
   /* -----------------------------------------------------------
-     1. DESKTOP SINGLE-PAGE (PC VIEW - 100% IDENTICAL TO SCREEN PREVIEW)
-     Fills the full A4 page (297mm): signatures and footer are
-     anchored in their exact, beautiful on-screen preview positions!
+     1. DESKTOP SINGLE-PAGE (PC VIEW - 100% EXACT MATCH TO ON-SCREEN PREVIEW)
+     Calibrated to 258mm: leaves ~20mm headroom under default margins,
+     strictly 1 page, zero footer overflow to page 2!
      ----------------------------------------------------------- */
+  body.is-desktop-device .printable-area,
+  body.is-desktop-device #printable-quotation-sheet,
+  body.is-desktop-device .desktop-single-page,
   .desktop-single-page {
     position: relative !important;
     left: 0 !important;
     top: 0 !important;
-    width: 210mm !important;
-    max-width: 210mm !important;
-    height: 297mm !important;
-    min-height: 297mm !important;
-    max-height: 297mm !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 258mm !important;
+    min-height: 258mm !important;
+    max-height: 258mm !important;
     box-sizing: border-box !important;
-    padding: 10mm 16mm 10mm 16mm !important;
+    padding: 0 4mm 2mm 4mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
@@ -245,12 +248,14 @@ button, a, input, select, textarea {
     print-color-adjust: exact !important;
   }
 
+  body.is-desktop-device .quotation-terms-spacer,
   .desktop-single-page .quotation-terms-spacer {
     display: flex !important;
     flex: 1 1 0% !important;
-    min-height: 28px !important;
+    min-height: 20px !important;
   }
 
+  body.is-desktop-device .quotation-signatures-block,
   .desktop-single-page .quotation-signatures-block {
     position: relative !important;
     width: 100% !important;
@@ -260,19 +265,22 @@ button, a, input, select, textarea {
     break-inside: avoid !important;
   }
 
+  body.is-desktop-device .quotation-print-spacer,
   .desktop-single-page .quotation-print-spacer {
     display: flex !important;
-    flex: 0 0 18px !important;
-    min-height: 18px !important;
+    flex: 0 0 12px !important;
+    min-height: 12px !important;
+    height: 12px !important;
   }
 
+  body.is-desktop-device .print-footer,
   .desktop-single-page .print-footer {
     position: relative !important;
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding-top: 6px !important;
-    padding-bottom: 0 !important;
+    padding-top: 4px !important;
+    padding-bottom: 2mm !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -282,8 +290,8 @@ button, a, input, select, textarea {
 
   /* -----------------------------------------------------------
      2. MOBILE & TABLET SINGLE-PAGE (MOBILE AIRPRINT & ANDROID SAFE)
-     Calibrated to 275mm to fit perfectly within US Letter (279.4mm)
-     and A4: strictly 1 page, footer anchored at bottom!
+     Calibrated to 246mm to fit perfectly within US Letter (279.4mm)
+     and A4 under AirPrint margins: strictly 1 page, footer at bottom!
      ----------------------------------------------------------- */
   body.is-mobile-device .printable-area,
   body.is-mobile-device #printable-quotation-sheet,
@@ -294,11 +302,11 @@ button, a, input, select, textarea {
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: 275mm !important;
-    min-height: 275mm !important;
-    max-height: 275mm !important;
+    height: 246mm !important;
+    min-height: 246mm !important;
+    max-height: 246mm !important;
     box-sizing: border-box !important;
-    padding: 8mm 12mm 8mm 12mm !important;
+    padding: 0 4mm 2mm 4mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
@@ -321,7 +329,7 @@ button, a, input, select, textarea {
   .mobile-single-page .quotation-terms-spacer {
     display: flex !important;
     flex: 1 1 0% !important;
-    min-height: 24px !important;
+    min-height: 16px !important;
   }
 
   body.is-mobile-device .quotation-signatures-block,
@@ -337,8 +345,9 @@ button, a, input, select, textarea {
   body.is-mobile-device .quotation-print-spacer,
   .mobile-single-page .quotation-print-spacer {
     display: flex !important;
-    flex: 0 0 16px !important;
-    min-height: 16px !important;
+    flex: 0 0 10px !important;
+    min-height: 10px !important;
+    height: 10px !important;
   }
 
   body.is-mobile-device .print-footer,
@@ -347,8 +356,8 @@ button, a, input, select, textarea {
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding-top: 4px !important;
-    padding-bottom: 0 !important;
+    padding-top: 3px !important;
+    padding-bottom: 2mm !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
