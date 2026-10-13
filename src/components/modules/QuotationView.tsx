@@ -4477,11 +4477,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               style={{
                 width: '100%',
                 maxWidth: '210mm',
-                minHeight: isMobileDevice ? 'auto' : '280mm',
+                minHeight: isMobileDevice ? '265mm' : '283mm',
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'column',
-                padding: isMobileDevice ? '12px 14px 12px 14px' : '10px 24px 14px 24px',
+                padding: isMobileDevice ? '8px 14px 10px 14px' : '10px 24px 14px 24px',
               }}
               className={`relative bg-white text-slate-900 rounded-xl shadow-2xl printable-area font-sans text-xs flex flex-col print:p-0 print:m-0 print:w-full print:max-w-none print:shadow-none ${
                 isMobileDevice

@@ -3228,11 +3228,11 @@ button, a, input, select, textarea {
 /* Top-level Page Definition for standard document printing (A4 & US Letter AirPrint Safe) */
 @page {
   size: A4 portrait;
-  margin: 4mm 6mm 4mm 6mm;
+  margin: 3mm 6mm 3mm 6mm;
 }
 @page :first {
   size: A4 portrait;
-  margin: 4mm 6mm 4mm 6mm;
+  margin: 3mm 6mm 3mm 6mm;
 }
 
 /* Print Stylesheet for A4 & Letter documents (Mobile & Desktop Responsive) */
@@ -3311,84 +3311,19 @@ button, a, input, select, textarea {
   }
 
   /* -----------------------------------------------------------
-     1. MOBILE & TABLET SINGLE-PAGE (AIRPRINT / ANDROID 100% 1-PAGE)
-     Guaranteed 1-Page on iOS Safari AirPrint (US Letter & A4) & Android!
-     Signatures & footer sit naturally below content with zero page overflow.
-     ----------------------------------------------------------- */
-  body.is-mobile-device .printable-area,
-  body.is-mobile-device #printable-quotation-sheet,
-  body.is-mobile-device .mobile-single-page,
-  .mobile-single-page {
-    min-height: auto !important;
-    height: auto !important;
-    max-height: none !important;
-    page-break-before: avoid !important;
-    -moz-column-break-before: avoid !important;
-         break-before: avoid !important;
-    page-break-after: avoid !important;
-    -moz-column-break-after: avoid !important;
-         break-after: avoid !important;
-    page-break-inside: avoid !important;
-    -moz-column-break-inside: avoid !important;
-         break-inside: avoid !important;
-  }
-
-  body.is-mobile-device .quotation-terms-spacer,
-  .mobile-single-page .quotation-terms-spacer {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    min-height: 20px !important;
-  }
-
-  body.is-mobile-device .quotation-signatures-block,
-  .mobile-single-page .quotation-signatures-block {
-    position: relative !important;
-    width: 100% !important;
-    margin-top: 6px !important;
-    margin-bottom: 0 !important;
-    padding: 0 !important;
-    page-break-inside: avoid !important;
-    -moz-column-break-inside: avoid !important;
-         break-inside: avoid !important;
-  }
-
-  body.is-mobile-device .quotation-print-spacer,
-  .mobile-single-page .quotation-print-spacer {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    min-height: 16px !important;
-  }
-
-  body.is-mobile-device .print-footer,
-  .mobile-single-page .print-footer {
-    position: relative !important;
-    top: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 100% !important;
-    margin-top: 10px !important;
-    margin-bottom: 0 !important;
-    padding-top: 4px !important;
-    padding-bottom: 0 !important;
-    text-align: center !important;
-    page-break-inside: avoid !important;
-    -moz-column-break-inside: avoid !important;
-         break-inside: avoid !important;
-    page-break-after: avoid !important;
-    -moz-column-break-after: avoid !important;
-         break-after: avoid !important;
-  }
-
-  /* -----------------------------------------------------------
-     2. DESKTOP SINGLE-PAGE (PC VIEW - A4 & LETTER SAFE)
-     Calibrated to 260mm to fit comfortably on both A4 (297mm) and
-     Letter (279.4mm) without ever overflowing to page 2!
+     1. DESKTOP SINGLE-PAGE (PC VIEW - EXACT POSITION 2 FOOTER PINNED)
+     Height calibrated to 283mm for A4: footer sits at Position 2
+     at the very bottom of the page, 100% strictly 1 page!
      ----------------------------------------------------------- */
   .desktop-single-page {
-    min-height: 260mm !important;
-    height: auto !important;
-    max-height: none !important;
+    height: 283mm !important;
+    min-height: 283mm !important;
+    max-height: 283mm !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
     page-break-before: avoid !important;
     -moz-column-break-before: avoid !important;
          break-before: avoid !important;
@@ -3403,13 +3338,7 @@ button, a, input, select, textarea {
   .desktop-single-page .quotation-terms-spacer {
     display: flex !important;
     flex: 1 1 0% !important;
-    min-height: 24px !important;
-  }
-
-  .desktop-single-page .quotation-print-spacer {
-    display: flex !important;
-    flex: 1 1 auto !important;
-    min-height: 20px !important;
+    min-height: 28px !important;
   }
 
   .desktop-single-page .quotation-signatures-block {
@@ -3422,13 +3351,19 @@ button, a, input, select, textarea {
          break-inside: avoid !important;
   }
 
+  .desktop-single-page .quotation-print-spacer {
+    display: flex !important;
+    flex: 0 0 16px !important;
+    min-height: 16px !important;
+  }
+
   .desktop-single-page .print-footer {
     position: relative !important;
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
     padding-top: 6px !important;
-    padding-bottom: 2px !important;
+    padding-bottom: 2mm !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     -moz-column-break-inside: avoid !important;
@@ -3436,6 +3371,88 @@ button, a, input, select, textarea {
     page-break-after: avoid !important;
     -moz-column-break-after: avoid !important;
          break-after: avoid !important;
+  }
+
+  /* -----------------------------------------------------------
+     2. MOBILE & TABLET SINGLE-PAGE (MOBILE VIEW - EXACT POSITION 2 FOOTER PINNED)
+     Height calibrated to 265mm for US Letter & A4:
+     Footer sits firmly at Position 2 (the bottom of the page),
+     zero floating in the middle, and 100% strictly 1 page!
+     ----------------------------------------------------------- */
+  body.is-mobile-device .printable-area,
+  body.is-mobile-device #printable-quotation-sheet,
+  body.is-mobile-device .mobile-single-page,
+  .mobile-single-page {
+    height: 265mm !important;
+    min-height: 265mm !important;
+    max-height: 265mm !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    page-break-before: avoid !important;
+    -moz-column-break-before: avoid !important;
+         break-before: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+  }
+
+  body.is-mobile-device .quotation-terms-spacer,
+  .mobile-single-page .quotation-terms-spacer {
+    display: flex !important;
+    flex: 1 1 0% !important;
+    min-height: 24px !important;
+  }
+
+  body.is-mobile-device .quotation-signatures-block,
+  .mobile-single-page .quotation-signatures-block {
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+  }
+
+  body.is-mobile-device .quotation-print-spacer,
+  .mobile-single-page .quotation-print-spacer {
+    display: flex !important;
+    flex: 0 0 14px !important;
+    min-height: 14px !important;
+  }
+
+  body.is-mobile-device .print-footer,
+  .mobile-single-page .print-footer {
+    position: relative !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    margin-bottom: 0 !important;
+    padding-top: 4px !important;
+    padding-bottom: 2mm !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    -moz-column-break-inside: avoid !important;
+         break-inside: avoid !important;
+    page-break-after: avoid !important;
+    -moz-column-break-after: avoid !important;
+         break-after: avoid !important;
+  }
+
+  /* Extra media query safeguard for narrower portrait print engines (phones / tablets) */
+  @media print and (max-width: 800px) {
+    .desktop-single-page,
+    .mobile-single-page,
+    #printable-quotation-sheet {
+      height: 265mm !important;
+      min-height: 265mm !important;
+      max-height: 265mm !important;
+    }
   }
 
   /* -----------------------------------------------------------
