@@ -4845,7 +4845,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               </div>
 
               {/* Lifted spacing between Signatures and Footer - keeps signatures higher up and footer pinned at bottom */}
-              <div style={{ flex: '0 0 32px', minHeight: '32px', height: '32px' }} className="quotation-print-spacer" />
+              <div style={{ flex: isMobileDevice ? '0 0 35px' : '0 0 65px', minHeight: isMobileDevice ? '35px' : '65px', height: isMobileDevice ? '35px' : '65px' }} className="quotation-print-spacer" />
 
               {/* 8. Company Pad Footer matching official letterhead (Clean layout matching PDF) */}
               <div className="print-footer relative z-10 w-full" style={{ textAlign: 'center', fontSize: '9.5px', color: '#475569', lineHeight: 1.35, pageBreakInside: 'avoid', breakInside: 'avoid', marginTop: 'auto', paddingTop: '8px', paddingBottom: '2px' }}>

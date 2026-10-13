@@ -3326,9 +3326,9 @@ button, a, input, select, textarea {
   }
 
   /* -----------------------------------------------------------
-     1. DESKTOP SINGLE-PAGE (PC VIEW - EXACT POSITION 2 FOOTER PINNED)
-     Height calibrated to 272mm: pins footer at the bottom edge (Box 2),
-     lifts signatures higher up (Box 3) via 45px spacer, strictly 1 page!
+     1. DESKTOP SINGLE-PAGE (PC VIEW - FOOTER PINNED AT ABSOLUTE BOTTOM)
+     Height calibrated to 282mm: pins footer at the absolute bottom edge (Box 2),
+     lifts signatures higher up (Box 1) via 85px spacer, strictly 1 page!
      ----------------------------------------------------------- */
   body.is-desktop-device .printable-area,
   body.is-desktop-device #printable-quotation-sheet,
@@ -3339,11 +3339,11 @@ button, a, input, select, textarea {
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: 272mm !important;
-    min-height: 272mm !important;
-    max-height: 272mm !important;
+    height: 282mm !important;
+    min-height: 282mm !important;
+    max-height: 282mm !important;
     box-sizing: border-box !important;
-    padding: 0 4mm 1mm 4mm !important;
+    padding: 0 4mm 0.5mm 4mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
@@ -3386,9 +3386,9 @@ button, a, input, select, textarea {
   body.is-desktop-device .quotation-print-spacer,
   .desktop-single-page .quotation-print-spacer {
     display: flex !important;
-    flex: 0 0 45px !important;
-    min-height: 45px !important;
-    height: 45px !important;
+    flex: 0 0 85px !important;
+    min-height: 85px !important;
+    height: 85px !important;
   }
 
   body.is-desktop-device .print-footer,
@@ -3397,8 +3397,8 @@ button, a, input, select, textarea {
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding-top: 4px !important;
-    padding-bottom: 1.5mm !important;
+    padding-top: 2px !important;
+    padding-bottom: 0.5mm !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     -moz-column-break-inside: avoid !important;
@@ -3409,9 +3409,9 @@ button, a, input, select, textarea {
   }
 
   /* -----------------------------------------------------------
-     2. MOBILE & TABLET SINGLE-PAGE (AIRPRINT & ANDROID 1-PAGE SAFE)
-     Calibrated to 232mm to safely clear iOS AirPrint 19mm margins
-     on US Letter (279.4mm) & A4: strictly 1 page, zero spillover!
+     2. MOBILE & TABLET SINGLE-PAGE (AIRPRINT & ANDROID 1-PAGE GUARANTEE)
+     Calibrated to 216mm to comfortably clear iOS AirPrint 19mm margins
+     on US Letter (792pt = 279.4mm) & A4: strictly 1 page, zero spillover!
      ----------------------------------------------------------- */
   body.is-mobile-device .printable-area,
   body.is-mobile-device #printable-quotation-sheet,
@@ -3422,11 +3422,11 @@ button, a, input, select, textarea {
     top: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    height: 232mm !important;
-    min-height: 232mm !important;
-    max-height: 232mm !important;
+    height: 216mm !important;
+    min-height: 216mm !important;
+    max-height: 216mm !important;
     box-sizing: border-box !important;
-    padding: 0 4mm 1mm 4mm !important;
+    padding: 0 4mm 0.5mm 4mm !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: flex-start !important;
@@ -3452,7 +3452,7 @@ button, a, input, select, textarea {
   .mobile-single-page .quotation-terms-spacer {
     display: flex !important;
     flex: 1 1 0% !important;
-    min-height: 12px !important;
+    min-height: 10px !important;
   }
 
   body.is-mobile-device .quotation-signatures-block,
@@ -3469,9 +3469,9 @@ button, a, input, select, textarea {
   body.is-mobile-device .quotation-print-spacer,
   .mobile-single-page .quotation-print-spacer {
     display: flex !important;
-    flex: 0 0 24px !important;
-    min-height: 24px !important;
-    height: 24px !important;
+    flex: 0 0 35px !important;
+    min-height: 35px !important;
+    height: 35px !important;
   }
 
   body.is-mobile-device .print-footer,
@@ -3480,8 +3480,8 @@ button, a, input, select, textarea {
     width: 100% !important;
     margin-top: auto !important;
     margin-bottom: 0 !important;
-    padding-top: 3px !important;
-    padding-bottom: 1.5mm !important;
+    padding-top: 2px !important;
+    padding-bottom: 0.5mm !important;
     text-align: center !important;
     page-break-inside: avoid !important;
     -moz-column-break-inside: avoid !important;
