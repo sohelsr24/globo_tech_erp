@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   FileText,
   Plus,
@@ -32,6 +32,9 @@ import {
   History,
   FileCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeftRight,
   Info,
   Calendar,
   XCircle,
@@ -1903,6 +1906,105 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     .reduce((acc, q) => acc + calculateQuotationTotals(q).grandTotal, 0);
   const conversionRate = totalCount > 0 ? (acceptedCount / totalCount) * 100 : 0;
 
+  // Top Synchronized Horizontal Scrollbar State & Refs
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncingTopScroll = useRef(false);
+  const isSyncingBottomScroll = useRef(false);
+
+  const [tableScrollWidth, setTableScrollWidth] = useState<number>(0);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(false);
+
+  const updateScrollMetrics = useCallback(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setTableScrollWidth(el.scrollWidth);
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(maxScroll > 4 && el.scrollLeft < maxScroll - 4);
+  }, []);
+
+  const handleTopScroll = () => {
+    if (isSyncingTopScroll.current) {
+      isSyncingTopScroll.current = false;
+      return;
+    }
+    if (tableContainerRef.current && topScrollRef.current) {
+      const topEl = topScrollRef.current;
+      const tableEl = tableContainerRef.current;
+      const topMax = topEl.scrollWidth - topEl.clientWidth;
+      const tableMax = tableEl.scrollWidth - tableEl.clientWidth;
+
+      isSyncingBottomScroll.current = true;
+      if (topMax > 0 && tableMax > 0 && Math.abs(topMax - tableMax) > 4) {
+        const ratio = topEl.scrollLeft / topMax;
+        tableEl.scrollLeft = ratio * tableMax;
+      } else {
+        tableEl.scrollLeft = topEl.scrollLeft;
+      }
+      updateScrollMetrics();
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (isSyncingBottomScroll.current) {
+      isSyncingBottomScroll.current = false;
+      return;
+    }
+    if (tableContainerRef.current && topScrollRef.current) {
+      const topEl = topScrollRef.current;
+      const tableEl = tableContainerRef.current;
+      const topMax = topEl.scrollWidth - topEl.clientWidth;
+      const tableMax = tableEl.scrollWidth - tableEl.clientWidth;
+
+      isSyncingTopScroll.current = true;
+      if (topMax > 0 && tableMax > 0 && Math.abs(topMax - tableMax) > 4) {
+        const ratio = tableEl.scrollLeft / tableMax;
+        topEl.scrollLeft = ratio * tableMax;
+      } else {
+        topEl.scrollLeft = tableEl.scrollLeft;
+      }
+      updateScrollMetrics();
+    }
+  };
+
+  const scrollTableBy = (delta: number) => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: delta, behavior: 'smooth' });
+    }
+  };
+
+  const handleWheelOnHeader = (e: React.WheelEvent) => {
+    if (tableContainerRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      tableContainerRef.current.scrollLeft += e.deltaY;
+      updateScrollMetrics();
+    }
+  };
+
+  // Synchronize scroll metrics on mount, resize, and filtered quotations update
+  useEffect(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+    updateScrollMetrics();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        updateScrollMetrics();
+      });
+      ro.observe(el);
+      const tableEl = el.querySelector('table');
+      if (tableEl) ro.observe(tableEl);
+    }
+
+    window.addEventListener('resize', updateScrollMetrics);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateScrollMetrics);
+    };
+  }, [filteredQuotations, updateScrollMetrics]);
+
   // Handle Dynamic Stock Item Selection
   const handleSelectCatalogProduct = (selectedVal: string) => {
     if (!selectedVal) return;
@@ -2899,25 +3001,129 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
           </div>
 
           {/* DESKTOP VIEW: Quotations Master Table */}
-          <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-            <div className="overflow-x-auto touch-scroll">
-              <table className="w-full text-left text-xs text-slate-300 min-w-[960px]">
-                <thead className="bg-slate-800/80 text-slate-400 uppercase font-semibold border-b border-slate-800">
-                  <tr>
-                    <th className="px-4 py-3">Quote # & Date</th>
-                    <th className="px-4 py-3">Customer & Project</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Items</th>
-                    <th className="px-4 py-3 text-right">Grand Total (BDT)</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Stock State</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+          <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            {/* Top Synchronized Horizontal Scrollbar Toolbar */}
+            <div className="bg-slate-950/95 border-b border-slate-800">
+              <div className="px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs select-none">
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 font-bold text-[11px] shadow-sm">
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                    <span>উপরে হরাইজন্টাল স্ক্রল (Top Scrollbar)</span>
+                  </span>
+                  <span className="text-[11px] text-slate-400 hidden lg:inline">
+                    ডান পাশের অ্যাকশন অপশনগুলো দেখতে উপরের বারটি ড্র্যাগ করুন অথবা বাটন ব্যবহার করুন
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tableContainerRef.current) {
+                        tableContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                      }
+                    }}
+                    disabled={!canScrollLeft}
+                    className={`px-2 py-1 rounded-lg border text-[11px] font-medium transition ${
+                      canScrollLeft
+                        ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
+                        : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                    }`}
+                    title="শুরুতে যান (Scroll to Quote #)"
+                  >
+                    &#124;&#9664; First
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollTableBy(-260)}
+                    disabled={!canScrollLeft}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition flex items-center gap-1 ${
+                      canScrollLeft
+                        ? 'bg-blue-950/80 hover:bg-blue-900 text-blue-300 border-blue-700/60 active:scale-95 cursor-pointer shadow-sm'
+                        : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                    }`}
+                    title="বামে স্ক্রল করুন (Scroll Left)"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Scroll Left</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollTableBy(260)}
+                    disabled={!canScrollRight}
+                    className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition flex items-center gap-1 ${
+                      canScrollRight
+                        ? 'bg-blue-950/80 hover:bg-blue-900 text-blue-300 border-blue-700/60 active:scale-95 cursor-pointer shadow-sm'
+                        : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                    }`}
+                    title="ডানে স্ক্রল করুন (Scroll Right)"
+                  >
+                    <span>Scroll Right</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (tableContainerRef.current) {
+                        tableContainerRef.current.scrollTo({
+                          left: tableContainerRef.current.scrollWidth,
+                          behavior: 'smooth'
+                        });
+                      }
+                    }}
+                    disabled={!canScrollRight}
+                    className={`px-2 py-1 rounded-lg border text-[11px] font-medium transition ${
+                      canScrollRight
+                        ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
+                        : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                    }`}
+                    title="অ্যাকশন কলামে যান (Scroll to Actions / End)"
+                  >
+                    Last &#9654;&#124;
+                  </button>
+                </div>
+              </div>
+
+              {/* Full-width Synced Scrollbar Track */}
+              <div
+                ref={topScrollRef}
+                onScroll={handleTopScroll}
+                onWheel={handleWheelOnHeader}
+                className="w-full overflow-x-auto touch-scroll erp-horizontal-scrollbar bg-slate-950 px-2 py-1.5 border-t border-slate-800/70 cursor-ew-resize select-none"
+                title="এই স্ক্রলবারে মাউস দিয়ে ড্র্যাগ করে অথবা মাউস হুইল ঘুরিয়ে ডানে-বামে সরান"
+              >
+                <div style={{ width: `${Math.max(tableScrollWidth, 1)}px`, height: '8px' }} />
+              </div>
+            </div>
+
+            {/* Table Container */}
+            <div
+              ref={tableContainerRef}
+              onScroll={handleBottomScroll}
+              className="overflow-x-auto touch-scroll max-h-[calc(100vh-250px)] min-h-[420px] overflow-y-auto erp-horizontal-scrollbar"
+            >
+              <table className="w-full text-left border-separate border-spacing-0 text-xs text-slate-300 min-w-[960px]">
+                <thead onWheel={handleWheelOnHeader}>
+                  <tr className="bg-slate-950/95 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
+                    <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Quote # &amp; Date</th>
+                    <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Customer &amp; Project</th>
+                    <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Type</th>
+                    <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Items</th>
+                    <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-right whitespace-nowrap">Grand Total (BDT)</th>
+                    <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-center whitespace-nowrap">Status</th>
+                    <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-center whitespace-nowrap">Stock State</th>
+                    <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 right-0 z-30 border-b border-l border-slate-800 shadow-[-8px_0_12px_rgba(0,0,0,0.5)] text-right whitespace-nowrap">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="text-slate-300">
                   {filteredQuotations.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
+                      <td colSpan={8} className="py-12 text-center text-slate-500 border-b border-slate-800/60">
                         No matching quotations found.
                       </td>
                     </tr>
@@ -2926,33 +3132,33 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       const totals = calculateQuotationTotals(q);
 
                       return (
-                        <tr key={q.id} className="hover:bg-slate-800/40 transition">
-                          <td className="px-4 py-3">
+                        <tr key={q.id} className="hover:bg-slate-800/40 transition group">
+                          <td className="py-2.5 px-3 border-b border-slate-800/60 whitespace-nowrap">
                             <div className="font-mono font-bold text-blue-400 flex items-center gap-1.5">
                               {q.quotationNumber}
                               <span className="text-[10px] text-slate-500 font-normal">v{q.version}</span>
                             </div>
                             <span className="text-[10px] text-slate-500">{formatDate(q.date)}</span>
                           </td>
-                          <td className="px-4 py-3">
-                            <div className="font-semibold text-slate-100">{q.customerCompany}</div>
-                            <div className="text-[11px] text-slate-400">{q.projectName}</div>
+                          <td className="py-2.5 px-3 border-b border-slate-800/60 max-w-[180px]">
+                            <div className="font-semibold text-slate-100 truncate" title={q.customerCompany}>{q.customerCompany}</div>
+                            <div className="text-[11px] text-slate-400 truncate" title={q.projectName}>{q.projectName}</div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 whitespace-nowrap">
                             <Badge variant={q.type === 'PRODUCT_SERVICE' ? 'purple' : q.type === 'PRODUCT' ? 'blue' : 'info'}>
                               {q.type.replace(/_/g, ' + ')}
                             </Badge>
                           </td>
-                          <td className="px-4 py-3 text-slate-400">
-                            {q.items.length} Lines
-                            <div className="text-[10px] text-slate-500 truncate max-w-[140px]">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 text-slate-400 max-w-[140px]">
+                            <span className="font-medium text-slate-300">{q.items.length} {q.items.length === 1 ? 'Line' : 'Lines'}</span>
+                            <div className="text-[10px] text-slate-500 truncate" title={q.items.map((i) => i.name).join(', ')}>
                               {q.items.map((i) => i.name).join(', ')}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-right font-mono font-bold text-slate-100">
+                          <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-100 border-b border-slate-800/60 whitespace-nowrap">
                             {formatBDT(totals.grandTotal)}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 text-center whitespace-nowrap">
                             <div className="relative inline-flex items-center group">
                               <select
                                 value={q.status}
@@ -2987,80 +3193,82 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               <ChevronDown className="w-3 h-3 absolute right-1.5 pointer-events-none text-slate-400 group-hover:text-slate-200" />
                             </div>
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="py-2.5 px-2.5 border-b border-slate-800/60 text-center whitespace-nowrap">
                             {q.stockReserved ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
+                              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/60">
                                 <ShieldCheck className="w-3 h-3" /> Reserved
                               </span>
                             ) : (
                               <span className="text-[11px] text-slate-500">Unreserved</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedQuotation(q);
-                                setActiveViewMode('DETAIL');
-                              }}
-                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-xs border border-slate-700 transition"
-                            >
-                              Inspect
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStartEditQuotation(q);
-                              }}
-                              className="px-2.5 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition inline-flex items-center gap-1"
-                              title="Edit Quotation"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (onNavigateTab) {
-                                  onNavigateTab('bill-invoice', q.id);
-                                } else {
-                                  sessionStorage.setItem('globotech_pending_bill_quote_id', q.id);
-                                }
-                              }}
-                              className="px-2.5 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition inline-flex items-center gap-1"
-                              title="Create Bill Invoice from this Quotation"
-                            >
-                              <Receipt className="w-3.5 h-3.5" />
-                              Bill
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedQuotation(q);
-                                setActiveViewMode('PDF');
-                              }}
-                              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition"
-                              title="Print / View Customer PDF"
-                            >
-                              <Printer className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
-                              PDF
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteQuotation(q);
-                              }}
-                              className="px-2.5 py-1 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs border border-rose-500/30 transition inline-flex items-center gap-1"
-                              title="Delete this Quotation"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              Delete
-                            </button>
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap sticky right-0 z-10 bg-slate-900/95 group-hover:bg-slate-850/95 backdrop-blur-md border-b border-l border-slate-800 shadow-[-8px_0_12px_rgba(0,0,0,0.5)]">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedQuotation(q);
+                                  setActiveViewMode('DETAIL');
+                                }}
+                                className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-xs border border-slate-700 transition active:scale-95"
+                                title="Inspect Details"
+                              >
+                                Inspect
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStartEditQuotation(q);
+                                }}
+                                className="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-semibold text-xs border border-amber-500/30 transition inline-flex items-center gap-1 active:scale-95"
+                                title="Edit Quotation"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onNavigateTab) {
+                                    onNavigateTab('bill-invoice', q.id);
+                                  } else {
+                                    sessionStorage.setItem('globotech_pending_bill_quote_id', q.id);
+                                  }
+                                }}
+                                className="px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold text-xs border border-emerald-500/30 transition inline-flex items-center gap-1 active:scale-95"
+                                title="Create Bill Invoice from this Quotation"
+                              >
+                                <Receipt className="w-3.5 h-3.5" />
+                                <span>Bill</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedQuotation(q);
+                                  setActiveViewMode('PDF');
+                                }}
+                                className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition active:scale-95 inline-flex items-center gap-1"
+                                title="Print / View Customer PDF"
+                              >
+                                <Printer className="w-3.5 h-3.5 text-slate-400" />
+                                <span>PDF</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteQuotation(q);
+                                }}
+                                className="p-1.5 rounded bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-xs border border-rose-500/30 transition active:scale-95"
+                                title="Delete this Quotation"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   Receipt,
   Plus,
@@ -25,6 +25,9 @@ import {
   File,
   AlertCircle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ArrowLeftRight,
   Truck,
   Tag,
   Barcode,
@@ -668,6 +671,105 @@ export function BillInvoiceView({
   const [quickAttachFile, setQuickAttachFile] = useState<File | null>(null);
   const [isUploadingPO, setIsUploadingPO] = useState(false);
   const [poFilterOnly, setPoFilterOnly] = useState(false);
+
+  // Top Synchronized Scrollbar State & Refs
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const topScrollRef = useRef<HTMLDivElement>(null);
+  const isSyncingTopScroll = useRef(false);
+  const isSyncingBottomScroll = useRef(false);
+
+  const [tableScrollWidth, setTableScrollWidth] = useState<number>(0);
+  const [canScrollLeft, setCanScrollLeft] = useState<boolean>(false);
+  const [canScrollRight, setCanScrollRight] = useState<boolean>(false);
+
+  const updateScrollMetrics = useCallback(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setTableScrollWidth(el.scrollWidth);
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(maxScroll > 4 && el.scrollLeft < maxScroll - 4);
+  }, []);
+
+  const handleTopScroll = () => {
+    if (isSyncingTopScroll.current) {
+      isSyncingTopScroll.current = false;
+      return;
+    }
+    if (tableContainerRef.current && topScrollRef.current) {
+      const topEl = topScrollRef.current;
+      const tableEl = tableContainerRef.current;
+      const topMax = topEl.scrollWidth - topEl.clientWidth;
+      const tableMax = tableEl.scrollWidth - tableEl.clientWidth;
+
+      isSyncingBottomScroll.current = true;
+      if (topMax > 0 && tableMax > 0 && Math.abs(topMax - tableMax) > 4) {
+        const ratio = topEl.scrollLeft / topMax;
+        tableEl.scrollLeft = ratio * tableMax;
+      } else {
+        tableEl.scrollLeft = topEl.scrollLeft;
+      }
+      updateScrollMetrics();
+    }
+  };
+
+  const handleBottomScroll = () => {
+    if (isSyncingBottomScroll.current) {
+      isSyncingBottomScroll.current = false;
+      return;
+    }
+    if (tableContainerRef.current && topScrollRef.current) {
+      const topEl = topScrollRef.current;
+      const tableEl = tableContainerRef.current;
+      const topMax = topEl.scrollWidth - topEl.clientWidth;
+      const tableMax = tableEl.scrollWidth - tableEl.clientWidth;
+
+      isSyncingTopScroll.current = true;
+      if (topMax > 0 && tableMax > 0 && Math.abs(topMax - tableMax) > 4) {
+        const ratio = tableEl.scrollLeft / tableMax;
+        topEl.scrollLeft = ratio * topMax;
+      } else {
+        topEl.scrollLeft = tableEl.scrollLeft;
+      }
+      updateScrollMetrics();
+    }
+  };
+
+  const scrollTableBy = (delta: number) => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollBy({ left: delta, behavior: 'smooth' });
+    }
+  };
+
+  const handleWheelOnHeader = (e: React.WheelEvent) => {
+    if (tableContainerRef.current && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      tableContainerRef.current.scrollLeft += e.deltaY;
+      updateScrollMetrics();
+    }
+  };
+
+  // Synchronize scroll metrics on mount, resize, and filtered bills update
+  useEffect(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+    updateScrollMetrics();
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        updateScrollMetrics();
+      });
+      ro.observe(el);
+      const tableEl = el.querySelector('table');
+      if (tableEl) ro.observe(tableEl);
+    }
+
+    window.addEventListener('resize', updateScrollMetrics);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateScrollMetrics);
+    };
+  }, [updateScrollMetrics]);
 
   // Toast Notification
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -2234,9 +2336,111 @@ export function BillInvoiceView({
 
             {/* Desktop Table View (hidden md:block) */}
             <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-              <div className="overflow-x-auto touch-scroll max-h-[calc(100vh-250px)] min-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+              {/* Top Synchronized Horizontal Scrollbar Toolbar */}
+              <div className="bg-slate-950/95 border-b border-slate-800">
+                <div className="px-3.5 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs select-none">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[11px] shadow-sm">
+                      <ArrowLeftRight className="w-3.5 h-3.5" />
+                      <span>উপরে হরাইজন্টাল স্ক্রল (Top Scrollbar)</span>
+                    </span>
+                    <span className="text-[11px] text-slate-400 hidden lg:inline">
+                      পেজের নিচে না গিয়ে এখান থেকেই ড্র্যাগ করে অথবা বাটন চেপে টেবিল ডানে/বামে স্ক্রল করুন
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (tableContainerRef.current) {
+                          tableContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      disabled={!canScrollLeft}
+                      className={`px-2 py-1 rounded-lg border text-[11px] font-medium transition ${
+                        canScrollLeft
+                          ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
+                          : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                      }`}
+                      title="শুরুতে যান (Scroll to Bill No)"
+                    >
+                      &#124;&#9664; First
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => scrollTableBy(-260)}
+                      disabled={!canScrollLeft}
+                      className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition flex items-center gap-1 ${
+                        canScrollLeft
+                          ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-700/60 active:scale-95 cursor-pointer shadow-sm'
+                          : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                      }`}
+                      title="বামে স্ক্রল করুন (Scroll Left)"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Scroll Left</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => scrollTableBy(260)}
+                      disabled={!canScrollRight}
+                      className={`px-2.5 py-1 rounded-lg border text-xs font-semibold transition flex items-center gap-1 ${
+                        canScrollRight
+                          ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-700/60 active:scale-95 cursor-pointer shadow-sm'
+                          : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                      }`}
+                      title="ডানে স্ক্রল করুন (Scroll Right)"
+                    >
+                      <span>Scroll Right</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (tableContainerRef.current) {
+                          tableContainerRef.current.scrollTo({
+                            left: tableContainerRef.current.scrollWidth,
+                            behavior: 'smooth'
+                          });
+                        }
+                      }}
+                      disabled={!canScrollRight}
+                      className={`px-2 py-1 rounded-lg border text-[11px] font-medium transition ${
+                        canScrollRight
+                          ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
+                          : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
+                      }`}
+                      title="অ্যাকশন কলামে যান (Scroll to Actions / End)"
+                    >
+                      Last &#9654;&#124;
+                    </button>
+                  </div>
+                </div>
+
+                {/* Full-width Synced Scrollbar Track */}
+                <div
+                  ref={topScrollRef}
+                  onScroll={handleTopScroll}
+                  onWheel={handleWheelOnHeader}
+                  className="w-full overflow-x-auto touch-scroll erp-horizontal-scrollbar bg-slate-950 px-2 py-1.5 border-t border-slate-800/70 cursor-ew-resize select-none"
+                  title="এই স্ক্রলবারে মাউস দিয়ে ড্র্যাগ করে অথবা মাউস হুইল ঘুরিয়ে ডানে-বামে সরান"
+                >
+                  <div style={{ width: `${Math.max(tableScrollWidth, 1)}px`, height: '8px' }} />
+                </div>
+              </div>
+
+              {/* Table Container */}
+              <div
+                ref={tableContainerRef}
+                onScroll={handleBottomScroll}
+                className="overflow-x-auto touch-scroll max-h-[calc(100vh-250px)] min-h-[400px] overflow-y-auto erp-horizontal-scrollbar"
+              >
                 <table className="w-full text-left border-separate border-spacing-0 text-xs">
-                  <thead>
+                  <thead onWheel={handleWheelOnHeader}>
                     <tr className="bg-slate-950/95 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
                       <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Bill NO</th>
                       <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Date</th>
