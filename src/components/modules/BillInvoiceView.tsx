@@ -208,6 +208,25 @@ export function downloadPOAttachment(attachment: POAttachment, poNumber?: string
   document.body.removeChild(link);
 }
 
+// Helper to extract VAT and TAX percentage rate from quotation terms
+export function extractVatRateFromQuoteTerms(vatTaxTerms?: string): string {
+  if (!vatTaxTerms) return '15%';
+  const clean = vatTaxTerms.trim();
+  const comboMatch = clean.match(/(\d+(?:\.\d+)?%\s*VAT\s*(?:and|&)\s*\d+(?:\.\d+)?%\s*(?:TAX|AIT))/i);
+  if (comboMatch) {
+    return comboMatch[1].replace(/\s+/g, ' ').replace(/\band\b/i, '&');
+  }
+  const vatAndTaxMatch = clean.match(/(\d+(?:\.\d+)?%\s*VAT\s*(?:and|&)\s*(?:TAX|AIT))/i);
+  if (vatAndTaxMatch) {
+    return vatAndTaxMatch[1].replace(/\s+/g, ' ').replace(/\band\b/i, '&');
+  }
+  const singleMatch = clean.match(/(\d+(?:\.\d+)?%)/);
+  if (singleMatch) {
+    return singleMatch[1];
+  }
+  return '15%';
+}
+
 // Initial Sample Bill Invoices matching User's exact Pad Print bills (including GT/26145, GT/26144, GT/26143, GT/26107)
 export const INITIAL_BILL_INVOICES: BillInvoice[] = [
   {
@@ -626,7 +645,9 @@ export function BillInvoiceView({
     amountInWords: '',
     termsAndConditions: [
       '1. VAT&TAX : Included',
-      '2. Payment: Within Deadline'
+      '2. Payment: Within Deadline',
+      '3. Delivery: Within 3-5 Working Days',
+      '4. Warranty: 1 Year Service Warranty (Without Parts)'
     ],
     bankAccountNo: '2051923010001',
     bankAccountTitle: 'Globo Tech',
@@ -635,6 +656,20 @@ export function BillInvoiceView({
     preparedBy: 'Engr. Sohel Rana',
     status: 'ISSUED'
   });
+
+  // Quick Edit Terms & Conditions Modal State (Directly from Bill Preview)
+  const [isEditTermsModalOpen, setIsEditTermsModalOpen] = useState(false);
+  const [termsEditTargetBill, setTermsEditTargetBill] = useState<BillInvoice | null>(null);
+  const [billTermsForm, setBillTermsForm] = useState({
+    vatTaxMode: 'INCLUDED' as 'INCLUDED' | 'EXCLUDED',
+    vatRate: '15%',
+    paymentTerms: '',
+    deliveryTerms: '',
+    warrantyTerms: '',
+    notes: ''
+  });
+  const [isRawTermsMode, setIsRawTermsMode] = useState(false);
+  const [rawTermsText, setRawTermsText] = useState('');
 
   // Load from localStorage on client mount
   useEffect(() => {
@@ -675,10 +710,30 @@ export function BillInvoiceView({
             );
             const combinedBills = [...missingInitials, ...cleanBills];
             const hydrated = combinedBills.map((b: BillInvoice) => {
+              const updated = { ...b };
               if (b.id === 'bill-26107' && !b.poAttachment) {
-                return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
+                updated.poAttachment = SAMPLE_DARAZ_PO_ATTACHMENT;
               }
-              return b;
+              // If terms line 1 has no percentage, auto-upgrade with quote rate or standard 15%
+              if (Array.isArray(updated.termsAndConditions) && updated.termsAndConditions.length > 0) {
+                updated.termsAndConditions = updated.termsAndConditions.map((term) => {
+                  if (/vat\s*&?\s*tax/i.test(term) && !/\d+(?:\.\d+)?%/.test(term)) {
+                    const isEx = /excluded/i.test(term);
+                    let rate = '15%';
+                    if (updated.quotationRef || updated.quotationId) {
+                      const quote = (INITIAL_QUOTATIONS || []).find(
+                        (q) => q.quotationNumber === updated.quotationRef || q.id === updated.quotationId
+                      );
+                      if (quote?.vatTaxTerms) {
+                        rate = extractVatRateFromQuoteTerms(quote.vatTaxTerms);
+                      }
+                    }
+                    return isEx ? `1. VAT&TAX : ${rate} Excluded` : `1. VAT&TAX : ${rate} Included`;
+                  }
+                  return term;
+                });
+              }
+              return updated;
             });
             setBills(hydrated);
             localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(hydrated));
@@ -847,7 +902,9 @@ export function BillInvoiceView({
       amountInWords: 'Zero Taka Only.',
       termsAndConditions: [
         '1. VAT&TAX : Included',
-        '2. Payment: Within Deadline'
+        '2. Payment: Net 30 Days after Delivery & Invoice',
+        '3. Delivery: Within 3-5 Working Days',
+        '4. Warranty: 1 Year Service Warranty (Without Parts)'
       ],
       bankAccountNo: '2051923010001',
       bankAccountTitle: 'Globo Tech',
@@ -911,12 +968,27 @@ export function BillInvoiceView({
     const deliverContactPhone = targetQuote.customerPhone || '';
     const deliveryLocation = targetQuote.projectLocation || targetQuote.deliveryTerms || targetQuote.customerAddress || '';
 
-    // Terms & Conditions (automatically reflect quotation VAT mode)
+    // Terms & Conditions (automatically reflect all quotation terms: VAT & Rate, Payment, Delivery, Warranty & Remarks)
     const isQuoteExclusive = (targetQuote.vatTaxTerms || '').toLowerCase().includes('exclusive');
-    const terms = [
-      isQuoteExclusive ? '1. VAT&TAX : Excluded' : '1. VAT&TAX : Included',
+    const quoteVatRate = extractVatRateFromQuoteTerms(targetQuote.vatTaxTerms);
+    const cleanRate = quoteVatRate ? ` ${quoteVatRate}` : ' 15%';
+    const terms: string[] = [
+      isQuoteExclusive ? `1. VAT&TAX :${cleanRate} Excluded` : `1. VAT&TAX :${cleanRate} Included`,
       targetQuote.paymentTerms ? `2. Payment: ${targetQuote.paymentTerms}` : '2. Payment: Within Deadline'
     ];
+    let termIndex = 3;
+    if (targetQuote.deliveryTerms && targetQuote.deliveryTerms.trim()) {
+      terms.push(`${termIndex}. Delivery: ${targetQuote.deliveryTerms.trim()}`);
+      termIndex++;
+    }
+    if (targetQuote.warrantyTerms && targetQuote.warrantyTerms.trim()) {
+      terms.push(`${termIndex}. Warranty: ${targetQuote.warrantyTerms.trim()}`);
+      termIndex++;
+    }
+    if (targetQuote.notes && targetQuote.notes.trim()) {
+      terms.push(`${termIndex}. Remarks: ${targetQuote.notes.trim()}`);
+      termIndex++;
+    }
 
     setFormData((prev) => {
       const stateToUse = currentFormState || prev;
@@ -1292,24 +1364,34 @@ export function BillInvoiceView({
     showToast(`Updated Serial Numbers & Part Nos for Challan DC/${updatedBill.billNo.replace('GT/', '')}`);
   };
 
-  // 1-Click Interactive VAT/TAX Mode Toggle (Included vs Excluded)
+  // 1-Click Interactive VAT/TAX Mode Toggle (Included vs Excluded) - Preserving % Rate
   const handleToggleBillVatMode = (mode: 'INCLUDED' | 'EXCLUDED') => {
     if (!activeBill) return;
     const isIncluded = mode === 'INCLUDED';
 
-    // Update terms and conditions: replace or update the VAT&TAX line
+    // Update terms and conditions: replace or update the VAT&TAX line while preserving percentage
     const currentTerms = Array.isArray(activeBill.termsAndConditions) ? [...activeBill.termsAndConditions] : [];
     let foundVatLine = false;
     const updatedTerms = currentTerms.map((term) => {
       if (/vat\s*&?\s*tax/i.test(term)) {
         foundVatLine = true;
-        return isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded';
+        const comboMatch = term.match(/(\d+(?:\.\d+)?%\s*VAT\s*(?:and|&)\s*\d+(?:\.\d+)?%\s*(?:TAX|AIT))/i);
+        let rateStr = '15%';
+        if (comboMatch) {
+          rateStr = comboMatch[1].replace(/\band\b/i, '&');
+        } else {
+          const matchSingle = term.match(/(\d+(?:\.\d+)?%[^\:\-\n]*)/i);
+          if (matchSingle) {
+            rateStr = matchSingle[1].replace(/\b(included|excluded)\b/gi, '').trim() || '15%';
+          }
+        }
+        return isIncluded ? `1. VAT&TAX : ${rateStr} Included` : `1. VAT&TAX : ${rateStr} Excluded`;
       }
       return term;
     });
 
     if (!foundVatLine) {
-      updatedTerms.unshift(isIncluded ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded');
+      updatedTerms.unshift(isIncluded ? '1. VAT&TAX : 15% Included' : '1. VAT&TAX : 15% Excluded');
     }
 
     const updatedBill: BillInvoice = {
@@ -1334,6 +1416,194 @@ export function BillInvoiceView({
     }
 
     showToast(`✓ VAT & TAX set to ${isIncluded ? 'Included' : 'Excluded'}`);
+  };
+
+  // Quick change VAT & TAX rate (% percentage) directly from the bill preview
+  const handleQuickChangeVatRate = (newRate: string) => {
+    if (!activeBill) return;
+    const currentTerms = Array.isArray(activeBill.termsAndConditions) ? [...activeBill.termsAndConditions] : [];
+    const isInc = activeBill.vatTaxIncluded;
+    let found = false;
+    const updatedTerms = currentTerms.map((term) => {
+      if (/vat\s*&?\s*tax/i.test(term)) {
+        found = true;
+        return isInc ? `1. VAT&TAX : ${newRate} Included` : `1. VAT&TAX : ${newRate} Excluded`;
+      }
+      return term;
+    });
+    if (!found) {
+      updatedTerms.unshift(isInc ? `1. VAT&TAX : ${newRate} Included` : `1. VAT&TAX : ${newRate} Excluded`);
+    }
+
+    const updatedBill: BillInvoice = {
+      ...activeBill,
+      termsAndConditions: updatedTerms
+    };
+    setActiveBill(updatedBill);
+    const updatedBills = bills.map((b) => (b.id === updatedBill.id ? updatedBill : b));
+    setBills(updatedBills);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updatedBills }));
+        mirrorToIndexedDB().catch(() => {});
+      } catch (err) {
+        console.error('Failed to save bill VAT rate:', err);
+      }
+    }
+    showToast(`✓ VAT & TAX percentage set to ${newRate}`);
+  };
+
+  // Open Edit Terms Modal
+  const handleOpenEditTerms = (bill: BillInvoice) => {
+    setTermsEditTargetBill(bill);
+    const existingTerms = Array.isArray(bill.termsAndConditions) ? bill.termsAndConditions : [];
+
+    let vatMode: 'INCLUDED' | 'EXCLUDED' = bill.vatTaxIncluded ? 'INCLUDED' : 'EXCLUDED';
+    let vatRate = '15%';
+    let payment = '';
+    let delivery = '';
+    let warranty = '';
+    let notes = '';
+
+    existingTerms.forEach((term) => {
+      const clean = term.replace(/^\d+[\.\)]\s*/, '').trim();
+      if (/vat\s*&?\s*tax/i.test(clean)) {
+        if (/excluded/i.test(clean)) vatMode = 'EXCLUDED';
+        else if (/included/i.test(clean)) vatMode = 'INCLUDED';
+
+        const comboMatch = clean.match(/(\d+(?:\.\d+)?%\s*VAT\s*(?:and|&)\s*\d+(?:\.\d+)?%\s*(?:TAX|AIT))/i);
+        if (comboMatch) {
+          vatRate = comboMatch[1].replace(/\band\b/i, '&');
+        } else {
+          const matchSingle = clean.match(/(\d+(?:\.\d+)?%[^\:\-\n]*)/i);
+          if (matchSingle) {
+            vatRate = matchSingle[1].replace(/\b(included|excluded)\b/gi, '').trim() || '15%';
+          }
+        }
+      } else if (/payment\s*:/i.test(clean)) {
+        payment = clean.replace(/payment\s*:\s*/i, '').trim();
+      } else if (/delivery\s*:/i.test(clean)) {
+        delivery = clean.replace(/delivery\s*:\s*/i, '').trim();
+      } else if (/warranty\s*:/i.test(clean)) {
+        warranty = clean.replace(/warranty\s*:\s*/i, '').trim();
+      } else if (/remarks\s*:|validity\s*:|notes?\s*:/i.test(clean)) {
+        notes = clean.replace(/^(remarks|validity|notes?)\s*:\s*/i, '').trim();
+      }
+    });
+
+    // If delivery or warranty is missing from the bill, check if linked quotation has them
+    const linkedQuote = quotations.find(
+      (q) => q.quotationNumber === bill.quotationRef || q.id === bill.quotationId
+    );
+    if (linkedQuote) {
+      if (vatRate === '15%' && linkedQuote.vatTaxTerms) {
+        vatRate = extractVatRateFromQuoteTerms(linkedQuote.vatTaxTerms);
+      }
+      if (!payment && linkedQuote.paymentTerms) payment = linkedQuote.paymentTerms;
+      if (!delivery && linkedQuote.deliveryTerms) delivery = linkedQuote.deliveryTerms;
+      if (!warranty && linkedQuote.warrantyTerms) warranty = linkedQuote.warrantyTerms;
+      if (!notes && linkedQuote.notes) notes = linkedQuote.notes;
+    }
+
+    setBillTermsForm({
+      vatTaxMode: vatMode,
+      vatRate: vatRate,
+      paymentTerms: payment || 'Net 30 Days after Delivery & Invoice',
+      deliveryTerms: delivery || 'Within 3-5 Working Days',
+      warrantyTerms: warranty || '1 Year Service Warranty (Without Parts)',
+      notes: notes || ''
+    });
+    setRawTermsText(existingTerms.join('\n'));
+    setIsRawTermsMode(false);
+    setIsEditTermsModalOpen(true);
+  };
+
+  // Import all terms from linked quotation
+  const handleImportTermsFromQuote = () => {
+    if (!termsEditTargetBill) return;
+    const linkedQuote = quotations.find(
+      (q) => q.quotationNumber === termsEditTargetBill.quotationRef || q.id === termsEditTargetBill.quotationId
+    );
+    if (!linkedQuote) {
+      showToast('⚠️ No linked quotation found for this bill.');
+      return;
+    }
+
+    const isQuoteExclusive = (linkedQuote.vatTaxTerms || '').toLowerCase().includes('exclusive');
+    const quoteRate = extractVatRateFromQuoteTerms(linkedQuote.vatTaxTerms);
+    setBillTermsForm({
+      vatTaxMode: isQuoteExclusive ? 'EXCLUDED' : 'INCLUDED',
+      vatRate: quoteRate,
+      paymentTerms: linkedQuote.paymentTerms || '',
+      deliveryTerms: linkedQuote.deliveryTerms || '',
+      warrantyTerms: linkedQuote.warrantyTerms || '',
+      notes: linkedQuote.notes || ''
+    });
+    showToast(`✓ Imported all terms from Quotation ${linkedQuote.quotationNumber}`);
+  };
+
+  // Save updated terms to bill
+  const handleSaveBillTerms = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!termsEditTargetBill) return;
+
+    let updatedTerms: string[] = [];
+
+    if (isRawTermsMode) {
+      updatedTerms = rawTermsText
+        .split('\n')
+        .map((t) => t.trim())
+        .filter(Boolean);
+    } else {
+      const isInc = billTermsForm.vatTaxMode === 'INCLUDED';
+      const cleanRate = billTermsForm.vatRate.trim() ? ` ${billTermsForm.vatRate.trim()}` : ' 15%';
+      updatedTerms.push(isInc ? `1. VAT&TAX :${cleanRate} Included` : `1. VAT&TAX :${cleanRate} Excluded`);
+
+      let idx = 2;
+      if (billTermsForm.paymentTerms.trim()) {
+        updatedTerms.push(`${idx}. Payment: ${billTermsForm.paymentTerms.trim()}`);
+        idx++;
+      }
+      if (billTermsForm.deliveryTerms.trim()) {
+        updatedTerms.push(`${idx}. Delivery: ${billTermsForm.deliveryTerms.trim()}`);
+        idx++;
+      }
+      if (billTermsForm.warrantyTerms.trim()) {
+        updatedTerms.push(`${idx}. Warranty: ${billTermsForm.warrantyTerms.trim()}`);
+        idx++;
+      }
+      if (billTermsForm.notes.trim()) {
+        updatedTerms.push(`${idx}. Remarks: ${billTermsForm.notes.trim()}`);
+        idx++;
+      }
+    }
+
+    const updatedBill: BillInvoice = {
+      ...termsEditTargetBill,
+      vatTaxIncluded: billTermsForm.vatTaxMode === 'INCLUDED',
+      termsAndConditions: updatedTerms
+    };
+
+    setActiveBill(updatedBill);
+    const updatedBills = bills.map((b) => (b.id === updatedBill.id ? updatedBill : b));
+    setBills(updatedBills);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updatedBills }));
+        mirrorToIndexedDB().catch(() => {});
+      } catch (err) {
+        console.error('Failed to save bill terms to localStorage:', err);
+      }
+    }
+
+    setIsEditTermsModalOpen(false);
+    showToast(`✓ Updated Terms & Conditions for ${updatedBill.billNo}`);
   };
 
   // Robust isolated printing engine (guarantees 100% data visibility on A4 pad without clipping)
@@ -2836,8 +3106,17 @@ export function BillInvoiceView({
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '11.5px', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     {/* Terms & Conditions */}
                     <div style={{ width: '58%' }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '12px', borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '5px', display: 'inline-block', minWidth: '140px' }}>
-                        Terms &amp; Conditions
+                      <div style={{ borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '5px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                        <span style={{ fontWeight: 'bold', fontSize: '12px' }}>Terms &amp; Conditions</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditTerms(activeBill)}
+                          className="no-print print:hidden text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-xs transition cursor-pointer"
+                          title="Click to edit, add, or sync Terms & Conditions"
+                        >
+                          <Edit className="w-3 h-3" />
+                          <span>Edit Terms</span>
+                        </button>
                       </div>
                       <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
                         {activeBill.termsAndConditions.map((term, tIdx) => {
@@ -2846,12 +3125,32 @@ export function BillInvoiceView({
                             <div key={tIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span>{term}</span>
                               {isVatLine && (
-                                <span className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-sm text-[9px]">
+                                <span className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-xs text-[9px] gap-1">
+                                  <select
+                                    value={(() => {
+                                      if (/15%\s*vat\s*&\s*10%/i.test(term)) return '15% VAT & 10% TAX';
+                                      if (/15%\s*vat\s*&\s*5%/i.test(term)) return '15% VAT & 5% TAX';
+                                      if (/10%\s*vat\s*&\s*5%/i.test(term)) return '10% VAT & 5% TAX';
+                                      const m = term.match(/(\d+(?:\.\d+)?%)/);
+                                      return m ? m[1] : '15%';
+                                    })()}
+                                    onChange={(e) => handleQuickChangeVatRate(e.target.value)}
+                                    className="bg-white border border-slate-300 text-slate-800 rounded px-1 py-0.5 text-[9px] font-bold cursor-pointer hover:bg-slate-50 focus:outline-none"
+                                    title="Quick change VAT % Rate"
+                                  >
+                                    <option value="15%">15%</option>
+                                    <option value="15% VAT & 10% TAX">15% VAT &amp; 10% TAX</option>
+                                    <option value="15% VAT & 5% TAX">15% VAT &amp; 5% TAX</option>
+                                    <option value="10% VAT & 5% TAX">10% VAT &amp; 5% TAX</option>
+                                    <option value="10%">10%</option>
+                                    <option value="7.5%">7.5%</option>
+                                    <option value="5%">5%</option>
+                                  </select>
                                   <button
                                     type="button"
                                     onClick={() => handleToggleBillVatMode('INCLUDED')}
                                     title="Set VAT & TAX as Included"
-                                    className={`px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${
+                                    className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
                                       activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
                                     }`}
                                   >
@@ -2861,7 +3160,7 @@ export function BillInvoiceView({
                                     type="button"
                                     onClick={() => handleToggleBillVatMode('EXCLUDED')}
                                     title="Set VAT & TAX as Excluded"
-                                    className={`px-1.5 py-0.2 rounded font-bold cursor-pointer transition ${
+                                    className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
                                       !activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
                                     }`}
                                   >
@@ -3503,9 +3802,45 @@ export function BillInvoiceView({
           {/* Terms & Payment Bank Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2 bg-slate-900/80 p-3.5 rounded-xl border border-slate-800">
-              <label className="block text-[11px] font-bold text-slate-300">Terms & Conditions</label>
+              <div className="flex items-center justify-between">
+                <label className="block text-[11px] font-bold text-slate-300">Terms &amp; Conditions</label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = formData.termsAndConditions || [];
+                      const exists = current.some((t) => /delivery/i.test(t));
+                      if (!exists) {
+                        setFormData({
+                          ...formData,
+                          termsAndConditions: [...current, `${current.length + 1}. Delivery: Within 3-5 Working Days`]
+                        });
+                      }
+                    }}
+                    className="text-[10px] text-sky-400 hover:text-sky-300 bg-sky-950/60 border border-sky-800/60 px-1.5 py-0.5 rounded cursor-pointer transition"
+                  >
+                    + Delivery
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const current = formData.termsAndConditions || [];
+                      const exists = current.some((t) => /warranty/i.test(t));
+                      if (!exists) {
+                        setFormData({
+                          ...formData,
+                          termsAndConditions: [...current, `${current.length + 1}. Warranty: 1 Year Service Warranty (Without Parts)`]
+                        });
+                      }
+                    }}
+                    className="text-[10px] text-emerald-400 hover:text-emerald-300 bg-emerald-950/60 border border-emerald-800/60 px-1.5 py-0.5 rounded cursor-pointer transition"
+                  >
+                    + Warranty
+                  </button>
+                </div>
+              </div>
               <textarea
-                rows={3}
+                rows={4}
                 value={(formData.termsAndConditions || []).join('\n')}
                 onChange={(e) =>
                   setFormData({
@@ -3514,7 +3849,7 @@ export function BillInvoiceView({
                   })
                 }
                 className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 focus:outline-none focus:border-emerald-500 font-mono text-[11px]"
-                placeholder="1. VAT&TAX : Included&#10;2. Payment: Within Deadline"
+                placeholder="1. VAT&TAX : Included&#10;2. Payment: Net 30 Days&#10;3. Delivery: Within 3-5 Working Days&#10;4. Warranty: 1 Year Service Warranty"
               />
             </div>
 
@@ -3909,6 +4244,287 @@ export function BillInvoiceView({
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Save &amp; Update Challan</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* MODAL: EDIT BILL TERMS & CONDITIONS DIRECTLY FROM PREVIEW */}
+      {isEditTermsModalOpen && termsEditTargetBill && (
+        <Modal
+          isOpen={isEditTermsModalOpen}
+          onClose={() => setIsEditTermsModalOpen(false)}
+          title={`Edit Terms & Conditions (${termsEditTargetBill.billNo})`}
+          size="lg"
+        >
+          <form onSubmit={handleSaveBillTerms} className="space-y-4 text-xs">
+            <div className="flex items-center justify-between">
+              <p className="text-slate-300">
+                Customize terms &amp; conditions for Bill <strong className="text-slate-100">{termsEditTargetBill.billNo}</strong>:
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isRawTermsMode) {
+                    const lines = [
+                      billTermsForm.vatTaxMode === 'INCLUDED' ? '1. VAT&TAX : Included' : '1. VAT&TAX : Excluded',
+                      billTermsForm.paymentTerms ? `2. Payment: ${billTermsForm.paymentTerms}` : '',
+                      billTermsForm.deliveryTerms ? `3. Delivery: ${billTermsForm.deliveryTerms}` : '',
+                      billTermsForm.warrantyTerms ? `4. Warranty: ${billTermsForm.warrantyTerms}` : '',
+                      billTermsForm.notes ? `5. Remarks: ${billTermsForm.notes}` : ''
+                    ].filter(Boolean);
+                    setRawTermsText(lines.join('\n'));
+                  }
+                  setIsRawTermsMode(!isRawTermsMode);
+                }}
+                className="text-[11px] text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
+              >
+                {isRawTermsMode ? 'Switch to Structured Presets' : 'Switch to Raw Text Editor'}
+              </button>
+            </div>
+
+            {/* If linked to a quotation, show import button */}
+            {termsEditTargetBill.quotationRef && (
+              <div className="flex items-center justify-between p-3 bg-blue-950/40 border border-blue-800/50 rounded-xl">
+                <div className="flex items-center gap-2 text-xs text-blue-300">
+                  <FileText className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>
+                    Linked Quotation: <strong className="text-white font-mono">{termsEditTargetBill.quotationRef}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleImportTermsFromQuote}
+                  className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-[11px] rounded-lg transition flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Import All Terms from Quote</span>
+                </button>
+              </div>
+            )}
+
+            {isRawTermsMode ? (
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-300">
+                  Line-by-Line Terms &amp; Conditions (One per line)
+                </label>
+                <textarea
+                  rows={6}
+                  value={rawTermsText}
+                  onChange={(e) => setRawTermsText(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                  placeholder="1. VAT&TAX : Included&#10;2. Payment: Net 30 Days after Delivery & Invoice&#10;3. Delivery: Within 3-5 Working Days&#10;4. Warranty: 1 Year Official Warranty"
+                />
+              </div>
+            ) : (
+              <div className="space-y-3.5">
+                {/* 1. VAT & TAX Mode & Rate */}
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="block text-slate-200 font-bold text-[11px]">1. VAT &amp; TAX Terms &amp; Percentage</label>
+                      <span className="text-[10px] text-slate-400">Specify VAT &amp; TAX percentage and inclusion mode</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-lg border border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setBillTermsForm((prev) => ({ ...prev, vatTaxMode: 'INCLUDED' }))}
+                        className={`px-3 py-1 text-xs font-bold rounded transition cursor-pointer ${
+                          billTermsForm.vatTaxMode === 'INCLUDED'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Included
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillTermsForm((prev) => ({ ...prev, vatTaxMode: 'EXCLUDED' }))}
+                        className={`px-3 py-1 text-xs font-bold rounded transition cursor-pointer ${
+                          billTermsForm.vatTaxMode === 'EXCLUDED'
+                            ? 'bg-rose-600 text-white shadow-xs'
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        Excluded
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-slate-800/60">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-semibold block mb-1">Percentage Preset</span>
+                      <select
+                        value={billTermsForm.vatRate}
+                        onChange={(e) => setBillTermsForm((prev) => ({ ...prev, vatRate: e.target.value }))}
+                        className="w-full bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 cursor-pointer focus:outline-none focus:border-emerald-500 font-medium"
+                      >
+                        <option value="15%">15% (Standard VAT)</option>
+                        <option value="15% VAT & 10% TAX">15% VAT &amp; 10% TAX (Standard Corporate)</option>
+                        <option value="15% VAT & 5% TAX">15% VAT &amp; 5% TAX</option>
+                        <option value="10% VAT & 5% TAX">10% VAT &amp; 5% TAX</option>
+                        <option value="10%">10%</option>
+                        <option value="7.5%">7.5%</option>
+                        <option value="5%">5%</option>
+                      </select>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-semibold block mb-1">Custom Rate / Text</span>
+                      <input
+                        type="text"
+                        value={billTermsForm.vatRate}
+                        onChange={(e) => setBillTermsForm((prev) => ({ ...prev, vatRate: e.target.value }))}
+                        placeholder="e.g. 15% VAT & 10% TAX"
+                        className="w-full px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Payment Terms */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-200 font-bold text-[11px]">2. Payment Terms</label>
+                    <select
+                      onChange={(e) => e.target.value && setBillTermsForm((prev) => ({ ...prev, paymentTerms: e.target.value }))}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-2 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Presets...</option>
+                      <option value="Net 30 Days after Delivery & Invoice">Net 30 Days after Delivery & Invoice</option>
+                      <option value="Net 15 Days after Invoice">Net 15 Days after Invoice</option>
+                      <option value="Cash on Delivery (COD)">Cash on Delivery (COD)</option>
+                      <option value="100% Advance Payment with Work Order">100% Advance Payment</option>
+                      <option value="50% Advance with PO, 50% on Delivery">50% Adv, 50% Delivery</option>
+                      <option value="50% Advance with PO, 40% on Delivery, 10% on Commissioning">50% Adv, 40% Del, 10% Com</option>
+                      <option value="Within Deadline">Within Deadline</option>
+                    </select>
+                  </div>
+                  <input
+                    type="text"
+                    value={billTermsForm.paymentTerms}
+                    onChange={(e) => setBillTermsForm((prev) => ({ ...prev, paymentTerms: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                    placeholder="e.g. Net 30 Days after Delivery & Invoice"
+                  />
+                </div>
+
+                {/* 3. Delivery Terms */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-200 font-bold text-[11px]">3. Delivery Terms</label>
+                    <select
+                      onChange={(e) => e.target.value && setBillTermsForm((prev) => ({ ...prev, deliveryTerms: e.target.value }))}
+                      className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-2 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
+                    >
+                      <option value="">Presets...</option>
+                      <option value="Within 7 days from PO date">Within 7 days from PO date</option>
+                      <option value="Within 3-5 Working Days">Within 3-5 Working Days</option>
+                      <option value="Within 15 days from PO date">Within 15 days from PO date</option>
+                      <option value="Immediate Delivery from Central Warehouse (Ex-Stock)">Immediate Delivery (Ex-Stock)</option>
+                      <option value="As per customer work order schedule">As per work order schedule</option>
+                    </select>
+                  </div>
+                  <input
+                    type="text"
+                    value={billTermsForm.deliveryTerms}
+                    onChange={(e) => setBillTermsForm((prev) => ({ ...prev, deliveryTerms: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                    placeholder="e.g. Within 3-5 Working Days or Immediate Delivery"
+                  />
+                </div>
+
+                {/* 4. Warranty Terms */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-200 font-bold text-[11px]">4. Warranty Support</label>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setBillTermsForm((prev) => ({ ...prev, warrantyTerms: 'No Warranty' }))}
+                        className={`px-1.5 py-0.5 text-[10px] rounded transition cursor-pointer ${
+                          /no\s*warranty/i.test(billTermsForm.warrantyTerms)
+                            ? 'bg-rose-600 text-white font-bold'
+                            : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                        }`}
+                      >
+                        No Warranty
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillTermsForm((prev) => ({ ...prev, warrantyTerms: '1 Year Service Warranty (Without Parts)' }))}
+                        className={`px-1.5 py-0.5 text-[10px] rounded transition cursor-pointer ${
+                          billTermsForm.warrantyTerms === '1 Year Service Warranty (Without Parts)'
+                            ? 'bg-blue-600 text-white font-bold'
+                            : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                        }`}
+                      >
+                        1Y Service
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setBillTermsForm((prev) => ({ ...prev, warrantyTerms: '1 Year Full Replacement Warranty' }))}
+                        className={`px-1.5 py-0.5 text-[10px] rounded transition cursor-pointer ${
+                          billTermsForm.warrantyTerms === '1 Year Full Replacement Warranty'
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
+                        }`}
+                      >
+                        1Y Replace
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={billTermsForm.warrantyTerms}
+                    onChange={(e) => setBillTermsForm((prev) => ({ ...prev, warrantyTerms: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                    placeholder="e.g. 1 Year Service Warranty (Without Parts)"
+                  />
+                </div>
+
+                {/* 5. Remarks / Additional Notes */}
+                <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1.5">
+                  <label className="text-slate-200 font-bold text-[11px] block">5. Remarks / Special Conditions</label>
+                  <input
+                    type="text"
+                    value={billTermsForm.notes}
+                    onChange={(e) => setBillTermsForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    className="w-full px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-slate-100 text-xs focus:outline-none focus:border-emerald-500 font-medium"
+                    placeholder="Optional remarks or validity (e.g. Goods once sold are non-refundable)"
+                  />
+                </div>
+
+                {/* Preview Box */}
+                <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Printed Bill Preview
+                  </span>
+                  <div className="text-[11px] text-slate-300 font-mono space-y-0.5">
+                    <div>1. VAT&amp;TAX : {billTermsForm.vatRate.trim() ? `${billTermsForm.vatRate.trim()} ` : ''}{billTermsForm.vatTaxMode === 'INCLUDED' ? 'Included' : 'Excluded'}</div>
+                    {billTermsForm.paymentTerms.trim() && <div>2. Payment: {billTermsForm.paymentTerms.trim()}</div>}
+                    {billTermsForm.deliveryTerms.trim() && <div>3. Delivery: {billTermsForm.deliveryTerms.trim()}</div>}
+                    {billTermsForm.warrantyTerms.trim() && <div>4. Warranty: {billTermsForm.warrantyTerms.trim()}</div>}
+                    {billTermsForm.notes.trim() && <div>5. Remarks: {billTermsForm.notes.trim()}</div>}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <button
+                type="button"
+                onClick={() => setIsEditTermsModalOpen(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-semibold text-xs transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Save Terms &amp; Update Bill</span>
               </button>
             </div>
           </form>
