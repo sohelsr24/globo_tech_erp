@@ -425,6 +425,69 @@ export const INITIAL_BILL_INVOICES: BillInvoice[] = [
   }
 ];
 
+// Computes a numeric sorting score for a Bill Invoice based on year and sequential number.
+// Higher score = newer / higher serial number (e.g. GT/26154 > GT/26148 > GT/26107).
+export function getBillSerialScore(b: Partial<BillInvoice> | null | undefined): number {
+  if (!b) return 0;
+  const billNo = (b.billNo || '').trim();
+  const id = (b.id || '').trim();
+
+  // Pattern 1: GT/26154, GT-26154, GT26154, DZ_AMC_GT_26003, GT/2026-154
+  const fullMatch = billNo.match(/(?:GT[/-_]?)?(?:20)?(\d{2})[-/_]?(\d{2,})/i) || id.match(/(?:bill-)?(?:GT[/-_]?)?(?:20)?(\d{2})[-/_]?(\d{2,})/i);
+  if (fullMatch) {
+    const year = parseInt(fullMatch[1], 10);
+    const seq = parseInt(fullMatch[2], 10);
+    if (!isNaN(year) && !isNaN(seq)) {
+      return year * 1000000 + seq;
+    }
+  }
+
+  // Pattern 2: Any numbers in billNo
+  const allDigits = billNo.replace(/\D/g, '');
+  if (allDigits.length >= 2) {
+    const val = parseInt(allDigits, 10);
+    if (!isNaN(val)) return val;
+  }
+
+  // Pattern 3: Fallback to timestamp in id if available
+  const idDigits = id.replace(/\D/g, '');
+  if (idDigits.length >= 10) {
+    const ts = parseInt(idDigits, 10);
+    if (!isNaN(ts)) return Math.floor(ts / 1000);
+  }
+
+  return 0;
+}
+
+// Sorts Bill Invoices descending so the newest / highest serial bills are always at the top (1st).
+export function sortBillsDesc<T extends Partial<BillInvoice>>(billsList: T[]): T[] {
+  if (!Array.isArray(billsList)) return [];
+  return [...billsList].sort((a, b) => {
+    const scoreA = getBillSerialScore(a);
+    const scoreB = getBillSerialScore(b);
+
+    if (scoreA !== scoreB) {
+      return scoreB - scoreA; // Descending: 26154 > 26148 > 26147 > 26107
+    }
+
+    // Secondary fallback: Date or createdAt timestamp descending
+    const parseDateMs = (dStr?: string) => {
+      if (!dStr) return 0;
+      const ms = Date.parse(dStr);
+      return isNaN(ms) ? 0 : ms;
+    };
+
+    const timeA = (a?.createdAt ? parseDateMs(a.createdAt) : 0) || parseDateMs(a?.date);
+    const timeB = (b?.createdAt ? parseDateMs(b.createdAt) : 0) || parseDateMs(b?.date);
+    if (timeA !== timeB) {
+      return timeB - timeA;
+    }
+
+    // Tertiary natural compare
+    return (b?.billNo || b?.id || '').localeCompare(a?.billNo || a?.id || '', undefined, { numeric: true });
+  });
+}
+
 // Automatically generates the next sequential Bill Invoice number based on existing bills.
 // Format: GT/YYNNN (e.g., GT/26109 when GT/26107 & GT/26108 exist)
 export function generateNextBillNo(existingBills: BillInvoice[]): string {
@@ -439,8 +502,8 @@ export function generateNextBillNo(existingBills: BillInvoice[]): string {
   billsList.forEach((b) => {
     if (!b || !b.billNo) return;
     const cleanStr = b.billNo.trim();
-    // Match GT/26108, GT-26108, GT26108, 26108
-    const match = cleanStr.match(/(?:GT[/-]?)?(\d{2})(\d{3,})/i);
+    // Match GT/26108, GT-26108, GT26108, 26108, DZ_AMC_GT_26003
+    const match = cleanStr.match(/(?:GT[/-_]?)?(?:20)?(\d{2})[-/_]?(\d{3,})/i);
     if (match) {
       const billYear = match[1];
       const seq = parseInt(match[2], 10);
@@ -491,24 +554,27 @@ export function BillInvoiceView({
             const missingInitials = INITIAL_BILL_INVOICES.filter(
               (initB) => !existingNos.has(initB.billNo) && !deletedBillIds.has(initB.id) && !deletedBillIds.has(initB.billNo)
             );
-            return [...missingInitials, ...cleanBills].map((b: BillInvoice) => {
+            const combined = [...missingInitials, ...cleanBills].map((b: BillInvoice) => {
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 return { ...b, poAttachment: SAMPLE_DARAZ_PO_ATTACHMENT };
               }
               return b;
             });
+            return sortBillsDesc(combined);
           }
         } catch (e) {}
       }
-      return INITIAL_BILL_INVOICES.filter(
-        (initB) =>
-          !deletedBillIds.has(initB.id) &&
-          !deletedBillIds.has(initB.billNo) &&
-          initB.id !== 'bill-26108' &&
-          initB.billNo !== 'GT/26108'
+      return sortBillsDesc(
+        INITIAL_BILL_INVOICES.filter(
+          (initB) =>
+            !deletedBillIds.has(initB.id) &&
+            !deletedBillIds.has(initB.billNo) &&
+            initB.id !== 'bill-26108' &&
+            initB.billNo !== 'GT/26108'
+        )
       );
     }
-    return INITIAL_BILL_INVOICES;
+    return sortBillsDesc(INITIAL_BILL_INVOICES);
   });
 
   const [quotations, setQuotations] = useState<Quotation[]>(() => {
@@ -735,22 +801,25 @@ export function BillInvoiceView({
               }
               return updated;
             });
-            setBills(hydrated);
-            localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(hydrated));
-            if (hydrated.length > 0 && !activeBill) {
-              setActiveBill(hydrated[0]);
+            const sortedHydrated = sortBillsDesc(hydrated);
+            setBills(sortedHydrated);
+            localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(sortedHydrated));
+            if (sortedHydrated.length > 0 && !activeBill) {
+              setActiveBill(sortedHydrated[0]);
             }
           }
         } catch (e) {
           console.error('Error loading bill invoices from localStorage', e);
         }
       } else {
-        const initialFiltered = INITIAL_BILL_INVOICES.filter(
-          (initB) =>
-            !deletedBillIds.has(initB.id) &&
-            !deletedBillIds.has(initB.billNo) &&
-            initB.id !== 'bill-26108' &&
-            initB.billNo !== 'GT/26108'
+        const initialFiltered = sortBillsDesc(
+          INITIAL_BILL_INVOICES.filter(
+            (initB) =>
+              !deletedBillIds.has(initB.id) &&
+              !deletedBillIds.has(initB.billNo) &&
+              initB.id !== 'bill-26108' &&
+              initB.billNo !== 'GT/26108'
+          )
         );
         localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(initialFiltered));
         setBills(initialFiltered);
@@ -800,7 +869,7 @@ export function BillInvoiceView({
         const savedBills = localStorage.getItem('globotech_erp_bill_invoices');
         if (savedBills) {
           try {
-            setBills(JSON.parse(savedBills));
+            setBills(sortBillsDesc(JSON.parse(savedBills)));
           } catch (e) {
             console.error('Error reloading bills after restore:', e);
           }
@@ -834,12 +903,12 @@ export function BillInvoiceView({
 
     const handleBillsUpdated = (e: any) => {
       if (e?.detail && Array.isArray(e.detail)) {
-        setBills(e.detail);
+        setBills(sortBillsDesc(e.detail));
       } else if (typeof window !== 'undefined') {
         const saved = localStorage.getItem('globotech_erp_bill_invoices');
         if (saved) {
           try {
-            setBills(JSON.parse(saved));
+            setBills(sortBillsDesc(JSON.parse(saved)));
           } catch (err) {}
         }
       }
@@ -1066,7 +1135,7 @@ export function BillInvoiceView({
           }
         : undefined
     };
-    setBills([newBill, ...bills]);
+    setBills(sortBillsDesc([newBill, ...bills]));
   };
 
   // Delete bill
@@ -1203,7 +1272,7 @@ export function BillInvoiceView({
         poAttachment: formData.poAttachment
       } as BillInvoice;
 
-      setBills(bills.map((b) => (b.id === editingBillId ? savedRecord : b)));
+      setBills(sortBillsDesc(bills.map((b) => (b.id === editingBillId ? savedRecord : b))));
     } else {
       // Create new
       savedRecord = {
@@ -1246,7 +1315,7 @@ export function BillInvoiceView({
         createdAt: new Date().toISOString()
       };
 
-      setBills([savedRecord, ...bills]);
+      setBills(sortBillsDesc([savedRecord, ...bills]));
     }
 
     setActiveBill(savedRecord);
@@ -1730,7 +1799,7 @@ export function BillInvoiceView({
     const rawQuery = searchQuery.trim().toLowerCase();
     const cleanQuery = rawQuery.replace(/[\s\-/\\#.]/g, '');
 
-    return bills.filter((b) => {
+    const filtered = bills.filter((b) => {
       // 1. Search Query Match
       let matchesSearch = true;
       if (rawQuery !== '') {
@@ -1818,6 +1887,8 @@ export function BillInvoiceView({
 
       return matchesSearch && matchesStatus && matchesPoOnly;
     });
+
+    return sortBillsDesc(filtered);
   }, [bills, searchQuery, statusFilter, poFilterOnly]);
 
   // Statistics

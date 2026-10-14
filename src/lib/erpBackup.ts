@@ -265,8 +265,34 @@ export function restoreERPBackupData(
         localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(Array.from(delSet)));
       }
 
-      // 2. Bills Safe Merge
+      // 2. Bills Safe Merge (Strictly sorted descending so newest / highest serial sit at the top)
       if (Array.isArray(data.bills)) {
+        const sortBillsDesc = (arr: any[]) => {
+          return [...arr].sort((a, b) => {
+            const getScore = (bObj: any) => {
+              const num = (bObj?.billNo || '').trim();
+              const id = (bObj?.id || '').trim();
+              const m = num.match(/(?:GT[/-_]?)?(?:20)?(\d{2})[-/_]?(\d{2,})/i) || id.match(/(?:bill-)?(?:GT[/-_]?)?(?:20)?(\d{2})[-/_]?(\d{2,})/i);
+              if (m) return parseInt(m[1], 10) * 1000000 + parseInt(m[2], 10);
+              const allDigits = num.replace(/\D/g, '');
+              if (allDigits.length >= 2) return parseInt(allDigits, 10);
+              return 0;
+            };
+            const sA = getScore(a);
+            const sB = getScore(b);
+            if (sA !== sB) return sB - sA;
+            const parseDateMs = (dStr?: string) => {
+              if (!dStr) return 0;
+              const ms = Date.parse(dStr);
+              return isNaN(ms) ? 0 : ms;
+            };
+            const timeA = (a?.createdAt ? parseDateMs(a.createdAt) : 0) || parseDateMs(a?.date);
+            const timeB = (b?.createdAt ? parseDateMs(b.createdAt) : 0) || parseDateMs(b?.date);
+            if (timeA !== timeB) return timeB - timeA;
+            return (b?.billNo || b?.id || '').localeCompare(a?.billNo || a?.id || '', undefined, { numeric: true });
+          });
+        };
+
         const cleanIncoming = data.bills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
@@ -281,10 +307,10 @@ export function restoreERPBackupData(
               const key = b.id || b.billNo;
               if (key) map.set(key, b);
             });
-          const merged = Array.from(map.values());
+          const merged = sortBillsDesc(Array.from(map.values()));
           localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(merged));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(cleanIncoming));
+          localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(sortBillsDesc(cleanIncoming)));
         }
       }
       if (Array.isArray(data.deletedBillIds)) {
