@@ -8,7 +8,8 @@ import {
   FileText,
   Menu,
   FileCheck,
-  WalletCards
+  WalletCards,
+  HandCoins
 } from 'lucide-react';
 
 interface MobileBottomNavProps {
@@ -34,10 +35,10 @@ export function MobileBottomNav({
       action: () => onSelectTab('dashboard')
     },
     {
-      id: 'products',
-      label: 'Products',
-      icon: Package,
-      action: () => onSelectTab('products')
+      id: 'expenses',
+      label: 'Expenses',
+      icon: HandCoins,
+      action: () => onSelectTab('expenses')
     },
     {
       id: 'stock',
@@ -54,10 +55,10 @@ export function MobileBottomNav({
     },
     {
       id: 'menu',
-      label: currentTab === 'purchases' ? 'Purchases' : 'Menu',
-      icon: currentTab === 'purchases' ? WalletCards : Menu,
+      label: currentTab === 'purchases' ? 'Purchases' : (currentTab === 'products' ? 'Products' : 'Menu'),
+      icon: currentTab === 'purchases' ? WalletCards : (currentTab === 'products' ? Package : Menu),
       action: onOpenMenu,
-      isActive: isMenuOpen || currentTab === 'purchases'
+      isActive: isMenuOpen || currentTab === 'purchases' || currentTab === 'products'
     }
   ];
 

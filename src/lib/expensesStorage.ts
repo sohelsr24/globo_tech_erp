@@ -6,6 +6,7 @@
  * - Cash In (collection / bank withdrawal) vs Cash Out (expenses)
  * - Real-time drawer petty cash balance & category breakdown
  */
+import { markLocalDataChanged } from '@/lib/erpAutoSync';
 
 export type ExpenseCategory =
   | 'CONVEYANCE'       // যাতায়াত ও সাইট ডেলিভারি (CNG, Fuel, Rickshaw, Transport)
@@ -457,6 +458,11 @@ export function saveStoredExpenses(expenses: ExpenseEntry[]): void {
   try {
     localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expenses));
     window.dispatchEvent(new CustomEvent('globotech_expenses_updated', { detail: expenses }));
+    try {
+      markLocalDataChanged();
+    } catch (syncErr) {
+      console.warn('Auto sync trigger error on expenses save:', syncErr);
+    }
   } catch (e) {
     console.error('Error saving daily expenses to storage:', e);
   }

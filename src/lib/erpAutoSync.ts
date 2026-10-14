@@ -77,6 +77,7 @@ function dispatchAllModuleRefreshEvents(timestamp: number) {
     window.dispatchEvent(new CustomEvent('globotech_quotations_updated'));
     window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
     window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_expenses_updated'));
     window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
   } catch (e) {
     console.warn('Dispatch module events error:', e);
@@ -398,6 +399,7 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
   window.addEventListener('globotech_quotations_updated', handleDataChangedEvent);
   window.addEventListener('globotech_bills_updated', handleDataChangedEvent);
   window.addEventListener('globotech_stock_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_expenses_updated', handleDataChangedEvent);
 
   // 1. Initial check immediately on load
   setTimeout(() => {
@@ -445,6 +447,7 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
     window.removeEventListener('globotech_quotations_updated', handleDataChangedEvent);
     window.removeEventListener('globotech_bills_updated', handleDataChangedEvent);
     window.removeEventListener('globotech_stock_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_expenses_updated', handleDataChangedEvent);
   };
 }
 

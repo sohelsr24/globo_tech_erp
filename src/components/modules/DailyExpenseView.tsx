@@ -129,7 +129,15 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       }
     };
     window.addEventListener('globotech_expenses_updated', handleUpdate);
-    return () => window.removeEventListener('globotech_expenses_updated', handleUpdate);
+    window.addEventListener('globotech:cloud_data_synced', handleUpdate);
+    window.addEventListener('globotech_backup_restored', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('globotech_expenses_updated', handleUpdate);
+      window.removeEventListener('globotech:cloud_data_synced', handleUpdate);
+      window.removeEventListener('globotech_backup_restored', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   // Sync search query from prop
@@ -1582,6 +1590,28 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           </div>
         </div>
       </Modal>
+
+      {/* Mobile Sticky Floating Action Buttons for instant fast entry on smartphones */}
+      <div className="lg:hidden fixed bottom-20 right-4 z-30 flex flex-col items-end gap-2.5 no-print pointer-events-none">
+        <button
+          type="button"
+          onClick={() => handleOpenCreateModal('CASH_IN')}
+          className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 transition-all backdrop-blur-sm"
+          title="নতুন নগদ জমা এন্ট্রি"
+        >
+          <ArrowDownRight className="w-3.5 h-3.5" />
+          <span>+ নগদ জমা</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => handleOpenCreateModal('EXPENSE')}
+          className="pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-sm font-bold shadow-2xl shadow-rose-950/80 border border-rose-400/40 transition-all backdrop-blur-sm animate-pulse hover:animate-none"
+          title="নতুন খরচ এন্ট্রি"
+        >
+          <Plus className="w-5 h-5" />
+          <span>+ খরচ এন্ট্রি (Add Expense)</span>
+        </button>
+      </div>
     </div>
   );
 }

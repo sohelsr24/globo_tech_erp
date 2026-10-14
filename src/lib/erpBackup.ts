@@ -49,6 +49,7 @@ export interface ERPBackupPayload {
       imports: number;
       suppliers: number;
       purchases?: number;
+      expenses?: number;
       serials: number;
     };
   };
@@ -140,6 +141,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
         imports: imports.length,
         suppliers: suppliers.length,
         purchases: purchases.length,
+        expenses: expenses.length,
         serials: serials.length
       }
     },
@@ -570,7 +572,37 @@ export function restoreERPBackupData(
         }
       }
 
-      // 14. Serials Safe Merge
+      // 14. Daily Expenses Safe Merge
+      if (Array.isArray(data.expenses)) {
+        if (isMergeMode) {
+          const current = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
+          const map = new Map<string, any>();
+          data.expenses.forEach((ex: any) => {
+            const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
+            if (key) map.set(key, ex);
+          });
+          current.forEach((ex: any) => {
+            const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
+            if (key) {
+              const existing = map.get(key);
+              map.set(key, existing ? { ...existing, ...ex } : ex);
+            } else {
+              map.set(key, ex);
+            }
+          });
+          // Sort descending by date & creation time
+          const merged = Array.from(map.values()).sort((a, b) => {
+            const dateCmp = (b.date || '').localeCompare(a.date || '');
+            if (dateCmp !== 0) return dateCmp;
+            return (b.createdAt || '').localeCompare(a.createdAt || '');
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.EXPENSES, JSON.stringify(merged));
+        } else {
+          localStorage.setItem(ERP_STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
+        }
+      }
+
+      // 15. Serials Safe Merge
       if (Array.isArray(data.serials)) {
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
@@ -583,7 +615,7 @@ export function restoreERPBackupData(
         }
       }
 
-      // 15. Settings Safe Merge
+      // 16. Settings Safe Merge
       if (data.settings && typeof data.settings === 'object') {
         const curSettings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
         localStorage.setItem(ERP_STORAGE_KEYS.SETTINGS, JSON.stringify({ ...curSettings, ...data.settings }));
@@ -603,6 +635,7 @@ export function restoreERPBackupData(
       window.dispatchEvent(new CustomEvent('globotech_quotations_updated'));
       window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
       window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_expenses_updated'));
     }
 
     const currentCounts = generateERPBackupPayload().meta.recordCounts;

@@ -406,6 +406,34 @@ function mergeErpDatasets($existing, $incoming) {
         $merged[$delKey] = array_keys($delSet);
     }
 
+    // 11. Daily Expenses & Cash Flow: merge by id (non-destructive union)
+    $expenseMap = [];
+    $allExpenses = array_merge(
+        isset($existing['expenses']) && is_array($existing['expenses']) ? $existing['expenses'] : [],
+        isset($incoming['expenses']) && is_array($incoming['expenses']) ? $incoming['expenses'] : []
+    );
+    foreach ($allExpenses as $ex) {
+        if (!is_array($ex)) continue;
+        $exId = !empty($ex['id']) ? trim($ex['id']) : (isset($ex['date'], $ex['particulars']) ? $ex['date'].'_'.$ex['particulars'] : '');
+        if ($exId !== '') {
+            if (isset($expenseMap[$exId])) {
+                $expenseMap[$exId] = array_merge($expenseMap[$exId], $ex);
+            } else {
+                $expenseMap[$exId] = $ex;
+            }
+        }
+    }
+    $expenseList = array_values($expenseMap);
+    usort($expenseList, function($a, $b) {
+        $dateA = !empty($a['date']) ? $a['date'] : '';
+        $dateB = !empty($b['date']) ? $b['date'] : '';
+        if ($dateA !== $dateB) return strcmp($dateB, $dateA);
+        $timeA = !empty($a['createdAt']) ? $a['createdAt'] : '';
+        $timeB = !empty($b['createdAt']) ? $b['createdAt'] : '';
+        return strcmp($timeB, $timeA);
+    });
+    $merged['expenses'] = $expenseList;
+
     return $merged;
 }
 
@@ -458,6 +486,7 @@ if ($action === 'push') {
         'imports' => isset($finalData['imports']) ? count($finalData['imports']) : 0,
         'suppliers' => isset($finalData['suppliers']) ? count($finalData['suppliers']) : 0,
         'purchases' => isset($finalData['purchases']) ? count($finalData['purchases']) : 0,
+        'expenses' => isset($finalData['expenses']) ? count($finalData['expenses']) : 0,
         'serials' => isset($finalData['serials']) ? count($finalData['serials']) : 0,
     ];
 
