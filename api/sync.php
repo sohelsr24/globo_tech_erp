@@ -170,6 +170,16 @@ function mergeErpDatasets($existing, $incoming) {
     }
     $merged['deletedCustomerIds'] = array_keys($delCustSet);
 
+    $delExpSet = [];
+    $allDelExp = array_merge(
+        isset($existing['deletedExpenseIds']) && is_array($existing['deletedExpenseIds']) ? $existing['deletedExpenseIds'] : [],
+        isset($incoming['deletedExpenseIds']) && is_array($incoming['deletedExpenseIds']) ? $incoming['deletedExpenseIds'] : []
+    );
+    foreach ($allDelExp as $de) {
+        if (is_string($de) && trim($de) !== '') $delExpSet[trim($de)] = true;
+    }
+    $merged['deletedExpenseIds'] = array_keys($delExpSet);
+
     // 1. Suppliers: merge by name or id (respecting deletion tombstones)
     $supplierMap = [];
     $allSuppliers = array_merge(
@@ -415,6 +425,10 @@ function mergeErpDatasets($existing, $incoming) {
     foreach ($allExpenses as $ex) {
         if (!is_array($ex)) continue;
         $exId = !empty($ex['id']) ? trim($ex['id']) : (isset($ex['date'], $ex['particulars']) ? $ex['date'].'_'.$ex['particulars'] : '');
+        if ($exId !== '' && isset($delExpSet[$exId])) continue;
+        $altKey = isset($ex['date'], $ex['amount'], $ex['particulars']) ? trim($ex['date'].'_'.(isset($ex['time']) ? $ex['time'] : '').'_'.$ex['amount'].'_'.$ex['particulars']) : '';
+        if ($altKey !== '' && isset($delExpSet[$altKey])) continue;
+
         if ($exId !== '') {
             if (isset($expenseMap[$exId])) {
                 $expenseMap[$exId] = array_merge($expenseMap[$exId], $ex);

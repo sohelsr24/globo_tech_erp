@@ -22,6 +22,7 @@ export const ERP_STORAGE_KEYS = {
   PURCHASES: 'globotech_erp_purchases',
   DELETED_PURCHASE_IDS: 'globotech_erp_deleted_purchases',
   EXPENSES: 'globotech_erp_daily_expenses',
+  DELETED_EXPENSE_IDS: 'globotech_erp_deleted_expense_ids',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
   LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
@@ -73,6 +74,7 @@ export interface ERPBackupPayload {
     purchases?: any[];
     deletedPurchaseIds?: string[];
     expenses?: any[];
+    deletedExpenseIds?: string[];
     serials: any[];
     settings: any;
   };
@@ -116,6 +118,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const purchases = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
   const deletedPurchaseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
   const expenses = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
+  const deletedExpenseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, []);
   const serials = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
   const settings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
 
@@ -165,6 +168,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       purchases,
       deletedPurchaseIds,
       expenses,
+      deletedExpenseIds,
       serials,
       settings
     }
@@ -246,32 +250,53 @@ export function restoreERPBackupData(
           });
         };
 
+        // 1. Compute master set of deleted Quotation IDs
+        const curDelQuotes = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, []);
+        const incDelQuotes = Array.isArray(data.deletedQuotationIds) ? data.deletedQuotationIds : [];
+        const allDelQuotesSet = new Set<string>([...curDelQuotes, ...incDelQuotes].map((s) => (s || '').trim().toUpperCase()));
+        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(Array.from(allDelQuotesSet)));
+
+        const isDelQuote = (q: any) => {
+          if (!q) return true;
+          const id = (q.id || '').trim().toUpperCase();
+          const num = (q.quotationNumber || '').trim().toUpperCase();
+          return (id && allDelQuotesSet.has(id)) || (num && allDelQuotesSet.has(num));
+        };
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
           const map = new Map<string, any>();
-          // Incoming items first
+          // Incoming items first (filtered)
           data.quotations.forEach((q: any) => {
+            if (isDelQuote(q)) return;
             const key = q.id || q.quotationNumber;
             if (key) map.set(key, q);
           });
-          // User local items take precedence so nothing user created or edited is lost!
+          // User local items (also strictly filtered so deleted items NEVER resurrect)
           current.forEach((q: any) => {
+            if (isDelQuote(q)) return;
             const key = q.id || q.quotationNumber;
             if (key) map.set(key, q);
           });
           const merged = sortDesc(Array.from(map.values()));
           localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(merged));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(sortDesc(data.quotations)));
+          localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(sortDesc(data.quotations.filter((q) => !isDelQuote(q)))));
         }
       }
-      if (Array.isArray(data.deletedQuotationIds)) {
-        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, []);
-        const delSet = new Set<string>([...curDel, ...data.deletedQuotationIds]);
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_QUOTATION_IDS, JSON.stringify(Array.from(delSet)));
-      }
 
-      // 2. Bills Safe Merge (Strictly sorted descending so newest / highest serial sit at the top)
+      // 2. Bills Safe Merge (Strictly filtered against deleted bills, demo bill GT/26108 permanently removed)
+      const curDelBills = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_BILL_IDS, []);
+      const incDelBills = Array.isArray(data.deletedBillIds) ? data.deletedBillIds : [];
+      const allDelBillsSet = new Set<string>([
+        ...curDelBills,
+        ...incDelBills,
+        'BILL-26108',
+        'GT/26108',
+        'bill-26108'
+      ].map((s) => (s || '').trim().toUpperCase()));
+      localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(Array.from(allDelBillsSet)));
+
       if (Array.isArray(data.bills)) {
         const sortBillsDesc = (arr: any[]) => {
           return [...arr].sort((a, b) => {
@@ -299,7 +324,14 @@ export function restoreERPBackupData(
           });
         };
 
-        const cleanIncoming = data.bills.filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108');
+        const isDelBill = (b: any) => {
+          if (!b) return true;
+          const id = (b.id || '').trim().toUpperCase();
+          const num = (b.billNo || '').trim().toUpperCase();
+          return (id && allDelBillsSet.has(id)) || (num && allDelBillsSet.has(num)) || id === 'BILL-26108' || num === 'GT/26108';
+        };
+
+        const cleanIncoming = data.bills.filter((b: any) => !isDelBill(b));
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
           const map = new Map<string, any>();
@@ -308,7 +340,7 @@ export function restoreERPBackupData(
             if (key) map.set(key, b);
           });
           current
-            .filter((b: any) => b && b.id !== 'bill-26108' && b.billNo !== 'GT/26108')
+            .filter((b: any) => !isDelBill(b))
             .forEach((b: any) => {
               const key = b.id || b.billNo;
               if (key) map.set(key, b);
@@ -319,37 +351,40 @@ export function restoreERPBackupData(
           localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(sortBillsDesc(cleanIncoming)));
         }
       }
-      if (Array.isArray(data.deletedBillIds)) {
-        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_BILL_IDS, []);
-        const delSet = new Set<string>([...curDel, ...data.deletedBillIds]);
-        delSet.add('bill-26108');
-        delSet.add('GT/26108');
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_BILL_IDS, JSON.stringify(Array.from(delSet)));
-      }
 
-      // 3. Customers Safe Merge
+      // 3. Customers Safe Merge (Strictly filtered against deleted customers)
+      const curDelCust = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, []);
+      const incDelCust = Array.isArray(data.deletedCustomerIds) ? data.deletedCustomerIds : [];
+      const allDelCustSet = new Set<string>([...curDelCust, ...incDelCust].map((s) => (s || '').trim().toLowerCase()));
+      localStorage.setItem(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, JSON.stringify(Array.from(allDelCustSet)));
+
       if (Array.isArray(data.customers)) {
+        const isDelCustomer = (c: any) => {
+          if (!c) return true;
+          const id = (c.id || '').trim().toLowerCase();
+          const comp = (c.company || '').trim().toLowerCase();
+          const name = (c.name || '').trim().toLowerCase();
+          return (id && allDelCustSet.has(id)) || (comp && allDelCustSet.has(comp)) || (name && allDelCustSet.has(name));
+        };
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.CUSTOMERS, []);
           const map = new Map<string, any>();
           data.customers.forEach((c: any) => {
+            if (isDelCustomer(c)) return;
             const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
             if (key) map.set(key, c);
           });
           current.forEach((c: any) => {
+            if (isDelCustomer(c)) return;
             const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
             if (key) map.set(key, c);
           });
           const merged = Array.from(map.values());
           localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(merged));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers));
+          localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers.filter((c) => !isDelCustomer(c))));
         }
-      }
-      if (Array.isArray(data.deletedCustomerIds)) {
-        const curDel = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, []);
-        const delSet = new Set<string>([...curDel, ...data.deletedCustomerIds]);
-        localStorage.setItem(ERP_STORAGE_KEYS.DELETED_CUSTOMER_IDS, JSON.stringify(Array.from(delSet)));
       }
 
       // 4. Projects Safe Merge
@@ -572,16 +607,32 @@ export function restoreERPBackupData(
         }
       }
 
-      // 14. Daily Expenses Safe Merge
+      // 14. Daily Expenses Safe Merge (Strictly filtered against deleted expenses)
+      const curDelExp = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, []);
+      const incDelExp = Array.isArray(data.deletedExpenseIds) ? data.deletedExpenseIds : [];
+      const allDelExpSet = new Set<string>([...curDelExp, ...incDelExp].map((s) => (s || '').trim()));
+      localStorage.setItem(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, JSON.stringify(Array.from(allDelExpSet)));
+
       if (Array.isArray(data.expenses)) {
+        const isDelExpense = (ex: any) => {
+          if (!ex) return true;
+          const id = (ex.id || '').trim();
+          const altKey = `${ex.date}_${ex.time || ''}_${ex.amount}_${ex.particulars}`.trim();
+          return (id && allDelExpSet.has(id)) || (altKey && allDelExpSet.has(altKey));
+        };
+
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
           const map = new Map<string, any>();
+          // Incoming items first (filtered)
           data.expenses.forEach((ex: any) => {
+            if (isDelExpense(ex)) return;
             const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
             if (key) map.set(key, ex);
           });
+          // User local items (also strictly filtered so deleted expenses NEVER resurrect)
           current.forEach((ex: any) => {
+            if (isDelExpense(ex)) return;
             const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
             if (key) {
               const existing = map.get(key);
@@ -598,7 +649,7 @@ export function restoreERPBackupData(
           });
           localStorage.setItem(ERP_STORAGE_KEYS.EXPENSES, JSON.stringify(merged));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses));
+          localStorage.setItem(ERP_STORAGE_KEYS.EXPENSES, JSON.stringify(data.expenses.filter((ex) => !isDelExpense(ex))));
         }
       }
 

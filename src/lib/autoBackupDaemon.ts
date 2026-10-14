@@ -91,7 +91,8 @@ export function startAutoBackupDaemon(): () => void {
     'globotech_purchases_updated',
     'globotech_projects_updated',
     'globotech_sales_updated',
-    'globotech_serials_updated'
+    'globotech_serials_updated',
+    'globotech_expenses_updated'
   ];
 
   const handleUpdate = (e: Event) => {

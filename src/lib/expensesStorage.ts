@@ -428,22 +428,28 @@ export const INITIAL_EXPENSES: ExpenseEntry[] = [
   }
 ];
 
+export const DELETED_EXPENSES_STORAGE_KEY = 'globotech_erp_deleted_expense_ids';
+
 /**
- * Reads stored expenses safely from browser localStorage
+ * Reads stored expenses safely from browser localStorage, filtering out deleted items
  */
 export function getStoredExpenses(): ExpenseEntry[] {
   if (typeof window === 'undefined') return INITIAL_EXPENSES;
   try {
+    const rawDel = localStorage.getItem(DELETED_EXPENSES_STORAGE_KEY);
+    const delSet = new Set<string>(rawDel ? JSON.parse(rawDel) : []);
+
     const raw = localStorage.getItem(EXPENSES_STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(INITIAL_EXPENSES));
-      return INITIAL_EXPENSES;
+      const filteredInit = INITIAL_EXPENSES.filter((e) => !delSet.has(e.id));
+      localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(filteredInit));
+      return filteredInit;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((e) => !delSet.has(e.id));
     }
-    return INITIAL_EXPENSES;
+    return INITIAL_EXPENSES.filter((e) => !delSet.has(e.id));
   } catch (e) {
     console.error('Error reading daily expenses from storage:', e);
     return INITIAL_EXPENSES;
@@ -465,6 +471,29 @@ export function saveStoredExpenses(expenses: ExpenseEntry[]): void {
     }
   } catch (e) {
     console.error('Error saving daily expenses to storage:', e);
+  }
+}
+
+/**
+ * Permanently deletes an expense and records its tombstone so it never resurrects during cloud sync
+ */
+export function deleteStoredExpense(id: string, entry?: Partial<ExpenseEntry>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const rawDel = localStorage.getItem(DELETED_EXPENSES_STORAGE_KEY);
+    const delList: string[] = rawDel ? JSON.parse(rawDel) : [];
+    if (id && !delList.includes(id)) delList.push(id);
+    if (entry && entry.date && entry.amount && entry.particulars) {
+      const altKey = `${entry.date}_${entry.time || ''}_${entry.amount}_${entry.particulars}`.trim();
+      if (!delList.includes(altKey)) delList.push(altKey);
+    }
+    localStorage.setItem(DELETED_EXPENSES_STORAGE_KEY, JSON.stringify(delList));
+
+    const current = getStoredExpenses();
+    const updated = current.filter((e) => e.id !== id);
+    saveStoredExpenses(updated);
+  } catch (e) {
+    console.error('Error deleting expense:', e);
   }
 }
 

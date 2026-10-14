@@ -345,7 +345,10 @@ export async function checkAndAutoSync(): Promise<void> {
 export async function forceSyncNow(): Promise<{ success: boolean; message: string }> {
   // Push local changes first and adopt server-merged master state
   const pushRes = await pushToCloud();
-  if (pushRes.success) return pushRes;
+  if (pushRes.success) {
+    await pullFromCloud({ silent: true });
+    return pushRes;
+  }
   return await pullFromCloud({ silent: false });
 }
 
@@ -365,7 +368,9 @@ function patchLocalStorageForAutoSync() {
         !key.includes('local_last_modified') &&
         !key.includes('has_unsynced') &&
         !key.includes('auto_snapshot') &&
-        !key.includes('persistence_status')
+        !key.includes('persistence_status') &&
+        !key.includes('last_backup') &&
+        !key.includes('backup_timestamp')
       ) {
         markLocalDataChanged();
       }
@@ -378,7 +383,7 @@ function patchLocalStorageForAutoSync() {
 
 /**
  * Initializes Automatic Background Sync on application startup.
- * Sets up listeners for window focus, tab visibility, and periodic 5-second polling.
+ * Sets up listeners for window focus, tab visibility, and periodic 2-second real-time polling.
  */
 export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) => void): () => void {
   if (typeof window === 'undefined') return () => {};
@@ -401,18 +406,18 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
   window.addEventListener('globotech_stock_updated', handleDataChangedEvent);
   window.addEventListener('globotech_expenses_updated', handleDataChangedEvent);
 
-  // 1. Initial check immediately on load
+  // 1. Initial check immediately on load (300ms)
   setTimeout(() => {
     checkAndAutoSync();
-  }, 800);
+  }, 300);
 
-  // 2. Periodic background check every 5 seconds (ultra-lightweight ~60 bytes ping)
+  // 2. Periodic background check every 2 seconds for instantaneous cross-device sync
   if (backgroundIntervalId) {
     clearInterval(backgroundIntervalId);
   }
   backgroundIntervalId = setInterval(() => {
     checkAndAutoSync();
-  }, 5000);
+  }, 2000);
 
   // 3. Check immediately when user switches tabs or unlocks phone screen
   const handleVisibilityOrFocus = () => {

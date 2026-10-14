@@ -53,6 +53,7 @@ import {
   INITIAL_EXPENSES,
   getStoredExpenses,
   saveStoredExpenses,
+  deleteStoredExpense,
   calculateExpenseMetrics
 } from '@/lib/expensesStorage';
 
@@ -65,12 +66,19 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
   const [expenses, setExpenses] = useState<ExpenseEntry[]>(() => getStoredExpenses());
   const [isMounted, setIsMounted] = useState(false);
 
-  // 2. Filter & Navigation States
+  // 2. Filter & Navigation States - Default to THIS_MONTH so all current month entries from Mobile & PC are immediately visible
   const [searchQuery, setSearchQuery] = useState(globalSearchQuery || '');
-  const [datePreset, setDatePreset] = useState<'TODAY' | 'YESTERDAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'ALL' | 'CUSTOM'>('TODAY');
+  const [datePreset, setDatePreset] = useState<'TODAY' | 'YESTERDAY' | 'THIS_WEEK' | 'THIS_MONTH' | 'ALL' | 'CUSTOM'>('THIS_MONTH');
   
-  // Custom or selected calendar date (Default: today's date YYYY-MM-DD)
-  const todayDateString = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Custom or selected calendar date (Local timezone date YYYY-MM-DD)
+  const getLocalDateString = useCallback((d: Date = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
+
+  const todayDateString = useMemo(() => getLocalDateString(new Date()), [getLocalDateString]);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(todayDateString);
 
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -155,22 +163,28 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
     if (notifyMsg) showToast(notifyMsg);
   };
 
-  // Date calculation helpers
+  // Date calculation helpers using local timezone
   const yesterdayDateString = useMemo(() => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
-    return d.toISOString().split('T')[0];
-  }, []);
+    return getLocalDateString(d);
+  }, [getLocalDateString]);
 
   const weekStartDateString = useMemo(() => {
     const d = new Date();
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
     const monday = new Date(d.setDate(diff));
-    return monday.toISOString().split('T')[0];
-  }, []);
+    return getLocalDateString(monday);
+  }, [getLocalDateString]);
 
   const currentMonthString = useMemo(() => todayDateString.substring(0, 7), [todayDateString]);
+
+  // Quick count calculations for UI pills
+  const todayCount = useMemo(() => expenses.filter((e) => e.date === todayDateString).length, [expenses, todayDateString]);
+  const yesterdayCount = useMemo(() => expenses.filter((e) => e.date === yesterdayDateString).length, [expenses, yesterdayDateString]);
+  const thisMonthCount = useMemo(() => expenses.filter((e) => e.date.startsWith(currentMonthString)).length, [expenses, currentMonthString]);
+  const allCount = expenses.length;
 
   // Filtered entries strictly sorted descending (newest date & time first)
   const filteredEntries = useMemo(() => {
@@ -411,11 +425,15 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
     setEditingEntry(null);
   };
 
-  // Handle Delete Entry
+  // Handle Delete Entry (with Anti-Resurrection Tombstone)
   const handleDeleteEntry = (id: string, particulars: string) => {
-    if (confirm(`আপনি কি নিশ্চিত যে "${particulars}" খরচটি ডিলিট করতে চান?`)) {
+    if (confirm(`আপনি কি নিশ্চিত যে "${particulars}" খরচটি চিরতরে ডিলিট করতে চান?\nএটি মোবাইল ও পিসির ক্লাউড ডাটাবেজ থেকেও চিরতরে ডিলিট হয়ে যাবে।`)) {
+      const targetEntry = expenses.find((e) => e.id === id);
+      deleteStoredExpense(id, targetEntry);
       const updated = expenses.filter((e) => e.id !== id);
-      persistExpenses(updated, '🗑️ খরচ তালিকা থেকে ডিলিট করা হয়েছে!');
+      setExpenses(updated);
+      forceImmediateBackup('daily_expenses_deleted');
+      showToast('🗑️ খরচ চিরতরে ডিলিট করা হয়েছে এবং ক্লাউডে সিঙ্ক করা হয়েছে!');
     }
   };
 
@@ -611,26 +629,53 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <button
               type="button"
+              onClick={() => setDatePreset('THIS_MONTH')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                datePreset === 'THIS_MONTH'
+                  ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
+                  : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              এই মাস (চলতি মাস)
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                datePreset === 'THIS_MONTH' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
+              }`}>
+                {thisMonthCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setDatePreset('TODAY')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                 datePreset === 'TODAY'
                   ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
               আজকের দিন (Today)
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                datePreset === 'TODAY' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
+              }`}>
+                {todayCount}
+              </span>
             </button>
 
             <button
               type="button"
               onClick={() => setDatePreset('YESTERDAY')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                 datePreset === 'YESTERDAY'
                   ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
               গতকাল (Yesterday)
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                datePreset === 'YESTERDAY' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
+              }`}>
+                {yesterdayCount}
+              </span>
             </button>
 
             <button
@@ -647,26 +692,19 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <button
               type="button"
-              onClick={() => setDatePreset('THIS_MONTH')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                datePreset === 'THIS_MONTH'
-                  ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
-                  : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              এই মাস (October)
-            </button>
-
-            <button
-              type="button"
               onClick={() => setDatePreset('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                 datePreset === 'ALL'
                   ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-400'
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
               সব রেকর্ড (All)
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                datePreset === 'ALL' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
+              }`}>
+                {allCount}
+              </span>
             </button>
           </div>
 
