@@ -46,6 +46,8 @@ import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
 import {
   ExpenseEntry,
   ExpenseCategory,
+  BuiltInExpenseCategory,
+  CategoryMeta,
   PaymentMethod,
   TransactionType,
   EXPENSE_CATEGORIES_CONFIG,
@@ -54,7 +56,10 @@ import {
   getStoredExpenses,
   saveStoredExpenses,
   deleteStoredExpense,
-  calculateExpenseMetrics
+  calculateExpenseMetrics,
+  getAllExpenseCategories,
+  saveCustomExpenseCategory,
+  deleteCustomExpenseCategory
 } from '@/lib/expensesStorage';
 
 interface DailyExpenseViewProps {
@@ -65,6 +70,18 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
   // 1. Data State
   const [expenses, setExpenses] = useState<ExpenseEntry[]>(() => getStoredExpenses());
   const [isMounted, setIsMounted] = useState(false);
+
+  // Custom Categories State
+  const [allCategories, setAllCategories] = useState<Record<string, CategoryMeta>>(() => getAllExpenseCategories(expenses));
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isEditAddingNewCategory, setIsEditAddingNewCategory] = useState(false);
+  const [newEditCategoryName, setNewEditCategoryName] = useState('');
+
+  // Keep categories updated when expenses or storage change
+  useEffect(() => {
+    setAllCategories(getAllExpenseCategories(expenses));
+  }, [expenses]);
 
   // 2. Filter & Navigation States - Default to THIS_MONTH so all current month entries from Mobile & PC are immediately visible
   const [searchQuery, setSearchQuery] = useState(globalSearchQuery || '');
@@ -216,8 +233,9 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           const matchVoucher = (entry.voucherNo || '').toLowerCase().includes(q);
           const matchProject = (entry.projectRef || '').toLowerCase().includes(q);
           const matchNotes = (entry.notes || '').toLowerCase().includes(q);
-          const matchCategory = (EXPENSE_CATEGORIES_CONFIG[entry.category]?.labelEn || '').toLowerCase().includes(q) ||
-                                (EXPENSE_CATEGORIES_CONFIG[entry.category]?.labelBn || '').toLowerCase().includes(q);
+          const catMeta = allCategories[entry.category] || EXPENSE_CATEGORIES_CONFIG[entry.category as BuiltInExpenseCategory];
+          const matchCategory = (catMeta?.labelEn || entry.category || '').toLowerCase().includes(q) ||
+                                (catMeta?.labelBn || '').toLowerCase().includes(q);
           return matchDesc || matchPayee || matchSpentBy || matchVoucher || matchProject || matchNotes || matchCategory;
         }
 
@@ -230,6 +248,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       });
   }, [
     expenses,
+    allCategories,
     searchQuery,
     datePreset,
     selectedCalendarDate,
@@ -354,6 +373,8 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       defaultDate = selectedCalendarDate;
     }
 
+    setIsAddingNewCategory(false);
+    setNewCategoryName('');
     setFormData({
       ...initialFormState,
       type,
@@ -361,6 +382,33 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     });
     setIsCreateModalOpen(true);
+  };
+
+  // Add new custom category handler
+  const handleCreateCategory = (isEdit: boolean) => {
+    const rawName = isEdit ? newEditCategoryName : newCategoryName;
+    const nameToUse = rawName.trim();
+    if (!nameToUse) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    try {
+      const created = saveCustomExpenseCategory(nameToUse);
+      const updated = getAllExpenseCategories(expenses);
+      setAllCategories(updated);
+      setFormData((prev) => ({ ...prev, category: created.id }));
+      if (isEdit) {
+        setIsEditAddingNewCategory(false);
+        setNewEditCategoryName('');
+      } else {
+        setIsAddingNewCategory(false);
+        setNewCategoryName('');
+      }
+      showToast(`✨ Category "${created.labelEn}" added & selected!`);
+    } catch (err: any) {
+      alert(err?.message || 'Error creating category');
+    }
   };
 
   const handleSaveCreate = (e: React.FormEvent) => {
@@ -397,6 +445,8 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
   // Handle Edit Entry
   const handleOpenEditModal = (entry: ExpenseEntry) => {
+    setIsEditAddingNewCategory(false);
+    setNewEditCategoryName('');
     setEditingEntry(entry);
     setFormData({ ...entry });
     setIsEditModalOpen(true);
@@ -456,7 +506,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       e.date,
       `"${e.time || ''}"`,
       e.type,
-      `"${EXPENSE_CATEGORIES_CONFIG[e.category]?.labelEn || e.category}"`,
+      `"${allCategories[e.category]?.labelEn || EXPENSE_CATEGORIES_CONFIG[e.category as BuiltInExpenseCategory]?.labelEn || e.category}"`,
       `"${(e.particulars || '').replace(/"/g, '""')}"`,
       e.amount,
       `"${PAYMENT_METHODS_CONFIG[e.paymentMethod]?.labelEn || e.paymentMethod}"`,
@@ -833,7 +883,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer text-xs"
             >
               <option value="ALL" className="bg-slate-900 text-slate-300">All Categories</option>
-              {Object.values(EXPENSE_CATEGORIES_CONFIG).map((cat) => (
+              {Object.values(allCategories).map((cat) => (
                 <option key={cat.id} value={cat.id} className="bg-slate-900 text-slate-200">
                   {cat.labelEn}
                 </option>
@@ -903,7 +953,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             </div>
           ) : (
             filteredEntries.map((item) => {
-              const catMeta = EXPENSE_CATEGORIES_CONFIG[item.category] || EXPENSE_CATEGORIES_CONFIG.MISC;
+              const catMeta = allCategories[item.category] || EXPENSE_CATEGORIES_CONFIG[item.category as BuiltInExpenseCategory] || EXPENSE_CATEGORIES_CONFIG.MISC;
               const payMeta = PAYMENT_METHODS_CONFIG[item.paymentMethod] || PAYMENT_METHODS_CONFIG.PETTY_CASH;
               const isExpense = item.type === 'EXPENSE';
 
@@ -1099,7 +1149,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   </tr>
                 ) : (
                   filteredEntries.map((item) => {
-                    const catMeta = EXPENSE_CATEGORIES_CONFIG[item.category] || EXPENSE_CATEGORIES_CONFIG.MISC;
+                    const catMeta = allCategories[item.category] || EXPENSE_CATEGORIES_CONFIG[item.category as BuiltInExpenseCategory] || EXPENSE_CATEGORIES_CONFIG.MISC;
                     const payMeta = PAYMENT_METHODS_CONFIG[item.paymentMethod] || PAYMENT_METHODS_CONFIG.PETTY_CASH;
                     const isExpense = item.type === 'EXPENSE';
 
@@ -1268,21 +1318,89 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             </div>
           </div>
 
-          {/* Category */}
+          {/* Category with New Category Option */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">
-              Category *
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-slate-400" />
+                Category *
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsAddingNewCategory(!isAddingNewCategory)}
+                className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition px-2 py-0.5 rounded-md hover:bg-emerald-500/10"
+              >
+                <Plus className="w-3 h-3" />
+                <span>{isAddingNewCategory ? 'Cancel' : '+ New Category'}</span>
+              </button>
+            </div>
+
+            {/* Inline Add New Category Box */}
+            {isAddingNewCategory && (
+              <div className="mb-2.5 p-2.5 rounded-xl bg-slate-950 border border-emerald-500/40 space-y-2 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    Add Custom Category
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingNewCategory(false);
+                      setNewCategoryName('');
+                    }}
+                    className="text-slate-400 hover:text-slate-200 text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Enter category name (e.g. Travel & Hotel)"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateCategory(false);
+                      }
+                    }}
+                    className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCreateCategory(false)}
+                    disabled={!newCategoryName.trim()}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm whitespace-nowrap"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Add & Select
+                  </button>
+                </div>
+              </div>
+            )}
+
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as ExpenseCategory })}
+              onChange={(e) => {
+                if (e.target.value === '__ADD_NEW__') {
+                  setIsAddingNewCategory(true);
+                  return;
+                }
+                setFormData({ ...formData, category: e.target.value as ExpenseCategory });
+              }}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
             >
-              {Object.values(EXPENSE_CATEGORIES_CONFIG).map((c) => (
+              {Object.values(allCategories).map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
                   {c.labelEn}
                 </option>
               ))}
+              <option value="__ADD_NEW__" className="bg-emerald-950 text-emerald-300 font-bold">
+                ➕ + Add New Category...
+              </option>
             </select>
           </div>
 
@@ -1449,18 +1567,89 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             </div>
           </div>
 
+          {/* Category with New Category Option in Edit Modal */}
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Tag className="w-3.5 h-3.5 text-slate-400" />
+                Category
+              </label>
+              <button
+                type="button"
+                onClick={() => setIsEditAddingNewCategory(!isEditAddingNewCategory)}
+                className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition px-2 py-0.5 rounded-md hover:bg-emerald-500/10"
+              >
+                <Plus className="w-3 h-3" />
+                <span>{isEditAddingNewCategory ? 'Cancel' : '+ New Category'}</span>
+              </button>
+            </div>
+
+            {/* Inline Add New Category Box in Edit */}
+            {isEditAddingNewCategory && (
+              <div className="mb-2.5 p-2.5 rounded-xl bg-slate-950 border border-emerald-500/40 space-y-2 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-emerald-400" />
+                    Add Custom Category
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditAddingNewCategory(false);
+                      setNewEditCategoryName('');
+                    }}
+                    className="text-slate-400 hover:text-slate-200 text-xs px-1"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Enter category name (e.g. Travel & Hotel)"
+                    value={newEditCategoryName}
+                    onChange={(e) => setNewEditCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateCategory(true);
+                      }
+                    }}
+                    className="flex-1 px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCreateCategory(true)}
+                    disabled={!newEditCategoryName.trim()}
+                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-sm whitespace-nowrap"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    Add & Select
+                  </button>
+                </div>
+              </div>
+            )}
+
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value as ExpenseCategory })}
+              onChange={(e) => {
+                if (e.target.value === '__ADD_NEW__') {
+                  setIsEditAddingNewCategory(true);
+                  return;
+                }
+                setFormData({ ...formData, category: e.target.value as ExpenseCategory });
+              }}
               className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-100 focus:outline-none focus:border-emerald-500"
             >
-              {Object.values(EXPENSE_CATEGORIES_CONFIG).map((c) => (
+              {Object.values(allCategories).map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
                   {c.labelEn}
                 </option>
               ))}
+              <option value="__ADD_NEW__" className="bg-emerald-950 text-emerald-300 font-bold">
+                ➕ + Add New Category...
+              </option>
             </select>
           </div>
 
@@ -1603,7 +1792,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   <tr key={item.id} className="border-b border-slate-200">
                     <td className="p-2 text-center border-r border-slate-300 font-mono">{idx + 1}</td>
                     <td className="p-2 border-r border-slate-300 font-semibold">
-                      {EXPENSE_CATEGORIES_CONFIG[item.category]?.labelEn || item.category}
+                      {allCategories[item.category]?.labelEn || EXPENSE_CATEGORIES_CONFIG[item.category as BuiltInExpenseCategory]?.labelEn || item.category}
                     </td>
                     <td className="p-2 border-r border-slate-300">{item.particulars}</td>
                     <td className="p-2 border-r border-slate-300">{item.spentBy}</td>

@@ -8,7 +8,7 @@
  */
 import { markLocalDataChanged } from '@/lib/erpAutoSync';
 
-export type ExpenseCategory =
+export type BuiltInExpenseCategory =
   | 'CONVEYANCE'       // যাতায়াত ও সাইট ডেলিভারি (CNG, Fuel, Rickshaw, Transport)
   | 'FOOD'             // আপ্যায়ন, চা-নাস্তা ও দুপুরের খাবার (Meals, Snacks, Refreshments)
   | 'LABOR'            // টেকনিশিয়ান মজুরি ও লেবার হাজিরা (Technician, Coolie, Daily Wage)
@@ -20,6 +20,8 @@ export type ExpenseCategory =
   | 'REPAIR'           // টুলস ও হার্ডওয়্যার মেরামত (Tools maintenance, Servicing)
   | 'BANK_CHARGES'     // ব্যাংক চার্জ ও অনলাইন ট্রানজ্যাকশন ফি (Bank fees, bKash charge)
   | 'MISC';            // অন্যান্য বিবিধ খরচ (General miscellaneous)
+
+export type ExpenseCategory = BuiltInExpenseCategory | (string & {});
 
 export type PaymentMethod =
   | 'PETTY_CASH'       // ড্রয়ার পেটি ক্যাশ (হাতের নগদ)
@@ -50,16 +52,17 @@ export interface ExpenseEntry {
 }
 
 export interface CategoryMeta {
-  id: ExpenseCategory;
+  id: string;
   labelEn: string;
   labelBn: string;
   color: string;
   badgeBg: string;
   badgeText: string;
   badgeBorder: string;
+  isCustom?: boolean;
 }
 
-export const EXPENSE_CATEGORIES_CONFIG: Record<ExpenseCategory, CategoryMeta> = {
+export const EXPENSE_CATEGORIES_CONFIG: Record<BuiltInExpenseCategory, CategoryMeta> = {
   CONVEYANCE: {
     id: 'CONVEYANCE',
     labelEn: 'Conveyance & Transport',
@@ -160,6 +163,117 @@ export const EXPENSE_CATEGORIES_CONFIG: Record<ExpenseCategory, CategoryMeta> = 
     badgeBorder: 'border-violet-500/30'
   }
 };
+
+export const CUSTOM_EXPENSE_CATEGORIES_STORAGE_KEY = 'globotech_erp_custom_expense_categories';
+
+export const CUSTOM_CATEGORY_PALETTES = [
+  { color: '#06b6d4', badgeBg: 'bg-cyan-500/10', badgeText: 'text-cyan-400', badgeBorder: 'border-cyan-500/30' },
+  { color: '#10b981', badgeBg: 'bg-emerald-500/10', badgeText: 'text-emerald-400', badgeBorder: 'border-emerald-500/30' },
+  { color: '#8b5cf6', badgeBg: 'bg-purple-500/10', badgeText: 'text-purple-400', badgeBorder: 'border-purple-500/30' },
+  { color: '#f59e0b', badgeBg: 'bg-amber-500/10', badgeText: 'text-amber-400', badgeBorder: 'border-amber-500/30' },
+  { color: '#ec4899', badgeBg: 'bg-pink-500/10', badgeText: 'text-pink-400', badgeBorder: 'border-pink-500/30' },
+  { color: '#3b82f6', badgeBg: 'bg-blue-500/10', badgeText: 'text-blue-400', badgeBorder: 'border-blue-500/30' },
+  { color: '#14b8a6', badgeBg: 'bg-teal-500/10', badgeText: 'text-teal-400', badgeBorder: 'border-teal-500/30' },
+  { color: '#f43f5e', badgeBg: 'bg-rose-500/10', badgeText: 'text-rose-400', badgeBorder: 'border-rose-500/30' },
+  { color: '#6366f1', badgeBg: 'bg-indigo-500/10', badgeText: 'text-indigo-400', badgeBorder: 'border-indigo-500/30' }
+];
+
+export function getCustomExpenseCategories(): CategoryMeta[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(CUSTOM_EXPENSE_CATEGORIES_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error('Error reading custom expense categories:', e);
+    return [];
+  }
+}
+
+export function saveCustomExpenseCategory(name: string): CategoryMeta {
+  const trimmed = name.trim();
+  if (!trimmed) throw new Error('Category name cannot be empty');
+
+  // Slugify ID
+  const cleanId = 'CAT_' + trimmed.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  const id = cleanId.length > 4 ? cleanId : `CAT_${Date.now()}`;
+
+  const existing = getCustomExpenseCategories();
+  const alreadyExists = existing.find(c => c.id === id || c.labelEn.toLowerCase() === trimmed.toLowerCase());
+  if (alreadyExists) {
+    return alreadyExists;
+  }
+
+  const paletteIndex = existing.length % CUSTOM_CATEGORY_PALETTES.length;
+  const palette = CUSTOM_CATEGORY_PALETTES[paletteIndex];
+
+  const newCategory: CategoryMeta = {
+    id,
+    labelEn: trimmed,
+    labelBn: trimmed,
+    color: palette.color,
+    badgeBg: palette.badgeBg,
+    badgeText: palette.badgeText,
+    badgeBorder: palette.badgeBorder,
+    isCustom: true
+  };
+
+  const updated = [...existing, newCategory];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(CUSTOM_EXPENSE_CATEGORIES_STORAGE_KEY, JSON.stringify(updated));
+    try {
+      markLocalDataChanged();
+    } catch {}
+  }
+  return newCategory;
+}
+
+export function deleteCustomExpenseCategory(id: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const list = getCustomExpenseCategories();
+    const updated = list.filter(c => c.id !== id);
+    localStorage.setItem(CUSTOM_EXPENSE_CATEGORIES_STORAGE_KEY, JSON.stringify(updated));
+    try {
+      markLocalDataChanged();
+    } catch {}
+  } catch (e) {
+    console.error('Error deleting custom category:', e);
+  }
+}
+
+export function getAllExpenseCategories(currentExpenses?: ExpenseEntry[]): Record<string, CategoryMeta> {
+  const all: Record<string, CategoryMeta> = { ...EXPENSE_CATEGORIES_CONFIG };
+
+  // 1. Add stored custom categories
+  const customList = getCustomExpenseCategories();
+  customList.forEach(c => {
+    all[c.id] = c;
+  });
+
+  // 2. Discover any categories present in current expenses not yet registered
+  if (currentExpenses && Array.isArray(currentExpenses)) {
+    currentExpenses.forEach((exp, idx) => {
+      if (exp.category && !all[exp.category]) {
+        const palette = CUSTOM_CATEGORY_PALETTES[idx % CUSTOM_CATEGORY_PALETTES.length];
+        const formattedLabel = exp.category.replace(/^CAT_/, '').replace(/_/g, ' ');
+        all[exp.category] = {
+          id: exp.category,
+          labelEn: formattedLabel || exp.category,
+          labelBn: formattedLabel || exp.category,
+          color: palette.color,
+          badgeBg: palette.badgeBg,
+          badgeText: palette.badgeText,
+          badgeBorder: palette.badgeBorder,
+          isCustom: true
+        };
+      }
+    });
+  }
+
+  return all;
+}
 
 export const PAYMENT_METHODS_CONFIG: Record<PaymentMethod, { labelEn: string; labelBn: string; badge: string }> = {
   PETTY_CASH: {
