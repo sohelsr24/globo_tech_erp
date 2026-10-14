@@ -8,6 +8,8 @@ import {
   Printer,
   Eye,
   Edit,
+  Edit3,
+  Check,
   Trash2,
   Copy,
   CheckCircle2,
@@ -161,6 +163,23 @@ export interface BillInvoice {
   paidAmount?: number;
   notes?: string;
   createdAt: string;
+}
+
+/**
+ * Sanitizes Bill Terms & Conditions:
+ * 1. Excludes quotation validity conditions (e.g. "Quotation valid for 7 calendar days due to currency fluctuation")
+ *    which are meant only for quotations, never final Bill Invoices.
+ * 2. Renumbers remaining lines sequentially: 1., 2., 3., etc.
+ */
+export function sanitizeBillTerms(terms: string[] | undefined | null): string[] {
+  if (!Array.isArray(terms)) return [];
+  const filtered = terms.filter(
+    (t) => typeof t === 'string' && !/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(t)
+  );
+  return filtered.map((t, idx) => {
+    const clean = t.replace(/^\d+[\.\)]\s*/, '').trim();
+    return `${idx + 1}. ${clean}`;
+  });
 }
 
 export const SAMPLE_DARAZ_PO_ATTACHMENT: POAttachment = {
@@ -839,6 +858,17 @@ export function BillInvoiceView({
   const [isRawTermsMode, setIsRawTermsMode] = useState(false);
   const [rawTermsText, setRawTermsText] = useState('');
 
+  // On-Page Direct Terms & Conditions Editor State
+  const [isEditingTermsOnPage, setIsEditingTermsOnPage] = useState(false);
+  const [inlineTermsForm, setInlineTermsForm] = useState({
+    vatTaxMode: 'INCLUDED' as 'INCLUDED' | 'EXCLUDED',
+    vatRate: '15%',
+    paymentTerms: '',
+    deliveryTerms: '',
+    warrantyTerms: '',
+    notes: ''
+  });
+
   // Load from localStorage on client mount
   useEffect(() => {
     setIsMounted(true);
@@ -882,9 +912,10 @@ export function BillInvoiceView({
               if (b.id === 'bill-26107' && !b.poAttachment) {
                 updated.poAttachment = SAMPLE_DARAZ_PO_ATTACHMENT;
               }
-              // If terms line 1 has no percentage, auto-upgrade with quote rate or standard 15%
+              // Sanitize terms & conditions: permanently strip quotation validity conditions (e.g. 7 calendar days)
               if (Array.isArray(updated.termsAndConditions) && updated.termsAndConditions.length > 0) {
-                updated.termsAndConditions = updated.termsAndConditions.map((term) => {
+                const cleaned = sanitizeBillTerms(updated.termsAndConditions);
+                updated.termsAndConditions = cleaned.map((term) => {
                   if (/vat\s*&?\s*tax/i.test(term) && !/\d+(?:\.\d+)?%/.test(term)) {
                     const isEx = /excluded/i.test(term);
                     let rate = '15%';
@@ -906,8 +937,12 @@ export function BillInvoiceView({
             const sortedHydrated = sortBillsDesc(hydrated);
             setBills(sortedHydrated);
             localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(sortedHydrated));
-            if (sortedHydrated.length > 0 && !activeBill) {
-              setActiveBill(sortedHydrated[0]);
+            if (sortedHydrated.length > 0) {
+              setActiveBill((prev) => {
+                if (!prev) return sortedHydrated[0];
+                const found = sortedHydrated.find((b: BillInvoice) => b.id === prev.id || b.billNo === prev.billNo);
+                return found || sortedHydrated[0];
+              });
             }
           }
         } catch (e) {
@@ -1157,8 +1192,11 @@ export function BillInvoiceView({
       termIndex++;
     }
     if (targetQuote.notes && targetQuote.notes.trim()) {
-      terms.push(`${termIndex}. Remarks: ${targetQuote.notes.trim()}`);
-      termIndex++;
+      const isQuoteValidity = /quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(targetQuote.notes);
+      if (!isQuoteValidity) {
+        terms.push(`${termIndex}. Remarks: ${targetQuote.notes.trim()}`);
+        termIndex++;
+      }
     }
 
     setFormData((prev) => {
@@ -1182,7 +1220,7 @@ export function BillInvoiceView({
         vatTaxAmount: 0,
         grandTotal: totals.grandTotal,
         amountInWords: totals.amountInWords,
-        termsAndConditions: terms
+        termsAndConditions: sanitizeBillTerms(terms)
       };
     });
   };
@@ -1627,10 +1665,123 @@ export function BillInvoiceView({
     showToast(`✓ VAT & TAX percentage set to ${newRate}`);
   };
 
+  // Initialize On-Page Inline Terms Form from a Bill
+  const initInlineTermsFromBill = useCallback((bill: BillInvoice) => {
+    const existingTerms = sanitizeBillTerms(bill.termsAndConditions);
+    let vatMode: 'INCLUDED' | 'EXCLUDED' = bill.vatTaxIncluded ? 'INCLUDED' : 'EXCLUDED';
+    let vatRate = '15%';
+    let payment = '';
+    let delivery = '';
+    let warranty = '';
+    let notes = '';
+
+    existingTerms.forEach((term) => {
+      const clean = term.replace(/^\d+[\.\)]\s*/, '').trim();
+      if (/vat\s*&?\s*tax/i.test(clean)) {
+        if (/excluded/i.test(clean)) vatMode = 'EXCLUDED';
+        else if (/included/i.test(clean)) vatMode = 'INCLUDED';
+
+        const comboMatch = clean.match(/(\d+(?:\.\d+)?%\s*VAT\s*(?:and|&)\s*\d+(?:\.\d+)?%\s*(?:TAX|AIT))/i);
+        if (comboMatch) {
+          vatRate = comboMatch[1].replace(/\band\b/i, '&');
+        } else {
+          const matchSingle = clean.match(/(\d+(?:\.\d+)?%[^\:\-\n]*)/i);
+          if (matchSingle) {
+            vatRate = matchSingle[1].replace(/\b(included|excluded)\b/gi, '').trim() || '15%';
+          }
+        }
+      } else if (/payment\s*:/i.test(clean)) {
+        payment = clean.replace(/payment\s*:\s*/i, '').trim();
+      } else if (/delivery\s*:/i.test(clean)) {
+        delivery = clean.replace(/delivery\s*:\s*/i, '').trim();
+      } else if (/warranty\s*:/i.test(clean)) {
+        warranty = clean.replace(/warranty\s*:\s*/i, '').trim();
+      } else if (/remarks\s*:|validity\s*:|notes?\s*:/i.test(clean)) {
+        const rawNotes = clean.replace(/^(remarks|validity|notes?)\s*:\s*/i, '').trim();
+        if (!/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(rawNotes)) {
+          notes = rawNotes;
+        }
+      }
+    });
+
+    setInlineTermsForm({
+      vatTaxMode: vatMode,
+      vatRate: vatRate,
+      paymentTerms: payment || 'Net 30 Days after Delivery & Invoice',
+      deliveryTerms: delivery || 'Immediate Delivery from Central Warehouse',
+      warrantyTerms: warranty || 'No Warranty',
+      notes: notes
+    });
+  }, []);
+
+  // Sync inline terms form whenever activeBill changes
+  useEffect(() => {
+    if (activeBill) {
+      initInlineTermsFromBill(activeBill);
+    }
+  }, [activeBill, initInlineTermsFromBill]);
+
+  // Save On-Page Direct Terms & Conditions to Active Bill & Storage
+  const handleSaveInlineTerms = () => {
+    if (!activeBill) return;
+
+    const isInc = inlineTermsForm.vatTaxMode === 'INCLUDED';
+    const cleanRate = inlineTermsForm.vatRate.trim() ? ` ${inlineTermsForm.vatRate.trim()}` : ' 15%';
+    const rawTerms: string[] = [
+      isInc ? `1. VAT&TAX :${cleanRate} Included` : `1. VAT&TAX :${cleanRate} Excluded`
+    ];
+
+    let idx = 2;
+    if (inlineTermsForm.paymentTerms.trim()) {
+      rawTerms.push(`${idx}. Payment: ${inlineTermsForm.paymentTerms.trim()}`);
+      idx++;
+    }
+    if (inlineTermsForm.deliveryTerms.trim()) {
+      rawTerms.push(`${idx}. Delivery: ${inlineTermsForm.deliveryTerms.trim()}`);
+      idx++;
+    }
+    if (inlineTermsForm.warrantyTerms.trim()) {
+      rawTerms.push(`${idx}. Warranty: ${inlineTermsForm.warrantyTerms.trim()}`);
+      idx++;
+    }
+    if (inlineTermsForm.notes.trim()) {
+      if (!/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(inlineTermsForm.notes)) {
+        rawTerms.push(`${idx}. Remarks: ${inlineTermsForm.notes.trim()}`);
+        idx++;
+      }
+    }
+
+    const cleanTerms = sanitizeBillTerms(rawTerms);
+
+    const updatedBill: BillInvoice = {
+      ...activeBill,
+      vatTaxIncluded: isInc,
+      termsAndConditions: cleanTerms
+    };
+
+    setActiveBill(updatedBill);
+    const updatedBills = bills.map((b) => (b.id === updatedBill.id ? updatedBill : b));
+    setBills(updatedBills);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('globotech_erp_bill_invoices', JSON.stringify(updatedBills));
+        window.dispatchEvent(new Event('storage'));
+        window.dispatchEvent(new CustomEvent('globotech_bills_updated', { detail: updatedBills }));
+        mirrorToIndexedDB().catch(() => {});
+      } catch (err) {
+        console.error('Failed to save bill terms to localStorage:', err);
+      }
+    }
+
+    setIsEditingTermsOnPage(false);
+    showToast(`✓ Updated Terms & Conditions for ${activeBill.billNo}`);
+  };
+
   // Open Edit Terms Modal
   const handleOpenEditTerms = (bill: BillInvoice) => {
     setTermsEditTargetBill(bill);
-    const existingTerms = Array.isArray(bill.termsAndConditions) ? bill.termsAndConditions : [];
+    const existingTerms = sanitizeBillTerms(bill.termsAndConditions);
 
     let vatMode: 'INCLUDED' | 'EXCLUDED' = bill.vatTaxIncluded ? 'INCLUDED' : 'EXCLUDED';
     let vatRate = '15%';
@@ -1661,7 +1812,10 @@ export function BillInvoiceView({
       } else if (/warranty\s*:/i.test(clean)) {
         warranty = clean.replace(/warranty\s*:\s*/i, '').trim();
       } else if (/remarks\s*:|validity\s*:|notes?\s*:/i.test(clean)) {
-        notes = clean.replace(/^(remarks|validity|notes?)\s*:\s*/i, '').trim();
+        const rawNotes = clean.replace(/^(remarks|validity|notes?)\s*:\s*/i, '').trim();
+        if (!/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(rawNotes)) {
+          notes = rawNotes;
+        }
       }
     });
 
@@ -1676,15 +1830,17 @@ export function BillInvoiceView({
       if (!payment && linkedQuote.paymentTerms) payment = linkedQuote.paymentTerms;
       if (!delivery && linkedQuote.deliveryTerms) delivery = linkedQuote.deliveryTerms;
       if (!warranty && linkedQuote.warrantyTerms) warranty = linkedQuote.warrantyTerms;
-      if (!notes && linkedQuote.notes) notes = linkedQuote.notes;
+      if (!notes && linkedQuote.notes && !/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(linkedQuote.notes)) {
+        notes = linkedQuote.notes;
+      }
     }
 
     setBillTermsForm({
       vatTaxMode: vatMode,
       vatRate: vatRate,
       paymentTerms: payment || 'Net 30 Days after Delivery & Invoice',
-      deliveryTerms: delivery || 'Within 3-5 Working Days',
-      warrantyTerms: warranty || '1 Year Service Warranty (Without Parts)',
+      deliveryTerms: delivery || 'Immediate Delivery from Central Warehouse',
+      warrantyTerms: warranty || 'No Warranty',
       notes: notes || ''
     });
     setRawTermsText(existingTerms.join('\n'));
@@ -1705,13 +1861,16 @@ export function BillInvoiceView({
 
     const isQuoteExclusive = (linkedQuote.vatTaxTerms || '').toLowerCase().includes('exclusive');
     const quoteRate = extractVatRateFromQuoteTerms(linkedQuote.vatTaxTerms);
+    const rawQuoteNotes = linkedQuote.notes || '';
+    const cleanQuoteNotes = /quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(rawQuoteNotes) ? '' : rawQuoteNotes;
+
     setBillTermsForm({
       vatTaxMode: isQuoteExclusive ? 'EXCLUDED' : 'INCLUDED',
       vatRate: quoteRate,
       paymentTerms: linkedQuote.paymentTerms || '',
       deliveryTerms: linkedQuote.deliveryTerms || '',
       warrantyTerms: linkedQuote.warrantyTerms || '',
-      notes: linkedQuote.notes || ''
+      notes: cleanQuoteNotes
     });
     showToast(`✓ Imported all terms from Quotation ${linkedQuote.quotationNumber}`);
   };
@@ -1747,15 +1906,19 @@ export function BillInvoiceView({
         idx++;
       }
       if (billTermsForm.notes.trim()) {
-        updatedTerms.push(`${idx}. Remarks: ${billTermsForm.notes.trim()}`);
-        idx++;
+        if (!/quotation valid|quotation validity|currency fluctuation|valid for \d+ (?:calendar )?days/i.test(billTermsForm.notes)) {
+          updatedTerms.push(`${idx}. Remarks: ${billTermsForm.notes.trim()}`);
+          idx++;
+        }
       }
     }
+
+    const cleanTerms = sanitizeBillTerms(updatedTerms);
 
     const updatedBill: BillInvoice = {
       ...termsEditTargetBill,
       vatTaxIncluded: billTermsForm.vatTaxMode === 'INCLUDED',
-      termsAndConditions: updatedTerms
+      termsAndConditions: cleanTerms
     };
 
     setActiveBill(updatedBill);
@@ -2862,14 +3025,37 @@ export function BillInvoiceView({
                 </button>
               )}
 
-              {/* Edit button */}
+              {/* Edit Bill button */}
               <button
                 type="button"
                 onClick={() => handleOpenEditModal(activeBill)}
                 className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center gap-1.5"
+                title="Edit entire bill invoice details"
               >
                 <Edit className="w-3.5 h-3.5" />
-                <span>Edit</span>
+                <span>Edit Bill</span>
+              </button>
+
+              {/* Direct Edit Terms button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeBill) {
+                    initInlineTermsFromBill(activeBill);
+                    setIsEditingTermsOnPage((prev) => !prev);
+                    const el = document.getElementById('bill-terms-and-conditions-box');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                  isEditingTermsOnPage
+                    ? 'bg-emerald-600 text-white shadow'
+                    : 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
+                }`}
+                title="Edit Terms & Conditions directly on this page"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                <span>{isEditingTermsOnPage ? 'Done Terms' : 'Edit Terms'}</span>
               </button>
 
               {/* PRIMARY PRINT BUTTON */}
@@ -3380,73 +3566,285 @@ export function BillInvoiceView({
                   {/* TERMS & CONDITIONS (Left) and PAYMENT DETAILS (Right) */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '11.5px', color: '#000', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     {/* Terms & Conditions */}
-                    <div style={{ width: '58%' }}>
+                    <div id="bill-terms-and-conditions-box" style={{ width: '58%' }}>
                       <div style={{ borderBottom: '1px solid #000', paddingBottom: '2px', marginBottom: '5px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                         <span style={{ fontWeight: 'bold', fontSize: '12px' }}>Terms &amp; Conditions</span>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditTerms(activeBill)}
-                          className="no-print print:hidden text-[10px] text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 hover:underline bg-blue-50 border border-blue-200 px-2 py-0.5 rounded shadow-xs transition cursor-pointer"
-                          title="Click to edit, add, or sync Terms & Conditions"
-                        >
-                          <Edit className="w-3 h-3" />
-                          <span>Edit Terms</span>
-                        </button>
+                        <div className="no-print print:hidden flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!isEditingTermsOnPage) {
+                                initInlineTermsFromBill(activeBill);
+                                setIsEditingTermsOnPage(true);
+                              } else {
+                                handleSaveInlineTerms();
+                              }
+                            }}
+                            className={`text-[10px] font-bold flex items-center gap-1 px-2 py-0.5 rounded shadow-xs transition cursor-pointer ${
+                              isEditingTermsOnPage
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                : 'bg-blue-600 hover:bg-blue-500 text-white'
+                            }`}
+                            title="Edit Terms & Conditions directly on this page"
+                          >
+                            {isEditingTermsOnPage ? (
+                              <>
+                                <Check className="w-3 h-3" />
+                                <span>Save</span>
+                              </>
+                            ) : (
+                              <>
+                                <Edit3 className="w-3 h-3" />
+                                <span>Edit Terms</span>
+                              </>
+                            )}
+                          </button>
+                          {isEditingTermsOnPage ? (
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingTermsOnPage(false)}
+                              className="text-[10px] text-slate-700 bg-slate-200 hover:bg-slate-300 font-semibold px-1.5 py-0.5 rounded transition cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEditTerms(activeBill)}
+                              className="text-[10px] text-slate-600 hover:text-slate-900 font-medium bg-slate-100 hover:bg-slate-200 border border-slate-300 px-1.5 py-0.5 rounded transition cursor-pointer"
+                              title="Open Full Popup Terms Editor"
+                            >
+                              Modal
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
-                        {activeBill.termsAndConditions.map((term, tIdx) => {
-                          const isVatLine = /vat\s*&?\s*tax/i.test(term);
-                          return (
-                            <div key={tIdx} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <span>{term}</span>
-                              {isVatLine && (
-                                <span className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-xs text-[9px] gap-1">
-                                  <select
-                                    value={(() => {
-                                      if (/15%\s*vat\s*&\s*10%/i.test(term)) return '15% VAT & 10% TAX';
-                                      if (/15%\s*vat\s*&\s*5%/i.test(term)) return '15% VAT & 5% TAX';
-                                      if (/10%\s*vat\s*&\s*5%/i.test(term)) return '10% VAT & 5% TAX';
-                                      const m = term.match(/(\d+(?:\.\d+)?%)/);
-                                      return m ? m[1] : '15%';
-                                    })()}
-                                    onChange={(e) => handleQuickChangeVatRate(e.target.value)}
-                                    className="bg-white border border-slate-300 text-slate-800 rounded px-1 py-0.5 text-[9px] font-bold cursor-pointer hover:bg-slate-50 focus:outline-none"
-                                    title="Quick change VAT % Rate"
-                                  >
-                                    <option value="15%">15%</option>
-                                    <option value="15% VAT & 10% TAX">15% VAT &amp; 10% TAX</option>
-                                    <option value="15% VAT & 5% TAX">15% VAT &amp; 5% TAX</option>
-                                    <option value="10% VAT & 5% TAX">10% VAT &amp; 5% TAX</option>
-                                    <option value="10%">10%</option>
-                                    <option value="7.5%">7.5%</option>
-                                    <option value="5%">5%</option>
-                                  </select>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleBillVatMode('INCLUDED')}
-                                    title="Set VAT & TAX as Included"
-                                    className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
-                                      activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    Included
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleToggleBillVatMode('EXCLUDED')}
-                                    title="Set VAT & TAX as Excluded"
-                                    className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
-                                      !activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                  >
-                                    Excluded
-                                  </button>
-                                </span>
+
+                      {/* If in On-Page Edit Mode: Render Interactive Direct Form right on the sheet */}
+                      {isEditingTermsOnPage ? (
+                        <div className="no-print print:hidden p-3 bg-slate-50 border-2 border-dashed border-blue-400 rounded-xl space-y-2.5 shadow-sm text-slate-800 text-[11px] my-1">
+                          {/* 1. VAT & TAX */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">1. VAT &amp; TAX Terms</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, vatTaxMode: 'INCLUDED' }))}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition ${inlineTermsForm.vatTaxMode === 'INCLUDED' ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+                                >
+                                  Included
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, vatTaxMode: 'EXCLUDED' }))}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition ${inlineTermsForm.vatTaxMode === 'EXCLUDED' ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+                                >
+                                  Excluded
+                                </button>
+                              </div>
+                            </div>
+                            <select
+                              value={inlineTermsForm.vatRate}
+                              onChange={(e) => setInlineTermsForm(prev => ({ ...prev, vatRate: e.target.value }))}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] font-semibold text-slate-800"
+                            >
+                              <option value="15%">15% VAT</option>
+                              <option value="15% VAT & 10% TAX">15% VAT &amp; 10% TAX</option>
+                              <option value="15% VAT & 5% TAX">15% VAT &amp; 5% TAX</option>
+                              <option value="10% VAT & 5% TAX">10% VAT &amp; 5% TAX</option>
+                              <option value="10%">10% VAT</option>
+                              <option value="7.5%">7.5% VAT</option>
+                              <option value="5%">5% VAT</option>
+                              <option value="0%">0% (Exempted)</option>
+                            </select>
+                          </div>
+
+                          {/* 2. Payment Terms */}
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-700 block">2. Payment Terms</span>
+                            <input
+                              type="text"
+                              value={inlineTermsForm.paymentTerms}
+                              onChange={(e) => setInlineTermsForm(prev => ({ ...prev, paymentTerms: e.target.value }))}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 font-medium"
+                              placeholder="e.g. Net 30 Days after Delivery & Invoice"
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {['Net 30 Days after Delivery & Invoice', 'Cash on Delivery (COD)', '100% Advance with Work Order', 'Within 15 Days of Submission'].map((p) => (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, paymentTerms: p }))}
+                                  className="text-[9px] bg-slate-200 hover:bg-blue-100 hover:text-blue-800 text-slate-700 px-1.5 py-0.5 rounded cursor-pointer transition"
+                                >
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 3. Delivery Terms */}
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-700 block">3. Delivery Terms</span>
+                            <input
+                              type="text"
+                              value={inlineTermsForm.deliveryTerms}
+                              onChange={(e) => setInlineTermsForm(prev => ({ ...prev, deliveryTerms: e.target.value }))}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 font-medium"
+                              placeholder="e.g. Immediate Delivery from Central Warehouse"
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {['Immediate Delivery from Central Warehouse', 'Within 3-5 Working Days', 'Within 7-10 Days', 'Ex-Stock Subject to Prior Sale'].map((d) => (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, deliveryTerms: d }))}
+                                  className="text-[9px] bg-slate-200 hover:bg-blue-100 hover:text-blue-800 text-slate-700 px-1.5 py-0.5 rounded cursor-pointer transition"
+                                >
+                                  {d}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 4. Warranty Terms */}
+                          <div className="space-y-1">
+                            <span className="font-bold text-slate-700 block">4. Warranty Terms</span>
+                            <input
+                              type="text"
+                              value={inlineTermsForm.warrantyTerms}
+                              onChange={(e) => setInlineTermsForm(prev => ({ ...prev, warrantyTerms: e.target.value }))}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 font-medium"
+                              placeholder="e.g. No Warranty / 1 Year Service Warranty"
+                            />
+                            <div className="flex flex-wrap gap-1">
+                              {['No Warranty', '1 Year Service Warranty (Without Parts)', '1 Year Full Replacement Warranty', '6 Months Brand Warranty'].map((w) => (
+                                <button
+                                  key={w}
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, warrantyTerms: w }))}
+                                  className="text-[9px] bg-slate-200 hover:bg-blue-100 hover:text-blue-800 text-slate-700 px-1.5 py-0.5 rounded cursor-pointer transition"
+                                >
+                                  {w}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 5. Remarks / Special Conditions (Optional - strictly NO quotation validity) */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-slate-700">5. Remarks / Additional Notes (Optional)</span>
+                              {inlineTermsForm.notes && (
+                                <button
+                                  type="button"
+                                  onClick={() => setInlineTermsForm(prev => ({ ...prev, notes: '' }))}
+                                  className="text-[9px] text-rose-600 hover:underline cursor-pointer"
+                                >
+                                  ✕ Remove Remarks
+                                </button>
                               )}
                             </div>
-                          );
-                        })}
-                      </div>
+                            <input
+                              type="text"
+                              value={inlineTermsForm.notes}
+                              onChange={(e) => setInlineTermsForm(prev => ({ ...prev, notes: e.target.value }))}
+                              className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 font-medium"
+                              placeholder="Optional remarks (Leave empty to omit)"
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-200">
+                            <button
+                              type="button"
+                              onClick={() => setIsEditingTermsOnPage(false)}
+                              className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-semibold text-[11px] cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleSaveInlineTerms}
+                              className="px-3.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-[11px] shadow-xs cursor-pointer flex items-center gap-1"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span>Save Terms</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div style={{ lineHeight: '1.5', fontWeight: '500' }}>
+                          {sanitizeBillTerms(activeBill.termsAndConditions).map((term, tIdx) => {
+                            const isVatLine = /vat\s*&?\s*tax/i.test(term);
+                            return (
+                              <div
+                                key={tIdx}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                                className="group/term hover:bg-blue-50/60 rounded px-1 -mx-1 transition cursor-pointer"
+                                onClick={(e) => {
+                                  // If clicked outside select/button, trigger on-page edit
+                                  if ((e.target as HTMLElement).tagName !== 'SELECT' && (e.target as HTMLElement).tagName !== 'BUTTON') {
+                                    initInlineTermsFromBill(activeBill);
+                                    setIsEditingTermsOnPage(true);
+                                  }
+                                }}
+                                title="Click to edit terms directly on this page"
+                              >
+                                <span>{term}</span>
+                                <Edit3 className="w-2.5 h-2.5 text-blue-500 opacity-0 group-hover/term:opacity-100 no-print transition shrink-0" />
+                                {isVatLine && (
+                                  <span
+                                    className="no-print print:hidden inline-flex items-center rounded bg-slate-100 border border-slate-300 p-0.5 shadow-xs text-[9px] gap-1"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <select
+                                      value={(() => {
+                                        if (/15%\s*vat\s*&\s*10%/i.test(term)) return '15% VAT & 10% TAX';
+                                        if (/15%\s*vat\s*&\s*5%/i.test(term)) return '15% VAT & 5% TAX';
+                                        if (/10%\s*vat\s*&\s*5%/i.test(term)) return '10% VAT & 5% TAX';
+                                        const m = term.match(/(\d+(?:\.\d+)?%)/);
+                                        return m ? m[1] : '15%';
+                                      })()}
+                                      onChange={(e) => handleQuickChangeVatRate(e.target.value)}
+                                      className="bg-white border border-slate-300 text-slate-800 rounded px-1 py-0.5 text-[9px] font-bold cursor-pointer hover:bg-slate-50 focus:outline-none"
+                                      title="Quick change VAT % Rate"
+                                    >
+                                      <option value="15%">15%</option>
+                                      <option value="15% VAT & 10% TAX">15% VAT &amp; 10% TAX</option>
+                                      <option value="15% VAT & 5% TAX">15% VAT &amp; 5% TAX</option>
+                                      <option value="10% VAT & 5% TAX">10% VAT &amp; 5% TAX</option>
+                                      <option value="10%">10%</option>
+                                      <option value="7.5%">7.5%</option>
+                                      <option value="5%">5%</option>
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleBillVatMode('INCLUDED')}
+                                      title="Set VAT & TAX as Included"
+                                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
+                                        activeBill.vatTaxIncluded ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
+                                      }`}
+                                    >
+                                      Included
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleBillVatMode('EXCLUDED')}
+                                      title="Set VAT & TAX as Excluded"
+                                      className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition ${
+                                        !activeBill.vatTaxIncluded ? 'bg-rose-600 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-200'
+                                      }`}
+                                    >
+                                      Excluded
+                                    </button>
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Payment Details (aligned to right column) */}
