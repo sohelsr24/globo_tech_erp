@@ -359,7 +359,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
   const handleSaveCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.particulars || !formData.amount || formData.amount <= 0) {
-      alert('দয়া করে খরচের বিবরণ (Particulars) এবং টাকার পরিমাণ (Amount) সঠিকভাবে লিখুন।');
+      alert('Please provide valid Particulars (description) and Amount.');
       return;
     }
 
@@ -383,7 +383,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
     const updated = [newEntry, ...expenses];
     persistExpenses(
       updated,
-      formData.type === 'CASH_IN' ? '✅ নগদ জমা সফলভাবে এন্ট্রি হয়েছে!' : '✅ দৈনিক খরচ সফলভাবে এন্ট্রি হয়েছে!'
+      formData.type === 'CASH_IN' ? '✅ Cash In recorded successfully!' : '✅ Daily expense recorded successfully!'
     );
     setIsCreateModalOpen(false);
   };
@@ -420,27 +420,27 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       return item;
     });
 
-    persistExpenses(updatedEntries, '✅ এন্ট্রি সফলভাবে আপডেট করা হয়েছে!');
+    persistExpenses(updatedEntries, '✅ Entry updated successfully!');
     setIsEditModalOpen(false);
     setEditingEntry(null);
   };
 
   // Handle Delete Entry (with Anti-Resurrection Tombstone)
   const handleDeleteEntry = (id: string, particulars: string) => {
-    if (confirm(`আপনি কি নিশ্চিত যে "${particulars}" খরচটি চিরতরে ডিলিট করতে চান?\nএটি মোবাইল ও পিসির ক্লাউড ডাটাবেজ থেকেও চিরতরে ডিলিট হয়ে যাবে।`)) {
+    if (confirm(`Are you sure you want to permanently delete "${particulars}"?\nThis will be deleted across all devices and the cloud.`)) {
       const targetEntry = expenses.find((e) => e.id === id);
       deleteStoredExpense(id, targetEntry);
       const updated = expenses.filter((e) => e.id !== id);
       setExpenses(updated);
       forceImmediateBackup('daily_expenses_deleted');
-      showToast('🗑️ খরচ চিরতরে ডিলিট করা হয়েছে এবং ক্লাউডে সিঙ্ক করা হয়েছে!');
+      showToast('🗑️ Record permanently deleted and synced with cloud!');
     }
   };
 
   // Handle Export CSV
   const handleExportCSV = () => {
     if (filteredEntries.length === 0) {
-      alert('এক্সপোর্ট করার মতো কোনো ডাটা পাওয়া যায়নি।');
+      alert('No expense data found to export.');
       return;
     }
 
@@ -489,7 +489,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-slate-100">Daily Expenses &amp; Cash Flow</h1>
               <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                দৈনিক খরচ ও ক্যাশ
+                Cash Flow &amp; Ledger
               </span>
             </div>
             <p className="text-xs text-slate-400">
@@ -505,7 +505,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             className="flex items-center gap-2 px-3.5 py-2.5 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-rose-600/20 transition-all"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Add Expense (খরচ)</span>
+            <span>+ Add Expense</span>
           </button>
 
           <button
@@ -514,7 +514,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             className="flex items-center gap-2 px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all"
           >
             <ArrowDownRight className="w-4 h-4" />
-            <span>+ Cash In (নগদ জমা)</span>
+            <span>+ Cash In</span>
           </button>
 
           <button
@@ -546,7 +546,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-rose-400 flex items-center gap-1">
               <TrendingDown className="w-3.5 h-3.5" />
-              আজকের খরচ (Today)
+              Today's Expenses
             </span>
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
           </div>
@@ -554,7 +554,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             {formatBDT(metrics.todayExpenses)}
           </p>
           <p className="text-[11px] text-slate-500 mt-0.5">
-            {expenses.filter((e) => e.date === todayDateString && e.type === 'EXPENSE').length} টি খরচ এন্ট্রি
+            {expenses.filter((e) => e.date === todayDateString && e.type === 'EXPENSE').length} expense entries
           </p>
         </div>
 
@@ -563,21 +563,21 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
               <ArrowDownRight className="w-3.5 h-3.5" />
-              আজকের জমা (Cash In)
+              Today's Cash In
             </span>
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
           </div>
           <p className="text-xl font-mono font-bold text-emerald-400 mt-2">
             {formatBDT(metrics.todayCashIn)}
           </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">কালেকশন ও ড্রয়ার রিফিল</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Collections &amp; Drawer Refills</p>
         </div>
 
         {/* Card 3: Today's Net Cash Flow */}
         <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-sky-400">
-              আজকের নিট ক্যাশ ফ্লো
+              Today's Net Cash Flow
             </span>
             <span className="text-[10px] text-slate-500 font-mono">In - Out</span>
           </div>
@@ -592,7 +592,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-amber-400 flex items-center gap-1">
               <DollarSign className="w-3.5 h-3.5" />
-              হাতের ক্যাশ (Drawer)
+              Drawer Cash Balance
             </span>
             <span className="text-[10px] text-emerald-400 font-mono">Available</span>
           </div>
@@ -606,14 +606,14 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
         <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 col-span-2 lg:col-span-1">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-purple-400">
-              এই মাসের মোট খরচ
+              This Month's Total Expenses
             </span>
             <span className="text-[10px] text-slate-500">October 2026</span>
           </div>
           <p className="text-xl font-mono font-bold text-purple-300 mt-2">
             {formatBDT(metrics.monthExpenses)}
           </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">মাসিক টোটাল ভলিউম</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Monthly Total Volume</p>
         </div>
       </div>
 
@@ -624,7 +624,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs font-bold text-slate-300 mr-1 flex items-center gap-1">
               <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-              হিসাবের দিন নির্বাচন:
+              Select Period:
             </span>
 
             <button
@@ -636,7 +636,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
-              এই মাস (চলতি মাস)
+              This Month
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                 datePreset === 'THIS_MONTH' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
               }`}>
@@ -653,7 +653,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
-              আজকের দিন (Today)
+              Today
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                 datePreset === 'TODAY' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
               }`}>
@@ -670,7 +670,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
-              গতকাল (Yesterday)
+              Yesterday
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                 datePreset === 'YESTERDAY' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
               }`}>
@@ -687,7 +687,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
-              এই সপ্তাহ (Week)
+              This Week
             </button>
 
             <button
@@ -699,7 +699,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
               }`}
             >
-              সব রেকর্ড (All)
+              All Records
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                 datePreset === 'ALL' ? 'bg-emerald-700 text-white' : 'bg-slate-900 text-slate-400'
               }`}>
@@ -711,7 +711,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           {/* Specific Calendar Date Picker */}
           <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 self-start md:self-auto">
             <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
-              যেকোনো নির্দিষ্ট তারিখ:
+              Specific Date:
             </span>
             <input
               type="date"
@@ -730,19 +730,19 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-semibold text-slate-200">
-              নির্বাচিত তারিখের মোট হিসাব (
+              Summary for Period (
               <span className="text-emerald-400 font-mono">
                 {datePreset === 'TODAY'
-                  ? `আজ: ${todayDateString}`
+                  ? `Today: ${todayDateString}`
                   : datePreset === 'YESTERDAY'
-                  ? `গতকাল: ${yesterdayDateString}`
+                  ? `Yesterday: ${yesterdayDateString}`
                   : datePreset === 'CUSTOM'
                   ? selectedCalendarDate
                   : datePreset === 'THIS_MONTH'
-                  ? 'চলতি মাস (October 2026)'
+                  ? 'This Month'
                   : datePreset === 'THIS_WEEK'
-                  ? 'এই সপ্তাহের মোট'
-                  : 'সবদিনের মোট'}
+                  ? 'This Week'
+                  : 'All Time'}
               </span>
               ):
             </span>
@@ -750,21 +750,21 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
           <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400">মোট খরচ (Expenses):</span>
+              <span className="text-slate-400">Total Expenses:</span>
               <strong className="text-rose-400 text-sm font-bold">
                 {formatBDT(filteredListTotalExpense)}
               </strong>
             </div>
 
             <div className="flex items-center gap-1.5 border-l border-slate-800 pl-4">
-              <span className="text-slate-400">মোট জমা (Cash In):</span>
+              <span className="text-slate-400">Total Cash In:</span>
               <strong className="text-emerald-400 text-sm font-bold">
                 {formatBDT(filteredListTotalCashIn)}
               </strong>
             </div>
 
             <div className="flex items-center gap-1.5 border-l border-slate-800 pl-4">
-              <span className="text-slate-400">নিট ব্যালেন্স:</span>
+              <span className="text-slate-400">Net Cash Flow:</span>
               <strong
                 className={`text-sm font-bold ${
                   filteredListTotalCashIn - filteredListTotalExpense >= 0
@@ -778,9 +778,8 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             </div>
 
             <div className="hidden xl:flex items-center gap-1 border-l border-slate-800 pl-4 text-slate-400 text-[11px]">
-              <span>মোট</span>
               <strong className="text-slate-200">{filteredEntries.length}</strong>
-              <span>টি এন্ট্রি</span>
+              <span>entries</span>
             </div>
           </div>
         </div>
@@ -793,7 +792,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Search by Description (কী বাবদ), Payee, Voucher, Project..."
+            placeholder="Search by Description, Payee, Voucher, Project..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-8 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
@@ -820,10 +819,10 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer text-xs"
             >
-              <option value="ALL" className="bg-slate-900 text-slate-300">সব ক্যাটাগরি (All Categories)</option>
+              <option value="ALL" className="bg-slate-900 text-slate-300">All Categories</option>
               {Object.values(EXPENSE_CATEGORIES_CONFIG).map((cat) => (
                 <option key={cat.id} value={cat.id} className="bg-slate-900 text-slate-200">
-                  {cat.labelBn} ({cat.labelEn})
+                  {cat.labelEn}
                 </option>
               ))}
             </select>
@@ -837,10 +836,10 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               onChange={(e) => setPaymentMethodFilter(e.target.value)}
               className="bg-transparent text-slate-200 font-medium focus:outline-none cursor-pointer text-xs"
             >
-              <option value="ALL" className="bg-slate-900 text-slate-300">সব পেমেন্ট মাধ্যম</option>
+              <option value="ALL" className="bg-slate-900 text-slate-300">All Payment Methods</option>
               {Object.entries(PAYMENT_METHODS_CONFIG).map(([k, v]) => (
                 <option key={k} value={k} className="bg-slate-900 text-slate-200">
-                  {v.labelBn}
+                  {v.labelEn}
                 </option>
               ))}
             </select>
@@ -864,7 +863,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                 typeFilter === 'EXPENSE' ? 'bg-rose-950 text-rose-300 border border-rose-800' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              খরচ (Expense)
+              Expenses
             </button>
             <button
               type="button"
@@ -873,7 +872,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                 typeFilter === 'CASH_IN' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              জমা (Cash In)
+              Cash In
             </button>
           </div>
         </div>
@@ -886,8 +885,8 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           {filteredEntries.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center text-slate-500">
               <WalletCards className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
-              <p className="text-sm font-medium">কোনো খরচ বা জমার রেকর্ড পাওয়া যায়নি</p>
-              <p className="text-xs text-slate-600 mt-1">উপরে &ldquo;+ Add Expense&rdquo; বাটনে চাপুন</p>
+              <p className="text-sm font-medium">No expense or cash flow records found</p>
+              <p className="text-xs text-slate-600 mt-1">Tap &ldquo;+ Add Expense&rdquo; or &ldquo;+ Cash In&rdquo; above to record an entry</p>
             </div>
           ) : (
             filteredEntries.map((item) => {
@@ -901,11 +900,11 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${catMeta.badgeBg} ${catMeta.badgeText} ${catMeta.badgeBorder}`}>
-                          {catMeta.labelBn}
+                          {catMeta.labelEn}
                         </span>
                         {item.type === 'CASH_IN' && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
-                            নগদ জমা
+                            Cash In
                           </span>
                         )}
                       </div>
@@ -917,7 +916,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                         {isExpense ? `- ${formatBDT(item.amount)}` : `+ ${formatBDT(item.amount)}`}
                       </span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded border ${payMeta.badge}`}>
-                        {payMeta.labelBn}
+                        {payMeta.labelEn}
                       </span>
                     </div>
                   </div>
@@ -925,9 +924,9 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80 text-xs text-slate-200">
                     <p className="font-medium text-slate-100">{item.particulars}</p>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 mt-2 pt-1.5 border-t border-slate-800/60">
-                      <span>কে খরচ করল: <strong className="text-slate-200">{item.spentBy}</strong></span>
-                      {item.paidTo && <span>&bull; কাকে: <strong className="text-slate-200">{item.paidTo}</strong></span>}
-                      {item.voucherNo && <span className="font-mono text-emerald-400">&bull; ভাউচার: {item.voucherNo}</span>}
+                      <span>Spent by: <strong className="text-slate-200">{item.spentBy}</strong></span>
+                      {item.paidTo && <span>&bull; Paid to: <strong className="text-slate-200">{item.paidTo}</strong></span>}
+                      {item.voucherNo && <span className="font-mono text-emerald-400">&bull; Voucher: {item.voucherNo}</span>}
                     </div>
                   </div>
 
@@ -962,10 +961,10 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[11px] shadow-sm">
                   <ArrowLeftRight className="w-3.5 h-3.5" />
-                  <span>উপরে হরাইজন্টাল স্ক্রল (Top Scrollbar)</span>
+                  <span>Top Horizontal Scrollbar</span>
                 </span>
                 <span className="text-[11px] text-slate-400 hidden lg:inline">
-                  পেজের নিচে না গিয়ে এখান থেকেই ড্র্যাগ করে অথবা বাটন চেপে টেবিল ডানে/বামে স্ক্রল করুন
+                  Drag scrollbar or use buttons to scroll the table horizontally without scrolling down
                 </span>
               </div>
 
@@ -983,7 +982,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                       ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
                       : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
                   }`}
-                  title="শুরুতে যান (Scroll to Date)"
+                  title="Scroll to Beginning"
                 >
                   &#124;&#9664; First
                 </button>
@@ -997,7 +996,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                       ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-700/60 active:scale-95 cursor-pointer shadow-sm'
                       : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
                   }`}
-                  title="বামে স্ক্রল করুন (Scroll Left)"
+                  title="Scroll Left"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>Scroll Left</span>
@@ -1012,7 +1011,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                       ? 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-700/60 active:scale-95 cursor-pointer shadow-sm'
                       : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
                   }`}
-                  title="ডানে স্ক্রল করুন (Scroll Right)"
+                  title="Scroll Right"
                 >
                   <span>Scroll Right</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -1034,7 +1033,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                       ? 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 active:scale-95 cursor-pointer'
                       : 'bg-slate-900/40 text-slate-600 border-slate-800/40 cursor-not-allowed opacity-40'
                   }`}
-                  title="অ্যাকশন কলামে যান (Scroll to Actions / End)"
+                  title="Scroll to Actions (End)"
                 >
                   Last &#9654;&#124;
                 </button>
@@ -1047,7 +1046,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               onScroll={handleTopScroll}
               onWheel={handleWheelOnHeader}
               className="w-full overflow-x-auto touch-scroll erp-horizontal-scrollbar bg-slate-950 px-2 py-1.5 border-t border-slate-800/70 cursor-ew-resize select-none"
-              title="এই স্ক্রলবারে মাউস দিয়ে ড্র্যাগ করে অথবা মাউস হুইল ঘুরিয়ে ডানে-বামে সরান"
+              title="Drag with mouse or use wheel to scroll horizontally"
             >
               <div style={{ width: `${Math.max(tableScrollWidth, 1)}px`, height: '8px' }} />
             </div>
@@ -1062,13 +1061,13 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             <table className="w-full text-left border-separate border-spacing-0 text-xs text-slate-300 min-w-[980px]">
               <thead onWheel={handleWheelOnHeader}>
                 <tr className="bg-slate-950/95 text-slate-400 uppercase text-[10px] tracking-wider font-semibold">
-                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">তারিখ ও সময়</th>
-                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">খরচের খাত (Category)</th>
-                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">কী বাবদ খরচ (Particulars)</th>
-                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">পেমেন্ট মাধ্যম</th>
-                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">কে খরচ করল / কাকে</th>
-                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">ভাউচার / প্রজেক্ট</th>
-                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-right whitespace-nowrap">টাকার পরিমাণ (BDT)</th>
+                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Date &amp; Time</th>
+                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Category</th>
+                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Particulars (Description)</th>
+                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 whitespace-nowrap">Payment Method</th>
+                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Spent By / Paid To</th>
+                  <th className="py-2.5 px-2.5 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800">Voucher / Project</th>
+                  <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 z-20 border-b border-slate-800 text-right whitespace-nowrap">Amount (BDT)</th>
                   <th className="py-2.5 px-3 bg-slate-950/95 sticky top-0 right-0 z-30 border-b border-l border-slate-800 shadow-[-8px_0_12px_rgba(0,0,0,0.5)] text-right whitespace-nowrap">
                     Actions
                   </th>
@@ -1079,9 +1078,9 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   <tr>
                     <td colSpan={8} className="py-12 text-center text-slate-500 border-b border-slate-800/60">
                       <WalletCards className="w-8 h-8 mx-auto mb-2 text-slate-600 opacity-50" />
-                      <p className="text-sm font-medium">কোনো খরচ বা জমার রেকর্ড পাওয়া যায়নি</p>
+                      <p className="text-sm font-medium">No expense or cash flow records found</p>
                       <p className="text-xs text-slate-600 mt-1">
-                        উপরে &ldquo;+ Add Expense&rdquo; অথবা &ldquo;+ Cash In&rdquo; বাটনে ক্লিক করে নতুন এন্ট্রি দিন
+                        Click &ldquo;+ Add Expense&rdquo; or &ldquo;+ Cash In&rdquo; above to record a new entry
                       </p>
                     </td>
                   </tr>
@@ -1103,9 +1102,8 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                         <td className="py-2.5 px-3 border-b border-slate-800/60 whitespace-nowrap">
                           <div className="flex flex-col items-start gap-1">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${catMeta.badgeBg} ${catMeta.badgeText} ${catMeta.badgeBorder}`}>
-                              {catMeta.labelBn}
+                              {catMeta.labelEn}
                             </span>
-                            <span className="text-[9px] text-slate-500">{catMeta.labelEn}</span>
                           </div>
                         </td>
 
@@ -1118,7 +1116,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                         {/* Payment Method */}
                         <td className="py-2.5 px-2.5 border-b border-slate-800/60 whitespace-nowrap">
                           <span className={`text-[10px] font-medium px-2 py-0.5 rounded border inline-block ${payMeta.badge}`}>
-                            {payMeta.labelBn}
+                            {payMeta.labelEn}
                           </span>
                         </td>
 
@@ -1127,7 +1125,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                           <div className="font-semibold text-slate-200 truncate">{item.spentBy}</div>
                           {item.paidTo && (
                             <div className="text-[11px] text-slate-400 truncate" title={`Paid to: ${item.paidTo}`}>
-                              কাকে: {item.paidTo}
+                              Paid to: {item.paidTo}
                             </div>
                           )}
                         </td>
@@ -1195,7 +1193,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title={formData.type === 'CASH_IN' ? 'নগদ জমা এন্ট্রি (Add Cash In)' : 'নতুন দৈনিক খরচ এন্ট্রি (Add Daily Expense)'}
+        title={formData.type === 'CASH_IN' ? 'Record Cash In' : 'Record Daily Expense'}
         size="lg"
       >
         <form onSubmit={handleSaveCreate} className="space-y-4">
@@ -1211,7 +1209,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               }`}
             >
               <TrendingDown className="w-3.5 h-3.5" />
-              <span>দৈনিক খরচ (Cash Out / Expense)</span>
+              <span>Daily Expense (Cash Out)</span>
             </button>
 
             <button
@@ -1224,7 +1222,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               }`}
             >
               <ArrowDownRight className="w-3.5 h-3.5" />
-              <span>নগদ জমা (Cash Inflow)</span>
+              <span>Cash In (Inflow)</span>
             </button>
           </div>
 
@@ -1232,7 +1230,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                তারিখ (Date) *
+                Date *
               </label>
               <input
                 type="date"
@@ -1245,7 +1243,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                সময় (Time)
+                Time
               </label>
               <input
                 type="text"
@@ -1260,7 +1258,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           {/* Category */}
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-1">
-              খরচের খাত (Category) *
+              Category *
             </label>
             <select
               value={formData.category}
@@ -1269,7 +1267,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             >
               {Object.values(EXPENSE_CATEGORIES_CONFIG).map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
-                  {c.labelBn} &bull; {c.labelEn}
+                  {c.labelEn}
                 </option>
               ))}
             </select>
@@ -1278,7 +1276,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           {/* Description (Particulars) */}
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-1">
-              কী বাবদ খরচ / বিবরণ (Particulars) *
+              Particulars / Description *
             </label>
             <input
               type="text"
@@ -1295,7 +1293,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                টাকার পরিমাণ (Amount in BDT) *
+                Amount (BDT) *
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-mono font-bold">
@@ -1315,7 +1313,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                পেমেন্ট মাধ্যম (Paid From) *
+                Payment Method (Paid From) *
               </label>
               <select
                 value={formData.paymentMethod}
@@ -1324,7 +1322,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               >
                 {Object.entries(PAYMENT_METHODS_CONFIG).map(([k, v]) => (
                   <option key={k} value={k} className="bg-slate-900 text-slate-200">
-                    {v.labelBn} ({v.labelEn})
+                    {v.labelEn}
                   </option>
                 ))}
               </select>
@@ -1335,7 +1333,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                কে খরচ করল (Spent By)
+                Spent By
               </label>
               <input
                 type="text"
@@ -1348,7 +1346,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                কাকে দেওয়া হলো (Paid To / Shop)
+                Paid To / Shop
               </label>
               <input
                 type="text"
@@ -1364,7 +1362,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                ভাউচার / ক্যাশ মেমো নং
+                Voucher / Memo No
               </label>
               <input
                 type="text"
@@ -1377,7 +1375,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
             <div>
               <label className="text-xs font-semibold text-slate-300 block mb-1">
-                সংশ্লিষ্ট প্রজেক্ট / ক্লায়েন্ট
+                Project / Client Reference
               </label>
               <input
                 type="text"
@@ -1396,13 +1394,13 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               onClick={() => setIsCreateModalOpen(false)}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition"
             >
-              বাতিল (Cancel)
+              Cancel
             </button>
             <button
               type="submit"
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 transition active:scale-95"
             >
-              সংরক্ষণ করুন (Save Entry)
+              Save Entry
             </button>
           </div>
         </form>
@@ -1412,13 +1410,13 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="খরচের এন্ট্রি সংশোধন করুন (Edit Expense Entry)"
+        title="Edit Expense Entry"
         size="lg"
       >
         <form onSubmit={handleSaveEdit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">তারিখ (Date)</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Date</label>
               <input
                 type="date"
                 required
@@ -1428,7 +1426,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">সময় (Time)</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Time</label>
               <input
                 type="text"
                 value={formData.time || ''}
@@ -1439,7 +1437,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">খরচের খাত (Category)</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Category</label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value as ExpenseCategory })}
@@ -1447,14 +1445,14 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             >
               {Object.values(EXPENSE_CATEGORIES_CONFIG).map((c) => (
                 <option key={c.id} value={c.id} className="bg-slate-900 text-slate-200">
-                  {c.labelBn} &bull; {c.labelEn}
+                  {c.labelEn}
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-300 block mb-1">কী বাবদ খরচ / বিবরণ *</label>
+            <label className="text-xs font-semibold text-slate-300 block mb-1">Particulars / Description *</label>
             <input
               type="text"
               required
@@ -1466,7 +1464,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">টাকার পরিমাণ (Amount in BDT) *</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Amount (BDT) *</label>
               <input
                 type="number"
                 min="1"
@@ -1478,7 +1476,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">পেমেন্ট মাধ্যম</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Payment Method</label>
               <select
                 value={formData.paymentMethod}
                 onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as PaymentMethod })}
@@ -1486,7 +1484,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               >
                 {Object.entries(PAYMENT_METHODS_CONFIG).map(([k, v]) => (
                   <option key={k} value={k} className="bg-slate-900 text-slate-200">
-                    {v.labelBn}
+                    {v.labelEn}
                   </option>
                 ))}
               </select>
@@ -1495,7 +1493,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">কে খরচ করল</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Spent By</label>
               <input
                 type="text"
                 value={formData.spentBy || ''}
@@ -1504,7 +1502,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-300 block mb-1">কাকে দেওয়া হলো</label>
+              <label className="text-xs font-semibold text-slate-300 block mb-1">Paid To / Shop</label>
               <input
                 type="text"
                 value={formData.paidTo || ''}
@@ -1520,13 +1518,13 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               onClick={() => setIsEditModalOpen(false)}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
             >
-              বাতিল
+              Cancel
             </button>
             <button
               type="submit"
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-600/20 active:scale-95"
             >
-              আপডেট করুন (Save Changes)
+              Save Changes
             </button>
           </div>
         </form>
@@ -1536,7 +1534,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
       <Modal
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
-        title="দৈনিক খরচ বিবরণী শিট প্রিন্ট (Daily Expense Sheet)"
+        title="Print Daily Expense Sheet"
         size="xl"
       >
         <div className="space-y-4">
@@ -1547,7 +1545,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-lg active:scale-95"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>প্রিন্ট করুন (Print A4)</span>
+              <span>Print Sheet (A4)</span>
             </button>
           </div>
 
@@ -1558,19 +1556,19 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               <p className="text-[11px] text-slate-600">Enterprise IT &bull; Security &bull; Networking Solutions</p>
               <p className="text-[10px] text-slate-500">12/13 Motijheel C/A, Dhaka-1000 | Phone: 01622-152133</p>
               <h3 className="text-sm font-bold uppercase mt-2 bg-slate-100 py-1 inline-block px-4 rounded border">
-                দৈনিক খরচ ও ক্যাশ বিবরণী (Daily Expense Voucher)
+                Daily Expense &amp; Cash Flow Voucher
               </h3>
             </div>
 
             <div className="flex justify-between items-center text-xs border-b pb-2">
               <div>
-                <span>তারিখ: </span>
+                <span>Date: </span>
                 <strong className="font-mono">
                   {datePreset === 'CUSTOM' ? selectedCalendarDate : todayDateString}
                 </strong>
               </div>
               <div>
-                <span>প্রিন্ট সময়: </span>
+                <span>Print Time: </span>
                 <span>{new Date().toLocaleDateString('en-GB')} {new Date().toLocaleTimeString('en-US')}</span>
               </div>
             </div>
@@ -1580,11 +1578,11 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               <thead>
                 <tr className="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
                   <th className="p-2 border-r border-slate-300 w-10 text-center">SL</th>
-                  <th className="p-2 border-r border-slate-300 w-28">খাত (Category)</th>
-                  <th className="p-2 border-r border-slate-300">কী বাবদ খরচ (Particulars)</th>
-                  <th className="p-2 border-r border-slate-300 w-24">কে খরচ করল</th>
-                  <th className="p-2 border-r border-slate-300 w-24">মাধ্যম</th>
-                  <th className="p-2 text-right w-28">টাকার পরিমাণ</th>
+                  <th className="p-2 border-r border-slate-300 w-28">Category</th>
+                  <th className="p-2 border-r border-slate-300">Particulars (Description)</th>
+                  <th className="p-2 border-r border-slate-300 w-24">Spent By</th>
+                  <th className="p-2 border-r border-slate-300 w-24">Method</th>
+                  <th className="p-2 text-right w-28">Amount</th>
                 </tr>
               </thead>
               <tbody>
@@ -1592,12 +1590,12 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
                   <tr key={item.id} className="border-b border-slate-200">
                     <td className="p-2 text-center border-r border-slate-300 font-mono">{idx + 1}</td>
                     <td className="p-2 border-r border-slate-300 font-semibold">
-                      {EXPENSE_CATEGORIES_CONFIG[item.category]?.labelBn || item.category}
+                      {EXPENSE_CATEGORIES_CONFIG[item.category]?.labelEn || item.category}
                     </td>
                     <td className="p-2 border-r border-slate-300">{item.particulars}</td>
                     <td className="p-2 border-r border-slate-300">{item.spentBy}</td>
                     <td className="p-2 border-r border-slate-300 font-medium">
-                      {PAYMENT_METHODS_CONFIG[item.paymentMethod]?.labelBn || item.paymentMethod}
+                      {PAYMENT_METHODS_CONFIG[item.paymentMethod]?.labelEn || item.paymentMethod}
                     </td>
                     <td className="p-2 text-right font-mono font-bold">
                       {item.type === 'CASH_IN' ? `+ ${formatBDT(item.amount)}` : formatBDT(item.amount)}
@@ -1607,7 +1605,7 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               </tbody>
               <tfoot>
                 <tr className="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-400">
-                  <td colSpan={5} className="p-2 text-right border-r border-slate-300">মোট খরচ (Total Expenses):</td>
+                  <td colSpan={5} className="p-2 text-right border-r border-slate-300">Total Expenses:</td>
                   <td className="p-2 text-right font-mono text-sm">{formatBDT(filteredListTotalExpense)}</td>
                 </tr>
               </tfoot>
@@ -1616,13 +1614,13 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
             {/* Signature Block */}
             <div className="grid grid-cols-3 gap-8 pt-12 text-center text-xs">
               <div>
-                <div className="border-t border-slate-400 pt-1 font-semibold">খরচকারী (Prepared By)</div>
+                <div className="border-t border-slate-400 pt-1 font-semibold">Prepared By</div>
               </div>
               <div>
-                <div className="border-t border-slate-400 pt-1 font-semibold">হিসাবরক্ষক (Accountant)</div>
+                <div className="border-t border-slate-400 pt-1 font-semibold">Accountant</div>
               </div>
               <div>
-                <div className="border-t border-slate-400 pt-1 font-semibold">ব্যবস্থাপনা পরিচালক (Approved By)</div>
+                <div className="border-t border-slate-400 pt-1 font-semibold">Approved By</div>
               </div>
             </div>
           </div>
@@ -1635,19 +1633,19 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
           type="button"
           onClick={() => handleOpenCreateModal('CASH_IN')}
           className="pointer-events-auto flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-xs font-bold shadow-2xl shadow-emerald-950/80 border border-emerald-400/40 transition-all backdrop-blur-sm"
-          title="নতুন নগদ জমা এন্ট্রি"
+          title="Record Cash In"
         >
           <ArrowDownRight className="w-3.5 h-3.5" />
-          <span>+ নগদ জমা</span>
+          <span>+ Cash In</span>
         </button>
         <button
           type="button"
           onClick={() => handleOpenCreateModal('EXPENSE')}
           className="pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-full bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-sm font-bold shadow-2xl shadow-rose-950/80 border border-rose-400/40 transition-all backdrop-blur-sm animate-pulse hover:animate-none"
-          title="নতুন খরচ এন্ট্রি"
+          title="Record Daily Expense"
         >
           <Plus className="w-5 h-5" />
-          <span>+ খরচ এন্ট্রি (Add Expense)</span>
+          <span>+ Add Expense</span>
         </button>
       </div>
     </div>

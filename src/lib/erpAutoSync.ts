@@ -44,7 +44,7 @@ let currentStatus: AutoSyncStatus = {
   isSyncing: false,
   lastSyncedAt: null,
   serverTimestamp: null,
-  statusText: 'প্রস্তুত (Ready)',
+  statusText: 'Ready (Cloud Synced)',
   isOnline: true,
   error: null,
   lastAction: 'IDLE'
@@ -105,7 +105,7 @@ export function markLocalDataChanged(): void {
   const now = Date.now();
   localStorage.setItem(STORAGE_KEY_HAS_UNSYNCED, 'true');
   localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, now.toString());
-  updateStatus({ statusText: 'লোকাল ডাটা সেভ হয়েছে, ক্লাউডে সিঙ্ক হচ্ছে...' });
+  updateStatus({ statusText: 'Local data saved, syncing to cloud...' });
 
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
@@ -127,7 +127,7 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
   if (isSyncInProgress) return { success: false, message: 'Sync already in progress' };
 
   isSyncInProgress = true;
-  updateStatus({ isSyncing: true, statusText: 'ক্লাউড সার্ভারে ডাটা সিঙ্ক হচ্ছে...', lastAction: 'PUSH' });
+  updateStatus({ isSyncing: true, statusText: 'Syncing data to cloud server...', lastAction: 'PUSH' });
 
   try {
     const payload: ERPBackupPayload = generateERPBackupPayload();
@@ -171,7 +171,7 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
         isSyncing: false,
         lastSyncedAt: serverTime,
         serverTimestamp: serverTime,
-        statusText: '🟢 ক্লাউডে রিয়েল-টাইম সিঙ্ক সম্পন্ন!',
+        statusText: '🟢 Real-time cloud sync complete!',
         error: null,
         lastAction: 'PUSH'
       });
@@ -186,7 +186,7 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
     console.warn('Cloud Push Error:', err);
     updateStatus({
       isSyncing: false,
-      statusText: 'ক্লাউড সিঙ্কে সমস্যা হয়েছে',
+      statusText: 'Cloud sync encountered an issue',
       error: err?.message || 'Network error',
       lastAction: 'PUSH'
     });
@@ -205,7 +205,7 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
 
   isSyncInProgress = true;
   if (!options.silent) {
-    updateStatus({ isSyncing: true, statusText: 'ক্লাউড থেকে নতুন ডাটা নামানো হচ্ছে...', lastAction: 'PULL' });
+    updateStatus({ isSyncing: true, statusText: 'Downloading latest data from cloud...', lastAction: 'PULL' });
   }
 
   try {
@@ -231,7 +231,7 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
     try {
       const parsedCheck = JSON.parse(jsonText);
       if (parsedCheck.status === 'empty') {
-        updateStatus({ isSyncing: false, statusText: 'ক্লাউডে এখনো কোনো ডাটা নেই' });
+        updateStatus({ isSyncing: false, statusText: 'No cloud database found yet' });
         return { success: false, message: parsedCheck.message };
       }
     } catch (e) {}
@@ -259,7 +259,7 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
         isSyncing: false,
         lastSyncedAt: serverTimestamp,
         serverTimestamp: serverTimestamp,
-        statusText: '🎉 মোবাইল ও পিসির ডাটা লাইভ আপডেট হয়েছে!',
+        statusText: '🎉 Mobile & PC database updated live!',
         error: null,
         lastAction: 'PULL'
       });
@@ -274,7 +274,7 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
     console.warn('Cloud Pull Error:', err);
     updateStatus({
       isSyncing: false,
-      statusText: 'ক্লাউড থেকে ডাটা নামাতে সমস্যা হয়েছে',
+      statusText: 'Failed to download data from cloud',
       error: err?.message || 'Network error',
       lastAction: 'PULL'
     });
@@ -331,7 +331,7 @@ export async function checkAndAutoSync(): Promise<void> {
       updateStatus({
         lastSyncedAt: serverTs,
         serverTimestamp: serverTs,
-        statusText: '🟢 ক্লাউড সিঙ্ক সক্রিয় (সব ডাটা আপ-টু-ডেট)'
+        statusText: '🟢 Cloud sync active (All data up to date)'
       });
     }
   } catch (err) {
@@ -431,11 +431,11 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
 
   // 4. Hook into window online/offline events
   const handleOnline = () => {
-    updateStatus({ isOnline: true, statusText: '🟢 ইন্টারনেট সচল, সিঙ্ক হচ্ছে...' });
+    updateStatus({ isOnline: true, statusText: '🟢 Internet connected, syncing...' });
     checkAndAutoSync();
   };
   const handleOffline = () => {
-    updateStatus({ isOnline: false, statusText: '⚠️ অফলাইন (ইন্টারনেট নেই)' });
+    updateStatus({ isOnline: false, statusText: '⚠️ Offline (No internet)' });
   };
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);

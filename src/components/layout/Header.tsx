@@ -576,15 +576,15 @@ export function Header({
                 ? 'bg-emerald-500/25 border-emerald-400 text-emerald-200 scale-105 shadow-emerald-500/20'
                 : 'bg-emerald-950/70 hover:bg-emerald-900/60 border-emerald-700/60 text-emerald-300 hover:border-emerald-600'
             }`}
-            title="জিরো ডেটা লস শিল্ড: ক্লিক করে ডাটাবেজ স্বাস্থ্য, ব্যাকআপ ও লাইভ রেকর্ড দেখুন"
+            title="Zero Data Loss Shield: View Database Health & Live Auto-Backups"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
             <span className={`w-1.5 h-1.5 rounded-full ${autoBackupJustSaved ? 'bg-emerald-300 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
             <span className="hidden sm:inline font-semibold">
-              {autoBackupJustSaved ? 'সুরক্ষিত ও সংরক্ষিত!' : 'ডেটা শিল্ড সক্রিয়'}
+              {autoBackupJustSaved ? 'Saved & Protected!' : 'Data Shield Active'}
             </span>
             <span className="sm:hidden font-semibold">
-              {autoBackupJustSaved ? 'সংরক্ষিত' : 'শিল্ড'}
+              {autoBackupJustSaved ? 'Saved' : 'Shield'}
             </span>
           </button>
 
@@ -601,7 +601,7 @@ export function Header({
                 ? 'bg-amber-600/20 border-amber-500/40 text-amber-300'
                 : 'bg-sky-600/20 hover:bg-sky-600/30 border-sky-500/40 text-sky-400 hover:text-sky-300'
             }`}
-            title={autoSyncStatus?.statusText || 'পিসি ও মোবাইলের মাঝে স্বয়ংক্রিয় ক্লাউড সিঙ্ক'}
+            title={autoSyncStatus?.statusText || 'Automatic Cloud Sync between PC & Mobile'}
           >
             {autoSyncStatus?.isSyncing ? (
               <RefreshCw className="w-3.5 h-3.5 text-amber-400 animate-spin" />
@@ -609,7 +609,7 @@ export function Header({
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             )}
             <span className="font-medium">
-              {autoSyncStatus?.isSyncing ? 'সিঙ্ক হচ্ছে...' : 'অটো সিঙ্ক'}
+              {autoSyncStatus?.isSyncing ? 'Syncing...' : 'Auto Sync'}
             </span>
           </button>
 
