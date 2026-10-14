@@ -21,6 +21,7 @@ export const ERP_STORAGE_KEYS = {
   DELETED_SUPPLIER_NAMES: 'globotech_erp_deleted_supplier_names',
   PURCHASES: 'globotech_erp_purchases',
   DELETED_PURCHASE_IDS: 'globotech_erp_deleted_purchases',
+  EXPENSES: 'globotech_erp_daily_expenses',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
   LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
@@ -70,6 +71,7 @@ export interface ERPBackupPayload {
     deletedSupplierNames?: string[];
     purchases?: any[];
     deletedPurchaseIds?: string[];
+    expenses?: any[];
     serials: any[];
     settings: any;
   };
@@ -112,6 +114,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const deletedSupplierNames = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_SUPPLIER_NAMES, []);
   const purchases = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
   const deletedPurchaseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
+  const expenses = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
   const serials = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
   const settings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
 
@@ -159,6 +162,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       deletedSupplierNames,
       purchases,
       deletedPurchaseIds,
+      expenses,
       serials,
       settings
     }

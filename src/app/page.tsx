@@ -22,6 +22,7 @@ import { SettingsView } from '@/components/modules/SettingsView';
 import { QuotationView } from '@/components/modules/QuotationView';
 import { BillInvoiceView } from '@/components/modules/BillInvoiceView';
 import { PurchasesView } from '@/components/modules/PurchasesView';
+import { DailyExpenseView } from '@/components/modules/DailyExpenseView';
 
 import { ShieldAlert, Lock } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
@@ -44,6 +45,7 @@ const VALID_TABS = [
   'bill-invoice',
   'sales',
   'projects',
+  'expenses',
   'reports',
   'settings'
 ];
@@ -331,6 +333,11 @@ export default function AppHome() {
           title: 'Supplier Purchases, Product Rates & Due Ledger',
           desc: 'Company-wise purchased products, each item unit value, paid amount, and outstanding payables'
         };
+      case 'expenses':
+        return {
+          title: 'Daily Expenses & Cash Flow Tracker',
+          desc: 'Record daily field & office costs, manage drawer petty cash, and calculate daily expenses with 1-click'
+        };
       case 'reports':
         return {
           title: 'P&L, Cash Flow & Inventory Valuation',
@@ -361,6 +368,7 @@ export default function AppHome() {
       case 'customers': return 'SALES';
       case 'suppliers': return 'IMPORTS';
       case 'purchases': return 'PAYMENTS';
+      case 'expenses': return 'PAYMENTS';
       case 'reports': return 'REPORTS';
       case 'settings': return 'SETTINGS';
       default: return 'DASHBOARD';
@@ -487,6 +495,7 @@ export default function AppHome() {
               {currentTab === 'purchases' && (
                 <PurchasesView canViewCosts={canViewCosts} globalSearchQuery={searchQuery} />
               )}
+              {currentTab === 'expenses' && <DailyExpenseView globalSearchQuery={searchQuery} />}
               {currentTab === 'reports' && <ReportsView />}
               {currentTab === 'settings' && <SettingsView />}
             </div>

@@ -18,7 +18,8 @@ import {
   LogOut,
   X,
   Smartphone,
-  WalletCards
+  WalletCards,
+  HandCoins
 } from 'lucide-react';
 import { GLOBO_TECH_LOGO_DATA_URL } from '@/lib/brandAssets';
 
@@ -50,6 +51,7 @@ export function Sidebar({
     { id: 'customers', label: 'Customer Directory', icon: Users },
     { id: 'suppliers', label: 'China Suppliers', icon: Building2 },
     { id: 'purchases', label: 'Company Purchases & Dues', icon: WalletCards },
+    { id: 'expenses', label: 'Daily Expense & Cash Flow', icon: HandCoins },
     { id: 'quotation', label: 'Quotation', icon: FileText },
     { id: 'bill-invoice', label: 'Bill & Challan', icon: Receipt },
     { id: 'sales', label: 'Sales & Invoicing', icon: FileText },
