@@ -347,10 +347,17 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
 
   // Handle Create New Entry
   const handleOpenCreateModal = (type: TransactionType = 'EXPENSE') => {
+    let defaultDate = todayDateString;
+    if (datePreset === 'YESTERDAY') {
+      defaultDate = yesterdayDateString;
+    } else if (datePreset === 'CUSTOM') {
+      defaultDate = selectedCalendarDate;
+    }
+
     setFormData({
       ...initialFormState,
       type,
-      date: datePreset === 'CUSTOM' ? selectedCalendarDate : todayDateString,
+      date: defaultDate,
       time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
     });
     setIsCreateModalOpen(true);

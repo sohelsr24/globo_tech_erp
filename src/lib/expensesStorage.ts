@@ -197,234 +197,186 @@ export const PAYMENT_METHODS_CONFIG: Record<PaymentMethod, { labelEn: string; la
 export const EXPENSES_STORAGE_KEY = 'globotech_erp_daily_expenses';
 
 // Real-world sample initial seed data matching Globo Tech operations
+// Real-world active ledger entries matching Globo Tech operations
 export const INITIAL_EXPENSES: ExpenseEntry[] = [
   // Today: 14-Oct-2026
   {
-    id: 'exp-1728920100000',
+    id: 'exp-1791996815093',
     date: '2026-10-14',
-    time: '11:15 AM',
+    time: '10:52 PM',
     type: 'EXPENSE',
-    category: 'CONVEYANCE',
-    particulars: 'Daraz Tejgaon Sorting Hub urgent Cat-6 cable delivery CNG fare',
-    amount: 350,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Farhan',
-    paidTo: 'CNG Driver',
-    voucherNo: 'V-2610-041',
-    projectRef: 'Daraz Tejgaon DC',
-    notes: 'Urgent sample supply',
-    createdAt: '2026-10-14T11:15:00.000Z'
-  },
-  {
-    id: 'exp-1728920200000',
-    date: '2026-10-14',
-    time: '01:30 PM',
-    type: 'EXPENSE',
-    category: 'FOOD',
-    particulars: 'Technician site lunch & mineral water for 3 persons (Parliament sound test)',
-    amount: 1200,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Rony',
-    paidTo: 'Kasturi Restaurant Banani',
-    voucherNo: 'V-2610-042',
-    projectRef: 'Bangladesh Parliament',
-    notes: 'Field engineering team lunch',
-    createdAt: '2026-10-14T13:30:00.000Z'
-  },
-  {
-    id: 'exp-1728920300000',
-    date: '2026-10-14',
-    time: '03:10 PM',
-    type: 'EXPENSE',
-    category: 'STATIONERY',
-    particulars: 'Heavy packing cartons, transparent tape & bubble wraps for CCTV dispatch',
-    amount: 650,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Office Staff',
-    paidTo: 'Motijheel Stationery House',
-    voucherNo: 'V-2610-043',
-    projectRef: 'Central Warehouse',
-    createdAt: '2026-10-14T15:10:00.000Z'
-  },
-  {
-    id: 'exp-1728920400000',
-    date: '2026-10-14',
-    time: '04:45 PM',
-    type: 'EXPENSE',
-    category: 'COURIER',
-    particulars: 'Sundarban Courier parcel fee for sending router spare parts to Cumilla branch',
-    amount: 320,
-    paymentMethod: 'BKASH',
-    spentBy: 'Farhan',
-    paidTo: 'Sundarban Courier Dilkusha',
-    voucherNo: 'SC-881902',
-    projectRef: 'Cumilla Project',
-    createdAt: '2026-10-14T16:45:00.000Z'
-  },
-  {
-    id: 'exp-1728920500000',
-    date: '2026-10-14',
-    time: '05:30 PM',
-    type: 'EXPENSE',
-    category: 'FOOD',
-    particulars: 'Daily evening office tea & biscuits for engineering department',
-    amount: 180,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Office Boy',
-    paidTo: 'Local Tea Stall',
-    voucherNo: 'V-2610-044',
-    createdAt: '2026-10-14T17:30:00.000Z'
-  },
-  {
-    id: 'exp-1728920600000',
-    date: '2026-10-14',
-    time: '10:00 AM',
-    type: 'CASH_IN',
     category: 'MISC',
-    particulars: 'Cash withdrawal from Brac Bank to refill office drawer petty cash',
+    particulars: 'Bag for personal use',
+    amount: 4600,
+    paymentMethod: 'PETTY_CASH',
+    spentBy: 'Self',
+    paidTo: 'Luxus bag',
+    voucherNo: '',
+    projectRef: 'Luxus bag',
+    notes: '',
+    createdAt: '2026-10-14T16:53:35.093Z'
+  },
+  {
+    id: 'exp-1791996642106',
+    date: '2026-10-14',
+    time: '10:49 PM',
+    type: 'EXPENSE',
+    category: 'LABOR',
+    particulars: 'Jony Hazira',
+    amount: 5000,
+    paymentMethod: 'BKASH',
+    spentBy: 'Self',
+    paidTo: 'Jony Hazira',
+    voucherNo: '',
+    projectRef: 'Jony Hazira',
+    notes: '',
+    createdAt: '2026-10-14T16:50:42.106Z'
+  },
+  {
+    id: 'exp-1791996590146',
+    date: '2026-10-14',
+    time: '10:48 AM',
+    type: 'EXPENSE',
+    category: 'LABOR',
+    particulars: 'Monir Salary',
+    amount: 10000,
+    paymentMethod: 'BKASH',
+    spentBy: 'Self',
+    paidTo: 'Monir Staf',
+    voucherNo: '',
+    projectRef: 'Monir Salary',
+    notes: '',
+    createdAt: '2026-10-14T16:49:50.146Z'
+  },
+  {
+    id: 'exp-1791996503369',
+    date: '2026-10-14',
+    time: '8:47 PM',
+    type: 'EXPENSE',
+    category: 'MISC',
+    particulars: 'Family',
+    amount: 5100,
+    paymentMethod: 'BKASH',
+    spentBy: 'Self',
+    paidTo: 'Shoshi',
+    voucherNo: '',
+    projectRef: 'Family Expense',
+    notes: '',
+    createdAt: '2026-10-14T16:48:23.369Z'
+  },
+  {
+    id: 'exp-1791996427651',
+    date: '2026-10-14',
+    time: '10:45 PM',
+    type: 'EXPENSE',
+    category: 'SITE_MATERIALS',
+    particulars: 'Speaker sir Protrait',
     amount: 20000,
+    paymentMethod: 'BKASH',
+    spentBy: 'self',
+    paidTo: 'Sujan Day',
+    voucherNo: '',
+    projectRef: 'Speaker sir Protrait',
+    notes: '',
+    createdAt: '2026-10-14T16:47:07.651Z'
+  },
+  {
+    id: 'exp-1791996195521',
+    date: '2026-10-14',
+    time: '3:42 PM',
+    type: 'EXPENSE',
+    category: 'MISC',
+    particulars: 'Walkie Talkie Audit Repot',
+    amount: 40500,
     paymentMethod: 'BRAC_BANK',
-    spentBy: 'Engr. Sohel Rana',
-    paidTo: 'Office Petty Cash Drawer',
-    voucherNo: 'CQ-991201',
-    notes: 'Petty cash refill for weekly operations',
-    createdAt: '2026-10-14T10:00:00.000Z'
+    spentBy: 'Self',
+    paidTo: 'Mojid sir common shakha',
+    voucherNo: '',
+    projectRef: '',
+    notes: '',
+    createdAt: '2026-10-14T16:43:15.521Z'
   },
 
   // Yesterday: 13-Oct-2026
   {
-    id: 'exp-1728830100000',
+    id: 'exp-1791996306959',
     date: '2026-10-13',
-    time: '11:45 AM',
+    time: '2:48 PM',
     type: 'EXPENSE',
     category: 'SITE_MATERIALS',
-    particulars: 'Fiber optic patch cords (SC-LC), RJ45 metal connectors & cable ties',
-    amount: 1450,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Rony',
-    paidTo: 'Dhaka Stadium Market Hardware',
-    voucherNo: 'V-2610-038',
-    projectRef: 'Daraz Bangladesh LTD',
-    createdAt: '2026-10-13T11:45:00.000Z'
+    particulars: 'shippinng charge of bainucular and Mirror',
+    amount: 24600,
+    paymentMethod: 'BKASH',
+    spentBy: 'Engr. Sohel Rana',
+    paidTo: 'Shipping',
+    voucherNo: '',
+    projectRef: 'Binocular & Mirror',
+    notes: '',
+    createdAt: '2026-10-14T16:45:40.000Z'
   },
   {
-    id: 'exp-1728830200000',
+    id: 'exp-1791996306958',
     date: '2026-10-13',
-    time: '02:00 PM',
-    type: 'EXPENSE',
-    category: 'LABOR',
-    particulars: 'Daily wage allowance for 2 assistant electricians for rack mounting & wiring',
-    amount: 1800,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Farhan',
-    paidTo: 'Electrician Team',
-    voucherNo: 'V-2610-039',
-    projectRef: 'Tejgaon Sort DC',
-    createdAt: '2026-10-13T14:00:00.000Z'
-  },
-  {
-    id: 'exp-1728830300000',
-    date: '2026-10-13',
-    time: '04:15 PM',
+    time: '2:47 PM',
     type: 'EXPENSE',
     category: 'UTILITIES',
-    particulars: 'Motijheel office dedicated fiber optic internet bill for October 2026',
-    amount: 2500,
-    paymentMethod: 'BKASH',
+    particulars: 'Amex credit  Card Bill',
+    amount: 25020,
+    paymentMethod: 'BRAC_BANK',
     spentBy: 'Engr. Sohel Rana',
-    paidTo: 'Dot Internet Ltd',
-    voucherNo: 'DOT-202610',
-    createdAt: '2026-10-13T16:15:00.000Z'
+    paidTo: 'Amex Card',
+    voucherNo: '',
+    projectRef: 'Card Bill',
+    notes: '',
+    createdAt: '2026-10-14T16:45:30.000Z'
   },
   {
-    id: 'exp-1728830400000',
+    id: 'exp-1791996306957',
     date: '2026-10-13',
-    time: '05:40 PM',
+    time: '2:46 PM',
     type: 'EXPENSE',
     category: 'CONVEYANCE',
-    particulars: 'Local rickshaw & CNG transit for bank cheque deposit and C/A delivery',
-    amount: 220,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Office Staff',
-    paidTo: 'Local Transport',
-    voucherNo: 'V-2610-040',
-    createdAt: '2026-10-13T17:40:00.000Z'
-  },
-
-  // 12-Oct-2026
-  {
-    id: 'exp-1728740100000',
-    date: '2026-10-12',
-    time: '12:30 PM',
-    type: 'EXPENSE',
-    category: 'REPAIR',
-    particulars: 'Network crimping tool & cable tester calibration and replacement parts',
-    amount: 600,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Rony',
-    paidTo: 'Electronic Lab Stadium',
-    voucherNo: 'V-2610-035',
-    createdAt: '2026-10-12T12:30:00.000Z'
-  },
-  {
-    id: 'exp-1728740200000',
-    date: '2026-10-12',
-    time: '03:50 PM',
-    type: 'EXPENSE',
-    category: 'COURIER',
-    particulars: 'Redx parcel pickup service charge for urgent document delivery',
-    amount: 280,
+    particulars: 'Air Ticekt Malaysia to China',
+    amount: 3520,
     paymentMethod: 'BKASH',
-    spentBy: 'Farhan',
-    paidTo: 'Redx Logistics',
-    voucherNo: 'RX-99182',
-    createdAt: '2026-10-12T15:50:00.000Z'
+    spentBy: 'Engr. Sohel Rana',
+    paidTo: 'Air Ticket',
+    voucherNo: '',
+    projectRef: 'Air Ticket',
+    notes: '',
+    createdAt: '2026-10-14T16:45:20.000Z'
   },
   {
-    id: 'exp-1728740300000',
-    date: '2026-10-12',
-    time: '04:30 PM',
+    id: 'exp-1791996306956',
+    date: '2026-10-13',
+    time: '2:45 PM',
+    type: 'EXPENSE',
+    category: 'MISC',
+    particulars: 'Malaysia and China Toure Cost Deposit to Shakil vi',
+    amount: 100000,
+    paymentMethod: 'BKASH',
+    spentBy: 'Engr. Sohel Rana',
+    paidTo: 'Shakil vi',
+    voucherNo: '',
+    projectRef: 'Tour Deposit',
+    notes: 'Malaysia and China Tour Deposit',
+    createdAt: '2026-10-14T16:45:10.000Z'
+  },
+  {
+    id: 'exp-1791996306955',
+    date: '2026-10-13',
+    time: '2:44 PM',
     type: 'CASH_IN',
     category: 'MISC',
-    particulars: 'Direct cash collection from local client for Hikvision surveillance accessories',
-    amount: 8500,
-    paymentMethod: 'PETTY_CASH',
+    particulars: 'Business Mantain',
+    amount: 310000,
+    paymentMethod: 'BRAC_BANK',
     spentBy: 'Engr. Sohel Rana',
-    paidTo: 'Globo Tech Drawer Cash',
-    voucherNo: 'CSH-1012',
-    notes: 'Cash in hand collection',
-    createdAt: '2026-10-12T16:30:00.000Z'
-  },
-
-  // Earlier in October 2026
-  {
-    id: 'exp-1728560100000',
-    date: '2026-10-10',
-    time: '01:00 PM',
-    type: 'EXPENSE',
-    category: 'STATIONERY',
-    particulars: 'HP LaserJet 85A toner cartridge refill & 2 reams Double A A4 printing paper',
-    amount: 3200,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Office Staff',
-    paidTo: 'Baitul Mukarram Stationery',
-    voucherNo: 'V-2610-028',
-    createdAt: '2026-10-10T13:00:00.000Z'
-  },
-  {
-    id: 'exp-1728560200000',
-    date: '2026-10-10',
-    time: '04:15 PM',
-    type: 'EXPENSE',
-    category: 'LABOR',
-    particulars: 'Warehouse coolie wages for unloading 40 boxes UTP pure copper cables',
-    amount: 3500,
-    paymentMethod: 'PETTY_CASH',
-    spentBy: 'Farhan',
-    paidTo: 'Motijheel Warehouse Labor Team',
-    voucherNo: 'V-2610-029',
-    projectRef: 'Central Warehouse',
-    createdAt: '2026-10-10T16:15:00.000Z'
+    paidTo: '',
+    voucherNo: '',
+    projectRef: 'Daraz Bangladesh',
+    notes: '',
+    createdAt: '2026-10-14T16:45:06.955Z'
   }
 ];
 
@@ -439,6 +391,35 @@ export function getStoredExpenses(): ExpenseEntry[] {
     const rawDel = localStorage.getItem(DELETED_EXPENSES_STORAGE_KEY);
     const delSet = new Set<string>(rawDel ? JSON.parse(rawDel) : []);
 
+    // Ensure real user transactions are protected and never blocked by stale tombstones
+    const protectedIds = [
+      'exp-1791996306955',
+      'exp-1791996306956',
+      'exp-1791996306957',
+      'exp-1791996306958',
+      'exp-1791996306959',
+      'exp-1791996195521',
+      'exp-1791996427651',
+      'exp-1791996503369',
+      'exp-1791996590146',
+      'exp-1791996642106',
+      'exp-1791996815093'
+    ];
+    let cleanedDel = false;
+    protectedIds.forEach((pid) => {
+      if (delSet.has(pid)) {
+        delSet.delete(pid);
+        cleanedDel = true;
+      }
+    });
+    if (delSet.has('2026-10-13_2:44 PM_310000_Business Mantain')) {
+      delSet.delete('2026-10-13_2:44 PM_310000_Business Mantain');
+      cleanedDel = true;
+    }
+    if (cleanedDel) {
+      localStorage.setItem(DELETED_EXPENSES_STORAGE_KEY, JSON.stringify(Array.from(delSet)));
+    }
+
     const raw = localStorage.getItem(EXPENSES_STORAGE_KEY);
     if (!raw) {
       const filteredInit = INITIAL_EXPENSES.filter((e) => !delSet.has(e.id));
@@ -446,7 +427,7 @@ export function getStoredExpenses(): ExpenseEntry[] {
       return filteredInit;
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed.filter((e) => !delSet.has(e.id));
     }
     return INITIAL_EXPENSES.filter((e) => !delSet.has(e.id));

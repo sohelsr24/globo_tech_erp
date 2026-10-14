@@ -611,6 +611,22 @@ export function restoreERPBackupData(
       const curDelExp = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, []);
       const incDelExp = Array.isArray(data.deletedExpenseIds) ? data.deletedExpenseIds : [];
       const allDelExpSet = new Set<string>([...curDelExp, ...incDelExp].map((s) => (s || '').trim()));
+      // Protect active user expenses from ever being blocked
+      const protectedExpIds = [
+        'exp-1791996306955',
+        '2026-10-13_2:44 PM_310000_Business Mantain',
+        'exp-1791996306956',
+        'exp-1791996306957',
+        'exp-1791996306958',
+        'exp-1791996306959',
+        'exp-1791996195521',
+        'exp-1791996427651',
+        'exp-1791996503369',
+        'exp-1791996590146',
+        'exp-1791996642106',
+        'exp-1791996815093'
+      ];
+      protectedExpIds.forEach((pid) => allDelExpSet.delete(pid));
       localStorage.setItem(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, JSON.stringify(Array.from(allDelExpSet)));
 
       if (Array.isArray(data.expenses)) {

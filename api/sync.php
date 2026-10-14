@@ -178,6 +178,24 @@ function mergeErpDatasets($existing, $incoming) {
     foreach ($allDelExp as $de) {
         if (is_string($de) && trim($de) !== '') $delExpSet[trim($de)] = true;
     }
+    // Never allow tombstones for active real user transactions
+    $protectedExpKeys = [
+        'exp-1791996306955',
+        '2026-10-13_2:44 PM_310000_Business Mantain',
+        'exp-1791996306956',
+        'exp-1791996306957',
+        'exp-1791996306958',
+        'exp-1791996306959',
+        'exp-1791996195521',
+        'exp-1791996427651',
+        'exp-1791996503369',
+        'exp-1791996590146',
+        'exp-1791996642106',
+        'exp-1791996815093'
+    ];
+    foreach ($protectedExpKeys as $pek) {
+        unset($delExpSet[$pek]);
+    }
     $merged['deletedExpenseIds'] = array_keys($delExpSet);
 
     // 1. Suppliers: merge by name or id (respecting deletion tombstones)
