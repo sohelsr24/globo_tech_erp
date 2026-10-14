@@ -601,12 +601,18 @@ export function DailyExpenseView({ globalSearchQuery = '' }: DailyExpenseViewPro
               <DollarSign className="w-3.5 h-3.5" />
               Drawer Cash Balance
             </span>
-            <span className="text-[10px] text-emerald-400 font-mono">Available</span>
+            <span className={`text-[10px] font-mono ${metrics.pettyCashBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              {metrics.pettyCashBalance >= 0 ? 'Available' : 'Deficit'}
+            </span>
           </div>
-          <p className="text-xl font-mono font-bold text-amber-300 mt-2">
-            {formatBDT(metrics.pettyCashBalance)}
+          <p className={`text-xl font-mono font-bold mt-2 ${metrics.pettyCashBalance >= 0 ? 'text-amber-300' : 'text-rose-400'}`}>
+            {metrics.pettyCashBalance < 0
+              ? `- ${formatBDT(Math.abs(metrics.pettyCashBalance))}`
+              : formatBDT(metrics.pettyCashBalance)}
           </p>
-          <p className="text-[11px] text-slate-500 mt-0.5">Petty Cash In Hand</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            {metrics.pettyCashBalance >= 0 ? 'Petty Cash In Hand' : 'Expenses Exceed Cash In'}
+          </p>
         </div>
 
         {/* Card 5: This Month Total */}

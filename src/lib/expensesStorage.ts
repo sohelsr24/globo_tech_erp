@@ -525,14 +525,15 @@ export function calculateExpenseMetrics(
     .reduce((sum, e) => sum + e.amount, 0);
 
   // Drawer Cash Balance:
-  // All Cash In with PETTY_CASH or Bank transfer to Cash - all expenses paid with PETTY_CASH
-  const totalPettyCashIn = expenses
+  // Automatically deducts in real-time as expenses are added:
+  // Total Cash In (collections, refills, deposits) - Total Expenses paid
+  const totalCashIn = expenses
     .filter((e) => e.type === 'CASH_IN')
     .reduce((sum, e) => sum + e.amount, 0);
-  const totalPettyCashOut = expenses
-    .filter((e) => e.type === 'EXPENSE' && e.paymentMethod === 'PETTY_CASH')
+  const totalExpenses = expenses
+    .filter((e) => e.type === 'EXPENSE')
     .reduce((sum, e) => sum + e.amount, 0);
-  const pettyCashBalance = Math.max(0, totalPettyCashIn - totalPettyCashOut);
+  const pettyCashBalance = totalCashIn - totalExpenses;
 
   // Category-wise Breakdown for the target period
   const categoryTotals: Record<string, number> = {};
