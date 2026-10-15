@@ -24,6 +24,7 @@ export const ERP_STORAGE_KEYS = {
   DELETED_PURCHASE_IDS: 'globotech_erp_deleted_purchases',
   EXPENSES: 'globotech_erp_daily_expenses',
   DELETED_EXPENSE_IDS: 'globotech_erp_deleted_expense_ids',
+  DELETED_PRODUCT_SKUS: 'globotech_erp_deleted_product_skus',
   SERIALS: 'globotech_erp_serials',
   SETTINGS: 'globotech_erp_settings',
   LAST_BACKUP_DATE: 'globotech_erp_last_backup_date',
@@ -123,6 +124,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const deletedPurchaseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PURCHASE_IDS, []);
   const expenses = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
   const deletedExpenseIds = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_EXPENSE_IDS, []);
+  const deletedProductSkus = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PRODUCT_SKUS, []);
   const serials = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
   const settings = readStorage<any>(ERP_STORAGE_KEYS.SETTINGS, {});
 
@@ -163,6 +165,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       projects,
       clientDirectory,
       products,
+      deletedProductSkus,
       warehouseStock,
       stockLedger,
       categories,
@@ -433,21 +436,34 @@ export function restoreERPBackupData(
       }
 
       // 6. Products Safe Merge
+      const curDelProducts = readStorage<string[]>(ERP_STORAGE_KEYS.DELETED_PRODUCT_SKUS, []);
+      const incDelProducts = Array.isArray((data as any).deletedProductSkus) ? (data as any).deletedProductSkus : [];
+      const allDelProductsSet = new Set<string>([...curDelProducts, ...incDelProducts].map((s: string) => s.trim().toUpperCase()));
+      localStorage.setItem(ERP_STORAGE_KEYS.DELETED_PRODUCT_SKUS, JSON.stringify(Array.from(allDelProductsSet)));
+
       if (Array.isArray(data.products)) {
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PRODUCTS, []);
           const map = new Map<string, any>();
           data.products.forEach((p: any) => {
             const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
-            if (key) map.set(key, p);
+            const isDel = allDelProductsSet.has(key) || allDelProductsSet.has((p.sku || '').trim().toUpperCase()) || allDelProductsSet.has((p.id || '').trim().toUpperCase()) || allDelProductsSet.has((p.name || '').trim().toUpperCase());
+            if (key && !isDel) map.set(key, p);
           });
           current.forEach((p: any) => {
             const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
-            if (key) map.set(key, p);
+            const isDel = allDelProductsSet.has(key) || allDelProductsSet.has((p.sku || '').trim().toUpperCase()) || allDelProductsSet.has((p.id || '').trim().toUpperCase()) || allDelProductsSet.has((p.name || '').trim().toUpperCase());
+            if (key && !isDel) map.set(key, p);
           });
           localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(Array.from(map.values())));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(data.products));
+          const filteredProducts = data.products.filter((p: any) => {
+            const sku = (p.sku || '').trim().toUpperCase();
+            const id = (p.id || '').trim().toUpperCase();
+            const name = (p.name || '').trim().toUpperCase();
+            return !allDelProductsSet.has(sku) && !allDelProductsSet.has(id) && !allDelProductsSet.has(name);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(filteredProducts));
         }
       }
 
@@ -457,16 +473,29 @@ export function restoreERPBackupData(
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, []);
           const map = new Map<string, any>();
           data.warehouseStock.forEach((s: any) => {
-            const key = s.id || `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`;
-            if (key) map.set(key, s);
+            const sku = (s.sku || '').trim().toUpperCase();
+            const name = (s.productName || '').trim().toUpperCase();
+            if (!allDelProductsSet.has(sku) && !allDelProductsSet.has(name)) {
+              const key = s.id || `${sku}-${(s.warehouseName || '').trim().toLowerCase()}`;
+              if (key) map.set(key, s);
+            }
           });
           current.forEach((s: any) => {
-            const key = s.id || `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`;
-            if (key) map.set(key, s);
+            const sku = (s.sku || '').trim().toUpperCase();
+            const name = (s.productName || '').trim().toUpperCase();
+            if (!allDelProductsSet.has(sku) && !allDelProductsSet.has(name)) {
+              const key = s.id || `${sku}-${(s.warehouseName || '').trim().toLowerCase()}`;
+              if (key) map.set(key, s);
+            }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(Array.from(map.values())));
         } else {
-          localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(data.warehouseStock));
+          const filteredStock = data.warehouseStock.filter((s: any) => {
+            const sku = (s.sku || '').trim().toUpperCase();
+            const name = (s.productName || '').trim().toUpperCase();
+            return !allDelProductsSet.has(sku) && !allDelProductsSet.has(name);
+          });
+          localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(filteredStock));
         }
       }
 

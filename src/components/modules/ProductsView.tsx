@@ -35,7 +35,9 @@ import {
   saveStoredCategories,
   getStoredWarehouses,
   saveStoredWarehouses,
-  INITIAL_WAREHOUSES
+  INITIAL_WAREHOUSES,
+  recordDeletedProduct,
+  unrecordDeletedProduct
 } from '@/lib/productsStorage';
 
 export { INITIAL_PRODUCTS };
@@ -302,6 +304,10 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
       saveStoredWarehouses(updatedWhs);
     }
 
+    // Unrecord deletion if product was previously deleted
+    unrecordDeletedProduct(newItem.sku);
+    unrecordDeletedProduct(newItem.name);
+
     setIsAddModalOpen(false);
     showToast(`✓ Product "${newItem.name}" added successfully with ${initialStockNum} pcs in ${newProd.targetWarehouse}!`);
 
@@ -373,11 +379,30 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
 
   // 4. DELETE PRODUCT
   const handleDeleteProduct = (id: string, name: string) => {
+    const targetProd = products.find((p) => p.id === id || p.name === name);
+    if (!targetProd) return;
+
     if (confirm(`Are you sure you want to delete "${name}" from the product catalog?`)) {
-      const updated = products.filter((p) => p.id !== id);
-      setProducts(updated);
-      saveStoredProducts(updated);
-      showToast(`Deleted product "${name}".`);
+      // 1. Record deletion so initial seeds or sync never resurrect it
+      recordDeletedProduct({
+        id: targetProd.id,
+        sku: targetProd.sku,
+        name: targetProd.name
+      });
+
+      // 2. Remove from products list
+      const updatedProducts = products.filter((p) => p.id !== id && p.sku !== targetProd.sku);
+      setProducts(updatedProducts);
+      saveStoredProducts(updatedProducts);
+
+      // 3. Also remove its stock from warehouseStock
+      const currentStock = getStoredWarehouseStock();
+      const updatedStock = currentStock.filter(
+        (s) => s.sku !== targetProd.sku && s.productName !== targetProd.name
+      );
+      saveStoredWarehouseStock(updatedStock);
+
+      showToast(`✓ Deleted product "${name}".`);
     }
   };
 

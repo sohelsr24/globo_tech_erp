@@ -60,6 +60,7 @@ export const STORAGE_KEYS = {
   LEDGER: 'globotech_erp_stock_ledger',
   CATEGORIES: 'globotech_erp_categories',
   WAREHOUSES: 'globotech_erp_warehouses',
+  DELETED_PRODUCT_SKUS: 'globotech_erp_deleted_product_skus',
 };
 
 export const INITIAL_CATEGORIES: string[] = MASTER_INITIAL_CATEGORIES;
@@ -148,29 +149,90 @@ export function saveStoredWarehouses(warehouses: string[]): void {
   }
 }
 
+export function getDeletedProductSkus(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.DELETED_PRODUCT_SKUS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {}
+  return [];
+}
+
+export function recordDeletedProduct(product: { id?: string; sku?: string; name?: string }): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const list = getDeletedProductSkus();
+    const set = new Set<string>(list.map((s) => s.trim().toUpperCase()));
+    if (product.id) set.add(product.id.trim().toUpperCase());
+    if (product.sku) set.add(product.sku.trim().toUpperCase());
+    if (product.name) set.add(product.name.trim().toUpperCase());
+    localStorage.setItem(STORAGE_KEYS.DELETED_PRODUCT_SKUS, JSON.stringify(Array.from(set)));
+    forceImmediateBackup('product_deletion');
+  } catch (e) {
+    console.error('Error recording deleted product:', e);
+  }
+}
+
+export function unrecordDeletedProduct(skuOrId: string): void {
+  if (typeof window === 'undefined' || !skuOrId) return;
+  try {
+    const list = getDeletedProductSkus();
+    const filtered = list.filter((s) => s.trim().toUpperCase() !== skuOrId.trim().toUpperCase());
+    localStorage.setItem(STORAGE_KEYS.DELETED_PRODUCT_SKUS, JSON.stringify(filtered));
+  } catch (e) {}
+}
+
 export function getStoredProducts(): ProductItem[] {
   if (typeof window === 'undefined') return INITIAL_PRODUCTS;
   try {
+    const deletedSkus = new Set<string>(getDeletedProductSkus().map((s) => s.trim().toUpperCase()));
+
     const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const existingSkus = new Set(parsed.map((p: ProductItem) => (p.sku || p.id || p.name).trim().toUpperCase()));
-        const newInitials = INITIAL_PRODUCTS.filter(
-          (p) => !existingSkus.has((p.sku || p.id || p.name).trim().toUpperCase())
+      if (Array.isArray(parsed)) {
+        // Exclude any deleted products
+        const cleanedParsed = parsed.filter((p: ProductItem) => {
+          const sku = (p.sku || '').trim().toUpperCase();
+          const id = (p.id || '').trim().toUpperCase();
+          const name = (p.name || '').trim().toUpperCase();
+          return !deletedSkus.has(sku) && !deletedSkus.has(id) && !deletedSkus.has(name);
+        });
+
+        const existingSkus = new Set(
+          cleanedParsed.map((p: ProductItem) => (p.sku || p.id || p.name).trim().toUpperCase())
         );
-        if (newInitials.length > 0) {
-          const merged = [...parsed, ...newInitials];
+
+        // Never restore initial products if they were deleted by the user!
+        const newInitials = INITIAL_PRODUCTS.filter((p) => {
+          const sku = (p.sku || '').trim().toUpperCase();
+          const id = (p.id || '').trim().toUpperCase();
+          const name = (p.name || '').trim().toUpperCase();
+          return !existingSkus.has(sku) && !deletedSkus.has(sku) && !deletedSkus.has(id) && !deletedSkus.has(name);
+        });
+
+        if (newInitials.length > 0 || cleanedParsed.length !== parsed.length) {
+          const merged = [...cleanedParsed, ...newInitials];
           localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(merged));
           return merged;
         }
-        return parsed;
+        return cleanedParsed;
       }
     }
   } catch (e) {
     console.error('Error loading products from storage:', e);
   }
-  return INITIAL_PRODUCTS;
+
+  const deletedSkus = new Set<string>(getDeletedProductSkus().map((s) => s.trim().toUpperCase()));
+  return INITIAL_PRODUCTS.filter((p) => {
+    const sku = (p.sku || '').trim().toUpperCase();
+    const id = (p.id || '').trim().toUpperCase();
+    const name = (p.name || '').trim().toUpperCase();
+    return !deletedSkus.has(sku) && !deletedSkus.has(id) && !deletedSkus.has(name);
+  });
 }
 
 export function saveStoredProducts(products: ProductItem[]): void {
@@ -188,28 +250,50 @@ export function saveStoredProducts(products: ProductItem[]): void {
 export function getStoredWarehouseStock(): WarehouseStockItem[] {
   if (typeof window === 'undefined') return INITIAL_WAREHOUSE_STOCK;
   try {
+    const deletedSkus = new Set<string>(getDeletedProductSkus().map((s) => s.trim().toUpperCase()));
+
     const saved = localStorage.getItem(STORAGE_KEYS.WAREHOUSE_STOCK);
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
+        const cleanedParsed = parsed.filter((s: WarehouseStockItem) => {
+          const sku = (s.sku || '').trim().toUpperCase();
+          const name = (s.productName || '').trim().toUpperCase();
+          return !deletedSkus.has(sku) && !deletedSkus.has(name);
+        });
+
         const existingKeys = new Set(
-          parsed.map((s: WarehouseStockItem) => `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`)
+          cleanedParsed.map(
+            (s: WarehouseStockItem) =>
+              `${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`
+          )
         );
-        const newInitials = INITIAL_WAREHOUSE_STOCK.filter(
-          (s) => !existingKeys.has(`${(s.sku || '').trim().toUpperCase()}-${(s.warehouseName || '').trim().toLowerCase()}`)
-        );
-        if (newInitials.length > 0) {
-          const merged = [...parsed, ...newInitials];
+
+        const newInitials = INITIAL_WAREHOUSE_STOCK.filter((s) => {
+          const sku = (s.sku || '').trim().toUpperCase();
+          const name = (s.productName || '').trim().toUpperCase();
+          const key = `${sku}-${(s.warehouseName || '').trim().toLowerCase()}`;
+          return !existingKeys.has(key) && !deletedSkus.has(sku) && !deletedSkus.has(name);
+        });
+
+        if (newInitials.length > 0 || cleanedParsed.length !== parsed.length) {
+          const merged = [...cleanedParsed, ...newInitials];
           localStorage.setItem(STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(merged));
           return merged;
         }
-        return parsed;
+        return cleanedParsed;
       }
     }
   } catch (e) {
     console.error('Error loading warehouse stock from storage:', e);
   }
-  return INITIAL_WAREHOUSE_STOCK;
+
+  const deletedSkus = new Set<string>(getDeletedProductSkus().map((s) => s.trim().toUpperCase()));
+  return INITIAL_WAREHOUSE_STOCK.filter((s) => {
+    const sku = (s.sku || '').trim().toUpperCase();
+    const name = (s.productName || '').trim().toUpperCase();
+    return !deletedSkus.has(sku) && !deletedSkus.has(name);
+  });
 }
 
 export function saveStoredWarehouseStock(stock: WarehouseStockItem[]): void {
