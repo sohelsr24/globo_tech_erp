@@ -59,9 +59,18 @@ export const STORAGE_KEYS = {
   WAREHOUSE_STOCK: 'globotech_erp_warehouse_stock',
   LEDGER: 'globotech_erp_stock_ledger',
   CATEGORIES: 'globotech_erp_categories',
+  WAREHOUSES: 'globotech_erp_warehouses',
 };
 
 export const INITIAL_CATEGORIES: string[] = MASTER_INITIAL_CATEGORIES;
+
+export const INITIAL_WAREHOUSES: string[] = [
+  'Main Warehouse (Tejgaon)',
+  'Project Store (Site Depot)',
+  'Office Store (Banani)',
+  'Showroom (Gulshan)',
+  'Chittagong Regional Depot'
+];
 
 // Storage helper functions
 export function getStoredCategories(): string[] {
@@ -90,6 +99,48 @@ export function saveStoredCategories(categories: string[]): void {
     forceImmediateBackup('categories_update');
   } catch (e) {
     console.error('Error saving categories to storage:', e);
+  }
+}
+
+export function getStoredWarehouses(): string[] {
+  if (typeof window === 'undefined') return INITIAL_WAREHOUSES;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.WAREHOUSES);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const merged = Array.from(new Set([...INITIAL_WAREHOUSES, ...parsed]));
+        return merged;
+      }
+    }
+    // Automatically discover any custom warehouses stored in existing warehouse stock
+    const stockStr = localStorage.getItem(STORAGE_KEYS.WAREHOUSE_STOCK);
+    if (stockStr) {
+      const stock = JSON.parse(stockStr);
+      if (Array.isArray(stock)) {
+        const found = stock.map((s: any) => s.warehouseName).filter(Boolean);
+        if (found.length > 0) {
+          const merged = Array.from(new Set([...INITIAL_WAREHOUSES, ...found]));
+          localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(merged));
+          return merged;
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Error loading warehouses from storage:', e);
+  }
+  return INITIAL_WAREHOUSES;
+}
+
+export function saveStoredWarehouses(warehouses: string[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(warehouses));
+    window.dispatchEvent(new CustomEvent('globotech_warehouses_updated', { detail: warehouses }));
+    window.dispatchEvent(new Event('storage'));
+    forceImmediateBackup('warehouses_update');
+  } catch (e) {
+    console.error('Error saving warehouses to storage:', e);
   }
 }
 

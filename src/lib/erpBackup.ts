@@ -15,6 +15,7 @@ export const ERP_STORAGE_KEYS = {
   WAREHOUSE_STOCK: 'globotech_erp_warehouse_stock',
   STOCK_LEDGER: 'globotech_erp_stock_ledger',
   CATEGORIES: 'globotech_erp_categories',
+  WAREHOUSES: 'globotech_erp_warehouses',
   SALES: 'globotech_erp_sales',
   IMPORTS: 'globotech_erp_imports',
   SUPPLIERS: 'globotech_erp_suppliers',
@@ -46,6 +47,7 @@ export interface ERPBackupPayload {
       warehouseStock: number;
       stockLedger: number;
       categories: number;
+      warehouses?: number;
       sales: number;
       imports: number;
       suppliers: number;
@@ -67,6 +69,7 @@ export interface ERPBackupPayload {
     warehouseStock: any[];
     stockLedger: any[];
     categories: string[];
+    warehouses?: string[];
     sales: any[];
     imports: any[];
     suppliers: any[];
@@ -111,6 +114,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
   const warehouseStock = readStorage<any[]>(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, []);
   const stockLedger = readStorage<any[]>(ERP_STORAGE_KEYS.STOCK_LEDGER, []);
   const categories = readStorage<string[]>(ERP_STORAGE_KEYS.CATEGORIES, []);
+  const warehouses = readStorage<string[]>(ERP_STORAGE_KEYS.WAREHOUSES, []);
   const sales = readStorage<any[]>(ERP_STORAGE_KEYS.SALES, []);
   const imports = readStorage<any[]>(ERP_STORAGE_KEYS.IMPORTS, []);
   const suppliers = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
@@ -140,6 +144,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
         warehouseStock: warehouseStock.length,
         stockLedger: stockLedger.length,
         categories: categories.length,
+        warehouses: warehouses.length,
         sales: sales.length,
         imports: imports.length,
         suppliers: suppliers.length,
@@ -161,6 +166,7 @@ export function generateERPBackupPayload(): ERPBackupPayload {
       warehouseStock,
       stockLedger,
       categories,
+      warehouses,
       sales,
       imports,
       suppliers,
@@ -488,6 +494,13 @@ export function restoreERPBackupData(
         const curCats = readStorage<string[]>(ERP_STORAGE_KEYS.CATEGORIES, []);
         const catSet = new Set<string>([...curCats, ...data.categories]);
         localStorage.setItem(ERP_STORAGE_KEYS.CATEGORIES, JSON.stringify(Array.from(catSet)));
+      }
+
+      // 9b. Warehouses Safe Merge
+      if (Array.isArray(data.warehouses)) {
+        const curWhs = readStorage<string[]>(ERP_STORAGE_KEYS.WAREHOUSES, []);
+        const whSet = new Set<string>([...curWhs, ...data.warehouses]);
+        localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSES, JSON.stringify(Array.from(whSet)));
       }
 
       // 10. Sales Safe Merge

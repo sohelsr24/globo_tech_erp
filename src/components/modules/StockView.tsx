@@ -42,16 +42,13 @@ import {
   getStoredStockLedger,
   saveStoredStockLedger,
   getStoredCategories,
-  saveStoredCategories
+  saveStoredCategories,
+  getStoredWarehouses,
+  saveStoredWarehouses,
+  INITIAL_WAREHOUSES
 } from '@/lib/productsStorage';
 
-const WAREHOUSE_OPTIONS = [
-  'Main Warehouse (Tejgaon)',
-  'Project Store (Site Depot)',
-  'Office Store (Banani)',
-  'Showroom (Gulshan)',
-  'Chittagong Regional Depot'
-];
+const WAREHOUSE_OPTIONS = INITIAL_WAREHOUSES;
 
 export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } = {}) {
   const [activeTab, setActiveTab] = useState<'inventory' | 'ledger'>('inventory');
@@ -71,6 +68,9 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
   const [categories, setCategories] = useState<string[]>(() => getStoredCategories());
   const [isAddingCustomCategory, setIsAddingCustomCategory] = useState(false);
   const [newCategoryInput, setNewCategoryInput] = useState('');
+  const [warehouses, setWarehouses] = useState<string[]>(() => getStoredWarehouses());
+  const [isAddingCustomWarehouse, setIsAddingCustomWarehouse] = useState(false);
+  const [newWarehouseInput, setNewWarehouseInput] = useState('');
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState(globalSearchQuery || '');
@@ -225,17 +225,20 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     const handleLedgerUpdate = () => setLedger(getStoredStockLedger());
     const handleProductsUpdate = () => setProducts(getStoredProducts());
     const handleCategoriesUpdate = () => setCategories(getStoredCategories());
+    const handleWarehousesUpdate = () => setWarehouses(getStoredWarehouses());
 
     window.addEventListener('globotech_stock_updated', handleStockUpdate);
     window.addEventListener('globotech_ledger_updated', handleLedgerUpdate);
     window.addEventListener('globotech_products_updated', handleProductsUpdate);
     window.addEventListener('globotech_categories_updated', handleCategoriesUpdate);
+    window.addEventListener('globotech_warehouses_updated', handleWarehousesUpdate);
 
     return () => {
       window.removeEventListener('globotech_stock_updated', handleStockUpdate);
       window.removeEventListener('globotech_ledger_updated', handleLedgerUpdate);
       window.removeEventListener('globotech_products_updated', handleProductsUpdate);
       window.removeEventListener('globotech_categories_updated', handleCategoriesUpdate);
+      window.removeEventListener('globotech_warehouses_updated', handleWarehousesUpdate);
     };
   }, []);
 
@@ -252,6 +255,21 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     setNewCategoryInput('');
     setIsAddingCustomCategory(false);
     showToast(`✓ Category "${target}" added!`);
+  };
+
+  // Helper to add custom warehouse
+  const handleCreateNewWarehouse = (whName?: string) => {
+    const target = (whName || newWarehouseInput).trim();
+    if (!target) return;
+    if (!warehouses.includes(target)) {
+      const updated = [...warehouses, target];
+      setWarehouses(updated);
+      saveStoredWarehouses(updated);
+    }
+    setNewProductForm((prev) => ({ ...prev, warehouseName: target }));
+    setNewWarehouseInput('');
+    setIsAddingCustomWarehouse(false);
+    showToast(`✓ Warehouse "${target}" added!`);
   };
 
   // Update GRN landed cost when product selection changes
@@ -1173,7 +1191,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
             className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none flex-shrink-0"
           >
             <option value="ALL">All Warehouses</option>
-            {WAREHOUSE_OPTIONS.map((wh) => (
+            {warehouses.map((wh) => (
               <option key={wh} value={wh}>
                 {wh}
               </option>
@@ -1973,20 +1991,78 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
             </h4>
 
             <div>
-              <label className="block text-slate-300 font-semibold mb-1">
-                Target Warehouse <span className="text-rose-400">*</span>
-              </label>
-              <select
-                value={newProductForm.warehouseName}
-                onChange={(e) => setNewProductForm({ ...newProductForm, warehouseName: e.target.value })}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500 font-medium"
-              >
-                {WAREHOUSE_OPTIONS.map((wh) => (
-                  <option key={wh} value={wh}>
-                    {wh}
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-slate-300 font-semibold">
+                  Target Warehouse <span className="text-rose-400">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAddingCustomWarehouse(!isAddingCustomWarehouse);
+                    setNewWarehouseInput('');
+                  }}
+                  className="text-[11px] text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>{isAddingCustomWarehouse ? 'Choose Existing' : '+ Add New Warehouse'}</span>
+                </button>
+              </div>
+
+              {isAddingCustomWarehouse ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="text"
+                    placeholder="e.g. Savar Central Depot, Uttara Sub-Store..."
+                    value={newWarehouseInput}
+                    onChange={(e) => setNewWarehouseInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleCreateNewWarehouse();
+                      }
+                    }}
+                    autoFocus
+                    className="flex-1 bg-slate-800 border border-blue-500 rounded-lg p-2 text-slate-100 text-xs focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleCreateNewWarehouse()}
+                    className="px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingCustomWarehouse(false)}
+                    className="px-2.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={newProductForm.warehouseName}
+                  onChange={(e) => {
+                    if (e.target.value === '__ADD_NEW_WAREHOUSE__') {
+                      setIsAddingCustomWarehouse(true);
+                      setNewWarehouseInput('');
+                    } else {
+                      setNewProductForm({ ...newProductForm, warehouseName: e.target.value });
+                    }
+                  }}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs focus:outline-none focus:border-blue-500 font-medium"
+                >
+                  {warehouses.map((wh) => (
+                    <option key={wh} value={wh}>
+                      {wh}
+                    </option>
+                  ))}
+                  <option value="__ADD_NEW_WAREHOUSE__" className="text-blue-400 font-bold bg-slate-900">
+                    ➕ + Add New Warehouse...
                   </option>
-                ))}
-              </select>
+                </select>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -2141,7 +2217,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
               onChange={(e) => setGrnWarehouse(e.target.value)}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 font-medium"
             >
-              {WAREHOUSE_OPTIONS.map((wh) => (
+              {warehouses.map((wh) => (
                 <option key={wh} value={wh}>
                   {wh}
                 </option>
@@ -2280,7 +2356,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                 }}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
               >
-                {WAREHOUSE_OPTIONS.map((wh) => (
+                {warehouses.map((wh) => (
                   <option key={wh} value={wh}>
                     {wh}
                   </option>
@@ -2295,7 +2371,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                 onChange={(e) => setTransferToWarehouse(e.target.value)}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-200 text-xs"
               >
-                {WAREHOUSE_OPTIONS.filter((wh) => wh !== transferFromWarehouse).map((wh) => (
+                {warehouses.filter((wh) => wh !== transferFromWarehouse).map((wh) => (
                   <option key={wh} value={wh}>
                     {wh}
                   </option>
@@ -2377,7 +2453,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                 }}
                 className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 focus:border-rose-500 focus:outline-none"
               >
-                {WAREHOUSE_OPTIONS.map((wh) => (
+                {warehouses.map((wh) => (
                   <option key={wh} value={wh}>
                     {wh}
                   </option>
@@ -2642,7 +2718,7 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
                     onChange={(e) => setEditWarehouseName(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-slate-100 text-xs focus:border-blue-500 focus:outline-none"
                   >
-                    {WAREHOUSE_OPTIONS.map((wh) => (
+                    {warehouses.map((wh) => (
                       <option key={wh} value={wh}>
                         {wh}
                       </option>
