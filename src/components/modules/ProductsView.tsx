@@ -168,11 +168,10 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
   const handleCreateNewWarehouse = (whName?: string) => {
     const target = (whName || newWarehouseInput).trim();
     if (!target) return;
-    if (!warehouses.includes(target)) {
-      const updated = [...warehouses, target];
-      setWarehouses(updated);
-      saveStoredWarehouses(updated);
-    }
+    const currentStored = getStoredWarehouses();
+    const updated = Array.from(new Set([...currentStored, ...warehouses, target]));
+    setWarehouses(updated);
+    saveStoredWarehouses(updated);
     setNewProd((prev) => ({ ...prev, targetWarehouse: target }));
     setNewWarehouseInput('');
     setIsAddingCustomWarehouse(false);
@@ -288,9 +287,19 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
     // Also save category to global list if new
     const cat = newItem.category.trim();
     if (cat && !categories.includes(cat)) {
-      const updatedCats = [...categories, cat];
+      const currentCats = getStoredCategories();
+      const updatedCats = Array.from(new Set([...currentCats, ...categories, cat]));
       setCategories(updatedCats);
       saveStoredCategories(updatedCats);
+    }
+
+    // Also save warehouse to global list if new
+    const wh = (newProd.targetWarehouse || '').trim();
+    if (wh && !warehouses.includes(wh)) {
+      const currentStored = getStoredWarehouses();
+      const updatedWhs = Array.from(new Set([...currentStored, ...warehouses, wh]));
+      setWarehouses(updatedWhs);
+      saveStoredWarehouses(updatedWhs);
     }
 
     setIsAddModalOpen(false);

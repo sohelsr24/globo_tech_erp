@@ -3,8 +3,8 @@ export const MASTER_DATABASE_PAYLOAD = {
     "app": "Globo Tech Enterprise ERP",
     "company": "Globo Tech Bangladesh",
     "version": "1.0.0",
-    "exportedAt": "2026-10-07T22:05:30.108Z",
-    "timestamp": 1791410730109,
+    "exportedAt": "2026-10-15T20:27:32.591Z",
+    "timestamp": 1792096052592,
     "recordCounts": {
       "quotations": 20,
       "bills": 26,
@@ -18,7 +18,8 @@ export const MASTER_DATABASE_PAYLOAD = {
       "imports": 2,
       "suppliers": 0,
       "serials": 5,
-      "purchases": 8
+      "purchases": 8,
+      "warehouses": 6
     }
   },
   "data": {
@@ -5127,6 +5128,14 @@ export const MASTER_DATABASE_PAYLOAD = {
         "createdAt": "2026-10-07T18:40:09.726Z",
         "updatedAt": "2026-10-07T19:03:00.877Z"
       }
+    ],
+    "warehouses": [
+      "Main Warehouse (Tejgaon)",
+      "Project Store (Site Depot)",
+      "Office Store (Banani)",
+      "Showroom (Gulshan)",
+      "Chittagong Regional Depot",
+      "Globo Store"
     ]
   }
 };

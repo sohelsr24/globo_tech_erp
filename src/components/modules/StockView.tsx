@@ -209,11 +209,13 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     const loadedLedger = getStoredStockLedger();
     const loadedProducts = getStoredProducts();
     const loadedCategories = getStoredCategories();
+    const loadedWarehouses = getStoredWarehouses();
 
     setWarehouseStock(loadedStock);
     setLedger(loadedLedger);
     setProducts(loadedProducts);
     setCategories(loadedCategories);
+    setWarehouses(loadedWarehouses);
 
     if (loadedProducts.length > 0) {
       setGrnSelectedProductId(loadedProducts[0].id);
@@ -226,12 +228,21 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     const handleProductsUpdate = () => setProducts(getStoredProducts());
     const handleCategoriesUpdate = () => setCategories(getStoredCategories());
     const handleWarehousesUpdate = () => setWarehouses(getStoredWarehouses());
+    const handleStorageChange = () => {
+      setWarehouseStock(getStoredWarehouseStock());
+      setLedger(getStoredStockLedger());
+      setProducts(getStoredProducts());
+      setCategories(getStoredCategories());
+      setWarehouses(getStoredWarehouses());
+    };
 
     window.addEventListener('globotech_stock_updated', handleStockUpdate);
     window.addEventListener('globotech_ledger_updated', handleLedgerUpdate);
     window.addEventListener('globotech_products_updated', handleProductsUpdate);
     window.addEventListener('globotech_categories_updated', handleCategoriesUpdate);
     window.addEventListener('globotech_warehouses_updated', handleWarehousesUpdate);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('globotech_backup_restored', handleStorageChange);
 
     return () => {
       window.removeEventListener('globotech_stock_updated', handleStockUpdate);
@@ -239,6 +250,8 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
       window.removeEventListener('globotech_products_updated', handleProductsUpdate);
       window.removeEventListener('globotech_categories_updated', handleCategoriesUpdate);
       window.removeEventListener('globotech_warehouses_updated', handleWarehousesUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('globotech_backup_restored', handleStorageChange);
     };
   }, []);
 
@@ -246,11 +259,10 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
   const handleCreateNewCategory = (catName?: string) => {
     const target = (catName || newCategoryInput).trim();
     if (!target) return;
-    if (!categories.includes(target)) {
-      const updated = [...categories, target];
-      setCategories(updated);
-      saveStoredCategories(updated);
-    }
+    const currentStored = getStoredCategories();
+    const updated = Array.from(new Set([...currentStored, ...categories, target]));
+    setCategories(updated);
+    saveStoredCategories(updated);
     setNewProductForm((prev) => ({ ...prev, category: target }));
     setNewCategoryInput('');
     setIsAddingCustomCategory(false);
@@ -261,11 +273,10 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
   const handleCreateNewWarehouse = (whName?: string) => {
     const target = (whName || newWarehouseInput).trim();
     if (!target) return;
-    if (!warehouses.includes(target)) {
-      const updated = [...warehouses, target];
-      setWarehouses(updated);
-      saveStoredWarehouses(updated);
-    }
+    const currentStored = getStoredWarehouses();
+    const updated = Array.from(new Set([...currentStored, ...warehouses, target]));
+    setWarehouses(updated);
+    saveStoredWarehouses(updated);
     setNewProductForm((prev) => ({ ...prev, warehouseName: target }));
     setNewWarehouseInput('');
     setIsAddingCustomWarehouse(false);
@@ -371,9 +382,19 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
     // Also save category to global list if new
     const catName = newProductForm.category.trim();
     if (catName && !categories.includes(catName)) {
-      const updatedCats = [...categories, catName];
+      const currentStored = getStoredCategories();
+      const updatedCats = Array.from(new Set([...currentStored, ...categories, catName]));
       setCategories(updatedCats);
       saveStoredCategories(updatedCats);
+    }
+
+    // Also save warehouse to global list if new
+    const whName = (newProductForm.warehouseName || '').trim();
+    if (whName && !warehouses.includes(whName)) {
+      const currentStored = getStoredWarehouses();
+      const updatedWhs = Array.from(new Set([...currentStored, ...warehouses, whName]));
+      setWarehouses(updatedWhs);
+      saveStoredWarehouses(updatedWhs);
     }
 
     setIsAddProductModalOpen(false);
@@ -1234,7 +1255,11 @@ export function StockView({ globalSearchQuery }: { globalSearchQuery?: string } 
           {/* Action buttons in a 2x2 grid on mobile */}
           <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
             <button
-              onClick={() => setIsAddProductModalOpen(true)}
+              onClick={() => {
+                setWarehouses(getStoredWarehouses());
+                setCategories(getStoredCategories());
+                setIsAddProductModalOpen(true);
+              }}
               className="px-3 py-2 sm:py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition active:scale-95 shadow-blue-600/20 ring-1 ring-blue-500 min-h-[40px] sm:min-h-0"
             >
               <Plus className="w-4 h-4" />

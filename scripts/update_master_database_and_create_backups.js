@@ -28,16 +28,28 @@ if (!initialPurchasesMatch) {
 let initialPurchasesCode = initialPurchasesMatch[1].replace(/;$/, '');
 const initialPurchases = eval(initialPurchasesCode);
 
-// 3. Inject purchases into master payload
+// 3. Inject purchases and warehouses into master payload
 masterPayload.meta.recordCounts.purchases = initialPurchases.length;
 masterPayload.data.purchases = initialPurchases;
+
+const initialWarehouses = [
+  'Main Warehouse (Tejgaon)',
+  'Project Store (Site Depot)',
+  'Office Store (Banani)',
+  'Showroom (Gulshan)',
+  'Chittagong Regional Depot',
+  'Globo Store'
+];
+masterPayload.meta.recordCounts.warehouses = initialWarehouses.length;
+masterPayload.data.warehouses = initialWarehouses;
+
 masterPayload.meta.exportedAt = new Date().toISOString();
 masterPayload.meta.timestamp = Date.now();
 
 // 4. Write back to src/lib/masterDatabasePayload.ts
 const updatedPayloadTs = `export const MASTER_DATABASE_PAYLOAD = ${JSON.stringify(masterPayload, null, 2)};\n`;
 fs.writeFileSync(masterPayloadFile, updatedPayloadTs, 'utf8');
-console.log('Successfully updated src/lib/masterDatabasePayload.ts with purchases data!');
+console.log('Successfully updated src/lib/masterDatabasePayload.ts with purchases and warehouses data!');
 
 // 5. Write to backup destinations
 const backupJson = JSON.stringify(masterPayload, null, 2);

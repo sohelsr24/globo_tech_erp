@@ -69,7 +69,8 @@ export const INITIAL_WAREHOUSES: string[] = [
   'Project Store (Site Depot)',
   'Office Store (Banani)',
   'Showroom (Gulshan)',
-  'Chittagong Regional Depot'
+  'Chittagong Regional Depot',
+  'Globo Store'
 ];
 
 // Storage helper functions
@@ -106,26 +107,29 @@ export function getStoredWarehouses(): string[] {
   if (typeof window === 'undefined') return INITIAL_WAREHOUSES;
   try {
     const saved = localStorage.getItem(STORAGE_KEYS.WAREHOUSES);
+    let parsedList: string[] = [];
     if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const merged = Array.from(new Set([...INITIAL_WAREHOUSES, ...parsed]));
-        return merged;
-      }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsedList = parsed.filter(Boolean);
+        }
+      } catch (e) {}
     }
     // Automatically discover any custom warehouses stored in existing warehouse stock
     const stockStr = localStorage.getItem(STORAGE_KEYS.WAREHOUSE_STOCK);
+    let stockWhs: string[] = [];
     if (stockStr) {
-      const stock = JSON.parse(stockStr);
-      if (Array.isArray(stock)) {
-        const found = stock.map((s: any) => s.warehouseName).filter(Boolean);
-        if (found.length > 0) {
-          const merged = Array.from(new Set([...INITIAL_WAREHOUSES, ...found]));
-          localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(merged));
-          return merged;
+      try {
+        const stock = JSON.parse(stockStr);
+        if (Array.isArray(stock)) {
+          stockWhs = stock.map((s: any) => s.warehouseName).filter(Boolean);
         }
-      }
+      } catch (e) {}
     }
+    const merged = Array.from(new Set([...INITIAL_WAREHOUSES, ...parsedList, ...stockWhs]));
+    localStorage.setItem(STORAGE_KEYS.WAREHOUSES, JSON.stringify(merged));
+    return merged;
   } catch (e) {
     console.error('Error loading warehouses from storage:', e);
   }
