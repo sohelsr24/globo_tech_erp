@@ -1309,15 +1309,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     e.preventDefault();
     if (!selectedQuotation) return;
 
-    const isNoWarr = /no\s*warranty|without\s*warranty/i.test(termsForm.warrantyTerms);
     const updatedItems = (selectedQuotation.items || []).map((it) => {
-      if (isNoWarr) {
-        return { ...it, warranty: 'No Warranty' };
+      // Preserve individual item warranty if specified
+      if (it.warranty && it.warranty.trim()) {
+        return it;
       }
-      if (!it.warranty || it.warranty === '24 Months' || it.warranty === 'No Warranty' || it.warranty === 'N/A') {
-        return { ...it, warranty: termsForm.warrantyTerms };
-      }
-      return it;
+      return { ...it, warranty: termsForm.warrantyTerms || 'No Warranty' };
     });
 
     const updatedQuote: Quotation = {
@@ -2035,7 +2032,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       unit: found.unit,
       unitPrice: suggestedPrice,
       unitCost: found.actualLandedCost,
-      warranty: /no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms || '') ? 'No Warranty' : (found.warranty || newQuote.warrantyTerms || 'No Warranty'),
+      warranty: found.warranty || (newQuote.warrantyTerms && !/no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms) ? newQuote.warrantyTerms : 'No Warranty'),
       leadTime: 'Immediate'
     });
   };
@@ -2047,10 +2044,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       return;
     }
 
-    const isQuoteNoWarranty = /no\s*warranty|without\s*warranty/i.test(newQuote.warrantyTerms || '');
-    const resolvedItemWarranty = isQuoteNoWarranty
-      ? 'No Warranty'
-      : (itemForm.warranty || newQuote.warrantyTerms || 'No Warranty');
+    const resolvedItemWarranty = itemForm.warranty && itemForm.warranty.trim()
+      ? itemForm.warranty.trim()
+      : (newQuote.warrantyTerms || 'No Warranty');
 
     const newItem: QuotationItem = {
       id: `item-${Date.now()}`,
@@ -2242,15 +2238,27 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     });
   };
 
-  // Sync quotation warranty terms across all items when user updates warranty terms
+  // Sync quotation warranty terms across items when user updates warranty terms
   const handleUpdateQuotationWarrantyTerms = (newWarranty: string) => {
-    const isNoWarr = /no\s*warranty|without\s*warranty/i.test(newWarranty);
     setNewQuote((prev) => {
+      // Check if user has defined separate individual warranties on items
+      const distinctItemWarranties = Array.from(new Set((prev.items || []).map(i => (i.warranty || '').trim()).filter(Boolean)));
+      const hasCustomSeparatedWarranties = distinctItemWarranties.length > 1;
+
+      // If user has manually configured separate warranties on items, do not overwrite them
+      if (hasCustomSeparatedWarranties || /as (?:stated|per) (?:in )?(?:item|product)/i.test(newWarranty)) {
+        return {
+          ...prev,
+          warrantyTerms: newWarranty
+        };
+      }
+
+      const isNoWarr = /no\s*warranty|without\s*warranty/i.test(newWarranty);
       const updatedItems = (prev.items || []).map((it) => {
         if (isNoWarr) {
           return { ...it, warranty: 'No Warranty' };
         }
-        if (!it.warranty || it.warranty === '24 Months' || it.warranty === 'No Warranty' || it.warranty === 'N/A') {
+        if (!it.warranty || it.warranty === 'No Warranty' || it.warranty === 'N/A') {
           return { ...it, warranty: newWarranty };
         }
         return it;
@@ -4020,6 +4028,18 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         >
                           2Y Service
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateQuotationWarrantyTerms('As stated in product description / specification')}
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                            /as (?:stated|per) (?:in )?(?:item|product)/i.test(newQuote.warrantyTerms || '')
+                              ? 'bg-purple-600 text-white font-bold'
+                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                          }`}
+                          title="Use when items have different individual warranties"
+                        >
+                          As per Item Spec
+                        </button>
                       </div>
                     </div>
                     <select
@@ -4032,6 +4052,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                     >
                       <option value="">Standard presets...</option>
+                      <option value="As stated in product description / specification">As stated in product description / specification</option>
                       <option value="No Warranty">No Warranty</option>
                       <option value="No Warranty Applicable">No Warranty Applicable</option>
                       <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
@@ -4516,8 +4537,18 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         </td>
                         <td className="px-3 py-2.5">
                           <div className="font-semibold text-slate-100">{item.name}</div>
-                          {item.brand && <span className="text-[10px] text-slate-400 mr-2">{item.brand}</span>}
-                          {item.leadTime && <span className="text-[10px] text-amber-400">Lead Time: {item.leadTime}</span>}
+                          {item.description && (
+                            <div className="text-[11px] text-slate-300 font-mono mt-0.5 whitespace-pre-line">{item.description}</div>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            {item.warranty && (
+                              <span className="text-[10px] text-sky-400 font-semibold bg-sky-950/60 border border-sky-800/80 rounded px-1.5 py-0.5">
+                                Warranty: {item.warranty}
+                              </span>
+                            )}
+                            {item.brand && <span className="text-[10px] text-slate-400">{item.brand}</span>}
+                            {item.leadTime && <span className="text-[10px] text-amber-400 font-medium">Lead: {item.leadTime}</span>}
+                          </div>
                         </td>
                         <td className="px-3 py-2.5 text-center font-mono font-bold text-slate-200">
                           {item.quantity} {item.unit}
@@ -4842,27 +4873,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     {selectedQuotation.items.map((item, idx) => {
                       const unitPriceWithTax = item.unitPrice * (1 + (item.vatPercent || 0) / 100 + (item.taxPercent || 0) / 100);
                       const lineTotal = item.quantity * unitPriceWithTax;
-                      const isQuoteNoWarranty = /no\s*warranty|without\s*warranty|no\s*guarantee/i.test(selectedQuotation.warrantyTerms || '');
 
-                      // If quotation has No Warranty, or item has No Warranty, do not print warranty in item description
-                      const effectiveItemWarranty = (() => {
-                        if (isQuoteNoWarranty) {
-                          return '';
-                        }
-                        if (item.warranty && !/no\s*warranty|without\s*warranty|none|n\/a/i.test(item.warranty.trim())) {
-                          return item.warranty.trim();
-                        }
-                        return '';
-                      })();
-
-                      const description = item.description && item.description.trim()
-                        ? item.description
-                        : [
-                            item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : ''),
-                            effectiveItemWarranty ? `Warranty: ${effectiveItemWarranty}` : '',
-                            item.leadTime && item.leadTime !== 'Immediate' ? `Delivery: ${item.leadTime}` : '',
-                            item.remarks || ''
-                          ].filter(Boolean).join('\n') || '--';
+                      const itemBaseDesc = (item.description || '').trim();
+                      const itemWarranty = (item.warranty || '').trim();
+                      const hasDescWarranty = /warranty\s*:/i.test(itemBaseDesc);
+                      const showItemWarranty = Boolean(itemWarranty) && !hasDescWarranty;
 
                       return (
                         <tr key={item.id} style={{ backgroundColor: 'transparent' }}>
@@ -4872,8 +4887,36 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.3, fontSize: '10.5px' }}>
                             {item.name}
                           </td>
-                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'left', verticalAlign: 'middle', whiteSpace: 'pre-line', lineHeight: 1.35, fontSize: '10px' }}>
-                            {description}
+                          <td style={{ border: '1px solid #000', padding: '6px 8px', textAlign: 'left', verticalAlign: 'middle', lineHeight: 1.35, fontSize: '10px' }}>
+                            {itemBaseDesc ? (
+                              <div style={{ whiteSpace: 'pre-line', color: '#000000' }}>
+                                {itemBaseDesc}
+                              </div>
+                            ) : (
+                              (item.model || item.brand) && (
+                                <div style={{ whiteSpace: 'pre-line', color: '#000000' }}>
+                                  {item.model ? `Model: ${item.model}` : (item.brand ? `Brand: ${item.brand}` : '')}
+                                </div>
+                              )
+                            )}
+                            {showItemWarranty && (
+                              <div style={{ marginTop: (itemBaseDesc || item.model || item.brand) ? '3px' : '0px', color: '#000000', fontWeight: 600 }}>
+                                <span style={{ fontWeight: 700 }}>Warranty:</span> {itemWarranty}
+                              </div>
+                            )}
+                            {item.leadTime && item.leadTime !== 'Immediate' && (
+                              <div style={{ marginTop: '2px', color: '#334155' }}>
+                                <span style={{ fontWeight: 600 }}>Delivery:</span> {item.leadTime}
+                              </div>
+                            )}
+                            {item.remarks && item.remarks.trim() && (
+                              <div style={{ marginTop: '2px', color: '#475569', fontStyle: 'italic' }}>
+                                {item.remarks}
+                              </div>
+                            )}
+                            {!itemBaseDesc && !item.model && !item.brand && !showItemWarranty && !item.leadTime && !item.remarks && (
+                              <div>--</div>
+                            )}
                           </td>
                           <td style={{ border: '1px solid #000', padding: '6px 4px', textAlign: 'center', verticalAlign: 'middle', fontSize: '10px' }}>
                             {item.unit || 'pcs'}
@@ -4996,7 +5039,19 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   </div>
                   <div>&bull; <strong>Payment Terms:</strong> {selectedQuotation.paymentTerms}</div>
                   <div>&bull; <strong>Delivery Terms:</strong> {selectedQuotation.deliveryTerms}</div>
-                  <div>&bull; <strong>Warranty Support:</strong> {selectedQuotation.warrantyTerms}</div>
+                  <div>&bull; <strong>Warranty Support:</strong> {(() => {
+                    const distinctWarranties = Array.from(new Set(
+                      (selectedQuotation.items || [])
+                        .map(it => (it.warranty || '').trim())
+                        .filter(Boolean)
+                    ));
+                    if (distinctWarranties.length > 1) {
+                      if (!selectedQuotation.warrantyTerms || /no\s*warranty/i.test(selectedQuotation.warrantyTerms)) {
+                        return 'As stated in product description / specification';
+                      }
+                    }
+                    return selectedQuotation.warrantyTerms || (distinctWarranties.length === 1 ? distinctWarranties[0] : 'No Warranty');
+                  })()}</div>
                   <div>&bull; <strong>VAT & TAX Terms:</strong> {cleanVatTaxTerms(selectedQuotation.vatTaxTerms)}</div>
                   <div>&bull; <strong>Validity:</strong> {selectedQuotation.notes || 'Quotation valid for 7 calendar days due to currency fluctuation.'}</div>
                 </div>
@@ -6089,6 +6144,18 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                     >
                       2Y Service
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => setTermsForm(prev => ({ ...prev, warrantyTerms: 'As stated in product description / specification' }))}
+                      className={`px-1.5 py-0.5 text-[10px] font-medium rounded transition-colors ${
+                        /as (?:stated|per) (?:in )?(?:item|product)/i.test(termsForm.warrantyTerms || '')
+                          ? 'bg-purple-600 text-white font-bold'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                      title="Use when items have different individual warranties"
+                    >
+                      As per Item Spec
+                    </button>
                   </div>
                 </div>
                 <select
@@ -6097,6 +6164,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   className="bg-slate-950 border border-slate-700 text-[10px] text-slate-300 rounded px-1.5 py-0.5 cursor-pointer hover:bg-slate-800 focus:outline-none"
                 >
                   <option value="">Choose preset...</option>
+                  <option value="As stated in product description / specification">As stated in product description / specification</option>
                   <option value="No Warranty">No Warranty</option>
                   <option value="No Warranty Applicable">No Warranty Applicable</option>
                   <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>

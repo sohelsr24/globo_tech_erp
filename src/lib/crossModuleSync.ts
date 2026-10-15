@@ -230,25 +230,9 @@ export function runCrossModuleSelfHealing(): void {
             }
           }
 
-          const isQuoteNoWarranty = /no\s*warranty|without\s*warranty/i.test(q.warrantyTerms || '');
-          let updatedItems = q.items;
-          if (isQuoteNoWarranty && Array.isArray(q.items)) {
-            let itemChanged = false;
-            updatedItems = q.items.map((it: any) => {
-              if (it.warranty === '24 Months' || !it.warranty || it.warranty === 'N/A') {
-                itemChanged = true;
-                return { ...it, warranty: 'No Warranty' };
-              }
-              return it;
-            });
-            if (itemChanged) {
-              qChanged = true;
-            }
-          }
-
           if (qChanged) {
             modified = true;
-            return { ...q, projectName: updatedProj, items: updatedItems };
+            return { ...q, projectName: updatedProj };
           }
           return q;
         });
