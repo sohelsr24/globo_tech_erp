@@ -38,6 +38,7 @@ import {
   Info,
   Calendar,
   XCircle,
+  X,
   Tag
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
@@ -1787,6 +1788,31 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [selectedItemCategory, setSelectedItemCategory] = useState<QuotationItemType>('IN_STOCK');
 
+  // Auto-suggest catalog search state
+  const [catalogSearchQuery, setCatalogSearchQuery] = useState('');
+  const [isCatalogDropdownOpen, setIsCatalogDropdownOpen] = useState(false);
+  const [catalogHighlightedIndex, setCatalogHighlightedIndex] = useState(0);
+  const catalogDropdownRef = useRef<HTMLDivElement>(null);
+  const catalogInputRef = useRef<HTMLInputElement>(null);
+
+  // Close catalog auto-suggest dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        catalogDropdownRef.current &&
+        !catalogDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsCatalogDropdownOpen(false);
+      }
+    };
+    if (isCatalogDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCatalogDropdownOpen]);
+
   // Dynamic Item Form Builder
   const [itemForm, setItemForm] = useState<Partial<QuotationItem>>({
     type: 'IN_STOCK',
@@ -2037,6 +2063,51 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     });
   };
 
+  // Filtered catalog products for real-time auto-suggest dropdown
+  const filteredCatalogProducts = React.useMemo(() => {
+    if (!catalogSearchQuery || !catalogSearchQuery.trim()) {
+      return liveCatalog;
+    }
+    const queryTokens = catalogSearchQuery.toLowerCase().trim().split(/\s+/);
+    return liveCatalog.filter((item) => {
+      const searchTarget = `${item.name} ${item.sku} ${item.brand || ''} ${item.model || ''} ${item.warehouse || ''} ${item.category || ''}`.toLowerCase();
+      return queryTokens.every((token) => searchTarget.includes(token));
+    });
+  }, [liveCatalog, catalogSearchQuery]);
+
+  // Handle keyboard navigation in catalog auto-suggest
+  const handleCatalogKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isCatalogDropdownOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        setIsCatalogDropdownOpen(true);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setCatalogHighlightedIndex((prev) =>
+        prev < filteredCatalogProducts.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setCatalogHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredCatalogProducts.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredCatalogProducts.length > 0 && filteredCatalogProducts[catalogHighlightedIndex]) {
+        const selected = filteredCatalogProducts[catalogHighlightedIndex];
+        handleSelectCatalogProduct(`${selected.sku}@@@${selected.warehouse}`);
+        setCatalogSearchQuery(selected.name);
+        setIsCatalogDropdownOpen(false);
+      }
+    } else if (e.key === 'Escape') {
+      setIsCatalogDropdownOpen(false);
+    }
+  };
+
   // Add Item to Quotation
   const handleAddItemToQuote = () => {
     if (!itemForm.name || !itemForm.quantity || itemForm.quantity <= 0) {
@@ -2113,6 +2184,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       warranty: isQuoteNoWarranty ? 'No Warranty' : (newQuote.warrantyTerms || 'No Warranty'),
       remarks: ''
     });
+    setCatalogSearchQuery('');
+    setIsCatalogDropdownOpen(false);
+    setCatalogHighlightedIndex(0);
   };
 
   // Delete Item from Quotation
@@ -3545,6 +3619,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   type="button"
                   onClick={() => {
                     setSelectedItemCategory('IN_STOCK');
+                    setCatalogSearchQuery('');
+                    setIsCatalogDropdownOpen(false);
+                    setCatalogHighlightedIndex(0);
                     setIsAddItemModalOpen(true);
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition shadow-md shadow-blue-500/20"
@@ -5157,6 +5234,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                         quantity: 1,
                         unitPrice: 0
                       });
+                      setCatalogSearchQuery('');
+                      setIsCatalogDropdownOpen(false);
+                      setCatalogHighlightedIndex(0);
                     }}
                     className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-xs font-semibold transition ${
                       isSelected
@@ -5175,21 +5255,196 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             {selectedItemCategory === 'IN_STOCK' && (
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-slate-400 font-semibold mb-1">
-                    Select From Warehouse Inventory *
-                  </label>
-                  <select
-                    value={itemForm.sku ? `${itemForm.sku}@@@${itemForm.warehouse}` : ''}
-                    onChange={(e) => handleSelectCatalogProduct(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-medium"
-                  >
-                    <option value="">-- Choose In-Stock Product --</option>
-                    {liveCatalog.map((p) => (
-                      <option key={`${p.sku}-${p.warehouse}`} value={`${p.sku}@@@${p.warehouse}`}>
-                        {p.name} [{p.warehouse.split(' ')[0]}] ({p.sku}) &bull; Free: {p.freeStock} {p.unit} &bull; ৳{p.projectPrice}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-slate-400 font-semibold">
+                      Select From Warehouse Inventory *
+                    </label>
+                    {itemForm.sku ? (
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/70 border border-emerald-800/60 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Selected: {itemForm.sku}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-500">
+                        {liveCatalog.length} products available
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Auto-suggest Searchable Combobox */}
+                  <div className="relative" ref={catalogDropdownRef}>
+                    <div className="relative flex items-center">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
+                      <input
+                        ref={catalogInputRef}
+                        type="text"
+                        value={catalogSearchQuery}
+                        onChange={(e) => {
+                          setCatalogSearchQuery(e.target.value);
+                          setIsCatalogDropdownOpen(true);
+                          setCatalogHighlightedIndex(0);
+                        }}
+                        onFocus={() => {
+                          setIsCatalogDropdownOpen(true);
+                        }}
+                        onKeyDown={handleCatalogKeyDown}
+                        placeholder="Search product by name, SKU, brand, model or warehouse..."
+                        className="w-full bg-slate-950 border border-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 rounded-lg pl-9 pr-16 py-2.5 text-slate-100 placeholder-slate-500 text-xs font-medium outline-none transition shadow-inner"
+                      />
+                      <div className="absolute right-2 flex items-center gap-1">
+                        {catalogSearchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCatalogSearchQuery('');
+                              setItemForm((prev) => ({
+                                ...prev,
+                                sku: '',
+                                name: '',
+                                brand: '',
+                                model: '',
+                                warehouse: 'Dhaka Central Warehouse',
+                                physicalStock: 0,
+                                reservedStock: 0,
+                                freeStock: 0,
+                                unitPrice: 0,
+                                unitCost: 0
+                              }));
+                              catalogInputRef.current?.focus();
+                            }}
+                            className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition"
+                            title="Clear search"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setIsCatalogDropdownOpen((prev) => !prev)}
+                          className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition"
+                          title="Toggle product list"
+                        >
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                              isCatalogDropdownOpen ? 'rotate-180 text-blue-400' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Auto-suggest Dropdown Panel */}
+                    {isCatalogDropdownOpen && (
+                      <div className="absolute left-0 right-0 top-full mt-1.5 z-50 bg-slate-900 border border-slate-700/90 rounded-xl shadow-2xl overflow-hidden backdrop-blur-xl animate-in fade-in duration-150">
+                        {/* Sub-header info */}
+                        <div className="px-3 py-1.5 bg-slate-950/90 border-b border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                          <span>
+                            {filteredCatalogProducts.length === 0
+                              ? 'No matching products'
+                              : `Showing ${filteredCatalogProducts.length} ${
+                                  filteredCatalogProducts.length === 1 ? 'product' : 'products'
+                                }`}
+                          </span>
+                          <span className="text-slate-500">Auto-suggest dropdown</span>
+                        </div>
+
+                        {/* Products List */}
+                        <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/60 touch-scroll">
+                          {filteredCatalogProducts.length === 0 ? (
+                            <div className="py-6 px-4 text-center">
+                              <Package className="w-8 h-8 text-slate-600 mx-auto mb-1.5 opacity-60" />
+                              <p className="text-xs text-slate-300 font-semibold">No warehouse products found</p>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                No items matching &ldquo;{catalogSearchQuery}&rdquo;. Try another name, SKU or warehouse.
+                              </p>
+                            </div>
+                          ) : (
+                            filteredCatalogProducts.map((p, index) => {
+                              const isHighlighted = index === catalogHighlightedIndex;
+                              const isCurrentSelected =
+                                itemForm.sku === p.sku && itemForm.warehouse === p.warehouse;
+
+                              // Price for this customer type
+                              let suggestedPrice = p.retailPrice;
+                              if (newQuote.customerType === 'WHOLESALE') {
+                                suggestedPrice = p.wholesalePrice;
+                              } else if (newQuote.customerType === 'CORPORATE') {
+                                suggestedPrice = p.projectPrice;
+                              }
+
+                              return (
+                                <button
+                                  key={`${p.sku}-${p.warehouse}-${index}`}
+                                  type="button"
+                                  onClick={() => {
+                                    handleSelectCatalogProduct(`${p.sku}@@@${p.warehouse}`);
+                                    setCatalogSearchQuery(p.name);
+                                    setIsCatalogDropdownOpen(false);
+                                  }}
+                                  onMouseEnter={() => setCatalogHighlightedIndex(index)}
+                                  className={`w-full text-left px-3 py-2.5 transition flex items-start justify-between gap-3 ${
+                                    isHighlighted
+                                      ? 'bg-blue-600/20 text-white'
+                                      : isCurrentSelected
+                                      ? 'bg-slate-800/90 text-slate-100'
+                                      : 'hover:bg-slate-800/60 text-slate-200'
+                                  }`}
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-semibold text-xs text-slate-100 truncate">
+                                        {p.name}
+                                      </span>
+                                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-800/60 font-medium">
+                                        {p.warehouse.split(' ')[0]}
+                                      </span>
+                                      {isCurrentSelected && (
+                                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-bold uppercase tracking-wider">
+                                          Selected
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-400 flex-wrap">
+                                      <span className="font-mono text-slate-400">SKU: {p.sku}</span>
+                                      <span>&bull;</span>
+                                      <span
+                                        className={`font-semibold ${
+                                          p.freeStock > 0 ? 'text-emerald-400' : 'text-rose-400'
+                                        }`}
+                                      >
+                                        Free: {p.freeStock} {p.unit}
+                                      </span>
+                                      {p.brand && (
+                                        <>
+                                          <span>&bull;</span>
+                                          <span className="text-slate-500">{p.brand}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right flex-shrink-0">
+                                    <div className="text-xs font-bold font-mono text-emerald-400">
+                                      ৳{suggestedPrice.toLocaleString('en-IN')}
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 capitalize">
+                                      {newQuote.customerType.toLowerCase()}
+                                    </div>
+                                  </div>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+
+                        {/* Keyboard navigation hint footer */}
+                        <div className="px-3 py-1 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-500">
+                          <span>↑ ↓ to navigate &bull; Enter to select &bull; Esc to close</span>
+                          <span>Click item to pick</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {itemForm.sku && (
