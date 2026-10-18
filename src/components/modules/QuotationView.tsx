@@ -5556,6 +5556,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       <option value="job">job</option>
                       <option value="nos">nos</option>
                       <option value="pcs">pcs</option>
+                      <option value="feet">feet (Per Foot)</option>
+                      <option value="meter">meter (Per Meter)</option>
                       <option value="packet">packet</option>
                       <option value="box">box</option>
                       <option value="Project">Project (Lump Sum)</option>
