@@ -38,7 +38,23 @@ let syncDebounceTimer: NodeJS.Timeout | null = null;
 let backgroundIntervalId: NodeJS.Timeout | null = null;
 let isSyncInProgress = false;
 let isRestoringFromSync = false;
+let hasPendingPush = false;
 const listeners = new Set<(status: AutoSyncStatus) => void>();
+
+let broadcastChannel: BroadcastChannel | null = null;
+if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+  try {
+    broadcastChannel = new BroadcastChannel('globotech_erp_cloud_sync_bus');
+    broadcastChannel.onmessage = (event) => {
+      if (event.data?.type === 'SYNC_COMPLETED' || event.data?.type === 'LOCAL_DATA_CHANGED') {
+        const ts = event.data.timestamp || Date.now();
+        dispatchAllModuleRefreshEvents(ts);
+      }
+    };
+  } catch (e) {
+    console.warn('BroadcastChannel init error:', e);
+  }
+}
 
 let currentStatus: AutoSyncStatus = {
   isSyncing: false,
@@ -78,6 +94,10 @@ function dispatchAllModuleRefreshEvents(timestamp: number) {
     window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
     window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
     window.dispatchEvent(new CustomEvent('globotech_expenses_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_customers_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_products_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_projects_updated'));
+    window.dispatchEvent(new CustomEvent('globotech_serials_updated'));
     window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
   } catch (e) {
     console.warn('Dispatch module events error:', e);
@@ -98,7 +118,7 @@ export function getDeviceCategory(): string {
 
 /**
  * Call whenever any module saves, updates, or deletes data locally.
- * Marks unsynced state and schedules an automatic background push to the cloud within 300ms.
+ * Marks unsynced state and schedules an automatic background push to the cloud within 150ms.
  */
 export function markLocalDataChanged(): void {
   if (typeof window === 'undefined' || isRestoringFromSync) return;
@@ -106,6 +126,10 @@ export function markLocalDataChanged(): void {
   localStorage.setItem(STORAGE_KEY_HAS_UNSYNCED, 'true');
   localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, now.toString());
   updateStatus({ statusText: 'Local data saved, syncing to cloud...' });
+
+  try {
+    broadcastChannel?.postMessage({ type: 'LOCAL_DATA_CHANGED', timestamp: now });
+  } catch (e) {}
 
   if (syncDebounceTimer) {
     clearTimeout(syncDebounceTimer);
@@ -115,7 +139,22 @@ export function markLocalDataChanged(): void {
     pushToCloud().catch((err) => {
       console.warn('Debounced auto-push failed:', err);
     });
-  }, 300);
+  }, 150);
+}
+
+/**
+ * Trigger an immediate push to cloud without debounce (0ms)
+ */
+export function triggerCloudSyncImmediate(): Promise<{ success: boolean; message: string }> {
+  if (typeof window === 'undefined') return Promise.resolve({ success: false, message: 'SSR' });
+  const now = Date.now();
+  localStorage.setItem(STORAGE_KEY_HAS_UNSYNCED, 'true');
+  localStorage.setItem(STORAGE_KEY_LOCAL_MODIFIED, now.toString());
+  if (syncDebounceTimer) {
+    clearTimeout(syncDebounceTimer);
+    syncDebounceTimer = null;
+  }
+  return pushToCloud();
 }
 
 /**
@@ -124,7 +163,11 @@ export function markLocalDataChanged(): void {
  */
 export async function pushToCloud(): Promise<{ success: boolean; message: string; timestamp?: number }> {
   if (typeof window === 'undefined') return { success: false, message: 'SSR' };
-  if (isSyncInProgress) return { success: false, message: 'Sync already in progress' };
+  
+  if (isSyncInProgress) {
+    hasPendingPush = true;
+    return { success: false, message: 'Sync already in progress, queued push' };
+  }
 
   isSyncInProgress = true;
   updateStatus({ isSyncing: true, statusText: 'Syncing data to cloud server...', lastAction: 'PUSH' });
@@ -176,6 +219,10 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
         lastAction: 'PUSH'
       });
 
+      try {
+        broadcastChannel?.postMessage({ type: 'SYNC_COMPLETED', timestamp: serverTime });
+      } catch (e) {}
+
       dispatchAllModuleRefreshEvents(serverTime);
 
       return { success: true, message: 'Cloud sync successful', timestamp: serverTime };
@@ -193,6 +240,12 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
     return { success: false, message: err?.message || 'Network error' };
   } finally {
     isSyncInProgress = false;
+    if (hasPendingPush) {
+      hasPendingPush = false;
+      setTimeout(() => {
+        pushToCloud().catch((e) => console.warn('Queued push error:', e));
+      }, 50);
+    }
   }
 }
 
@@ -201,7 +254,10 @@ export async function pushToCloud(): Promise<{ success: boolean; message: string
  */
 export async function pullFromCloud(options: { silent?: boolean; expectedTimestamp?: number } = {}): Promise<{ success: boolean; message: string }> {
   if (typeof window === 'undefined') return { success: false, message: 'SSR' };
-  if (isSyncInProgress) return { success: false, message: 'Sync already in progress' };
+  
+  if (isSyncInProgress) {
+    return { success: false, message: 'Sync already in progress' };
+  }
 
   isSyncInProgress = true;
   if (!options.silent) {
@@ -264,6 +320,10 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
         lastAction: 'PULL'
       });
 
+      try {
+        broadcastChannel?.postMessage({ type: 'SYNC_COMPLETED', timestamp: serverTimestamp });
+      } catch (e) {}
+
       dispatchAllModuleRefreshEvents(serverTimestamp);
 
       return { success: true, message: 'Data restored successfully' };
@@ -281,6 +341,12 @@ export async function pullFromCloud(options: { silent?: boolean; expectedTimesta
     return { success: false, message: err?.message || 'Network error' };
   } finally {
     isSyncInProgress = false;
+    if (hasPendingPush) {
+      hasPendingPush = false;
+      setTimeout(() => {
+        pushToCloud().catch((e) => console.warn('Queued push after pull error:', e));
+      }, 50);
+    }
   }
 }
 
@@ -314,15 +380,15 @@ export async function checkAndAutoSync(): Promise<void> {
       return;
     }
 
-    // 2. If this device has never synced, push local state to ensure server merges it!
-    if (localLastSynced === 0) {
-      await pushToCloud();
+    // 2. If server has data and device has never synced, OR server has newer data, PULL!
+    if (serverTs > 0 && (localLastSynced === 0 || serverTs > localLastSynced)) {
+      await pullFromCloud({ silent: true, expectedTimestamp: serverTs });
       return;
     }
 
-    // 3. If server has a newer timestamp than local last sync, pull and union-merge!
-    if (serverTs > 0 && serverTs > localLastSynced) {
-      await pullFromCloud({ silent: true, expectedTimestamp: serverTs });
+    // 3. If server is empty and this device has data, push to initialize cloud
+    if (serverTs === 0 && localLastSynced === 0) {
+      await pushToCloud();
       return;
     }
 
@@ -354,7 +420,7 @@ export async function forceSyncNow(): Promise<{ success: boolean; message: strin
 
 // Hook into localStorage.setItem so ANY module writing data triggers automatic cloud sync
 let isLocalStoragePatched = false;
-function patchLocalStorageForAutoSync() {
+export function patchLocalStorageForAutoSync() {
   if (typeof window === 'undefined' || isLocalStoragePatched) return;
   try {
     const originalSetItem = localStorage.setItem;
@@ -381,6 +447,11 @@ function patchLocalStorageForAutoSync() {
   }
 }
 
+// Auto-patch on client import
+if (typeof window !== 'undefined') {
+  patchLocalStorageForAutoSync();
+}
+
 /**
  * Initializes Automatic Background Sync on application startup.
  * Sets up listeners for window focus, tab visibility, and periodic 2-second real-time polling.
@@ -405,6 +476,10 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
   window.addEventListener('globotech_bills_updated', handleDataChangedEvent);
   window.addEventListener('globotech_stock_updated', handleDataChangedEvent);
   window.addEventListener('globotech_expenses_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_customers_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_products_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_projects_updated', handleDataChangedEvent);
+  window.addEventListener('globotech_serials_updated', handleDataChangedEvent);
 
   // 1. Initial check immediately on load (300ms)
   setTimeout(() => {
@@ -453,6 +528,10 @@ export function startAutoSyncEngine(onStatusChange?: (status: AutoSyncStatus) =>
     window.removeEventListener('globotech_bills_updated', handleDataChangedEvent);
     window.removeEventListener('globotech_stock_updated', handleDataChangedEvent);
     window.removeEventListener('globotech_expenses_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_customers_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_products_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_projects_updated', handleDataChangedEvent);
+    window.removeEventListener('globotech_serials_updated', handleDataChangedEvent);
   };
 }
 

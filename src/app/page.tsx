@@ -156,15 +156,14 @@ export default function AppHome() {
         restoreERPBackupData(JSON.stringify(MASTER_DATABASE_PAYLOAD), { mode: 'merge' });
       }
 
-      // 2. Background cloud sync check from master backup to ensure mobile gets latest changes
+      // 2. Background seed check: only if local storage is completely empty, seed from backup
       if (typeof window !== 'undefined') {
         fetch(`/globotech-master-backup.json?t=${Date.now()}`)
           .then((res) => (res.ok ? res.json() : null))
           .then((remoteData) => {
             if (remoteData && remoteData.data) {
               const localP = getStoredPurchases();
-              const hasAmeconNow = localP.some((p) => p.supplierName?.includes('Amecon'));
-              if (!hasAmeconNow || (remoteData.data.purchases && remoteData.data.purchases.length > localP.length)) {
+              if (localP.length === 0) {
                 restoreERPBackupData(JSON.stringify(remoteData), { mode: 'merge' });
                 window.dispatchEvent(new CustomEvent('globotech_purchases_updated', { detail: getStoredPurchases() }));
               }

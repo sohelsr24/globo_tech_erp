@@ -275,17 +275,20 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
           const map = new Map<string, any>();
-          // Incoming items first (filtered)
-          data.quotations.forEach((q: any) => {
-            if (isDelQuote(q)) return;
-            const key = q.id || q.quotationNumber;
-            if (key) map.set(key, q);
-          });
-          // User local items (also strictly filtered so deleted items NEVER resurrect)
+          // 1. User local items first
           current.forEach((q: any) => {
             if (isDelQuote(q)) return;
             const key = q.id || q.quotationNumber;
             if (key) map.set(key, q);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.quotations.forEach((q: any) => {
+            if (isDelQuote(q)) return;
+            const key = q.id || q.quotationNumber;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...q } : q);
+            }
           });
           const merged = sortDesc(Array.from(map.values()));
           localStorage.setItem(ERP_STORAGE_KEYS.QUOTATIONS, JSON.stringify(merged));
@@ -344,16 +347,21 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
           const map = new Map<string, any>();
-          cleanIncoming.forEach((b: any) => {
-            const key = b.id || b.billNo;
-            if (key) map.set(key, b);
-          });
+          // 1. User local items first
           current
             .filter((b: any) => !isDelBill(b))
             .forEach((b: any) => {
               const key = b.id || b.billNo;
               if (key) map.set(key, b);
             });
+          // 2. Incoming cloud bills merge and update on top
+          cleanIncoming.forEach((b: any) => {
+            const key = b.id || b.billNo;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...b } : b);
+            }
+          });
           const merged = sortBillsDesc(Array.from(map.values()));
           localStorage.setItem(ERP_STORAGE_KEYS.BILLS, JSON.stringify(merged));
         } else {
@@ -379,15 +387,20 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.CUSTOMERS, []);
           const map = new Map<string, any>();
-          data.customers.forEach((c: any) => {
-            if (isDelCustomer(c)) return;
-            const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
-            if (key) map.set(key, c);
-          });
+          // 1. User local items first
           current.forEach((c: any) => {
             if (isDelCustomer(c)) return;
             const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
             if (key) map.set(key, c);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.customers.forEach((c: any) => {
+            if (isDelCustomer(c)) return;
+            const key = c.id || (c.company ? `comp-${c.company.trim().toLowerCase()}` : c.name);
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...c } : c);
+            }
           });
           const merged = Array.from(map.values());
           localStorage.setItem(ERP_STORAGE_KEYS.CUSTOMERS, JSON.stringify(merged));
@@ -401,13 +414,18 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PROJECTS, []);
           const map = new Map<string, any>();
-          data.projects.forEach((pr: any) => {
-            const key = pr.id || pr.projectCode || pr.projectName;
-            if (key) map.set(key, pr);
-          });
+          // 1. User local items first
           current.forEach((pr: any) => {
             const key = pr.id || pr.projectCode || pr.projectName;
             if (key) map.set(key, pr);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.projects.forEach((pr: any) => {
+            const key = pr.id || pr.projectCode || pr.projectName;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...pr } : pr);
+            }
           });
           const merged = Array.from(map.values());
           localStorage.setItem(ERP_STORAGE_KEYS.PROJECTS, JSON.stringify(merged));
@@ -421,13 +439,18 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, []);
           const map = new Map<string, any>();
-          data.clientDirectory.forEach((cd: any) => {
-            const key = cd.id || cd.company || cd.name;
-            if (key) map.set(key, cd);
-          });
+          // 1. User local items first
           current.forEach((cd: any) => {
             const key = cd.id || cd.company || cd.name;
             if (key) map.set(key, cd);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.clientDirectory.forEach((cd: any) => {
+            const key = cd.id || cd.company || cd.name;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...cd } : cd);
+            }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.CLIENT_DIRECTORY, JSON.stringify(Array.from(map.values())));
         } else {
@@ -445,15 +468,20 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PRODUCTS, []);
           const map = new Map<string, any>();
-          data.products.forEach((p: any) => {
-            const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
-            const isDel = allDelProductsSet.has(key) || allDelProductsSet.has((p.sku || '').trim().toUpperCase()) || allDelProductsSet.has((p.id || '').trim().toUpperCase()) || allDelProductsSet.has((p.name || '').trim().toUpperCase());
-            if (key && !isDel) map.set(key, p);
-          });
+          // 1. User local items first
           current.forEach((p: any) => {
             const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
             const isDel = allDelProductsSet.has(key) || allDelProductsSet.has((p.sku || '').trim().toUpperCase()) || allDelProductsSet.has((p.id || '').trim().toUpperCase()) || allDelProductsSet.has((p.name || '').trim().toUpperCase());
             if (key && !isDel) map.set(key, p);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.products.forEach((p: any) => {
+            const key = p.sku ? p.sku.trim().toUpperCase() : (p.id || p.name);
+            const isDel = allDelProductsSet.has(key) || allDelProductsSet.has((p.sku || '').trim().toUpperCase()) || allDelProductsSet.has((p.id || '').trim().toUpperCase()) || allDelProductsSet.has((p.name || '').trim().toUpperCase());
+            if (key && !isDel) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...p } : p);
+            }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.PRODUCTS, JSON.stringify(Array.from(map.values())));
         } else {
@@ -472,7 +500,8 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, []);
           const map = new Map<string, any>();
-          data.warehouseStock.forEach((s: any) => {
+          // 1. User local items first
+          current.forEach((s: any) => {
             const sku = (s.sku || '').trim().toUpperCase();
             const name = (s.productName || '').trim().toUpperCase();
             if (!allDelProductsSet.has(sku) && !allDelProductsSet.has(name)) {
@@ -480,12 +509,16 @@ export function restoreERPBackupData(
               if (key) map.set(key, s);
             }
           });
-          current.forEach((s: any) => {
+          // 2. Incoming cloud items merge and update on top
+          data.warehouseStock.forEach((s: any) => {
             const sku = (s.sku || '').trim().toUpperCase();
             const name = (s.productName || '').trim().toUpperCase();
             if (!allDelProductsSet.has(sku) && !allDelProductsSet.has(name)) {
               const key = s.id || `${sku}-${(s.warehouseName || '').trim().toLowerCase()}`;
-              if (key) map.set(key, s);
+              if (key) {
+                const local = map.get(key);
+                map.set(key, local ? { ...local, ...s } : s);
+              }
             }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.WAREHOUSE_STOCK, JSON.stringify(Array.from(map.values())));
@@ -504,13 +537,18 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.STOCK_LEDGER, []);
           const map = new Map<string, any>();
-          data.stockLedger.forEach((l: any) => {
-            const key = l.id || `${l.timestamp}-${l.referenceId || ''}-${l.productName || ''}`;
-            if (key) map.set(key, l);
-          });
+          // 1. User local items first
           current.forEach((l: any) => {
             const key = l.id || `${l.timestamp}-${l.referenceId || ''}-${l.productName || ''}`;
             if (key) map.set(key, l);
+          });
+          // 2. Incoming cloud items merge and update on top
+          data.stockLedger.forEach((l: any) => {
+            const key = l.id || `${l.timestamp}-${l.referenceId || ''}-${l.productName || ''}`;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...l } : l);
+            }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.STOCK_LEDGER, JSON.stringify(Array.from(map.values())));
         } else {
@@ -537,8 +575,16 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SALES, []);
           const map = new Map<string, any>();
-          data.sales.forEach((s: any) => { const key = s.id || s.invoiceNo; if (key) map.set(key, s); });
+          // 1. User local items first
           current.forEach((s: any) => { const key = s.id || s.invoiceNo; if (key) map.set(key, s); });
+          // 2. Incoming cloud items merge and update on top
+          data.sales.forEach((s: any) => {
+            const key = s.id || s.invoiceNo;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...s } : s);
+            }
+          });
           localStorage.setItem(ERP_STORAGE_KEYS.SALES, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.SALES, JSON.stringify(data.sales));
@@ -550,8 +596,16 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.IMPORTS, []);
           const map = new Map<string, any>();
-          data.imports.forEach((im: any) => { const key = im.id || im.lcNumber || im.shipmentNumber; if (key) map.set(key, im); });
+          // 1. User local items first
           current.forEach((im: any) => { const key = im.id || im.lcNumber || im.shipmentNumber; if (key) map.set(key, im); });
+          // 2. Incoming cloud items merge and update on top
+          data.imports.forEach((im: any) => {
+            const key = im.id || im.lcNumber || im.shipmentNumber;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...im } : im);
+            }
+          });
           localStorage.setItem(ERP_STORAGE_KEYS.IMPORTS, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.IMPORTS, JSON.stringify(data.imports));
@@ -580,7 +634,8 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SUPPLIERS, []);
           const map = new Map<string, any>();
-          data.suppliers.forEach((sp: any) => {
+          // 1. User local items first
+          current.forEach((sp: any) => {
             if (!sp) return;
             const name = (sp.name || sp.company || '').trim();
             const nameLower = name.toLowerCase();
@@ -588,15 +643,16 @@ export function restoreERPBackupData(
             const key = nameLower ? `name:${nameLower}` : (sp.id || '');
             if (key) map.set(key, sp);
           });
-          current.forEach((sp: any) => {
+          // 2. Incoming cloud items merge and update on top
+          data.suppliers.forEach((sp: any) => {
             if (!sp) return;
             const name = (sp.name || sp.company || '').trim();
             const nameLower = name.toLowerCase();
             if (delSuppSet.has(nameLower)) return;
             const key = nameLower ? `name:${nameLower}` : (sp.id || '');
             if (key) {
-              const existing = map.get(key);
-              map.set(key, existing ? { ...existing, ...sp } : sp);
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...sp } : sp);
             }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.SUPPLIERS, JSON.stringify(Array.from(map.values())));
@@ -630,17 +686,19 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.PURCHASES, []);
           const map = new Map<string, any>();
-          data.purchases.forEach((pu: any) => {
+          // 1. User local items first
+          current.forEach((pu: any) => {
             if (!isValidPurchase(pu)) return;
             const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
             if (billKey) map.set(billKey, pu);
           });
-          current.forEach((pu: any) => {
+          // 2. Incoming cloud items merge and update on top
+          data.purchases.forEach((pu: any) => {
             if (!isValidPurchase(pu)) return;
             const billKey = pu.billNumber ? pu.billNumber.trim().toUpperCase() : (pu.id || '');
             if (billKey) {
-              const existing = map.get(billKey);
-              map.set(billKey, existing ? { ...existing, ...pu } : pu);
+              const local = map.get(billKey);
+              map.set(billKey, local ? { ...local, ...pu } : pu);
             }
           });
           localStorage.setItem(ERP_STORAGE_KEYS.PURCHASES, JSON.stringify(Array.from(map.values())));
@@ -682,21 +740,19 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.EXPENSES, []);
           const map = new Map<string, any>();
-          // Incoming items first (filtered)
-          data.expenses.forEach((ex: any) => {
+          // 1. User local items first
+          current.forEach((ex: any) => {
             if (isDelExpense(ex)) return;
             const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
             if (key) map.set(key, ex);
           });
-          // User local items (also strictly filtered so deleted expenses NEVER resurrect)
-          current.forEach((ex: any) => {
+          // 2. Incoming cloud items merge and update on top
+          data.expenses.forEach((ex: any) => {
             if (isDelExpense(ex)) return;
             const key = ex.id || `${ex.date}_${ex.time}_${ex.amount}_${ex.particulars}`;
             if (key) {
-              const existing = map.get(key);
-              map.set(key, existing ? { ...existing, ...ex } : ex);
-            } else {
-              map.set(key, ex);
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...ex } : ex);
             }
           });
           // Sort descending by date & creation time
@@ -716,8 +772,16 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.SERIALS, []);
           const map = new Map<string, any>();
-          data.serials.forEach((sr: any) => { const key = sr.id || sr.serialNumber; if (key) map.set(key, sr); });
+          // 1. User local items first
           current.forEach((sr: any) => { const key = sr.id || sr.serialNumber; if (key) map.set(key, sr); });
+          // 2. Incoming cloud items merge and update on top
+          data.serials.forEach((sr: any) => {
+            const key = sr.id || sr.serialNumber;
+            if (key) {
+              const local = map.get(key);
+              map.set(key, local ? { ...local, ...sr } : sr);
+            }
+          });
           localStorage.setItem(ERP_STORAGE_KEYS.SERIALS, JSON.stringify(Array.from(map.values())));
         } else {
           localStorage.setItem(ERP_STORAGE_KEYS.SERIALS, JSON.stringify(data.serials));
@@ -736,7 +800,7 @@ export function restoreERPBackupData(
       const completeMergedPayload = generateERPBackupPayload();
       mirrorToIndexedDB(completeMergedPayload, 'safe_restore_merge');
 
-      // Dispatch global events to inform active views
+      // Dispatch global events to inform active views immediately
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('globotech_backup_restored'));
       window.dispatchEvent(new CustomEvent('globotech_purchases_updated'));
@@ -745,6 +809,10 @@ export function restoreERPBackupData(
       window.dispatchEvent(new CustomEvent('globotech_bills_updated'));
       window.dispatchEvent(new CustomEvent('globotech_stock_updated'));
       window.dispatchEvent(new CustomEvent('globotech_expenses_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_customers_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_products_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_projects_updated'));
+      window.dispatchEvent(new CustomEvent('globotech_serials_updated'));
     }
 
     const currentCounts = generateERPBackupPayload().meta.recordCounts;
