@@ -3742,7 +3742,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                               />
                               <select
                                 value={
-                                  ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                                  ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'feet', 'ft', 'roll', 'lot', 'unit'].includes(
                                     (item.unit || '').toLowerCase()
                                   )
                                     ? (item.unit || '').toLowerCase()
@@ -3763,7 +3763,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                                   }
                                 }}
                                 className="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-blue-400 font-semibold text-xs rounded px-1.5 py-0.5 focus:outline-none focus:border-blue-500 cursor-pointer transition shadow-sm"
-                                title="Select or Change Unit (pcs, nos, job, packet, box, etc.)"
+                                title="Select or Change Unit (pcs, nos, job, packet, box, feet, etc.)"
                               >
                                 <option value="pcs">pcs</option>
                                 <option value="nos">nos</option>
@@ -3772,11 +3772,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                                 <option value="box">box</option>
                                 <option value="set">set</option>
                                 <option value="meter">meter</option>
+                                <option value="feet">feet</option>
                                 <option value="roll">roll</option>
                                 <option value="lot">lot</option>
                                 <option value="unit">unit</option>
                                 {item.unit &&
-                                  !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                                  !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'feet', 'ft', 'roll', 'lot', 'unit'].includes(
                                     item.unit.toLowerCase()
                                   ) && <option value={item.unit}>{item.unit}</option>}
                                 <option value="__CUSTOM__">✏️ Custom Unit...</option>
@@ -5696,7 +5697,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 <label className="block text-slate-400 font-semibold mb-1">Unit *</label>
                 <select
                   value={
-                    ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                    ['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'feet', 'ft', 'roll', 'lot', 'unit'].includes(
                       (itemForm.unit || '').toLowerCase()
                     )
                       ? (itemForm.unit || '').toLowerCase()
@@ -5726,11 +5727,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <option value="box">box</option>
                   <option value="set">set</option>
                   <option value="meter">meter</option>
+                  <option value="feet">feet</option>
                   <option value="roll">roll</option>
                   <option value="lot">lot</option>
                   <option value="unit">unit</option>
                   {itemForm.unit &&
-                    !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'roll', 'lot', 'unit'].includes(
+                    !['pcs', 'nos', 'job', 'packet', 'box', 'set', 'meter', 'feet', 'ft', 'roll', 'lot', 'unit'].includes(
                       itemForm.unit.toLowerCase()
                     ) && <option value={itemForm.unit}>{itemForm.unit}</option>}
                   <option value="__CUSTOM__">✏️ Custom Unit...</option>

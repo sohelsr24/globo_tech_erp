@@ -3867,6 +3867,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   <option value="set">set (Sets)</option>
                   <option value="box">box (Boxes)</option>
                   <option value="meter">meter</option>
+                  <option value="feet">feet</option>
                   <option value="coil">coil</option>
                   <option value="roll">roll</option>
                   <option value="job">job (Job/Labor)</option>
@@ -4305,6 +4306,7 @@ export function PurchasesView({ globalSearchQuery = '', canViewCosts = true }: P
                   <option value="set">set (Sets)</option>
                   <option value="box">box (Boxes)</option>
                   <option value="meter">meter</option>
+                  <option value="feet">feet</option>
                   <option value="coil">coil</option>
                   <option value="roll">roll</option>
                   <option value="job">job (Job/Labor)</option>

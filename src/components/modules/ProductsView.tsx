@@ -912,6 +912,7 @@ export function ProductsView({ canViewCosts, filterLowStock = false, globalSearc
                   <option value="box">box (Boxes)</option>
                   <option value="set">set (Sets)</option>
                   <option value="meter">meter (Meters)</option>
+                  <option value="feet">feet (Feet)</option>
                   <option value="roll">roll (Rolls/Coils)</option>
                 </select>
               </div>
