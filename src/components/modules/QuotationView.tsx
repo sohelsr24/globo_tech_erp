@@ -3769,6 +3769,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                                 title="Change line item warranty"
                               >
                                 <option value="No Warranty">No Warranty</option>
+                                <option value="6 Months Warranty">6 Months Warranty</option>
+                                <option value="6 Months">6 Months</option>
                                 <option value="1 Year Service Warranty (Without Parts)">1 Year Service (No Parts)</option>
                                 <option value="2 Years Service Warranty (Without Parts)">2 Years Service (No Parts)</option>
                                 <option value="1 Month Replacement Warranty">1 Month Replacement</option>
@@ -3779,7 +3781,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                                 <option value="36 Months">36 Months</option>
                                 <option value="Lifetime">Lifetime</option>
                                 {item.warranty &&
-                                  !['No Warranty', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(item.warranty) && (
+                                  !['No Warranty', '6 Months Warranty', '6 Months', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(item.warranty) && (
                                     <option value={item.warranty}>{item.warranty}</option>
                                   )}
                               </select>
@@ -4218,6 +4220,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                       <option value="No Warranty">No Warranty</option>
                       <option value="No Warranty Applicable">No Warranty Applicable</option>
                       <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                      <option value="6 Months Warranty">6 Months Warranty</option>
                       <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
                       <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                       <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
@@ -5722,6 +5725,17 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   </button>
                   <button
                     type="button"
+                    onClick={() => setItemForm({ ...itemForm, warranty: '6 Months Warranty' })}
+                    className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
+                      itemForm.warranty === '6 Months Warranty' || itemForm.warranty === '6 Months'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    6M
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setItemForm({ ...itemForm, warranty: '1 Year Service Warranty (Without Parts)' })}
                     className={`px-1.5 py-0.5 text-[10px] font-bold rounded transition cursor-pointer ${
                       itemForm.warranty === '1 Year Service Warranty (Without Parts)'
@@ -5750,6 +5764,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-100 font-semibold text-xs focus:border-blue-500 focus:outline-none cursor-pointer"
               >
                 <option value="No Warranty">No Warranty</option>
+                <option value="6 Months Warranty">6 Months Warranty</option>
+                <option value="6 Months">6 Months</option>
                 <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
                 <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                 <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
@@ -5760,7 +5776,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 <option value="36 Months">36 Months</option>
                 <option value="Lifetime">Lifetime</option>
                 {itemForm.warranty &&
-                  !['No Warranty', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(itemForm.warranty) && (
+                  !['No Warranty', '6 Months Warranty', '6 Months', '1 Year Service Warranty (Without Parts)', '2 Years Service Warranty (Without Parts)', '1 Month Replacement Warranty', '3 Months Service Warranty (Without Parts)', '6 Months Service Warranty (Without Parts)', '12 Months', '24 Months', '36 Months', 'Lifetime'].includes(itemForm.warranty) && (
                     <option value={itemForm.warranty}>{itemForm.warranty}</option>
                   )}
               </select>
@@ -6514,6 +6530,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                   <option value="No Warranty">No Warranty</option>
                   <option value="No Warranty Applicable">No Warranty Applicable</option>
                   <option value="No Warranty (As-Is Condition)">No Warranty (As-Is Condition)</option>
+                  <option value="6 Months Warranty">6 Months Warranty</option>
                   <option value="1 Year Service Warranty (Without Parts)">1 Year Service Warranty (Without Parts)</option>
                   <option value="2 Years Service Warranty (Without Parts)">2 Years Service Warranty (Without Parts)</option>
                   <option value="1 Month Replacement Warranty">1 Month Replacement Warranty</option>
