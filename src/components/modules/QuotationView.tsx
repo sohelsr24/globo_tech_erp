@@ -53,6 +53,7 @@ import {
   ProductItem
 } from '@/lib/productsStorage';
 import { forceImmediateBackup } from '@/lib/autoBackupDaemon';
+import { markLocalDataChanged } from '@/lib/erpAutoSync';
 
 // Types of Quotation Items
 export type QuotationItemType = 'IN_STOCK' | 'CUSTOM_PROJECT' | 'SERVICE' | 'OTHER_CHARGE';
@@ -1704,6 +1705,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
   // Edit Quotation State & Trigger
   const [editingQuotationId, setEditingQuotationId] = useState<string | null>(null);
+  const [editOriginMode, setEditOriginMode] = useState<'LIST' | 'DETAIL'>('LIST');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
 
   // Auto-sync customer details when customerId changes, on edit load, or if customerId becomes invalid/deleted
   useEffect(() => {
@@ -1750,6 +1753,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   }, [newQuote.customerId, newQuote.customerCompany, customers]);
 
   const handleStartEditQuotation = (quote: Quotation) => {
+    setEditOriginMode(activeViewMode === 'DETAIL' ? 'DETAIL' : 'LIST');
     setEditingQuotationId(quote.id);
     setSelectedQuotation(quote);
 
@@ -1780,6 +1784,37 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       items: quote.items ? quote.items.map((i) => ({ ...i })) : []
     });
     setActiveViewMode('CREATE');
+  };
+
+  // Start editing a specific line item from the items table
+  const handleStartEditItem = (item: QuotationItem) => {
+    setEditingItemId(item.id);
+    setSelectedItemCategory(item.type || 'IN_STOCK');
+    setItemForm({
+      type: item.type || 'IN_STOCK',
+      name: item.name || '',
+      sku: item.sku || '',
+      brand: item.brand || '',
+      model: item.model || '',
+      description: item.description || '',
+      warehouse: item.warehouse || 'Dhaka Central Warehouse',
+      physicalStock: item.physicalStock || 0,
+      reservedStock: item.reservedStock || 0,
+      freeStock: item.freeStock || 0,
+      unit: item.unit || 'pcs',
+      quantity: item.quantity || 1,
+      unitPrice: item.unitPrice || 0,
+      discountPercent: item.discountPercent || 0,
+      vatPercent: item.vatPercent !== undefined ? item.vatPercent : 15,
+      taxPercent: item.taxPercent || 0,
+      unitCost: item.unitCost || 0,
+      leadTime: item.leadTime || 'Immediate',
+      source: item.source || 'EXISTING_STOCK',
+      warranty: item.warranty || 'No Warranty',
+      remarks: item.remarks || ''
+    });
+    setCatalogSearchQuery(item.name || '');
+    setIsAddItemModalOpen(true);
   };
 
   // ==========================================
@@ -2108,7 +2143,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
   };
 
-  // Add Item to Quotation
+  // Add or Update Item in Quotation
   const handleAddItemToQuote = () => {
     if (!itemForm.name || !itemForm.quantity || itemForm.quantity <= 0) {
       alert('Please enter a valid item name and quantity');
@@ -2119,43 +2154,71 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       ? itemForm.warranty.trim()
       : (newQuote.warrantyTerms || 'No Warranty');
 
-    const newItem: QuotationItem = {
-      id: `item-${Date.now()}`,
-      type: selectedItemCategory,
-      name: itemForm.name || 'Untitled Item',
-      sku: itemForm.sku,
-      brand: itemForm.brand,
-      model: itemForm.model,
-      description: itemForm.description,
-      warehouse: itemForm.warehouse,
-      physicalStock: itemForm.physicalStock || 0,
-      reservedStock: itemForm.reservedStock || 0,
-      freeStock: itemForm.freeStock || 0,
-      unit: itemForm.unit || 'pcs',
-      quantity: Number(itemForm.quantity),
-      unitPrice: Number(itemForm.unitPrice) || 0,
-      discountPercent: Number(itemForm.discountPercent) || 0,
-      vatPercent: Number(itemForm.vatPercent) || 0,
-      taxPercent: Number(itemForm.taxPercent) || 0,
-      unitCost: Number(itemForm.unitCost) || 0,
-      leadTime: itemForm.leadTime || 'Immediate',
-      source: itemForm.source,
-      warranty: resolvedItemWarranty,
-      remarks: itemForm.remarks
-    };
-
-    const updatedItems = [...(newQuote.items || []), newItem];
-    setNewQuote((prev) => ({
-      ...prev,
-      items: updatedItems
-    }));
-
-    if (editingQuotationId) {
-      setQuotations((currentList) =>
-        currentList.map((q) =>
-          q.id === editingQuotationId ? { ...q, items: updatedItems } : q
+    if (editingItemId) {
+      // Update existing line item
+      setNewQuote((prev) => ({
+        ...prev,
+        items: (prev.items || []).map((item) =>
+          item.id === editingItemId
+            ? {
+                ...item,
+                type: selectedItemCategory,
+                name: itemForm.name || 'Untitled Item',
+                sku: itemForm.sku,
+                brand: itemForm.brand,
+                model: itemForm.model,
+                description: itemForm.description,
+                warehouse: itemForm.warehouse,
+                physicalStock: itemForm.physicalStock || 0,
+                reservedStock: itemForm.reservedStock || 0,
+                freeStock: itemForm.freeStock || 0,
+                unit: itemForm.unit || 'pcs',
+                quantity: Number(itemForm.quantity),
+                unitPrice: Number(itemForm.unitPrice) || 0,
+                discountPercent: Number(itemForm.discountPercent) || 0,
+                vatPercent: Number(itemForm.vatPercent) || 0,
+                taxPercent: Number(itemForm.taxPercent) || 0,
+                unitCost: Number(itemForm.unitCost) || 0,
+                leadTime: itemForm.leadTime || 'Immediate',
+                source: itemForm.source,
+                warranty: resolvedItemWarranty,
+                remarks: itemForm.remarks
+              }
+            : item
         )
-      );
+      }));
+      setEditingItemId(null);
+    } else {
+      // Append new line item
+      const newItem: QuotationItem = {
+        id: `item-${Date.now()}`,
+        type: selectedItemCategory,
+        name: itemForm.name || 'Untitled Item',
+        sku: itemForm.sku,
+        brand: itemForm.brand,
+        model: itemForm.model,
+        description: itemForm.description,
+        warehouse: itemForm.warehouse,
+        physicalStock: itemForm.physicalStock || 0,
+        reservedStock: itemForm.reservedStock || 0,
+        freeStock: itemForm.freeStock || 0,
+        unit: itemForm.unit || 'pcs',
+        quantity: Number(itemForm.quantity),
+        unitPrice: Number(itemForm.unitPrice) || 0,
+        discountPercent: Number(itemForm.discountPercent) || 0,
+        vatPercent: Number(itemForm.vatPercent) || 0,
+        taxPercent: Number(itemForm.taxPercent) || 0,
+        unitCost: Number(itemForm.unitCost) || 0,
+        leadTime: itemForm.leadTime || 'Immediate',
+        source: itemForm.source,
+        warranty: resolvedItemWarranty,
+        remarks: itemForm.remarks
+      };
+
+      setNewQuote((prev) => ({
+        ...prev,
+        items: [...(prev.items || []), newItem]
+      }));
     }
 
     setIsAddItemModalOpen(false);
@@ -2191,125 +2254,74 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
   // Delete Item from Quotation
   const handleDeleteItem = (itemId: string) => {
-    const updatedItems = (newQuote.items || []).filter((i) => i.id !== itemId);
     setNewQuote((prev) => ({
       ...prev,
-      items: updatedItems
+      items: (prev.items || []).filter((i) => i.id !== itemId)
     }));
-
-    if (editingQuotationId) {
-      setQuotations((currentList) =>
-        currentList.map((q) =>
-          q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-        )
-      );
-    }
   };
 
   // Update Item Unit directly
   const handleUpdateItemUnit = (itemId: string, newUnit: string) => {
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, unit: newUnit } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Update Item Quantity directly
   const handleUpdateItemQuantity = (itemId: string, newQty: number) => {
     const safeQty = Math.max(1, isNaN(newQty) ? 1 : newQty);
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, quantity: safeQty } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Update Item Unit Price directly
   const handleUpdateItemUnitPrice = (itemId: string, newPrice: number) => {
     const safePrice = Math.max(0, isNaN(newPrice) ? 0 : newPrice);
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, unitPrice: safePrice } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Update Item VAT & TAX % directly
   const handleUpdateItemVatPercent = (itemId: string, newVat: number) => {
     const safeVat = Math.max(0, isNaN(newVat) ? 0 : newVat);
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, vatPercent: safeVat } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Update Item TAX / AIT % directly
   const handleUpdateItemTaxPercent = (itemId: string, newTax: number) => {
     const safeTax = Math.max(0, isNaN(newTax) ? 0 : newTax);
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, taxPercent: safeTax } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Update Item Warranty directly
   const handleUpdateItemWarranty = (itemId: string, newWarranty: string) => {
-    setNewQuote((prev) => {
-      const updatedItems = (prev.items || []).map((item) =>
+    setNewQuote((prev) => ({
+      ...prev,
+      items: (prev.items || []).map((item) =>
         item.id === itemId ? { ...item, warranty: newWarranty } : item
-      );
-      if (editingQuotationId) {
-        setQuotations((currentList) =>
-          currentList.map((q) =>
-            q.id === editingQuotationId ? { ...q, items: updatedItems } : q
-          )
-        );
-      }
-      return { ...prev, items: updatedItems };
-    });
+      )
+    }));
   };
 
   // Sync quotation warranty terms across items when user updates warranty terms
@@ -2387,14 +2399,20 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     }
 
     if (editingQuotationId) {
-      const existing = quotations.find((q) => q.id === editingQuotationId);
+      const existing = quotations.find(
+        (q) => (q.id && q.id === editingQuotationId) || (q.quotationNumber && q.quotationNumber === editingQuotationId)
+      );
       const newVersion = (existing?.version || 1) + 1;
-      const targetStatus: QuotationStatus = requiresApproval ? 'PENDING_APPROVAL' : (newQuote.status || existing?.status || 'DRAFT');
+      const targetStatus: QuotationStatus = requiresApproval
+        ? 'PENDING_APPROVAL'
+        : (newQuote.status || existing?.status || 'DRAFT');
       const isAcceptedStatus = targetStatus === 'ACCEPTED' || targetStatus === 'CONVERTED';
+
       const updatedQuote: Quotation = {
         ...(existing || {}),
         ...(newQuote as Quotation),
-        id: editingQuotationId,
+        id: existing?.id || editingQuotationId,
+        quotationNumber: newQuote.quotationNumber || existing?.quotationNumber || editingQuotationId,
         customerId: selectedCustomer?.id || newQuote.customerId || (customers[0]?.id || ''),
         customerCompany: finalCustomerCompany,
         customerName: finalCustomerName,
@@ -2403,11 +2421,27 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         customerEmail: finalCustomerEmail,
         customerBin: finalCustomerBin,
         customerType: finalCustomerType,
+        projectName: newQuote.projectName || existing?.projectName || '',
+        projectLocation: newQuote.projectLocation || existing?.projectLocation || '',
+        type: newQuote.type || existing?.type || 'PRODUCT_SERVICE',
+        date: newQuote.date || existing?.date || new Date().toISOString().split('T')[0],
+        validUntil: newQuote.validUntil || existing?.validUntil || '',
+        paymentTerms: newQuote.paymentTerms !== undefined ? newQuote.paymentTerms : (existing?.paymentTerms || ''),
+        deliveryTerms: newQuote.deliveryTerms !== undefined ? newQuote.deliveryTerms : (existing?.deliveryTerms || ''),
+        warrantyTerms: newQuote.warrantyTerms !== undefined ? newQuote.warrantyTerms : (existing?.warrantyTerms || ''),
+        vatTaxTerms: newQuote.vatTaxTerms !== undefined ? newQuote.vatTaxTerms : (existing?.vatTaxTerms || ''),
+        notes: newQuote.notes !== undefined ? newQuote.notes : (existing?.notes || ''),
         version: newVersion,
         status: targetStatus,
-        stockReserved: isAcceptedStatus ? true : (newQuote.stockReserved !== undefined ? newQuote.stockReserved : existing?.stockReserved || false),
+        stockReserved: isAcceptedStatus
+          ? true
+          : (newQuote.stockReserved !== undefined ? newQuote.stockReserved : existing?.stockReserved || false),
         requiresApproval: requiresApproval || existing?.requiresApproval || false,
         approvalReason: approvalReason || existing?.approvalReason,
+        items: newQuote.items && newQuote.items.length > 0
+          ? newQuote.items.map((i) => ({ ...i }))
+          : (existing?.items || []),
+        additionalDiscount: Number(newQuote.additionalDiscount) || 0,
         versionHistory: [
           ...(existing?.versionHistory || []),
           {
@@ -2430,14 +2464,28 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
         ]
       };
 
-      const updatedList = quotations.map((q) => (q.id === editingQuotationId ? updatedQuote : q));
-      setQuotations(updatedList);
+      const updatedList = quotations.map((q) => {
+        const isMatch =
+          (q.id && (q.id === editingQuotationId || q.id === updatedQuote.id)) ||
+          (q.quotationNumber && (q.quotationNumber === editingQuotationId || q.quotationNumber === updatedQuote.quotationNumber));
+        return isMatch ? updatedQuote : q;
+      });
+
+      const existsInList = updatedList.some(
+        (q) => q.id === updatedQuote.id || q.quotationNumber === updatedQuote.quotationNumber
+      );
+      const finalList = sortQuotationsDesc(existsInList ? updatedList : [updatedQuote, ...updatedList]);
+
+      setQuotations(finalList);
       if (typeof window !== 'undefined') {
-        localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
+        localStorage.setItem('globotech_erp_quotations', JSON.stringify(finalList));
+        window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: finalList }));
+        forceImmediateBackup('quotation_updated');
+        markLocalDataChanged();
       }
       setSelectedQuotation(updatedQuote);
       setEditingQuotationId(null);
-      setActiveViewMode('DETAIL');
+      setActiveViewMode(editOriginMode);
       return;
     }
 
@@ -2508,6 +2556,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedList));
       window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedList }));
+      forceImmediateBackup('quotation_created');
+      markLocalDataChanged();
     }
     setSelectedQuotation(savedQuotation);
     setEditingQuotationId(null);
@@ -2519,7 +2569,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     if (!selectedQuotation) return;
 
     const updatedQuotations = quotations.map((q) => {
-      if (q.id === selectedQuotation.id) {
+      if (q.id === selectedQuotation.id || q.quotationNumber === selectedQuotation.quotationNumber) {
         return {
           ...q,
           status: 'CONVERTED' as QuotationStatus,
@@ -2540,6 +2590,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     setQuotations(updatedQuotations);
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedQuotations }));
+      forceImmediateBackup('quotation_converted');
+      markLocalDataChanged();
     }
     setIsConvertModalOpen(false);
     alert(`Success! Quotation ${selectedQuotation.quotationNumber} has been converted into ${convertTarget.replace(/_/g, ' ')}. Downstream fulfillment & billing triggered.`);
@@ -2551,7 +2604,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     if (!selectedQuotation) return;
 
     const updatedQuotations = quotations.map((q) => {
-      if (q.id === selectedQuotation.id) {
+      if (q.id === selectedQuotation.id || q.quotationNumber === selectedQuotation.quotationNumber) {
         const newStatus: QuotationStatus = approvalDecision === 'APPROVE' ? 'APPROVED' : 'REJECTED';
         return {
           ...q,
@@ -2574,6 +2627,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     setQuotations(updatedQuotations);
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedQuotations }));
+      forceImmediateBackup('quotation_approved');
+      markLocalDataChanged();
     }
     setIsApprovalModalOpen(false);
     alert(`Quotation ${selectedQuotation.quotationNumber} ${approvalDecision === 'APPROVE' ? 'Approved' : 'Rejected'} successfully.`);
@@ -2583,11 +2639,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
   // Quick Status Transition Handler (Lifecycle Step Update)
   const handleQuickUpdateStatus = (quoteId: string, newStatus: QuotationStatus) => {
     const updatedQuotations = quotations.map((q) => {
-      if (q.id === quoteId) {
+      if (q.id === quoteId || (q.quotationNumber && q.quotationNumber === quoteId)) {
         const isAccepted = newStatus === 'ACCEPTED' || newStatus === 'CONVERTED';
         const isUnreserved = newStatus === 'DRAFT' || newStatus === 'REJECTED';
         const updated: Quotation = {
           ...q,
+          version: (q.version || 1) + 1,
           status: newStatus,
           stockReserved: isAccepted ? true : isUnreserved ? false : q.stockReserved,
           requiresApproval: newStatus === 'PENDING_APPROVAL',
@@ -2596,7 +2653,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             {
               date: `${new Date().toISOString().split('T')[0]} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
               event: `Status updated to ${newStatus.replace(/_/g, ' ')}`,
-              actor: 'Engr. Sohel Rana',
+              actor: 'Sales Officer',
               comments: `Quotation lifecycle stage changed to ${newStatus.replace(/_/g, ' ')}`
             }
           ]
@@ -2609,9 +2666,12 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
     setQuotations(updatedQuotations);
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updatedQuotations));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updatedQuotations }));
+      forceImmediateBackup('quotation_status_updated');
+      markLocalDataChanged();
     }
-    if (selectedQuotation && selectedQuotation.id === quoteId) {
-      const match = updatedQuotations.find((q) => q.id === quoteId);
+    if (selectedQuotation && (selectedQuotation.id === quoteId || selectedQuotation.quotationNumber === quoteId)) {
+      const match = updatedQuotations.find((q) => q.id === quoteId || q.quotationNumber === quoteId);
       if (match) setSelectedQuotation(match);
     }
   };
@@ -2644,6 +2704,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updated }));
+      forceImmediateBackup('quotation_deleted');
+      markLocalDataChanged();
     }
 
     if (selectedQuotation && (selectedQuotation.id === idToDelete || selectedQuotation.quotationNumber === numToDelete)) {
@@ -2695,6 +2758,9 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('globotech_erp_quotations', JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('globotech_quotations_updated', { detail: updated }));
+      forceImmediateBackup('demo_quotations_cleaned');
+      markLocalDataChanged();
     }
 
     if (
@@ -3681,7 +3747,14 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                             </span>
                           </td>
                           <td className="px-3 py-2.5">
-                            <div className="font-semibold text-slate-100">{item.name}</div>
+                            <div
+                              onClick={() => handleStartEditItem(item)}
+                              className="font-semibold text-slate-100 hover:text-blue-400 cursor-pointer flex items-center gap-1.5 transition group"
+                              title="Click to edit full item details"
+                            >
+                              <span>{item.name}</span>
+                              <Edit3 className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition" />
+                            </div>
                             {item.sku && <span className="font-mono text-[10px] text-slate-400 mr-2">{item.sku}</span>}
                             {item.leadTime && item.leadTime !== 'Immediate' && (
                               <span className="text-[10px] text-amber-400 font-semibold">Lead Time: {item.leadTime}</span>
@@ -3867,14 +3940,25 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                           <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-100">
                             {formatBDT(total)}
                           </td>
-                          <td className="px-3 py-2.5 text-right">
-                            <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
-                              title="Delete Item"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                          <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditItem(item)}
+                                className="p-1 rounded text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition"
+                                title="Edit Item Details (Name, SKU, Cost, Specs)"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteItem(item.id)}
+                                className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+                                title="Delete Item"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -4341,11 +4425,8 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
               type="button"
               onClick={() => {
                 setEditingQuotationId(null);
-                if (selectedQuotation && editingQuotationId) {
-                  setActiveViewMode('DETAIL');
-                } else {
-                  setActiveViewMode('LIST');
-                }
+                setEditingItemId(null);
+                setActiveViewMode(editOriginMode);
               }}
               className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold"
             >
@@ -5208,8 +5289,11 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
       {isAddItemModalOpen && (
         <Modal
           isOpen={isAddItemModalOpen}
-          onClose={() => setIsAddItemModalOpen(false)}
-          title="Add Line Item to Quotation"
+          onClose={() => {
+            setIsAddItemModalOpen(false);
+            setEditingItemId(null);
+          }}
+          title={editingItemId ? 'Edit Line Item' : 'Add Line Item to Quotation'}
           size="lg"
         >
           <div className="space-y-4">
@@ -5876,7 +5960,10 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
             <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setIsAddItemModalOpen(false)}
+                onClick={() => {
+                  setIsAddItemModalOpen(false);
+                  setEditingItemId(null);
+                }}
                 className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold"
               >
                 Cancel
@@ -5886,7 +5973,7 @@ export function QuotationView({ onNavigateTab }: { onNavigateTab?: (tab: string,
                 onClick={handleAddItemToQuote}
                 className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-blue-500/20"
               >
-                Append Item to Quotation
+                {editingItemId ? 'Update Line Item' : 'Append Item to Quotation'}
               </button>
             </div>
           </div>

@@ -274,7 +274,14 @@ function mergeErpDatasets($existing, $incoming) {
         $qKey = $qNo !== '' ? $qNo : $qId;
         if ($qKey !== '') {
             if (isset($quotationMap[$qKey])) {
-                $quotationMap[$qKey] = array_merge($quotationMap[$qKey], $q);
+                $prevQ = $quotationMap[$qKey];
+                $prevVer = isset($prevQ['version']) ? (int)$prevQ['version'] : 1;
+                $newVer = isset($q['version']) ? (int)$q['version'] : 1;
+                if ($newVer >= $prevVer) {
+                    $quotationMap[$qKey] = array_merge($prevQ, $q);
+                } else {
+                    $quotationMap[$qKey] = array_merge($q, $prevQ);
+                }
             } else {
                 $quotationMap[$qKey] = $q;
             }

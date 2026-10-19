@@ -275,19 +275,53 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.QUOTATIONS, []);
           const map = new Map<string, any>();
+          const numToKeyMap = new Map<string, string>();
+
           // 1. User local items first
           current.forEach((q: any) => {
             if (isDelQuote(q)) return;
-            const key = q.id || q.quotationNumber;
-            if (key) map.set(key, q);
+            const primaryKey = q.id || q.quotationNumber;
+            if (primaryKey) {
+              map.set(primaryKey, q);
+              if (q.quotationNumber) numToKeyMap.set(q.quotationNumber.trim().toUpperCase(), primaryKey);
+              if (q.id) numToKeyMap.set(q.id.trim().toUpperCase(), primaryKey);
+            }
           });
-          // 2. Incoming cloud items merge and update on top
+
+          // 2. Incoming cloud items merge safely - never overwrite local edits with stale cloud data
           data.quotations.forEach((q: any) => {
             if (isDelQuote(q)) return;
-            const key = q.id || q.quotationNumber;
-            if (key) {
-              const local = map.get(key);
-              map.set(key, local ? { ...local, ...q } : q);
+            const qId = (q.id || '').trim().toUpperCase();
+            const qNum = (q.quotationNumber || '').trim().toUpperCase();
+            const matchedKey = (qId && numToKeyMap.get(qId)) || (qNum && numToKeyMap.get(qNum)) || q.id || q.quotationNumber;
+
+            if (matchedKey) {
+              const local = map.get(matchedKey);
+              if (!local) {
+                map.set(matchedKey, q);
+                if (qNum) numToKeyMap.set(qNum, matchedKey);
+                if (qId) numToKeyMap.set(qId, matchedKey);
+              } else {
+                const localVer = Number(local.version) || 1;
+                const cloudVer = Number(q.version) || 1;
+
+                if (localVer > cloudVer) {
+                  // Local quotation has higher revision version -> preserve local edits
+                  map.set(matchedKey, { ...q, ...local });
+                } else if (cloudVer > localVer) {
+                  // Cloud quotation has strictly higher revision -> adopt cloud version
+                  map.set(matchedKey, { ...local, ...q });
+                } else {
+                  // Same revision version: compare timeline length and dates
+                  const localTimeCount = Array.isArray(local.timeline) ? local.timeline.length : 0;
+                  const cloudTimeCount = Array.isArray(q.timeline) ? q.timeline.length : 0;
+                  if (localTimeCount >= cloudTimeCount) {
+                    map.set(matchedKey, { ...q, ...local });
+                  } else {
+                    map.set(matchedKey, { ...local, ...q });
+                  }
+                }
+              }
             }
           });
           const merged = sortDesc(Array.from(map.values()));
@@ -347,19 +381,46 @@ export function restoreERPBackupData(
         if (isMergeMode) {
           const current = readStorage<any[]>(ERP_STORAGE_KEYS.BILLS, []);
           const map = new Map<string, any>();
+          const numToKeyMap = new Map<string, string>();
+
           // 1. User local items first
           current
             .filter((b: any) => !isDelBill(b))
             .forEach((b: any) => {
-              const key = b.id || b.billNo;
-              if (key) map.set(key, b);
+              const primaryKey = b.id || b.billNo;
+              if (primaryKey) {
+                map.set(primaryKey, b);
+                if (b.billNo) numToKeyMap.set(b.billNo.trim().toUpperCase(), primaryKey);
+                if (b.id) numToKeyMap.set(b.id.trim().toUpperCase(), primaryKey);
+              }
             });
-          // 2. Incoming cloud bills merge and update on top
+
+          // 2. Incoming cloud bills merge safely - never overwrite local edits with older cloud data
           cleanIncoming.forEach((b: any) => {
-            const key = b.id || b.billNo;
-            if (key) {
-              const local = map.get(key);
-              map.set(key, local ? { ...local, ...b } : b);
+            const bId = (b.id || '').trim().toUpperCase();
+            const bNum = (b.billNo || '').trim().toUpperCase();
+            const matchedKey = (bId && numToKeyMap.get(bId)) || (bNum && numToKeyMap.get(bNum)) || b.id || b.billNo;
+
+            if (matchedKey) {
+              const local = map.get(matchedKey);
+              if (!local) {
+                map.set(matchedKey, b);
+                if (bNum) numToKeyMap.set(bNum, matchedKey);
+                if (bId) numToKeyMap.set(bId, matchedKey);
+              } else {
+                const parseDateMs = (dStr?: string) => {
+                  if (!dStr) return 0;
+                  const ms = Date.parse(dStr);
+                  return isNaN(ms) ? 0 : ms;
+                };
+                const localTime = (local.createdAt ? parseDateMs(local.createdAt) : 0) || parseDateMs(local.date);
+                const cloudTime = (b.createdAt ? parseDateMs(b.createdAt) : 0) || parseDateMs(b.date);
+                if (cloudTime > localTime) {
+                  map.set(matchedKey, { ...local, ...b });
+                } else {
+                  map.set(matchedKey, { ...b, ...local });
+                }
+              }
             }
           });
           const merged = sortBillsDesc(Array.from(map.values()));
